@@ -4,6 +4,9 @@ SOFIN_VERSION=0.60.2
 
 test -d /Users && mkdir /Users
 
+freebsd-update fetch
+freebsd-update install
+
 cd /var
 fetch http://dmilith.verknowsys.com/Public/Sofin-releases/sofin-${SOFIN_VERSION}.tar.bz2
 tar xf sofin-${SOFIN_VERSION}.tar.bz2
@@ -12,4 +15,31 @@ cd sofin-${SOFIN_VERSION}
 bin/install
 sofin distclean
 
+echo "Setting ZSH shell"
 chsh -s /Software/Zsh/exports/zsh
+echo "Setting HOME"
+pw user mod root -d /SystemUsers
+
+echo "Copying additional system files"
+git clone https://github.com/VerKnowSys/ServeD-OS.git
+cd ServeD-OS
+cp -Rv boot/ /boot/
+cp -Rv etc/ /etc/
+cp -Rv usr/ /usr/
+
+echo "Post-copy: Copying served files if not yet exist"
+test -f /etc/ttys || cp -v /etc/ttys.served /etc/ttys
+# TODO implement better managment of rest important files
+
+echo "Initializing core system services"
+test -d /SystemUsers/SoftwareData/Coreginx || mkdir -p /SystemUsers/SoftwareData/Coreginx
+test -f /SystemUsers/SoftwareData/Coreginx/.running || /SystemUsers/SoftwareData/Coreginx/.start
+
+test -d /SystemUsers/SoftwareData/Ntp || mkdir -p /SystemUsers/SoftwareData/Ntp
+test -f /SystemUsers/SoftwareData/Ntp/.running || /SystemUsers/SoftwareData/Ntp/.start
+
+test -d /SystemUsers/SoftwareData/LiveUsers || mkdir -p /SystemUsers/SoftwareData/LiveUsers
+test -f /SystemUsers/SoftwareData/LiveUsers/.running || /SystemUsers/SoftwareData/LiveUsers/.start
+
+echo "Reloading core services"
+kill -SIGHUP 1
