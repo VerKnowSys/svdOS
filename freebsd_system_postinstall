@@ -1,0 +1,15 @@
+#!/bin/sh
+
+SOFIN_VERSION=0.60.2
+
+test -d /Users && mkdir /Users
+
+cd /var
+fetch http://dmilith.verknowsys.com/Public/Sofin-releases/sofin-${SOFIN_VERSION}.tar.bz2
+tar xf sofin-${SOFIN_VERSION}.tar.bz2
+cd sofin-${SOFIN_VERSION}
+# this also invokes "sofin install base":
+bin/install
+sofin distclean
+
+chsh -s /Software/Zsh/exports/zsh
