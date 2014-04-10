@@ -1,8 +1,7 @@
-zfs_enable="NO"
+zfs_enable="YES"
 hostname="drahk"
-ifconfig_re0="DHCP"
-
-ifconfig_re0_alias0="inet 192.168.6.2 netmask 255.255.255.0"
+# ifconfig_re0="DHCP"
+# ifconfig_re0_alias0="inet 192.168.6.2 netmask 255.255.255.0"
 
 sshd_enable="YES"
 gateway_enable="YES"
@@ -54,13 +53,10 @@ afsd_enable="NO"
 # SOUND
 mixer_enable="NO"
 
-served_start="YES"
 hald_enable="NO"
 dbus_enable="NO"
 gdm_enable="NO"
 moused_enable="NO"
 oss_enable="NO"
-
 afsserver_enable="NO"
-
-ezjail_enable="YES"
+# ezjail_enable="YES"
