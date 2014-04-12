@@ -1,6 +1,8 @@
 #!/bin/sh
 
 SOFIN_VERSION=0.60.3
+SYS_ROOT_DOMAIN="verknowsys.com"
+SYS_DOMAIN="$(hostname).${SYS_ROOT_DOMAIN}"
 
 test -d /Users && mkdir /Users
 
@@ -31,9 +33,10 @@ echo "Post-copy: Copying served files if not yet exist"
 test -f /etc/ttys || cp -v /etc/ttys.served /etc/ttys
 # TODO implement better managment of rest important files
 
-echo "Initializing core system services"
+echo "Initializing core system services for domain: ${SYS_DOMAIN}"
 test -d /SystemUsers/SoftwareData/Coreginx || mkdir -p /SystemUsers/SoftwareData/Coreginx
 test -f /SystemUsers/SoftwareData/Coreginx/.running || touch /SystemUsers/SoftwareData/Coreginx/.start
+test -f /SystemUsers/SoftwareData/Coreginx/.domains/${SYS_DOMAIN} || (mkdir -p /SystemUsers/SoftwareData/Coreginx/.domains ; touch /SystemUsers/SoftwareData/Coreginx/.domains/${SYS_DOMAIN} && touch /SystemUsers/SoftwareData/Coreginx/.reconfigure)
 
 test -d /SystemUsers/SoftwareData/Ntp || mkdir -p /SystemUsers/SoftwareData/Ntp
 test -f /SystemUsers/SoftwareData/Ntp/.running || touch /SystemUsers/SoftwareData/Ntp/.start
