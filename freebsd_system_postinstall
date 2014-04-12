@@ -33,13 +33,13 @@ test -f /etc/ttys || cp -v /etc/ttys.served /etc/ttys
 
 echo "Initializing core system services"
 test -d /SystemUsers/SoftwareData/Coreginx || mkdir -p /SystemUsers/SoftwareData/Coreginx
-test -f /SystemUsers/SoftwareData/Coreginx/.running || /SystemUsers/SoftwareData/Coreginx/.start
+test -f /SystemUsers/SoftwareData/Coreginx/.running || touch /SystemUsers/SoftwareData/Coreginx/.start
 
 test -d /SystemUsers/SoftwareData/Ntp || mkdir -p /SystemUsers/SoftwareData/Ntp
-test -f /SystemUsers/SoftwareData/Ntp/.running || /SystemUsers/SoftwareData/Ntp/.start
+test -f /SystemUsers/SoftwareData/Ntp/.running || touch /SystemUsers/SoftwareData/Ntp/.start
 
 test -d /SystemUsers/SoftwareData/LiveUsers || mkdir -p /SystemUsers/SoftwareData/LiveUsers
-test -f /SystemUsers/SoftwareData/LiveUsers/.running || /SystemUsers/SoftwareData/LiveUsers/.start
+test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/SoftwareData/LiveUsers/.start
 
 echo "Reloading core services"
 kill -SIGHUP 1
