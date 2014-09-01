@@ -28,7 +28,8 @@ fi
 echo "Setting HOME to /SystemUsers"
 pw user mod root -d /SystemUsers
 
-if [ -f "/.vks-snapshot-version" ]; then
+if [ ! -f "/.vks-snapshot-version" ]; then
+    cd /var
     echo "Copying additional system files"
     git clone https://github.com/VerKnowSys/ServeD-OS.git
     cd ServeD-OS
@@ -36,6 +37,7 @@ if [ -f "/.vks-snapshot-version" ]; then
     cp -Rv etc/ /etc/
     cp -Rv usr/ /usr/
     cat .git/refs/heads/master > /.vks-snapshot-version
+    rm -rf /var/ServeD-OS
 fi
 
 echo "Post-copy: Copying served files if not yet exist"
