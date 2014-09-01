@@ -35,6 +35,7 @@ if [ -f "/.vks-snapshot-version" ]; then
     cp -Rv boot/ /boot/
     cp -Rv etc/ /etc/
     cp -Rv usr/ /usr/
+    cat .git/refs/heads/master > /.vks-snapshot-version
 fi
 
 echo "Post-copy: Copying served files if not yet exist"
