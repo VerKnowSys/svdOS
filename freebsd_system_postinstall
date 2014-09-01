@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SOFIN_VERSION=0.60.3
+SOFIN_VERSION=0.64.2
 SYS_ROOT_DOMAIN="verknowsys.com"
 SYS_DOMAIN="$(hostname).${SYS_ROOT_DOMAIN}"
 
@@ -9,25 +9,33 @@ test -d /Users && mkdir /Users
 freebsd-update fetch
 freebsd-update install
 
-cd /var
-fetch http://dmilith.verknowsys.com/Public/Sofin-releases/sofin-${SOFIN_VERSION}.tar.bz2
-tar xf sofin-${SOFIN_VERSION}.tar.bz2
-cd sofin-${SOFIN_VERSION}
-# this also invokes "sofin install base":
-bin/install
-sofin distclean
+if [ ! -x /usr/bin/sofin ]; then
+    cd /var
+    if [ ! -d "sofin-${SOFIN_VERSION}" ]; then
+        fetch http://dmilith.verknowsys.com/Public/Sofin-releases/sofin-${SOFIN_VERSION}.tar.bz2
+        tar xf sofin-${SOFIN_VERSION}.tar.bz2
+    fi
+    cd sofin-${SOFIN_VERSION}
+    bin/install
+    sofin distclean
+fi
 
-echo "Setting ZSH shell"
-chsh -s /Software/Zsh/exports/zsh
-echo "Setting HOME"
+if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
+    echo "Setting ZSH shell"
+    chsh -s /Software/Zsh/exports/zsh
+fi
+
+echo "Setting HOME to /SystemUsers"
 pw user mod root -d /SystemUsers
 
-echo "Copying additional system files"
-git clone https://github.com/VerKnowSys/ServeD-OS.git
-cd ServeD-OS
-cp -Rv boot/ /boot/
-cp -Rv etc/ /etc/
-cp -Rv usr/ /usr/
+if [ -f "/.vks-snapshot-version" ]; then
+    echo "Copying additional system files"
+    git clone https://github.com/VerKnowSys/ServeD-OS.git
+    cd ServeD-OS
+    cp -Rv boot/ /boot/
+    cp -Rv etc/ /etc/
+    cp -Rv usr/ /usr/
+fi
 
 echo "Post-copy: Copying served files if not yet exist"
 test -f /etc/ttys || cp -v /etc/ttys.served /etc/ttys
