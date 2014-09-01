@@ -38,7 +38,7 @@ cp /etc/*.served "${SNAPSHOT_DIR}/etc"
 cp /usr/bin/sofin* "${SNAPSHOT_DIR}/usr/bin"
 cp /usr/lib/libexecinfo* "${SNAPSHOT_DIR}/usr/lib"
 cp /usr/include/execinfo.h "${SNAPSHOT_DIR}/usr/include"
-cp -r /var/sofin-0.64.* "${SNAPSHOT_DIR}/var"
+printf "${SNAPSHOT}\n" > "${SNAPSHOT_DIR}/.vks-snapshot-version"
 
 note "Compiling snapshot: ${SNAPSHOT}"
 cd "${SNAPSHOT_DIR}"
