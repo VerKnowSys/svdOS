@@ -1,0 +1,50 @@
+#!/bin/sh
+
+readonly CONF_FILE="/etc/sofin.conf.sh"
+if [ -e "${CONF_FILE}" ]; then
+    . "${CONF_FILE}"
+    validate_env
+else
+    echo "FATAL: No configuration file found: ${CONF_FILE}. Sofin isn't installed properly."
+    exit 1
+fi
+
+
+NAME="ServeD-BASESYS"
+VERSION="v0.4"
+SNAPSHOT="${NAME}-${VERSION}-$(date +%F)"
+SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
+
+test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
+mkdir "${SNAPSHOT_DIR}"
+
+DIRS=(boot etc usr usr/bin usr/lib usr/include var)
+for dir in ${DIRS}; do
+    if [ ! -d "${SNAPSHOT_DIR}/${dir}" ]; then
+        note "Creating destination dir: ${dir}"
+        mkdir -p "${SNAPSHOT_DIR}/${dir}"
+    fi
+done
+
+note "Preparing snapshot: ${SNAPSHOT}"
+cp -r /Software "${SNAPSHOT_DIR}"
+cp -r /boot/kernel "${SNAPSHOT_DIR}/boot"
+cp -r /etc/ssl "${SNAPSHOT_DIR}/etc"
+cp /etc/profile* "${SNAPSHOT_DIR}/etc"
+cp /etc/sofin.conf.sh "${SNAPSHOT_DIR}/etc"
+cp /etc/zshenv "${SNAPSHOT_DIR}/etc"
+cp /etc/motd "${SNAPSHOT_DIR}/etc"
+cp /etc/*.served "${SNAPSHOT_DIR}/etc"
+cp /usr/bin/sofin* "${SNAPSHOT_DIR}/usr/bin"
+cp /usr/lib/libexecinfo* "${SNAPSHOT_DIR}/usr/lib"
+cp /usr/include/execinfo.h "${SNAPSHOT_DIR}/usr/include"
+cp -r /var/sofin-0.64.* "${SNAPSHOT_DIR}/var"
+
+note "Compiling snapshot: ${SNAPSHOT}"
+cd "${SNAPSHOT_DIR}"
+tar cfJ ../${SNAPSHOT}.tar.xz ./
+if [ "$?" = "0" ]; then
+    note "Finished successfully."
+else
+    error "Something went wrong."
+fi
