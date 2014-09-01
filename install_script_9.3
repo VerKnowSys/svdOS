@@ -1,0 +1,40 @@
+#!/bin/sh
+
+VERSION="v0.4"
+DATE="2014-09-01"
+
+# sanity checks
+test -d /Users && mkdir /Users
+
+cd /
+fetch http://dmilith.verknowsys.com/Public/9.3/ServeD-BASESYS-${VERSION}-${DATE}.tar.xz
+tar xf ServeD-BASESYS-${VERSION}-${DATE}.tar.xz
+
+. /etc/sofin.conf.sh
+note "Sofin configuration loaded"
+
+if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
+    note "Setting ZSH shell"
+    printf "/Software/Zsh/exports/zsh\n" >> /etc/shells
+    chsh -s /Software/Zsh/exports/zsh
+fi
+
+if [ ! -d "/SystemUsers" ]; then
+    note "Setting root home dir to /SystemUsers"
+    mv /root /SystemUsers
+    pw user mod root -d /SystemUsers
+fi
+
+note "Starting Ntp service"
+test -d /SystemUsers/SoftwareData/Ntp || mkdir -p /SystemUsers/SoftwareData/Ntp
+test -f /SystemUsers/SoftwareData/Ntp/.running || touch /SystemUsers/SoftwareData/Ntp/.start
+
+note "Starting LiveUsers service"
+test -d /SystemUsers/SoftwareData/LiveUsers || mkdir -p /SystemUsers/SoftwareData/LiveUsers
+test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/SoftwareData/LiveUsers/.start
+
+note "Reloading core services"
+cp /etc/ttys.served /etc/ttys
+kill -HUP 1
+
+note "ServeD system installation complete."
