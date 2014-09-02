@@ -14,9 +14,9 @@ else
 fi
 
 
-NAME="ServeD-BASESYS"
-VERSION="v0.4"
-SNAPSHOT="${NAME}-${VERSION}-$(date +%F)"
+NAME="ServeD-OS-Base"
+VERSION="v0.4.1"
+SNAPSHOT="${NAME}-${VERSION}"
 SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
 
 test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
