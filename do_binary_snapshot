@@ -57,7 +57,7 @@ else
 fi
 
 note "Uploading snapshot"
-scp ../${SNAPSHOT_DIR}.tar.xz dmilith@verknowsys.com:/home/dmilith/Web/Public/9.3/
+scp ../${SNAPSHOT}.tar.xz dmilith@verknowsys.com:/home/dmilith/Web/Public/9.3/
 if [ "$?" = "0" ]; then
     note "Finished successfully."
 else
