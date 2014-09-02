@@ -35,6 +35,23 @@ note "Starting LiveUsers service"
 test -d /SystemUsers/SoftwareData/LiveUsers || mkdir -p /SystemUsers/SoftwareData/LiveUsers
 test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/SoftwareData/LiveUsers/.start
 
+note "Setting up default boot loader configuration"
+cp /etc/loader.conf.served /boot/loader.conf
+
+note "Setting up sysctl"
+cp /etc/sysctl.conf.served /etc/sysctl.conf
+service sysctl reload
+
+note "Setting up rc configuration"
+cat /etc/rc.conf.served >> /etc/rc.conf
+
+note "Cleaning shared memory state and semaphores"
+ipcrm -W
+
+note "Disabling core dumps"
+ulimit -c 0
+echo "ulimit -c 0" >> /etc/zshenv
+
 note "Reloading core services"
 cp /etc/ttys.served /etc/ttys
 kill -HUP 1
