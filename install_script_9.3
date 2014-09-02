@@ -23,6 +23,8 @@ if [ ! -d "/SystemUsers" ]; then
     note "Setting root home dir to /SystemUsers"
     mv /root /SystemUsers
     pw user mod root -d /SystemUsers
+    note "Installing igniters"
+    ignitersinstall
 fi
 
 note "Starting Ntp service"
