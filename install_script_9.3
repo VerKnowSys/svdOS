@@ -2,30 +2,46 @@
 
 VERSION="v0.4"
 DATE="2014-09-02"
+LOG="/var/log/svd-install.log"
 
 # sanity checks
 test ! -d /Users && mkdir /Users
 
 cd /
 fetch http://dmilith.verknowsys.com/Public/9.3/ServeD-BASESYS-${VERSION}-${DATE}.tar.xz
+if [ "$?" != "0" ]; then
+    echo "Binary snapshot isn't available, or something just went wrong while fetching archive"
+    exit 1
+fi
+
 tar xf ServeD-BASESYS-${VERSION}-${DATE}.tar.xz
 
+if [ "$?" != "0" ]; then
+    echo "Binary snapshot corrupted or something just went wrong with archive"
+    exit 1
+fi
+
+echo "Installation process started" > ${LOG}
 . /etc/sofin.conf.sh
 note "Sofin configuration loaded"
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
     note "Setting ZSH shell"
     printf "/Software/Zsh/exports/zsh\n" >> /etc/shells
-    chsh -s /Software/Zsh/exports/zsh
+    chsh -s /Software/Zsh/exports/zsh >> ${LOG} 2>&1
 fi
 
 if [ ! -d "/SystemUsers" ]; then
     note "Setting root home dir to /SystemUsers"
     mv /root /SystemUsers
-    pw user mod root -d /SystemUsers
-    note "Installing igniters"
-    ignitersinstall
+    pw user mod root -d /SystemUsers >> ${LOG} 2>&1
 fi
+
+note "Setting up shell environment"
+cp -v /etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
+
+note "Installing igniters"
+/Software/Thess/exports/ignitersinstall >> ${LOG} 2>&1
 
 note "Starting Ntp service"
 test -d /SystemUsers/SoftwareData/Ntp || mkdir -p /SystemUsers/SoftwareData/Ntp
@@ -36,10 +52,10 @@ test -d /SystemUsers/SoftwareData/LiveUsers || mkdir -p /SystemUsers/SoftwareDat
 test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/SoftwareData/LiveUsers/.start
 
 note "Setting up default boot loader configuration"
-cp /etc/loader.conf.served /boot/loader.conf
+cp -v /etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
 
 note "Setting up sysctl"
-cp /etc/sysctl.conf.served /etc/sysctl.conf
+cp -v /etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
 service sysctl reload
 
 note "Setting up rc configuration"
@@ -53,7 +69,9 @@ ulimit -c 0
 echo "ulimit -c 0" >> /etc/zshenv
 
 note "Reloading core services"
-cp /etc/ttys.served /etc/ttys
+cp -v /etc/ttys.served /etc/ttys >> ${LOG} 2>&1
 kill -HUP 1
 
+note "Cleaning up"
+rm -rfv /ServeD-BASESYS-${VERSION}-${DATE}.tar.xz >> ${LOG} 2>&1
 note "ServeD system installation complete."
