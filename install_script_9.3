@@ -8,6 +8,10 @@ LOG="/var/log/svd-install.log"
 
 # sanity checks
 test ! -d /Users && mkdir /Users
+for i in $(zpool list -H | awk '{print $1}'); do
+    zfs set compression=lz4 $i
+    zfs set checksum=fletcher4 $i
+done
 
 cd /
 fetch http://dmilith.verknowsys.com/Public/9.3/${BASE}-${VERSION}.tar.xz
