@@ -74,6 +74,7 @@ note "Reloading core services"
 cp -v /etc/ttys.served /etc/ttys >> ${LOG} 2>&1
 kill -HUP 1
 
+echo "ServeD OS ${VERSION}" > /etc/motd
 note "Cleaning up"
 rm -rfv /${BASE}-${VERSION}.tar.xz >> ${LOG} 2>&1
 note "ServeD system installation complete."
