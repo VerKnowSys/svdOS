@@ -44,7 +44,17 @@ note "Compiling snapshot: ${SNAPSHOT}"
 cd "${SNAPSHOT_DIR}"
 tar cfJ ../${SNAPSHOT}.tar.xz ./
 if [ "$?" = "0" ]; then
+    note "Compiled successfully."
+else
+    error "Something went wrong while compiling."
+    exit 1
+fi
+
+note "Uploading snapshot"
+scp ../${SNAPSHOT_DIR}.tar.xz dmilith@verknowsys.com/home/dmilith/Web/Public/9.3/
+if [ "$?" = "0" ]; then
     note "Finished successfully."
 else
-    error "Something went wrong."
+    error "Something went wrong while uploading."
+    exit 1
 fi
