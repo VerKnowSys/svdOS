@@ -4,7 +4,7 @@ VERSION="v0.4"
 DATE="2014-09-02"
 
 # sanity checks
-test -d /Users && mkdir /Users
+test ! -d /Users && mkdir /Users
 
 cd /
 fetch http://dmilith.verknowsys.com/Public/9.3/ServeD-BASESYS-${VERSION}-${DATE}.tar.xz
