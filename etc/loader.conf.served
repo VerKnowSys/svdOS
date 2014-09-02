@@ -1,0 +1,13 @@
+# 2014-09-02 09:24:48 - dmilith:
+zfs_load="YES"
+autoboot_delay="1"
+aio_load="YES"
+random_load="YES"
+aio_load="YES"
+cc_htcp_load="YES"
+net.inet.tcp.syncache.hashsize=32768
+net.inet.tcp.syncache.bucketlimit=32
+net.inet.tcp.syncache.cachelimit=1048576
+kern.ipc.maxsockets=204800
+kern.ipc.nmbclusters=262144
+loader_logo="beastie"

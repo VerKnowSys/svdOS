@@ -2,6 +2,7 @@
 # net.inet.tcp.blackhole defines what happens when a TCP packet is received on a closed port. When set to '1', SYN packets arriving on a closed port will be dropped without a RST packet being sent back. When set to '2', all packets arriving on a closed port are dropped without an RST being sent back.
 net.inet.udp.blackhole=2
 net.inet.tcp.blackhole=2
+net.inet.tcp.delayed_ack=0
 
 security.bsd.unprivileged_proc_debug=0
 security.bsd.unprivileged_read_msgbuf=0
@@ -20,12 +21,6 @@ vfs.usermount=0
 
 kern.threads.max_threads_per_proc=4096
 kern.ipc.somaxconn=4096
-kern.ipc.maxsockets=204800
-
-# Mbuf 2k clusters (on amd64 7.2+ 25600 is default)
-# Note that defaults for other variables depend on this variable, for example `tcpreass`
-# Note for FreeBSD-7 and older: For such high value vm.kmem_size must be increased to 3G
-kern.ipc.nmbclusters=262144
 
 # For lower latency you can decrease scheduler's maximum time slice
 # default: stathz/10 (~ 13)
