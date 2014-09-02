@@ -1,0 +1,122 @@
+
+# default shell environment for ZSH
+# 2014-09-02 13:07:07
+# blame @dmilith
+
+autoload colors zsh/terminfo
+colors
+
+#Completion online
+autoload -U compinit
+compinit
+
+#ZSH completion caching
+#ie, cache things so they show up faster next time
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path ~/.zsh/cache
+
+#if colordiff is installed, prefer it
+if [[ -x /usr/bin/colordiff || -x /usr/local/bin/colordiff ]]; then
+  alias diff='colordiff'
+fi
+
+setprompt () {
+    # Need this, so the prompt will work
+    setopt prompt_subst
+
+    for COLOR in RED GREEN YELLOW WHITE BLACK BLUE CYAN MAGENTA; do
+        eval PR_$COLOR='%{$fg[${(L)COLOR}]%}'
+        eval PR_BRIGHT_$COLOR='%{$fg_bold[${(L)COLOR}]%}'
+    done
+
+    PR_RESET="%{$reset_color%}"
+
+    # Finally, let's set the prompt
+    if [ 0 -eq "0" ]; then
+        PS1='${PR_RED}%m ${PR_YELLOW}%$PR_PWDLEN<...<%~% ${PR_RESET} %# '
+    else
+      PS1='${PR_GREEN}%m ${PR_YELLOW}%$PR_PWDLEN<...<%~% ${PR_RESET} (id: $(/usr/bin/id -u)) %% '
+    fi
+}
+
+setprompt
+
+export LSCOLORS=cxfxcxdxbxegedabagacad
+
+setopt share_history
+setopt appendhistory
+setopt autocd
+setopt automenu
+setopt autopushd
+setopt autoresume
+setopt complete_in_word
+setopt extended_glob
+setopt hist_ignoredups
+setopt hist_ignorespace
+setopt list_types
+setopt mailwarning
+setopt no_flowcontrol
+setopt no_hup
+setopt no_notify
+setopt printexitvalue
+setopt pushd_ignoredups
+setopt pushd_silent
+
+export HISTFILE=$HOME/.zsh_history
+export HISTSIZE=8192
+export SAVEHIST=8192
+
+export HISTCONTROL=erasedups
+export HISTSIZE=10000
+setopt histappend
+
+# zgitinit and prompt_wunjo_setup must be somewhere in your $fpath, see README for more.
+
+setopt promptsubst
+
+# Load the prompt theme system
+autoload -U promptinit
+promptinit
+
+
+LANG="en_GB.UTF-8"
+LANGUAGE="pl_PL.UTF-8"
+LC_CTYPE="pl_PL.UTF-8"
+LC_NUMERIC="pl_PL.UTF-8"
+LC_TIME="pl_PL.UTF-8"
+LC_COLLATE="pl_PL.UTF-8"
+LC_MONETARY="pl_PL.UTF-8"
+LC_MESSAGES="pl_PL.UTF-8"
+LC_PAPER="pl_PL.UTF-8"
+LC_NAME="pl_PL.UTF-8"
+LC_ADDRESS="pl_PL.UTF-8"
+LC_TELEPHONE="pl_PL.UTF-8"
+LC_MEASUREMENT="pl_PL.UTF-8"
+LC_IDENTIFICATION="pl_PL.UTF-8"
+LC_ALL="pl_PL.UTF-8"
+TERM="xterm-color"
+PAGER="less"
+unset TMUX
+
+alias top='top -a -i -u -S -ores'
+alias ls='ls -G'
+alias grep='grep --color=auto'
+alias w="w -din"
+alias pstree='pstree -g 3'
+alias wget='fetch'
+alias bconsole='/Software/Bacula/exports/bconsole -c /etc/bacula/bconsole.conf'
+
+ulimit -c 0
+
+if [ "$(/usr/bin/id -u)" = "0" ]; then
+    if [ -e "/etc/profile_sofin" ]; then
+        . /etc/profile_sofin
+    fi
+    trap "source /etc/profile_sofin" USR2
+else
+    if [ -e $HOME/.profile ]; then
+        . $HOME/.profile
+    fi
+    trap "source $HOME/.profile" USR2
+fi
+export SHELL_PID="$$"
