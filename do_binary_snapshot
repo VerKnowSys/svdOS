@@ -1,4 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env zsh
+# ZSH is required
+#
+# 2014-09-02 13:11:55
+# blame: @dmilith
 
 readonly CONF_FILE="/etc/sofin.conf.sh"
 if [ -e "${CONF_FILE}" ]; then
