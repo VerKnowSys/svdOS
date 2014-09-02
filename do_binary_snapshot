@@ -26,6 +26,9 @@ for dir in ${DIRS}; do
     fi
 done
 
+note "Cleaning before snapshot"
+rm -rf /root/.cache /root/.ccache /root/.npm
+
 note "Preparing snapshot: ${SNAPSHOT}"
 cp -r /Software "${SNAPSHOT_DIR}"
 cp -r /boot/kernel "${SNAPSHOT_DIR}/boot"
