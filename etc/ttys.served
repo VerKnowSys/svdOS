@@ -1,7 +1,7 @@
 # Default TTYs for ServeD system
 
 ttyv1   "/Software/Thess/exports/svdss"            xterm   on  secure
-ttyv2   "/Software/Thess/exports/svdcoreginx_helper" xterm on secure # uid 15
+# Not enabled by default: ttyv2   "/Software/Thess/exports/svdcoreginx_helper" xterm on secure # uid 15
 
 # user side svdss spawn example:
 #ttyv234   "/Software/Thess/exports/svdshell -u234 -- svdss" xterm on secure # uid 234
