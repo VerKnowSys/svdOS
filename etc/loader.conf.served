@@ -11,3 +11,4 @@ net.inet.tcp.syncache.cachelimit=1048576
 kern.ipc.maxsockets=204800
 kern.ipc.nmbclusters=262144
 loader_logo="beastie"
+accf_http_load="YES"
