@@ -168,3 +168,9 @@ net.inet.tcp.ecn.enable=1
 # Use this to lessen Virtual Memory Manager's work when using Shared Mem.
 # Useful for databases
 kern.ipc.shm_use_phys=1
+
+# Use ZFS prefetch feature.
+vfs.zfs.prefetch_disable=0
+
+# Use HTCP congestion control
+net.inet.tcp.cc.algorithm=htcp

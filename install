@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "${VERSION}" = "" ]; then
-    VERSION="v0.4.1"
+    VERSION="v0.4.2"
 fi
 DEFAULT_ZPOOL="zroot"
 BASE="ServeD-OS-Base"
@@ -91,5 +91,11 @@ kill -HUP 1
 echo "ServeD OS ${VERSION}" > /etc/motd
 note "Cleaning up"
 rm -rfv /${BASE}-${VERSION}.tar.xz >> ${LOG} 2>&1
+
+note "Creating ZFS initial FS snapshots"
+for snap in /Software /SystemUsers /SoftwareData; do
+    zfs snapshot "${DEFAULT_ZPOOL}${snap}@$(date +%F_%H%M)-initial"
+done
+
 note "ServeD system installation complete."
 note "You must reboot to load new kernel and system settings."
