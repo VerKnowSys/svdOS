@@ -3,15 +3,25 @@
 if [ "${VERSION}" = "" ]; then
     VERSION="v0.4.1"
 fi
+DEFAULT_ZPOOL="zroot"
 BASE="ServeD-OS-Base"
 LOG="/var/log/svd-install.log"
 
 # sanity checks
 test ! -d /Users && mkdir /Users
+
+# handle older zpool versions. Try to upgrade them before start
+zpool upgrade ${DEFAULT_ZPOOL}
+
+# set lz4 compression and checksum mechanism for all pools:
 for i in $(zpool list -H | awk '{print $1}'); do
     zfs set compression=lz4 $i
     zfs set checksum=fletcher4 $i
 done
+
+zfs create -o mountpoint=/Software "${DEFAULT_ZPOOL}/Software"
+zfs create -o mountpoint=/SystemUsers "${DEFAULT_ZPOOL}/SystemUsers"
+zfs create -o mountpoint=/SoftwareData "${DEFAULT_ZPOOL}/SoftwareData"
 
 cd /
 fetch http://dmilith.verknowsys.com/Public/9.3/${BASE}-${VERSION}.tar.xz
@@ -82,4 +92,4 @@ echo "ServeD OS ${VERSION}" > /etc/motd
 note "Cleaning up"
 rm -rfv /${BASE}-${VERSION}.tar.xz >> ${LOG} 2>&1
 note "ServeD system installation complete."
-note "NOTE: You must reboot to load new kernel and settings."
+note "You must reboot to load new kernel and system settings."
