@@ -2,8 +2,9 @@
 # VERKNOWSYS -- kernel configuration file for FreeBSD/amd64
 # 2014-09-03 15:17:10 - dmilith
 
-# makeoptions   DEBUG=-gdwarf-2     # Build kernel with gdb(1) debug symbols
-makeoptions WITH_CTF=1      # Run ctfconvert(1) for DTrace support
+makeoptions    DEBUG=-gdwarf-2     # Build kernel with gdb(1) debug symbols
+makeoptions    WITH_CTF=1      # Run ctfconvert(1) for DTrace support
+makeoptions    COPTFLAGS="-O2 -pipe -funroll-loops -ffast-math"
 
 # dmilith:
 cpu HAMMER

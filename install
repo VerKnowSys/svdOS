@@ -1,7 +1,8 @@
 #!/bin/sh
 
 if [ "${VERSION}" = "" ]; then
-    VERSION="v0.4.2"
+    printf "No version specified. Picking last version!\n"
+    VERSION="$(fetch -q -o - http://dmilith.verknowsys.com/Public/9.3/version-latest)"
 fi
 DEFAULT_ZPOOL="zroot"
 BASE="ServeD-OS-Base"
@@ -21,7 +22,8 @@ done
 
 zfs create -o mountpoint=/Software "${DEFAULT_ZPOOL}/Software"
 zfs create -o mountpoint=/SystemUsers "${DEFAULT_ZPOOL}/SystemUsers"
-zfs create -o mountpoint=/SoftwareData "${DEFAULT_ZPOOL}/SoftwareData"
+zfs create -o mountpoint=/SystemUsers/Igniters "${DEFAULT_ZPOOL}/SystemUsers/Igniters"
+zfs create -o mountpoint=/SystemUsers/SoftwareData "${DEFAULT_ZPOOL}/SystemUsers/SoftwareData"
 
 cd /
 fetch http://dmilith.verknowsys.com/Public/9.3/${BASE}-${VERSION}.tar.xz
@@ -47,9 +49,9 @@ if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
     chsh -s /Software/Zsh/exports/zsh >> ${LOG} 2>&1
 fi
 
-if [ ! -d "/SystemUsers" ]; then
-    note "Setting root home dir to /SystemUsers"
-    mv /root /SystemUsers
+if [ -d "/SystemUsers" ]; then
+    note "Setting new root home dir: /SystemUsers"
+    cp -R /root/ /SystemUsers
     pw user mod root -d /SystemUsers >> ${LOG} 2>&1
 fi
 
@@ -72,7 +74,7 @@ cp -v /etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
 
 note "Setting up sysctl"
 cp -v /etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
-service sysctl reload
+# service sysctl reload
 
 note "Setting up rc configuration"
 cat /etc/rc.conf.served >> /etc/rc.conf
@@ -91,9 +93,10 @@ kill -HUP 1
 echo "ServeD OS ${VERSION}" > /etc/motd
 note "Cleaning up"
 rm -rfv /${BASE}-${VERSION}.tar.xz >> ${LOG} 2>&1
+rm -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 
 note "Creating ZFS initial FS snapshots"
-for snap in /Software /SystemUsers /SoftwareData; do
+for snap in /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     zfs snapshot "${DEFAULT_ZPOOL}${snap}@$(date +%F_%H%M)-initial"
 done
 
