@@ -15,7 +15,10 @@ fi
 
 
 NAME="ServeD-OS-Base"
-VERSION="v0.4.2"
+VERSION="v0.4.dev"
+if [ -f "/VERSION" ]; then
+    VERSION="$(cat /VERSION)"
+fi
 SNAPSHOT="${NAME}-${VERSION}"
 SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
 
