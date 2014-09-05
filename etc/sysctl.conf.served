@@ -174,5 +174,3 @@ vfs.zfs.prefetch_disable=0
 
 # Use HTCP congestion control
 net.inet.tcp.cc.algorithm=htcp
-
-kern.maxproc=2048

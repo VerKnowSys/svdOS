@@ -28,21 +28,21 @@ default:\
     :charset=UTF-8:\
     :lang=en_US.UTF-8:\
     :welcome=/etc/motd:\
-    :setenv=MAIL=/var/mail/$,BLOCKSIZE=K:\
-    :path=/sbin /bin /usr/sbin /usr/bin /usr/games /usr/local/sbin /usr/local/bin ~/bin:\
+    :setenv=BLOCKSIZE=K:\
+    :path=/sbin /bin /usr/sbin /usr/bin:\
     :nologin=/var/run/nologin:\
     :cputime=unlimited:\
     :datasize=unlimited:\
     :stacksize=unlimited:\
-    :memorylocked=64K:\
+    :memorylocked=256K:\
     :memoryuse=unlimited:\
     :filesize=unlimited:\
-    :coredumpsize=unlimited:\
+    :coredumpsize=0:\
     :openfiles=unlimited:\
-    :maxproc=unlimited:\
+    :maxproc=512:\
+    :swapuse=0:\
     :sbsize=unlimited:\
     :vmemoryuse=unlimited:\
-    :swapuse=unlimited:\
     :pseudoterminals=unlimited:\
     :priority=0:\
     :ignoretime@:\
