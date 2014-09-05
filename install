@@ -76,6 +76,9 @@ note "Setting up sysctl"
 cp -v /etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
 # service sysctl reload
 
+note "Setting up periodic"
+cat /etc/periodic.conf.served >> /etc/periodic.conf
+
 note "Setting up rc configuration"
 cat /etc/rc.conf.served >> /etc/rc.conf
 

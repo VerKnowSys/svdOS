@@ -1,0 +1,8 @@
+daily_status_security_enable="NO"
+daily_status_security_chksetuid_enable="NO"
+daily_status_security_neggrpperm_enable="NO"
+daily_status_security_chkmounts_enable="NO"
+daily_status_security_chkuid0_enable="NO"
+
+daily_accounting_enable="YES"
+daily_accounting_compress="YES"

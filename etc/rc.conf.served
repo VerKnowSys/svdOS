@@ -3,6 +3,7 @@
 # ifconfig_re0="DHCP"
 # ifconfig_re0_alias0="inet 192.168.6.2 netmask 255.255.255.0"
 
+accounting_enable="YES"
 dumpdev="NO"
 sshd_enable="YES"
 sendmail_enable="NONE"
