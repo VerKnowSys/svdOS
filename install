@@ -35,13 +35,18 @@ for mntpoint in /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Ig
 done
 
 cd /
-fetch ${BASE_SOURCE}/${BASE}-${VERSION}.tar.xz
-if [ "$?" != "0" ]; then
-    printf "Binary snapshot isn't available, or something just went wrong while fetching archive\n"
-    exit 1
+mkdir -p /tmp/.cache >> ${LOG} 2>&1
+if [ ! -f "/tmp/.cache/${BASE}-${VERSION}.tar.xz" ]; then
+    printf "Base archive wasn't downloaded yet\n"
+    fetch ${BASE_SOURCE}/${BASE}-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-${VERSION}.tar.xz
+    if [ "$?" != "0" ]; then
+        printf "Binary snapshot isn't available, or something just went wrong while fetching archive\n"
+        exit 1
+    fi
 fi
 
-tar xf ${BASE}-${VERSION}.tar.xz
+printf "Installing ServeD-Base ${VERSION}\n"
+tar xf /tmp/.cache/${BASE}-${VERSION}.tar.xz
 
 if [ "$?" != "0" ]; then
     printf "Binary snapshot corrupted or something just went wrong with archive\n"
@@ -116,7 +121,6 @@ test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/Softw
 
 printf "ServeD OS ${VERSION}" > /etc/motd
 note "Cleaning shared memory state, semaphores and unnecessary directories"
-rm -rfv /${BASE}-${VERSION}.tar.xz >> ${LOG} 2>&1
 rm -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 ipcrm -W
 
