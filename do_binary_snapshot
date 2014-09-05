@@ -21,6 +21,7 @@ if [ -f "/VERSION" ]; then
 fi
 SNAPSHOT="${NAME}-${VERSION}"
 SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
+DESTINATION="dmilith@verknowsys.com:/home/dmilith/Web/Public/9.3/"
 
 test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
 mkdir "${SNAPSHOT_DIR}"
@@ -37,17 +38,13 @@ note "Cleaning before snapshot"
 rm -rf /root/.cache /root/.ccache /root/.npm
 
 note "Preparing snapshot: ${SNAPSHOT}"
+cp /VERSION "${SNAPSHOT_DIR}"
 cp -r /Software "${SNAPSHOT_DIR}"
 cp -r /boot/kernel "${SNAPSHOT_DIR}/boot"
-cp -r /etc/ssl "${SNAPSHOT_DIR}/etc"
+cp -r /var/ServeD-OS "${SNAPSHOT_DIR}/var"
 cp /etc/profile* "${SNAPSHOT_DIR}/etc"
 cp /etc/sofin.conf.sh "${SNAPSHOT_DIR}/etc"
-cp /etc/motd "${SNAPSHOT_DIR}/etc"
-cp /etc/*.served "${SNAPSHOT_DIR}/etc"
 cp /usr/bin/sofin* "${SNAPSHOT_DIR}/usr/bin"
-cp /usr/lib/libexecinfo* "${SNAPSHOT_DIR}/usr/lib"
-cp /usr/include/execinfo.h "${SNAPSHOT_DIR}/usr/include"
-printf "${SNAPSHOT}\n" > "${SNAPSHOT_DIR}/.vks-snapshot-version"
 
 note "Compiling snapshot: ${SNAPSHOT}"
 cd "${SNAPSHOT_DIR}"
@@ -60,7 +57,7 @@ else
 fi
 
 note "Uploading snapshot"
-scp ../${SNAPSHOT}.tar.xz dmilith@verknowsys.com:/home/dmilith/Web/Public/9.3/
+scp ../${SNAPSHOT}.tar.xz ${DESTINATION}
 if [ "$?" = "0" ]; then
     note "Finished successfully."
 else
