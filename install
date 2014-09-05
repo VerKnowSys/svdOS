@@ -1,65 +1,110 @@
 #!/bin/sh
 
-if [ "${VERSION}" = "" ]; then
-    printf "No version specified. Picking last version!\n"
-    VERSION="$(fetch -q -o - http://dmilith.verknowsys.com/Public/9.3/version-latest)"
-fi
 DEFAULT_ZPOOL="zroot"
 BASE="ServeD-OS-Base"
 LOG="/var/log/svd-install.log"
+SERVED_REPO="/var/ServeD-OS"
+BASE_SOURCE="http://dmilith.verknowsys.com/Public/9.3"
+
+if [ "${VERSION}" = "" ]; then
+    VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
+    printf "No version specified. Picking last version: ${VERSION}\n"
+fi
 
 # sanity checks
+if [ "$(uname)" != "FreeBSD" ]; then
+    printf "Only 64bit FreeBSD hosts are supported by installer\n"
+    exit 1
+fi
 test ! -d /Users && mkdir /Users
 
 # handle older zpool versions. Try to upgrade them before start
-zpool upgrade ${DEFAULT_ZPOOL}
+zpool upgrade ${DEFAULT_ZPOOL} >> ${LOG} 2>&1
 
 # set lz4 compression and checksum mechanism for all pools:
-for i in $(zpool list -H | awk '{print $1}'); do
-    zfs set compression=lz4 $i
-    zfs set checksum=fletcher4 $i
+for pool in $(zpool list -H | awk '{print $1}'); do
+    printf "Setting compression: lz4, checksum: fletcher4 on zpool: ${pool}\n" >> ${LOG} 2>&1
+    zfs set compression=lz4 ${pool}
+    zfs set checksum=fletcher4 ${pool}
 done
 
-zfs create -o mountpoint=/Software "${DEFAULT_ZPOOL}/Software"
-zfs create -o mountpoint=/SystemUsers "${DEFAULT_ZPOOL}/SystemUsers"
-zfs create -o mountpoint=/SystemUsers/Igniters "${DEFAULT_ZPOOL}/SystemUsers/Igniters"
-zfs create -o mountpoint=/SystemUsers/SoftwareData "${DEFAULT_ZPOOL}/SystemUsers/SoftwareData"
+# create zvols for special snappable dirs
+for mntpoint in /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+    printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
+    zfs create -o mountpoint=${mntpoint} "${DEFAULT_ZPOOL}${mntpoint}"
+done
 
 cd /
-fetch http://dmilith.verknowsys.com/Public/9.3/${BASE}-${VERSION}.tar.xz
+fetch ${BASE_SOURCE}/${BASE}-${VERSION}.tar.xz
 if [ "$?" != "0" ]; then
-    echo "Binary snapshot isn't available, or something just went wrong while fetching archive"
+    printf "Binary snapshot isn't available, or something just went wrong while fetching archive\n"
     exit 1
 fi
 
 tar xf ${BASE}-${VERSION}.tar.xz
 
 if [ "$?" != "0" ]; then
-    echo "Binary snapshot corrupted or something just went wrong with archive"
+    printf "Binary snapshot corrupted or something just went wrong with archive\n"
     exit 1
 fi
 
-echo "Installation process started" > ${LOG}
 . /etc/sofin.conf.sh
 note "Sofin configuration loaded"
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
-    note "Setting ZSH shell"
+    note "Setting up ZSH shell"
     printf "/Software/Zsh/exports/zsh\n" >> /etc/shells
     chsh -s /Software/Zsh/exports/zsh >> ${LOG} 2>&1
 fi
 
 if [ -d "/SystemUsers" ]; then
-    note "Setting new root home dir: /SystemUsers"
+    note "Setting up new root home dir: /SystemUsers"
     cp -R /root/ /SystemUsers
     pw user mod root -d /SystemUsers >> ${LOG} 2>&1
 fi
 
-note "Setting up shell environment"
-cp -v /etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
-
 note "Installing igniters"
 /Software/Thess/exports/ignitersinstall >> ${LOG} 2>&1
+
+if [ -d "${SERVED_REPO}" ]; then
+    cd ${SERVED_REPO}
+    cp -Rv usr/ /usr/ >> ${LOG} 2>&1
+else
+    error "Binary snapshot lacks ${SERVED_REPO} directory. Installation aborted!"
+    exit 1
+fi
+
+note "Setting up shell environment"
+cp -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
+
+note "Setting up default boot loader configuration"
+cp -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
+
+note "Setting up mime types"
+cp -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
+
+note "Setting up login"
+cp -v ${SERVED_REPO}/etc/login.served /etc/login.conf >> ${LOG} 2>&1
+cap_mkdb /etc/login.conf >> ${LOG} 2>&1
+
+note "Setting up sysctl"
+cp -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
+
+note "Setting up periodic"
+cp -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
+
+note "Setting up rc configuration"
+cat ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
+
+note "Setting up core services"
+cp -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
+
+SNAP_DATE="$(date +%F_%H%M)"
+for snap in /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+    snap="${DEFAULT_ZPOOL}${snap}@${SNAP_DATE}-initial"
+    note "Creating ZFS snapshot: ${snap}"
+    zfs snapshot "${snap}"
+done
 
 note "Starting Ntp service"
 test -d /SystemUsers/SoftwareData/Ntp || mkdir -p /SystemUsers/SoftwareData/Ntp
@@ -69,39 +114,12 @@ note "Starting LiveUsers service"
 test -d /SystemUsers/SoftwareData/LiveUsers || mkdir -p /SystemUsers/SoftwareData/LiveUsers
 test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/SoftwareData/LiveUsers/.start
 
-note "Setting up default boot loader configuration"
-cp -v /etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
-
-note "Setting up sysctl"
-cp -v /etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
-# service sysctl reload
-
-note "Setting up periodic"
-cat /etc/periodic.conf.served >> /etc/periodic.conf
-
-note "Setting up rc configuration"
-cat /etc/rc.conf.served >> /etc/rc.conf
-
-note "Cleaning shared memory state and semaphores"
-ipcrm -W
-
-note "Disabling core dumps"
-ulimit -c 0
-echo "ulimit -c 0" >> /etc/zshenv
-
-note "Reloading core services"
-cp -v /etc/ttys.served /etc/ttys >> ${LOG} 2>&1
-kill -HUP 1
-
-echo "ServeD OS ${VERSION}" > /etc/motd
-note "Cleaning up"
+printf "ServeD OS ${VERSION}" > /etc/motd
+note "Cleaning shared memory state, semaphores and unnecessary directories"
 rm -rfv /${BASE}-${VERSION}.tar.xz >> ${LOG} 2>&1
 rm -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
+ipcrm -W
 
-note "Creating ZFS initial FS snapshots"
-for snap in /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
-    zfs snapshot "${DEFAULT_ZPOOL}${snap}@$(date +%F_%H%M)-initial"
-done
-
-note "ServeD system installation complete."
-note "You must reboot to load new kernel and system settings."
+note "ServeD system installation complete!"
+note
+note "You must reboot to apply new kernel and system configuration."
