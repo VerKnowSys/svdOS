@@ -13,6 +13,8 @@ else
     exit 1
 fi
 
+note "Synchronizing time"
+ntpdate -u ntp.nask.pl
 
 NAME="ServeD-OS-Base"
 VERSION="v0.4.dev"
