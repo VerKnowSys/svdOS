@@ -16,7 +16,6 @@ if [ "$(uname)" != "FreeBSD" ]; then
     printf "Only 64bit FreeBSD hosts are supported by installer\n"
     exit 1
 fi
-test ! -d /Users && mkdir /Users
 
 # handle older zpool versions. Try to upgrade them before start
 zpool upgrade ${DEFAULT_ZPOOL} >> ${LOG} 2>&1
@@ -29,7 +28,7 @@ for pool in $(zpool list -H | awk '{print $1}'); do
 done
 
 # create zvols for special snappable dirs
-for mntpoint in /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+for mntpoint in /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
     zfs create -o mountpoint=${mntpoint} "${DEFAULT_ZPOOL}${mntpoint}"
 done
