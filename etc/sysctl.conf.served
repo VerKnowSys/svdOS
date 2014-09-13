@@ -12,10 +12,6 @@ security.bsd.hardlink_check_gid=1
 net.inet.tcp.log_in_vain=1
 net.inet.udp.log_in_vain=1
 
-# allow user mounts. Required for ServeD ZFS datasets support.
-vfs.usermount=1
-
-
 kern.threads.max_threads_per_proc=4096
 kern.ipc.somaxconn=4096
 
@@ -177,3 +173,6 @@ security.bsd.conservative_signals=1
 
 # Required by svdss to launch user side svdss service. Also to have access to user daemons.
 security.bsd.see_other_gids=1
+
+# allow user mounts. Required for ServeD ZFS datasets support.
+vfs.usermount=1
