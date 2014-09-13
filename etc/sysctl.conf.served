@@ -9,10 +9,6 @@ security.bsd.unprivileged_read_msgbuf=0
 security.bsd.hardlink_check_uid=1
 security.bsd.hardlink_check_gid=1
 
-security.bsd.see_other_uids=0
-security.bsd.see_other_gids=0
-security.bsd.conservative_signals=1
-
 net.inet.tcp.log_in_vain=1
 net.inet.udp.log_in_vain=1
 
@@ -175,3 +171,9 @@ vfs.zfs.prefetch_disable=0
 
 # Use HTCP congestion control
 net.inet.tcp.cc.algorithm=htcp
+
+security.bsd.see_other_uids=0
+security.bsd.conservative_signals=1
+
+# Required by svdss to launch user side svdss service. Also to have access to user daemons.
+security.bsd.see_other_gids=1
