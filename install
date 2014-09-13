@@ -30,7 +30,7 @@ done
 # create zvols for special snappable dirs
 for mntpoint in /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
-    zfs create -o mountpoint=${mntpoint} "${DEFAULT_ZPOOL}${mntpoint}"
+    zfs create -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
 done
 
 cd /
