@@ -16,7 +16,8 @@ security.bsd.conservative_signals=1
 net.inet.tcp.log_in_vain=1
 net.inet.udp.log_in_vain=1
 
-vfs.usermount=0
+# allow user mounts. Required for ServeD ZFS datasets support.
+vfs.usermount=1
 
 
 kern.threads.max_threads_per_proc=4096
