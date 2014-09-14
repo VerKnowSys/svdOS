@@ -1,6 +1,12 @@
 
 ## CHANGELOG
 
+* v0.4.5
+    - updated Sofin to v0.64.4
+    - Several tweaks to sysctl.conf.served due to svdss requirements
+    - Several tweaks to loader.conf.served - increased shared memory limits
+    - Multiple fixes
+
 * v0.4.4
     - updated TheSS to v0.96.6
     - added automated installation from ServeD-OS repository (bundled with Base package)
