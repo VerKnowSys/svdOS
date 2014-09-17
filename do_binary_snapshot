@@ -45,6 +45,7 @@ git pull https://github.com/VerKnowSys/ServeD-OS.git
 
 note "Preparing snapshot: ${SNAPSHOT}"
 cp /VERSION "${SNAPSHOT_DIR}"
+cp -r /Jails "${SNAPSHOT_DIR}"
 cp -r /Software "${SNAPSHOT_DIR}"
 cp -r /boot/kernel "${SNAPSHOT_DIR}/boot"
 cp -r /var/ServeD-OS "${SNAPSHOT_DIR}/var"
