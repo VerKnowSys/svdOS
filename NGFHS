@@ -1,0 +1,21 @@
+
+/Jails
+    /Data
+        /JAIL_NAME
+            /Users/JAIL_SHORT_NAME/SoftwareData
+            /Users/JAIL_SHORT_NAME/Apps
+
+
+    /Shared
+        /Debian-6.0-amd64
+            /bin
+            /lib
+            /usr
+        /FreeBSD-9.3-amd64
+            /bin
+            /lib
+            /usr
+        /FreeBSD-10.0-amd64
+            /bin
+            /lib
+            /usr
