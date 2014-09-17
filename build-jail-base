@@ -1,0 +1,34 @@
+#!/bin/sh
+
+unset CC CXX CFLAGS CXXFLAGS LDFLAGS MANPAGES
+
+readonly VERSION=(10.0 9.3)
+readonly SHARED_DIR="/Jails/Shared"
+readonly CONF_FILE="/etc/sofin.conf.sh"
+if [ -e "${CONF_FILE}" ]; then
+    . "${CONF_FILE}"
+    validate_env
+else
+    echo "FATAL: No configuration file found: ${CONF_FILE}. Sofin isn't installed properly."
+    exit 1
+fi
+
+
+for version in ${VERSION}; do
+    note "Processing version: ${version}"
+    cd /usr
+    if [ -d "${version}-src" ]; then
+        svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
+    else
+        cd ${VERSION}-src
+        svn up
+    fi
+    mkdir -p ${SHARED_DIR}/FreeBSD-${version}-amd64
+    make buildworld -j4 DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
+    make buildkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
+    make installkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
+    make installworld DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
+    rm -rf ${DESTDIR}/{media,mnt,proc,root,sys}
+done
+
+
