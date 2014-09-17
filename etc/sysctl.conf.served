@@ -176,3 +176,7 @@ security.bsd.see_other_gids=1
 
 # allow user mounts. Required for ServeD ZFS datasets support.
 vfs.usermount=1
+
+# setup basic jails
+security.jail.allow_raw_sockets=1
+
