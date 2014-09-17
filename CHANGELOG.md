@@ -1,6 +1,11 @@
 
 ## CHANGELOG
 
+* v0.4.6
+    - Added /Jails to build
+    - Updated sysctl.conf jail option
+    - Several fixes
+
 * v0.4.5
     - updated Sofin to v0.64.4
     - Several tweaks to sysctl.conf.served due to svdss requirements
