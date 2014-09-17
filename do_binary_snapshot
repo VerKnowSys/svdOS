@@ -39,6 +39,10 @@ done
 note "Cleaning before snapshot"
 rm -rf /root/.cache /root/.ccache /root/.npm
 
+note "Updating ServeD-OS repository."
+cd /var/ServeD-OS
+git pull https://github.com/VerKnowSys/ServeD-OS.git
+
 note "Preparing snapshot: ${SNAPSHOT}"
 cp /VERSION "${SNAPSHOT_DIR}"
 cp -r /Software "${SNAPSHOT_DIR}"
