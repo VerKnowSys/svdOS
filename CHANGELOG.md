@@ -2,9 +2,12 @@
 ## CHANGELOG
 
 * v0.4.6
-    - Added /Jails to build
+    - Installing kernel from
+    - Removed Mysql from base system.
+    - Added Bacula 7.0.5 build
+    - Added /Jails to build. Versions: 9.3-p2, 10.0-p9
     - Updated sysctl.conf jail option
-    - Several fixes
+    - Several other improvements
 
 * v0.4.5
     - updated Sofin to v0.64.4
