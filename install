@@ -5,7 +5,8 @@ BASE="ServeD-OS-Base"
 LOG="/var/log/svd-install.log"
 SERVED_REPO="/var/ServeD-OS"
 BASE_SOURCE="http://dmilith.verknowsys.com/Public/9.3"
-
+SYS_VERSION="$(uname -r | cut -d- -f1)"
+SYS_ARCH="$(uname -m)"
 if [ "${VERSION}" = "" ]; then
     VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
     printf "No version specified. Picking last version: ${VERSION}\n"
@@ -28,7 +29,7 @@ for pool in $(zpool list -H | awk '{print $1}'); do
 done
 
 # create zvols for special snappable dirs
-for mntpoint in /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+for mntpoint in /Jails /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
     zfs create -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
 done
@@ -43,9 +44,20 @@ if [ ! -f "/tmp/.cache/${BASE}-${VERSION}.tar.xz" ]; then
         exit 1
     fi
 fi
+if [ ! -f "/tmp/.cache/${BASE}-Jails-${VERSION}.tar.xz" ]; then
+    printf "Jails archive wasn't downloaded yet\n"
+    fetch ${BASE_SOURCE}/${BASE}-Jails-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-Jails-${VERSION}.tar.xz
+    if [ "$?" != "0" ]; then
+        printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
+        exit 1
+    fi
+fi
 
 printf "Installing ServeD-Base ${VERSION}\n"
 tar xf /tmp/.cache/${BASE}-${VERSION}.tar.xz
+
+printf "Installing Jails-Base ${VERSION}\n"
+tar xf /tmp/.cache/${BASE}-Jails-${VERSION}.tar.xz
 
 if [ "$?" != "0" ]; then
     printf "Binary snapshot corrupted or something just went wrong with archive\n"
@@ -104,7 +116,7 @@ note "Setting up core services"
 cp -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
 
 SNAP_DATE="$(date +%F_%H%M)"
-for snap in /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+for snap in /Jails /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     snap="${DEFAULT_ZPOOL}${snap}@${SNAP_DATE}-initial"
     note "Creating ZFS snapshot: ${snap}"
     zfs snapshot "${snap}"
