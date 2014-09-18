@@ -1,6 +1,11 @@
 
 ## CHANGELOG
 
+* v0.4.7
+    - Updated Sofin to v0.66.0
+    - Support for both 9.3 and 10.0 hosts
+    - Even less software bundled on ng0. Using Sofin on install part to fetch current base software
+
 * v0.4.6
     - Installing kernel from
     - Removed Mysql from base system.
