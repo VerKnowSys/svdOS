@@ -41,8 +41,13 @@ note "Cleaning before snapshot"
 rm -rf /root/.cache /root/.ccache /root/.npm
 
 note "Updating ServeD-OS repository."
-cd /var/ServeD-OS
-git pull https://github.com/VerKnowSys/ServeD-OS.git
+if [ ! -d "/var/ServeD-OS" ]; then
+    cd /var
+    git clone https://github.com/VerKnowSys/ServeD-OS.git
+else
+    cd /var/ServeD-OS
+    git pull https://github.com/VerKnowSys/ServeD-OS.git
+fi
 
 note "Preparing Base snapshot: ${SNAPSHOT}"
 cp /VERSION "${SNAPSHOT_DIR}"
