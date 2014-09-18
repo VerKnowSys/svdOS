@@ -28,5 +28,5 @@ for version in ${VERSION}; do
     make buildkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
     make installkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
     make installworld DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
-    rm -rf ${DESTDIR}/{media,mnt,proc,root,sys,etc,dev}
+    rm -rf ${DESTDIR}/{media,mnt,proc,root,sys,etc,dev,rescue}
 done
