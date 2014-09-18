@@ -1,11 +1,11 @@
 
-/Jails
-    /Data
-        /JAIL_NAME
-            /Users/JAIL_SHORT_NAME/SoftwareData
-            /Users/JAIL_SHORT_NAME/Apps
+/Users/USER_NAME/JailData
+    /JAIL_NAME (app domain)
+        /Base (link to one of immutable Shared systems in /Jails/Shared) [link owned by user, content by root]
+        /SoftwareData (mounted to /Users/USER_NAME/SoftwareData in jail) [owned by user]
+        /Software (mounted to /Software in jail) [owned by user]
 
-
+/Jails [owned by root]
     /Shared
         /Debian-6.0-amd64
             /bin
