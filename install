@@ -57,25 +57,30 @@ fi
 printf "Installing ServeD-Base ${VERSION}\n"
 tar xf /tmp/.cache/${BASE}-${VERSION}.tar.xz
 
+if [ "$?" != "0" ]; then
+    printf "ERROR: Binary snapshot is corrupted or something just went wrong with archive\n"
+    exit 1
+fi
+
 printf "Installing Jails-Base ${VERSION}\n"
 tar xf /tmp/.cache/${BASE}-Jails-${VERSION}.tar.xz
 
 if [ "$?" != "0" ]; then
-    printf "Binary snapshot corrupted or something just went wrong with archive\n"
+    printf "ERROR: Jails snapshot is corrupted or something just went wrong with archive\n"
     exit 1
 fi
 
-note "Updating Sofin repository."
 if [ ! -d "${SOFIN_REPO}" ]; then
     cd /var
-    git clone https://github.com/VerKnowSys/sofin.git
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone https://github.com/VerKnowSys/sofin.git
+    cd ${SOFIN_REPO}
 else
     cd ${SOFIN_REPO}
-    git pull https://github.com/VerKnowSys/sofin.git
-    bin/install
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/sofin.git
 fi
-
+bin/install
 . /etc/sofin.conf.sh
+
 note "Sofin configuration loaded"
 
 note "Installing custom kernel"
@@ -134,6 +139,10 @@ cat ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
 
 note "Setting up core services"
 cp -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
+
+note "Setting up default ssl root certificates"
+mkdir -p /etc/ssl >> ${LOG} 2>&1
+cp -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/ >> ${LOG} 2>&1
 
 SNAP_DATE="$(date +%F_%H%M)"
 for snap in /Jails /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
