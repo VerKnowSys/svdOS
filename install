@@ -4,6 +4,7 @@ DEFAULT_ZPOOL="zroot"
 BASE="ServeD-OS-Base"
 LOG="/var/log/svd-install.log"
 SERVED_REPO="/var/ServeD-OS"
+SOFIN_REPO="/var/sofin"
 BASE_SOURCE="http://dmilith.verknowsys.com/Public/9.3"
 SYS_VERSION="$(uname -r | cut -d- -f1)"
 SYS_ARCH="$(uname -m)"
@@ -65,11 +66,11 @@ if [ "$?" != "0" ]; then
 fi
 
 note "Updating Sofin repository."
-if [ ! -d "/var/sofin" ]; then
+if [ ! -d "${SOFIN_REPO}" ]; then
     cd /var
     git clone https://github.com/VerKnowSys/sofin.git
 else
-    cd /var/sofin
+    cd ${SOFIN_REPO}
     git pull https://github.com/VerKnowSys/sofin.git
     bin/install
 fi

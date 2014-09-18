@@ -50,14 +50,14 @@ else
 fi
 
 note "Preparing Base snapshot: ${SNAPSHOT}"
-cp /VERSION "${SNAPSHOT_DIR}"
-cp -r /Software "${SNAPSHOT_DIR}"
-cp -r /var/ServeD-OS "${SNAPSHOT_DIR}/var"
-cp /etc/profile* "${SNAPSHOT_DIR}/etc"
+cp -v /VERSION "${SNAPSHOT_DIR}"
+cp -vr /Software "${SNAPSHOT_DIR}"
+cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
+cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
 cd "${SNAPSHOT_DIR}"
 
 note "Compiling Jails snapshot: ${SNAPSHOT_JAIL}"
-tar cfJ ../${SNAPSHOT_JAIL}.tar.xz /Jails
+tar vcfJ ../${SNAPSHOT_JAIL}.tar.xz /Jails
 if [ "$?" = "0" ]; then
     note "Compiled successfully."
 else
