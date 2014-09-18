@@ -64,6 +64,16 @@ if [ "$?" != "0" ]; then
     exit 1
 fi
 
+note "Updating Sofin repository."
+if [ ! -d "/var/sofin" ]; then
+    cd /var
+    git clone https://github.com/VerKnowSys/sofin.git
+else
+    cd /var/sofin
+    git pull https://github.com/VerKnowSys/sofin.git
+    bin/install
+fi
+
 . /etc/sofin.conf.sh
 note "Sofin configuration loaded"
 
@@ -84,6 +94,9 @@ if [ -d "/SystemUsers" ]; then
     cp -R /root/ /SystemUsers
     pw user mod root -d /SystemUsers >> ${LOG} 2>&1
 fi
+
+note "Installing additional Software"
+sofin get patchelf vifm qt thess bacula mc bind
 
 note "Installing igniters"
 /Software/Thess/exports/ignitersinstall >> ${LOG} 2>&1
