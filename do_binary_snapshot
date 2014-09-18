@@ -54,9 +54,6 @@ cp /VERSION "${SNAPSHOT_DIR}"
 cp -r /Software "${SNAPSHOT_DIR}"
 cp -r /var/ServeD-OS "${SNAPSHOT_DIR}/var"
 cp /etc/profile* "${SNAPSHOT_DIR}/etc"
-cp /etc/sofin.conf.sh "${SNAPSHOT_DIR}/etc"
-cp /usr/bin/sofin* "${SNAPSHOT_DIR}/usr/bin"
-
 cd "${SNAPSHOT_DIR}"
 
 note "Compiling Jails snapshot: ${SNAPSHOT_JAIL}"
