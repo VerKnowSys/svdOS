@@ -164,6 +164,10 @@ note "Cleaning shared memory state, semaphores and unnecessary directories"
 rm -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 ipcrm -W
 
+note "Performing additional system tweaks"
+test -x /usr/bin/gcc || ln -s /usr/bin/clang /usr/bin/gcc
+test -x /usr/bin/g++ || ln -s /usr/bin/clang++ /usr/bin/g++
+
 note "ServeD system installation complete!"
 note
 note "You must reboot to apply new kernel and system configuration."
