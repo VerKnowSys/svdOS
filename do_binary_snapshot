@@ -51,7 +51,7 @@ fi
 
 note "Preparing Base snapshot: ${SNAPSHOT}"
 cp -v /VERSION "${SNAPSHOT_DIR}"
-cp -vr /Software "${SNAPSHOT_DIR}"
+cp -Rv /Software "${SNAPSHOT_DIR}"
 cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
 cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
 cd "${SNAPSHOT_DIR}"
