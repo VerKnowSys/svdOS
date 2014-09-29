@@ -1,6 +1,12 @@
 
 ## CHANGELOG
 
+* v0.4.8
+    - No more kernel in binbuild package.
+    - Removed Patchelf from requirements.
+    - Updated Zsh to version 5.0.6
+    - Fixed issue with followed symlinks copied to exports/
+
 * v0.4.7
     - Updated Sofin to v0.66.0
     - Support for both 9.3 and 10.0 hosts
