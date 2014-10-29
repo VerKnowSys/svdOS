@@ -1,8 +1,18 @@
-#!/bin/sh
+#!/Software/Zsh/exports/zsh
 
-unset CC CXX CFLAGS CXXFLAGS LDFLAGS MANPAGES
+unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
 
-readonly VERSION=(10.0 9.3)
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Subversion/exports
+
+env
+
+printf "Accept env?\n"
+read ok
+
+set -e
+
+readonly PARALLEL_JOBS="8"
+readonly ARCH="$(uname -m)"
 readonly SHARED_DIR="/Jails/Shared"
 readonly CONF_FILE="/etc/sofin.conf.sh"
 if [ -e "${CONF_FILE}" ]; then
@@ -13,20 +23,33 @@ else
     exit 1
 fi
 
-
-for version in ${VERSION}; do
+for version in 10.0; do
     note "Processing version: ${version}"
     cd /usr
-    if [ -d "${version}-src" ]; then
+    if [ ! -d "${version}-src" ]; then
         svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
+        cd ${version}-src
     else
-        cd ${VERSION}-src
+        cd ${version}-src
         svn up
     fi
-    mkdir -p ${SHARED_DIR}/FreeBSD-${version}-amd64
-    make buildworld -j4 DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
-    make buildkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
-    make installkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
-    make installworld DESTDIR=${SHARED_DIR}/FreeBSD-${version}-amd64
-    rm -rf ${DESTDIR}/{media,mnt,proc,root,sys,etc,dev,rescue}
+    # find ${SHARED_DIR}/FreeBSD-*-${ARCH} -exec chflags -R noschg {} \;
+    note "Removing old Jail build for ${version}"
+    rm -rf ${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    note "Preparing new Jail builds"
+    mkdir -p ${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    note "Preparing kernel configuration"
+    rm -f /usr/${version}-src/sys/${ARCH}/conf/VERKNOWSYS
+    cp /var/ServeD-OS/kernel/VERKNOWSYS-${version} /usr/${version}-src/sys/${ARCH}/conf/VERKNOWSYS
+    note "Building world"
+    make clean
+    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    note "Building kernel"
+    make buildkernel DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    note "Installing kernel"
+    make installkernel DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    note "Installing world"
+    make installworld DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    note "Cleaning up"
+    rm -rf ${SHARED_DIR}/FreeBSD-${version}-${ARCH}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp}
 done
