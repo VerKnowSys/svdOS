@@ -1,6 +1,11 @@
 
 ## CHANGELOG
 
+* v0.4.9
+    - More specialized make.conf
+    - Improved build-jail-base script.
+    - Even less default dependencies in base
+
 * v0.4.8
     - No more kernel in binbuild package.
     - Removed Patchelf from requirements.
