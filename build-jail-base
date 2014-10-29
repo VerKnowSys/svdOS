@@ -4,17 +4,13 @@ unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
 
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Subversion/exports
 
-env
-
-printf "Accept env?\n"
-read ok
-
 set -e
 
 readonly PARALLEL_JOBS="8"
 readonly ARCH="$(uname -m)"
 readonly SHARED_DIR="/Jails/Shared"
 readonly CONF_FILE="/etc/sofin.conf.sh"
+readonly LOG_OUTPUT="/var/log/build-$(date +%F).log"
 if [ -e "${CONF_FILE}" ]; then
     . "${CONF_FILE}"
     validate_env
@@ -24,6 +20,8 @@ else
 fi
 
 for version in 10.0; do
+    echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
+    note "Process started for version: ${version}: $(date +%F@%H-%M)"
     note "Processing version: ${version}"
     cd /usr
     if [ ! -d "${version}-src" ]; then
@@ -35,21 +33,23 @@ for version in 10.0; do
     fi
     # find ${SHARED_DIR}/FreeBSD-*-${ARCH} -exec chflags -R noschg {} \;
     note "Removing old Jail build for ${version}"
-    rm -rf ${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    rm -rfv ${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}
     note "Preparing new Jail builds"
-    mkdir -p ${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    mkdir -p ${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}
     note "Preparing kernel configuration"
-    rm -f /usr/${version}-src/sys/${ARCH}/conf/VERKNOWSYS
-    cp /var/ServeD-OS/kernel/VERKNOWSYS-${version} /usr/${version}-src/sys/${ARCH}/conf/VERKNOWSYS
+    rm -fv /usr/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /usr/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
     note "Building world"
-    make clean
-    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    make clean >> ${LOG_OUTPUT}
+    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
     note "Building kernel"
-    make buildkernel DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    make buildkernel DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT} 2>&1
     note "Installing kernel"
-    make installkernel DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    make installkernel DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
     note "Installing world"
-    make installworld DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH}
+    make installworld DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
     note "Cleaning up"
-    rm -rf ${SHARED_DIR}/FreeBSD-${version}-${ARCH}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp}
+    rm -vrf ${SHARED_DIR}/FreeBSD-${version}-${ARCH}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
+    echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
+    note "Process finished: $(date +%F@%H-%M)"
 done
