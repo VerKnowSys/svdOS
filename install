@@ -5,7 +5,7 @@ BASE="ServeD-OS-Base"
 LOG="/var/log/svd-install.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
-BASE_SOURCE="http://dmilith.verknowsys.com/Public/9.3"
+BASE_SOURCE="http://dmilith.verknowsys.com/Public/ServeD"
 SYS_VERSION="$(uname -r | cut -d- -f1)"
 SYS_ARCH="$(uname -m)"
 if [ "${VERSION}" = "" ]; then
@@ -102,7 +102,7 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get patchelf vifm qt thess bacula mc bind
+sofin get vifm qt thess bacula mc bind
 
 note "Installing igniters"
 /Software/Thess/exports/ignitersinstall >> ${LOG} 2>&1

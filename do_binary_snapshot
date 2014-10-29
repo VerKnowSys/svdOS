@@ -24,7 +24,7 @@ fi
 SNAPSHOT="${NAME}-${VERSION}"
 SNAPSHOT_JAIL="${NAME}-Jails-${VERSION}"
 SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
-DESTINATION="dmilith@verknowsys.com:/home/dmilith/Web/Public/9.3/"
+DESTINATION="dmilith@verknowsys.com:/home/dmilith/Web/Public/ServeD/"
 
 test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
 mkdir "${SNAPSHOT_DIR}"
