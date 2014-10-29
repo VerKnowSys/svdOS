@@ -27,7 +27,7 @@ SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
 DESTINATION="dmilith@verknowsys.com:/home/dmilith/Web/Public/ServeD/"
 
 test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
-mkdir "${SNAPSHOT_DIR}"
+mkdir -p "${SNAPSHOT_DIR}"
 
 DIRS=(boot etc usr usr/bin usr/lib usr/include var)
 for dir in ${DIRS}; do
