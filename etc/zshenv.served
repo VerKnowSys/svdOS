@@ -106,6 +106,12 @@ alias pstree='pstree -g 3'
 alias wget='fetch'
 alias bconsole='/Software/Bacula/exports/bconsole -c /etc/bacula/bconsole.conf'
 
+bindkey "^b" backward-word
+bindkey "^n" forward-word
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+bindkey '^R' history-incremental-search-backward
+
 ulimit -c 0
 
 if [ "$(/usr/bin/id -u)" = "0" ]; then
