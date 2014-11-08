@@ -1,6 +1,10 @@
 
 ## CHANGELOG
 
+* v0.4.10
+    - Added Gcc to base
+    - More minor updates
+
 * v0.4.9
     - More specialized make.conf
     - Improved build-jail-base script.
