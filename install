@@ -102,7 +102,7 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get atop pstree vim tmux vifm pkgconf qtws53 thess bacula mc bind subversion mercurial openvpn openssl
+sofin get ezjail atop pstree vim tmux vifm pkgconf qtws53 thess bacula mc bind subversion mercurial openvpn openssl gcc syslog-ng
 
 note "Installing igniters"
 /Software/Thess/exports/ignitersinstall >> ${LOG} 2>&1
@@ -165,8 +165,8 @@ rm -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 ipcrm -W
 
 note "Performing additional system tweaks"
-test -x /usr/bin/gcc || ln -s /usr/bin/clang /usr/bin/gcc
-test -x /usr/bin/g++ || ln -s /usr/bin/clang++ /usr/bin/g++
+test -x /usr/bin/gcc || ln -s /Software/Gcc/exports/gcc /usr/bin/gcc
+test -x /usr/bin/g++ || ln -s /Software/Gcc/exports/g++ /usr/bin/g++
 
 note "ServeD system installation complete!"
 note
