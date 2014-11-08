@@ -26,68 +26,92 @@ SNAPSHOT_JAIL="${NAME}-Jails-${VERSION}"
 SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
 DESTINATION="dmilith@verknowsys.com:/home/dmilith/Web/Public/ServeD/"
 
-test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
-mkdir -p "${SNAPSHOT_DIR}"
 
-DIRS=(boot etc usr usr/bin usr/lib usr/include var)
-for dir in ${DIRS}; do
-    if [ ! -d "${SNAPSHOT_DIR}/${dir}" ]; then
-        note "Creating destination dir: ${dir}"
-        mkdir -p "${SNAPSHOT_DIR}/${dir}"
+compile_jails () {
+    note "Compiling Jails snapshot: ${SNAPSHOT_JAIL}"
+    tar vcfJ ../${SNAPSHOT_JAIL}.tar.xz /Jails
+    if [ "$?" = "0" ]; then
+        note "Compiled successfully."
+    else
+        error "Something went wrong while compiling Jails Base."
+        exit 1
     fi
-done
 
-note "Cleaning before snapshot"
-rm -rf /root/.cache /root/.ccache /root/.npm
+    note "Uploading Jails snapshot"
+    scp ../${SNAPSHOT_JAIL}.tar.xz ${DESTINATION}
+    if [ "$?" = "0" ]; then
+        note "Finished successfully."
+    else
+        error "Something went wrong while uploading Jails base."
+        exit 1
+    fi
+}
 
-note "Updating ServeD-OS repository."
-if [ ! -d "/var/ServeD-OS" ]; then
-    cd /var
-    git clone https://github.com/VerKnowSys/ServeD-OS.git
-else
-    cd /var/ServeD-OS
-    git pull https://github.com/VerKnowSys/ServeD-OS.git
-fi
 
-note "Preparing Base snapshot: ${SNAPSHOT}"
-cp -v /VERSION "${SNAPSHOT_DIR}"
-cp -Rv /Software "${SNAPSHOT_DIR}"
-cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
-cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
-cd "${SNAPSHOT_DIR}"
+compile_snapshot () {
+    test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
+    mkdir -p "${SNAPSHOT_DIR}"
 
-note "Compiling Jails snapshot: ${SNAPSHOT_JAIL}"
-tar vcfJ ../${SNAPSHOT_JAIL}.tar.xz /Jails
-if [ "$?" = "0" ]; then
-    note "Compiled successfully."
-else
-    error "Something went wrong while compiling Jails Base."
-    exit 1
-fi
+    DIRS=(boot etc usr usr/bin usr/lib usr/include var)
+    for dir in ${DIRS}; do
+        if [ ! -d "${SNAPSHOT_DIR}/${dir}" ]; then
+            note "Creating destination dir: ${dir}"
+            mkdir -p "${SNAPSHOT_DIR}/${dir}"
+        fi
+    done
 
-note "Compiling Base snapshot: ${SNAPSHOT}"
-tar cfJ ../${SNAPSHOT}.tar.xz ./
-if [ "$?" = "0" ]; then
-    note "Compiled successfully."
-else
-    error "Something went wrong while compiling Base."
-    exit 1
-fi
+    note "Cleaning before snapshot"
+    rm -rf /root/.cache /root/.ccache /root/.npm
 
-note "Uploading Base snapshot"
-scp ../${SNAPSHOT}.tar.xz ${DESTINATION}
-if [ "$?" = "0" ]; then
-    note "Finished successfully."
-else
-    error "Something went wrong while uploading Base snapshot."
-    exit 1
-fi
+    note "Updating ServeD-OS repository."
+    if [ ! -d "/var/ServeD-OS" ]; then
+        cd /var
+        git clone https://github.com/VerKnowSys/ServeD-OS.git
+    else
+        cd /var/ServeD-OS
+        git pull https://github.com/VerKnowSys/ServeD-OS.git
+    fi
 
-note "Uploading Jails snapshot"
-scp ../${SNAPSHOT_JAIL}.tar.xz ${DESTINATION}
-if [ "$?" = "0" ]; then
-    note "Finished successfully."
-else
-    error "Something went wrong while uploading Jails base."
-    exit 1
-fi
+    note "Preparing Base snapshot: ${SNAPSHOT}"
+    cp -v /VERSION "${SNAPSHOT_DIR}"
+    cp -Rv /Software "${SNAPSHOT_DIR}"
+    cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
+    cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
+    cd "${SNAPSHOT_DIR}"
+
+    note "Compiling Base snapshot: ${SNAPSHOT}"
+    tar cfJ ../${SNAPSHOT}.tar.xz ./
+    if [ "$?" = "0" ]; then
+        note "Compiled successfully."
+    else
+        error "Something went wrong while compiling Base."
+        exit 1
+    fi
+
+    note "Uploading Base snapshot"
+    scp ../${SNAPSHOT}.tar.xz ${DESTINATION}
+    if [ "$?" = "0" ]; then
+        note "Finished successfully."
+    else
+        error "Something went wrong while uploading Base snapshot."
+        exit 1
+    fi
+}
+
+
+case "${1}" in
+
+    JAILS)
+        compile_jails
+        ;;
+
+    SNAPSHOT)
+        compile_snapshot
+        ;;
+
+    *)
+        compile_snapshot
+        compile_jails
+        ;;
+
+esac
