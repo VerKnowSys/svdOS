@@ -104,7 +104,7 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get atop pstree vim tmux vifm pkgconf qtws53 bacula mc bind subversion mercurial openvpn openssl gcc syslog-ng thess
+sofin get atop pstree vim tmux vifm pkgconf qtws53 bacula mc bind subversion mercurial openvpn openssl gcc syslog-ng thess-devel
 
 note "Installing igniters"
 /Software/Thess/exports/ignitersinstall >> ${LOG} 2>&1
