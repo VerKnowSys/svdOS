@@ -99,7 +99,7 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get atop pstree vim tmux vifm pkgconf qtws53 bacula mc bind subversion mercurial openvpn openssl gcc syslog-ng thess-devel
+sofin get atop pstree vim tmux vifm pkgconf qtws53 bacula mc bind subversion mercurial openvpn openssl gcc syslog-ng thess
 
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
