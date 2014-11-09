@@ -101,9 +101,6 @@ fi
 note "Installing additional Software"
 sofin get atop pstree vim tmux vifm pkgconf qtws53 bacula mc bind subversion mercurial openvpn openssl gcc syslog-ng thess-devel
 
-note "Installing igniters"
-/Software/Thess/exports/ignitersinstall >> ${LOG} 2>&1
-
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
     cp -Rv usr/ /usr/ >> ${LOG} 2>&1
@@ -122,7 +119,7 @@ note "Setting up mime types"
 cp -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
 
 note "Setting up login"
-cp -v ${SERVED_REPO}/etc/login.served /etc/login.conf >> ${LOG} 2>&1
+cp -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
 cap_mkdb /etc/login.conf >> ${LOG} 2>&1
 
 note "Setting up sysctl"
