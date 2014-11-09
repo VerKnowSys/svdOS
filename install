@@ -83,13 +83,8 @@ fi
 bin/install
 . /etc/sofin.conf.sh
 
-note "Sofin configuration loaded"
-
 note "Installing custom kernel"
-mv /boot/kernel /boot/kernel.generic-$(date +%F)
-
-note "Installing kernel for FreeBSD ${SYS_VERSION}"
-cp -vr /Jails/Shared/FreeBSD-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/kernel >> ${LOG} 2>&1
+cp -vr /Jails/Shared/FreeBSD-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
     note "Setting up ZSH shell"

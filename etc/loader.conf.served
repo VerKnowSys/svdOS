@@ -1,4 +1,5 @@
 # 2014-09-02 09:24:48 - dmilith:
+kernel="verknowsys"
 zfs_load="YES"
 autoboot_delay="1"
 aio_load="YES"
