@@ -136,7 +136,7 @@ cp -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
 
 note "Setting up default ssl root certificates"
 mkdir -p /etc/ssl >> ${LOG} 2>&1
-cp -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/ >> ${LOG} 2>&1
+cp -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
 
 SNAP_DATE="$(date +%F_%H%M)"
 for snap in /Jails /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
