@@ -21,30 +21,33 @@ VERSION="v0.4.dev"
 if [ -f "/VERSION" ]; then
     VERSION="$(cat /VERSION)"
 fi
+SYS_ARCH="$(uname -m)"
 SNAPSHOT="${NAME}-${VERSION}"
-SNAPSHOT_JAIL="${NAME}-Jails-${VERSION}"
 SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
 DESTINATION="dmilith@verknowsys.com:/home/dmilith/Web/Public/ServeD/"
 
 
 compile_jails () {
-    note "Compiling Jails snapshot: ${SNAPSHOT_JAIL}"
-    tar vcfJ ../${SNAPSHOT_JAIL}.tar.xz /Jails
-    if [ "$?" = "0" ]; then
-        note "Compiled successfully."
-    else
-        error "Something went wrong while compiling Jails Base."
-        exit 1
-    fi
+    for version in 10.1 9.3; do
+        SNAPSHOT_JAIL="${NAME}-Jail-${version}-${VERSION}"
+        note "Compiling Jail snapshot: ${SNAPSHOT_JAIL}"
+        tar vcfJ ../${SNAPSHOT_JAIL}.tar.xz /Jails/Shared/FreeBSD-${version}-${SYS_ARCH}
+        if [ "$?" = "0" ]; then
+            note "Compiled successfully."
+        else
+            error "Something went wrong while compiling Jail Base."
+            exit 1
+        fi
 
-    note "Uploading Jails snapshot"
-    scp ../${SNAPSHOT_JAIL}.tar.xz ${DESTINATION}
-    if [ "$?" = "0" ]; then
-        note "Finished successfully."
-    else
-        error "Something went wrong while uploading Jails base."
-        exit 1
-    fi
+        note "Uploading Jail snapshot: ${SNAPSHOT_JAIL}"
+        scp ../${SNAPSHOT_JAIL}.tar.xz ${DESTINATION}
+        if [ "$?" = "0" ]; then
+            note "Finished successfully."
+        else
+            error "Something went wrong while uploading Jails base."
+            exit 1
+        fi
+    done
 }
 
 
