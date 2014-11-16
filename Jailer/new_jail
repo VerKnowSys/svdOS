@@ -24,12 +24,13 @@ if [ ! -f "${DEFAULT_ETC_ARCHIVE}" ]; then
     error "etc archive: ${DEFAULT_ETC_ARCHIVE} wasn't found. Cannot continue"
 fi
 
-JAIL_NAME="${1}" # hostname?
+JAIL_HOSTNAME="${1}" # hostname?
 if [ "${1}" = "" ]; then
-    note "No jail name given"
+    note "No jail hostname given"
     usage
     exit 1
 fi
+JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 
 JAIL_ADDRESS="${2}"
 if [ "${2}" = "" ]; then
@@ -50,20 +51,16 @@ fi
 
 ping -c1 ${2} > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    error "Given IP address: ${2} must be available"
+    error "Given IP address: ${2} must be available on host machine"
 fi
 
 
-CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_NAME}"
-SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}"
+CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
+SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
 JAIL_ID_FILE="${SENTRY}/jail.id"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
 
-note "Creating dirs"
-${MKDIR_BIN} -p "${CELL}"
-${MKDIR_BIN} -p "${SENTRY}"
-
-${GREP_BIN} "${JAIL_NAME}" ${JAIL_CONFIGURATION_FILE} > /dev/null 2>&1
+${GREP_BIN} "${JAIL_HOSTNAME}" ${JAIL_CONFIGURATION_FILE} > /dev/null 2>&1
 if [ "$?" = "0" ]; then
     note "Jail configuration already in ${JAIL_CONFIGURATION_FILE}"
 else
@@ -71,7 +68,7 @@ else
     ${PRINTF_BIN} "
 ${JAIL_NAME} {
     name = \"${JAIL_NAME}\";
-    host.hostname = \"${JAIL_NAME}\";
+    host.hostname = \"${JAIL_HOSTNAME}\";
     ip4.addr = \"${JAIL_ADDRESS}\";
     interface = ${JAIL_INTERFACE};
     path = \"${CELL}\";
@@ -91,19 +88,17 @@ fi
 
 
 note "Copying jail directories"
-if [ -d "${CELL}" ]; then
-    error "Cell: ${CELL} already exists! Aborting"
-fi
 zfs create -o mountpoint=${CELL} zroot${CELL}
-${CP_BIN} -R ${JAIL_SOURCE} ${CELL}
+zfs create -o mountpoint=${SENTRY} zroot${SENTRY}
+${CP_BIN} -R ${JAIL_SOURCE}/ ${CELL}
 
 note "Making required jail directories"
 ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev
 
 note "Installing default etc for jail"
 ${TAR_BIN} xf ${DEFAULT_ETC_ARCHIVE} --directory ${CELL}
-${SED_BIN} -i "s:__JAIL_NAME:${JAIL_NAME}:" ${CELL}/etc/rc.conf
+${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_HOSTNAME}:" ${CELL}/etc/rc.conf
 
-note "Launching jail: ${JAIL_NAME}"
+note "Launching jail: ${JAIL_HOSTNAME}"
 ${JAIL_BIN} -qcmr -J ${JAIL_ID_FILE}
 
