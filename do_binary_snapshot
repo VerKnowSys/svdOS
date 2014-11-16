@@ -55,16 +55,13 @@ compile_snapshot () {
     test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
     mkdir -p "${SNAPSHOT_DIR}"
 
-    DIRS=(boot etc usr usr/bin usr/lib usr/include var)
+    DIRS=(etc var)
     for dir in ${DIRS}; do
         if [ ! -d "${SNAPSHOT_DIR}/${dir}" ]; then
             note "Creating destination dir: ${dir}"
             mkdir -p "${SNAPSHOT_DIR}/${dir}"
         fi
     done
-
-    note "Cleaning before snapshot"
-    rm -rf /root/.cache /root/.ccache /root/.npm
 
     note "Updating ServeD-OS repository."
     if [ ! -d "/var/ServeD-OS" ]; then
