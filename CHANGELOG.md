@@ -1,6 +1,11 @@
 
 ## CHANGELOG
 
+* v0.6.0
+    - Updated Zsh to 5.0.7
+    - Added support for 10.1
+    - Split jails base for 10.1 and 9.3
+
 * v0.4.10
     - Added Gcc to base
     - More minor updates
