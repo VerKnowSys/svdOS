@@ -1,6 +1,6 @@
 #
 # VERKNOWSYS -- kernel configuration file for FreeBSD/amd64
-# 2014-11-16 01:41:39
+# 2014-11-16 16:43:06
 
 makeoptions    DEBUG=-gdwarf-2     # Build kernel with gdb(1) debug symbols
 makeoptions    WITH_CTF=1      # Run ctfconvert(1) for DTrace support
@@ -14,6 +14,7 @@ options SHMMAX=68719476736
 options SEMMNU=4096
 options SEMMNS=8194
 options SEMMNI=4096
+options VIMAGE
 options RACCT
 options RCTL
 options TEKEN_UTF8
