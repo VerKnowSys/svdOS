@@ -19,6 +19,14 @@ else
     exit 1
 fi
 
+if [ ! -d "/var/ServeD-OS" ]; then
+    cd /var
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone https://github.com/VerKnowSys/ServeD-OS.git
+else
+    cd /var/ServeD-OS
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/ServeD-OS.git
+fi
+
 for version in 10.1 9.3; do
     echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
     note "Process started for version: ${version}: $(date +%F@%H-%M)"
