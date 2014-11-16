@@ -37,7 +37,6 @@ for mntpoint in /Jails /Users /Software /SystemUsers /SystemUsers/SoftwareData /
     zfs create -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
 done
 
-cd /
 mkdir -p /tmp/.cache >> ${LOG} 2>&1
 if [ ! -f "/tmp/.cache/${BASE}-${VERSION}.tar.xz" ]; then
     printf "Base archive wasn't downloaded yet\n"
@@ -47,25 +46,30 @@ if [ ! -f "/tmp/.cache/${BASE}-${VERSION}.tar.xz" ]; then
         exit 1
     fi
 fi
-if [ ! -f "/tmp/.cache/${BASE}-Jails-${VERSION}.tar.xz" ]; then
-    printf "Jails archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/${BASE}-Jails-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-Jails-${VERSION}.tar.xz
-    if [ "$?" != "0" ]; then
-        printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
-        exit 1
+
+for version in 10.1 9.3; do
+    if [ ! -f "/tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz" ]; then
+        printf "Jails archive wasn't downloaded yet\n"
+        fetch ${BASE_SOURCE}/${BASE}-Jail-${version}-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz
+        if [ "$?" != "0" ]; then
+            printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
+            exit 1
+        fi
     fi
-fi
+done
 
 printf "Installing ServeD-Base ${VERSION}\n"
-tar xf /tmp/.cache/${BASE}-${VERSION}.tar.xz
+tar xf /tmp/.cache/${BASE}-${VERSION}.tar.xz --directory /
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Binary snapshot is corrupted or something just went wrong with archive\n"
     exit 1
 fi
 
-printf "Installing Jails-Base ${VERSION}\n"
-tar xf /tmp/.cache/${BASE}-Jails-${VERSION}.tar.xz
+for version in 10.1 9.3; do
+    printf "Installing Jail-Base ${version}-${VERSION}\n"
+    tar xf /tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz --directory /
+done
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Jails snapshot is corrupted or something just went wrong with archive\n"
