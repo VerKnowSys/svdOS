@@ -58,6 +58,7 @@ fi
 CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
 JAIL_ID_FILE="${SENTRY}/jail.id"
+JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
 
 ${GREP_BIN} "${JAIL_HOSTNAME}" ${JAIL_CONFIGURATION_FILE} > /dev/null 2>&1
@@ -119,5 +120,5 @@ ${CP_BIN} -R /Software/Vim ${CELL}/Software
 ${CP_BIN} /etc/zshenv ${CELL}/etc
 
 note "Launching jail: ${JAIL_HOSTNAME}"
-${JAIL_BIN} -qcmr -J ${JAIL_ID_FILE} 2> /dev/null
+${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -qcmr -J ${JAIL_ID_FILE} 2> /dev/null
 
