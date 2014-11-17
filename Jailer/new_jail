@@ -2,7 +2,9 @@
 
 . /etc/sofin.conf.sh
 
-JAIL_BIN="/usr/sbin/jail" # XXX: added in new sofin
+# EXAMPLE USE:
+# export AA=10 && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./new_jail jail${AA}.my.tld 192.168.1.${AA}
+
 JAIL_CONFIGURATION_FILE="/etc/jail.conf"
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
