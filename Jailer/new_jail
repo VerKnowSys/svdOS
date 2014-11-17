@@ -9,7 +9,7 @@ DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_VERSION="10.1"
 DEFAULT_INTERFACE="em0"
-DEFAULT_ETC_ARCHIVE="etc-jail.tar.gz"
+DEFAULT_ETC_ARCHIVE="etc-jail.tar.xz"
 
 usage () {
     note "$0 jail-name.com IP-address fbsd-version net-interface"
