@@ -93,12 +93,31 @@ zfs create -o mountpoint=${SENTRY} zroot${SENTRY}
 ${CP_BIN} -R ${JAIL_SOURCE}/ ${CELL}
 
 note "Making required jail directories"
-${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev
+${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers
 
 note "Installing default etc for jail"
 ${TAR_BIN} xf ${DEFAULT_ETC_ARCHIVE} --directory ${CELL}
 ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_HOSTNAME}:" ${CELL}/etc/rc.conf
 
+note "Removing unnecessary directories"
+${RM_BIN} -rf ${CELL}/boot
+
+note "Installing Sofin"
+if [ -d "/tmp/sofin" ]; then
+    cd /tmp/sofin
+    ${GIT_BIN} reset --hard
+    ${GIT_BIN} pull https://github.com/VerKnowSys/sofin.git
+else
+    cd /tmp
+    ${GIT_BIN} clone https://github.com/VerKnowSys/sofin.git
+    cd sofin
+fi
+PREFIX=${CELL} bin/install
+${CP_BIN} -R /Software/Git ${CELL}/Software
+${CP_BIN} -R /Software/Zsh ${CELL}/Software
+${CP_BIN} -R /Software/Vim ${CELL}/Software
+${CP_BIN} /etc/zshenv ${CELL}/etc
+
 note "Launching jail: ${JAIL_HOSTNAME}"
-${JAIL_BIN} -qcmr -J ${JAIL_ID_FILE}
+${JAIL_BIN} -qcmr -J ${JAIL_ID_FILE} 2> /dev/null
 
