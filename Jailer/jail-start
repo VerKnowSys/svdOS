@@ -1,0 +1,42 @@
+#!/bin/sh
+
+. /etc/sofin.conf.sh
+
+MOUNT_NULLFS="/sbin/mount_nullfs"
+
+
+usage () {
+    note "$0 jail.tld.com"
+}
+
+note "Performing sanity checks"
+
+DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
+DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
+DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
+
+JAIL_HOSTNAME="${1}" # hostname?
+if [ "${1}" = "" ]; then
+    note "No jail to stop"
+    usage
+    exit 1
+fi
+JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
+
+CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
+SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
+JAIL_ID_FILE="${SENTRY}/jail.id"
+JAIL_CONF_FILE="${SENTRY}/jail.conf"
+JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
+JAIL_VERSION_FILE="${SENTRY}/jail.os.version"
+JAIL_VERSION="$(cat ${JAIL_VERSION_FILE})"
+JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
+
+note "Mounting jail directories for system version: ${JAIL_VERSION}"
+for dir in bin lib libexec sbin usr; do
+    ${MKDIR_BIN} -p "${CELL}/${dir}"
+    ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}"
+done
+
+note "Starting jail: ${JAIL_HOSTNAME}"
+${JAIL_BIN} -c ${JAIL_NAME} -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE}

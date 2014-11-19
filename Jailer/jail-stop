@@ -1,0 +1,35 @@
+#!/bin/sh
+
+. /etc/sofin.conf.sh
+
+
+DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
+DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
+UMOUNT_BIN="/sbin/umount"
+
+
+usage () {
+    note "$0 jail.tld.com"
+}
+
+note "Performing sanity checks"
+
+JAIL_HOSTNAME="${1}" # hostname?
+if [ "${1}" = "" ]; then
+    note "No jail to stop"
+    usage
+    exit 1
+fi
+JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
+CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
+SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
+JAIL_CONF_FILE="${SENTRY}/jail.conf"
+JAIL_ID_FILE="${SENTRY}/jail.id"
+
+note "Terminating jail: ${JAIL_HOSTNAME}"
+${JAIL_BIN} -r "${JAIL_NAME}" -J "${JAIL_ID_FILE}" -f "${JAIL_CONF_FILE}"
+
+note "Unmounting jail directories"
+for dir in dev bin lib libexec sbin usr; do
+    ${UMOUNT_BIN} "${CELL}/${dir}"
+done
