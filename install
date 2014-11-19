@@ -180,6 +180,12 @@ note "Performing additional system tweaks"
 test -x /usr/bin/gcc || ln -s /Software/Gcc/exports/gcc /usr/bin/gcc
 test -x /usr/bin/g++ || ln -s /Software/Gcc/exports/g++ /usr/bin/g++
 
+note "Installing jail-utils to host system"
+install ${SERVED_REPO}/jail-utils/jail-create /usr/bin
+install ${SERVED_REPO}/jail-utils/jail-login /usr/bin
+install ${SERVED_REPO}/jail-utils/jail-start /usr/bin
+install ${SERVED_REPO}/jail-utils/jail-stop /usr/bin
+
 note "ServeD system installation complete!"
 note
 note "You must reboot to apply new kernel and system configuration."
