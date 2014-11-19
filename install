@@ -174,7 +174,6 @@ test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/Softw
 printf "ServeD OS ${VERSION}" > /etc/motd
 note "Cleaning shared memory state, semaphores and unnecessary directories"
 rm -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
-ipcrm -W
 
 note "Performing additional system tweaks"
 test -x /usr/bin/gcc || ln -s /Software/Gcc/exports/gcc /usr/bin/gcc
