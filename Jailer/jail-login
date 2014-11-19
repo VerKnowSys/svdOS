@@ -1,0 +1,21 @@
+#!/bin/sh
+
+. /etc/sofin.conf.sh
+
+
+usage () {
+    note "$0 jail.tld.com"
+}
+
+note "Performing sanity checks"
+
+JAIL_HOSTNAME="${1}" # hostname?
+if [ "${1}" = "" ]; then
+    note "No jail to enter"
+    usage
+    exit 1
+fi
+JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
+
+note "Logging into jail: ${JAIL_HOSTNAME}"
+${JEXEC_BIN} ${JAIL_NAME} login -f root
