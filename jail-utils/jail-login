@@ -11,9 +11,8 @@ note "Performing sanity checks"
 
 JAIL_HOSTNAME="${1}" # hostname?
 if [ "${1}" = "" ]; then
-    note "No jail to enter"
     usage
-    exit 1
+    error "No jail to enter"
 fi
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 
