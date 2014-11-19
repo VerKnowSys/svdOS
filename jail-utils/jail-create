@@ -3,10 +3,10 @@
 . /etc/sofin.conf.sh
 
 # EXAMPLE USE:
-# export AA=10 && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./jail-create jail${AA}.my.tld 192.168.1.${AA}
+# export AA=10 && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && jail-create jail${AA}.my.tld 192.168.1.${AA}
 #
 # testing routine:
-# for i in $(seq 100 250); do AA=$i && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./jail-create jail${AA}.my.tld 192.168.1.${AA}; done
+# for i in $(seq 100 250); do AA=$i && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && jail-create jail${AA}.my.tld 192.168.1.${AA}; done
 
 MOUNT_BIN="/sbin/mount"
 MOUNT_NULLFS="/sbin/mount_nullfs"
