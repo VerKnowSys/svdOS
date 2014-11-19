@@ -3,10 +3,13 @@
 . /etc/sofin.conf.sh
 
 # EXAMPLE USE:
-# export AA=10 && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./new_jail jail${AA}.my.tld 192.168.1.${AA}
+# export AA=10 && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./jail-create jail${AA}.my.tld 192.168.1.${AA}
 #
 # testing routine:
-# for i in $(seq 100 250); do AA=$i && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./new_jail jail${AA}.my.tld 192.168.1.${AA}; done
+# for i in $(seq 100 250); do AA=$i && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./jail-create jail${AA}.my.tld 192.168.1.${AA}; done
+
+MOUNT_BIN="/sbin/mount"
+MOUNT_NULLFS="/sbin/mount_nullfs"
 
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
@@ -63,12 +66,17 @@ fi
 CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
 JAIL_ID_FILE="${SENTRY}/jail.id"
-JAIL_CONF_FILE="/etc/jail.conf"
+JAIL_CONF_FILE="${SENTRY}/jail.conf"
 JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
+JAIL_VERSION_FILE="${SENTRY}/jail.os.version"
 
-${GREP_BIN} "${JAIL_HOSTNAME}" ${JAIL_CONF_FILE} > /dev/null 2>&1
-if [ "$?" = "0" ]; then
+
+note "Creating ZFS dataset"
+zfs create -o mountpoint=${CELL} zroot${CELL}
+zfs create -o mountpoint=${SENTRY} zroot${SENTRY}
+
+if [ -f "${JAIL_CONF_FILE}" ]; then
     note "Jail configuration already in ${JAIL_CONF_FILE}"
 else
     note "Generating jail configuration"
@@ -93,11 +101,16 @@ ${JAIL_NAME} {
 " >> ${JAIL_CONF_FILE}
 fi
 
+note "Mounting jail directories"
+for dir in bin lib libexec sbin usr; do
+    ${MKDIR_BIN} -p "${CELL}/${dir}"
+    ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}"
+done
 
-note "Copying jail directories"
-zfs create -o mountpoint=${CELL} zroot${CELL}
-zfs create -o mountpoint=${SENTRY} zroot${SENTRY}
-${CP_BIN} -R ${JAIL_SOURCE}/ ${CELL}
+note "Copying volatile part of jail"
+${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
+${CP_BIN} -R ${JAIL_SOURCE}/etc ${CELL}
+${CP_BIN} -R ${JAIL_SOURCE}/var ${CELL}
 
 note "Making required jail directories and user dir"
 ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh
@@ -110,7 +123,7 @@ ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_HOSTNAME}:" ${CELL}/etc/rc.conf
 note "Removing unnecessary directories"
 ${RM_BIN} -rf ${CELL}/boot ${CELL}/mnt ${CELL}/media ${CELL}/rescue ${CELL}/root ${CELL}/proc
 
-note "Installing Sofin"
+note "Installing current version of Sofin"
 if [ -d "/tmp/sofin" ]; then
     cd /tmp/sofin
     ${GIT_BIN} reset --hard
@@ -120,7 +133,8 @@ else
     ${GIT_BIN} clone https://github.com/VerKnowSys/sofin.git
     cd sofin
 fi
-PREFIX=${CELL} bin/install
+PREFIX=${JAIL_SOURCE} bin/install
+
 ${CP_BIN} -R /Software/Git ${CELL}/Software
 ${CP_BIN} -R /Software/Zsh ${CELL}/Software
 ${CP_BIN} -R /Software/Vim ${CELL}/Software
