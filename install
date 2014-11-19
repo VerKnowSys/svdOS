@@ -2,6 +2,7 @@
 
 set -e
 
+DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_ZPOOL="zroot"
 BASE="ServeD-OS-Base"
 LOG="/var/log/svd-install.log"
@@ -10,6 +11,7 @@ SOFIN_REPO="/var/sofin"
 BASE_SOURCE="http://dmilith.verknowsys.com/Public/ServeD"
 SYS_VERSION="$(uname -r | cut -d- -f1)"
 SYS_ARCH="$(uname -m)"
+VERSIONS="9.3 10.1"
 if [ "${VERSION}" = "" ]; then
     VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
     printf "No version specified. Picking last version: ${VERSION}\n"
@@ -33,8 +35,10 @@ done
 
 # create zvols for special snappable dirs
 for mntpoint in /Jails /Jails/Prison /Jails/Prison/Cells /Jails/Prison/Sentry /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
-    printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
-    zfs create -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
+    if [ ! -d "${mntpoint}" ]; then
+        printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
+        zfs create -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
+    fi
 done
 
 mkdir -p /tmp/.cache >> ${LOG} 2>&1
@@ -47,7 +51,7 @@ if [ ! -f "/tmp/.cache/${BASE}-${VERSION}.tar.xz" ]; then
     fi
 fi
 
-for version in 10.1 9.3; do
+for version in ${VERSIONS}; do
     if [ ! -f "/tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz" ]; then
         printf "Jails archive wasn't downloaded yet\n"
         fetch ${BASE_SOURCE}/${BASE}-Jail-${version}-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz
@@ -66,7 +70,7 @@ if [ "$?" != "0" ]; then
     exit 1
 fi
 
-for version in 10.1 9.3; do
+for version in ${VERSIONS}; do
     printf "Installing Jail-Base ${version}-${VERSION}\n"
     tar xf /tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz --directory /
 done
@@ -84,11 +88,19 @@ else
     cd ${SOFIN_REPO}
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/sofin.git
 fi
+
+printf "Installing Sofin\n"
 bin/install
 . /etc/sofin.conf.sh
+for version in ${VERSIONS}; do
+    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${version}-${SYSTEM_ARCH}"
+    PREFIX="${JAIL_SOURCE}" bin/install
+done
 
 note "Installing custom kernel"
-cp -vr /Jails/Shared/FreeBSD-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
+if [ ! -d "/boot/verknowsys" ]; then
+    cp -vr /Jails/Shared/FreeBSD-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
+fi
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
     note "Setting up ZSH shell"
@@ -98,7 +110,9 @@ fi
 
 if [ -d "/SystemUsers" ]; then
     note "Setting up new root home dir: /SystemUsers"
-    cp -R /root/ /SystemUsers
+    if [ -d "/root" ]; then
+        cp -R /root/ /SystemUsers
+    fi
     pw user mod root -d /SystemUsers >> ${LOG} 2>&1
 fi
 
