@@ -25,11 +25,12 @@ CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
 JAIL_CONF_FILE="${SENTRY}/jail.conf"
 JAIL_ID_FILE="${SENTRY}/jail.id"
+JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 
 note "Terminating jail: ${JAIL_HOSTNAME}"
-${JAIL_BIN} -r "${JAIL_NAME}" -J "${JAIL_ID_FILE}" -f "${JAIL_CONF_FILE}"
+${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -r "${JAIL_NAME}"
 
 note "Unmounting jail directories"
 for dir in dev bin lib libexec sbin usr; do
-    ${UMOUNT_BIN} "${CELL}/${dir}"
+    ${UMOUNT_BIN} "${CELL}/${dir}" 2>/dev/null
 done

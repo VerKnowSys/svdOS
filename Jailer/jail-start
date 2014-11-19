@@ -31,12 +31,13 @@ JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 JAIL_VERSION_FILE="${SENTRY}/jail.os.version"
 JAIL_VERSION="$(cat ${JAIL_VERSION_FILE})"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
+JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 
 note "Mounting jail directories for system version: ${JAIL_VERSION}"
 for dir in bin lib libexec sbin usr; do
     ${MKDIR_BIN} -p "${CELL}/${dir}"
-    ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}"
+    ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> /dev/null
 done
 
 note "Starting jail: ${JAIL_HOSTNAME}"
-${JAIL_BIN} -c ${JAIL_NAME} -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE}
+${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE}
