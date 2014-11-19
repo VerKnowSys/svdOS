@@ -21,7 +21,7 @@ DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
 DEFAULT_WORKER_UID="501"
 
 usage () {
-    note "$0 jail-name.com IP-address fbsd-version net-interface"
+    note "Usage: $(${BASENAME_BIN} $0) jail-name.com IP-address fbsd-version net-interface"
     note "fbsd-version -> by default 10.1"
     note "net-interface -> by default em0"
 }
@@ -35,9 +35,8 @@ fi
 
 JAIL_HOSTNAME="${1}" # hostname?
 if [ "${1}" = "" ]; then
-    note "No jail hostname given"
     usage
-    exit 1
+    error "No jail hostname given"
 fi
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 
@@ -78,7 +77,7 @@ zfs create -o mountpoint=${CELL} zroot${CELL}
 zfs create -o mountpoint=${SENTRY} zroot${SENTRY}
 
 if [ -f "${JAIL_CONF_FILE}" ]; then
-    note "Jail configuration already in ${JAIL_CONF_FILE}"
+    warn "Jail configuration already in ${JAIL_CONF_FILE}"
 else
     note "Generating jail configuration"
     ${PRINTF_BIN} "

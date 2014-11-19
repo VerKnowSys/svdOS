@@ -4,7 +4,7 @@
 
 
 usage () {
-    note "$0 jail.tld.com"
+    note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
 }
 
 note "Performing sanity checks"

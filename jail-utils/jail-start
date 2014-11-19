@@ -6,7 +6,7 @@ MOUNT_NULLFS="/sbin/mount_nullfs"
 
 
 usage () {
-    note "$0 jail.tld.com"
+    note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
 }
 
 note "Performing sanity checks"
@@ -17,9 +17,8 @@ DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 
 JAIL_HOSTNAME="${1}" # hostname?
 if [ "${1}" = "" ]; then
-    note "No jail to stop"
     usage
-    exit 1
+    error "No jail to stop"
 fi
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 
