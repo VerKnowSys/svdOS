@@ -1,6 +1,12 @@
 
 ## CHANGELOG
 
+* v0.6.1
+    - Automatic installation of Sofin for all subsystems.
+    - Improved install - done handling retries
+    - Added jail-utils to base system.
+    - Updated etc-jail.tar.xz (added standard worker user, improved PAM contents, fixed login)
+
 * v0.6.0
     - Updated Zsh to 5.0.7
     - Added support for 10.1
