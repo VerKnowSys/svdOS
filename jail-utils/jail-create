@@ -11,12 +11,13 @@
 MOUNT_BIN="/sbin/mount"
 MOUNT_NULLFS="/sbin/mount_nullfs"
 
+SERVED_REPO="/var/ServeD-OS"
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_VERSION="10.1"
 DEFAULT_INTERFACE="em0"
-DEFAULT_ETC_ARCHIVE="etc-jail.tar.xz"
+DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
 DEFAULT_WORKER_UID="501"
 
 usage () {
