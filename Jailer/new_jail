@@ -4,14 +4,17 @@
 
 # EXAMPLE USE:
 # export AA=10 && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./new_jail jail${AA}.my.tld 192.168.1.${AA}
+#
+# testing routine:
+# for i in $(seq 100 250); do AA=$i && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && ./new_jail jail${AA}.my.tld 192.168.1.${AA}; done
 
-JAIL_CONFIGURATION_FILE="/etc/jail.conf"
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_VERSION="10.1"
 DEFAULT_INTERFACE="em0"
 DEFAULT_ETC_ARCHIVE="etc-jail.tar.xz"
+DEFAULT_WORKER_UID="501"
 
 usage () {
     note "$0 jail-name.com IP-address fbsd-version net-interface"
@@ -60,12 +63,13 @@ fi
 CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
 JAIL_ID_FILE="${SENTRY}/jail.id"
+JAIL_CONF_FILE="/etc/jail.conf"
 JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
 
-${GREP_BIN} "${JAIL_HOSTNAME}" ${JAIL_CONFIGURATION_FILE} > /dev/null 2>&1
+${GREP_BIN} "${JAIL_HOSTNAME}" ${JAIL_CONF_FILE} > /dev/null 2>&1
 if [ "$?" = "0" ]; then
-    note "Jail configuration already in ${JAIL_CONFIGURATION_FILE}"
+    note "Jail configuration already in ${JAIL_CONF_FILE}"
 else
     note "Generating jail configuration"
     ${PRINTF_BIN} "
@@ -86,7 +90,7 @@ ${JAIL_NAME} {
     mount.devfs;
     persist;
 }
-" >> ${JAIL_CONFIGURATION_FILE}
+" >> ${JAIL_CONF_FILE}
 fi
 
 
@@ -95,15 +99,16 @@ zfs create -o mountpoint=${CELL} zroot${CELL}
 zfs create -o mountpoint=${SENTRY} zroot${SENTRY}
 ${CP_BIN} -R ${JAIL_SOURCE}/ ${CELL}
 
-note "Making required jail directories"
-${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers
+note "Making required jail directories and user dir"
+${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh
+${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Software ${CELL}/SystemUsers
 
 note "Installing default etc for jail"
 ${TAR_BIN} xf ${DEFAULT_ETC_ARCHIVE} --directory ${CELL}
 ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_HOSTNAME}:" ${CELL}/etc/rc.conf
 
 note "Removing unnecessary directories"
-${RM_BIN} -rf ${CELL}/boot
+${RM_BIN} -rf ${CELL}/boot ${CELL}/mnt ${CELL}/media ${CELL}/rescue ${CELL}/root ${CELL}/proc
 
 note "Installing Sofin"
 if [ -d "/tmp/sofin" ]; then
@@ -122,5 +127,5 @@ ${CP_BIN} -R /Software/Vim ${CELL}/Software
 ${CP_BIN} /etc/zshenv ${CELL}/etc
 
 note "Launching jail: ${JAIL_HOSTNAME}"
-${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -qcmr -J ${JAIL_ID_FILE}
+${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -qc -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE}
 
