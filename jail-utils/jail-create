@@ -123,18 +123,6 @@ ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_HOSTNAME}:" ${CELL}/etc/rc.conf
 note "Removing unnecessary directories"
 ${RM_BIN} -rf ${CELL}/boot ${CELL}/mnt ${CELL}/media ${CELL}/rescue ${CELL}/root ${CELL}/proc
 
-note "Installing current version of Sofin"
-if [ -d "/tmp/sofin" ]; then
-    cd /tmp/sofin
-    ${GIT_BIN} reset --hard
-    ${GIT_BIN} pull https://github.com/VerKnowSys/sofin.git
-else
-    cd /tmp
-    ${GIT_BIN} clone https://github.com/VerKnowSys/sofin.git
-    cd sofin
-fi
-PREFIX=${JAIL_SOURCE} bin/install
-
 ${CP_BIN} -R /Software/Git ${CELL}/Software
 ${CP_BIN} -R /Software/Zsh ${CELL}/Software
 ${CP_BIN} -R /Software/Vim ${CELL}/Software
