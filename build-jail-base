@@ -31,7 +31,7 @@ note "Setting up make.conf"
 ${RM_BIN} -f /etc/make.conf
 ${CP_BIN} /var/ServeD-OS/etc/make.conf /etc/make.conf
 
-for version in 10.1 9.3; do
+for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
     note "Process started for version: ${version}: $(date +%F@%H-%M)"
     note "Processing version: ${version}"
