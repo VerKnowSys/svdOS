@@ -1,0 +1,14 @@
+#!/bin/sh
+
+. /etc/sofin.conf.sh
+
+note "Enter new release version"
+read version
+
+echo "$version" > /Jails/Prison/Cells/fbsd-9.3/VERSION
+echo "$version" > /Jails/Prison/Cells/fbsd-10.1/VERSION
+
+mount_nullfs /Jails/Prison/Cells/fbsd-9.3/usr/obj /Jails/Prison/Cells/fbsd-9.3/var/obj
+mount_nullfs /Jails/Prison/Cells/fbsd-10.1/usr/obj /Jails/Prison/Cells/fbsd-10.1/var/obj
+
+note "Ready. You may proceed with launching build-jail-base and do_binary_snapshot"
