@@ -2,5 +2,5 @@
 
 set -e
 
-./build-jail-base
-./build-binary-snapshots
+/bin/sh ./build-jail-base
+/bin/sh ./build-binary-snapshots
