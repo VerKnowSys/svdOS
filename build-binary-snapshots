@@ -4,6 +4,8 @@
 # 2014-09-02 13:11:55
 # blame: @dmilith
 
+set -e
+
 readonly CONF_FILE="/etc/sofin.conf.sh"
 if [ -e "${CONF_FILE}" ]; then
     . "${CONF_FILE}"
@@ -55,8 +57,7 @@ compile_snapshot () {
     test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
     mkdir -p "${SNAPSHOT_DIR}"
 
-    DIRS=(etc var)
-    for dir in ${DIRS}; do
+    for dir in etc var; do
         if [ ! -d "${SNAPSHOT_DIR}/${dir}" ]; then
             note "Creating destination dir: ${dir}"
             mkdir -p "${SNAPSHOT_DIR}/${dir}"
