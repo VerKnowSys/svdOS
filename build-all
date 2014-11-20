@@ -1,0 +1,7 @@
+#!/bin/sh
+
+mount_nullfs /Jails/Prison/Cells/fbsd-9.3/usr/obj /Jails/Prison/Cells/fbsd-9.3/var/obj
+mount_nullfs /Jails/Prison/Cells/fbsd-10.1/usr/obj /Jails/Prison/Cells/fbsd-10.1/var/obj
+
+./build-jail-base
+./build-binary-snapshots
