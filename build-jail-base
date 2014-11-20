@@ -19,6 +19,9 @@ else
     exit 1
 fi
 
+# required to fetch system source tree:
+sofin get subversion
+
 if [ ! -d "/var/ServeD-OS" ]; then
     cd /var
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone https://github.com/VerKnowSys/ServeD-OS.git
@@ -65,3 +68,6 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
     note "Process finished: $(date +%F@%H-%M)"
 done
+
+# don't put it into final snapshot
+sofin remove subversion
