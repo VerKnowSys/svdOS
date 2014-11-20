@@ -1,6 +1,11 @@
 
 ## CHANGELOG
 
+* v0.6.2
+    - Fixed version determining bugs
+    - Fixed multiversioned jails support
+    - More minor fixes
+
 * v0.6.1
     - Automatic installation of Sofin for all subsystems.
     - Improved install - done handling retries
