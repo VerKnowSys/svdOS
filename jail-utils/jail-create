@@ -19,6 +19,8 @@ DEFAULT_VERSION="10.1"
 DEFAULT_INTERFACE="em0"
 DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
 DEFAULT_WORKER_UID="501"
+DEFAULT_QUOTA_LIMIT="5G"
+DEFAULT_SENTRY_LIMIT="128M"
 
 usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail-name.com IP-address fbsd-version net-interface"
@@ -74,7 +76,9 @@ JAIL_VERSION_FILE="${SENTRY}/jail.os.version"
 
 note "Creating ZFS dataset"
 zfs create -o mountpoint=${CELL} zroot${CELL}
+zfs set quota=${DEFAULT_QUOTA_LIMIT} zroot${CELL}
 zfs create -o mountpoint=${SENTRY} zroot${SENTRY}
+zfs set quota=${DEFAULT_SENTRY_LIMIT} zroot${SENTRY}
 
 if [ -f "${JAIL_CONF_FILE}" ]; then
     warn "Jail configuration already in ${JAIL_CONF_FILE}"
@@ -89,11 +93,11 @@ ${JAIL_NAME} {
     path = \"${CELL}\";
     exec.start = \"/bin/sh /etc/rc\";
     exec.stop = \"/bin/sh /etc/rc.shutdown\";
-    enforce_statfs = 1;
-    allow.mount = 1;
-    allow.mount.nullfs = 1;
-    allow.mount.zfs = 1;
-    allow.mount.tmpfs = 1;
+    enforce_statfs = 2;
+    allow.mount = 0;
+    allow.mount.nullfs = 0;
+    allow.mount.zfs = 0;
+    allow.mount.tmpfs = 0;
     allow.raw_sockets = 1;
     mount.devfs;
     persist;
