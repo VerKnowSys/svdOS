@@ -38,7 +38,7 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
     note "Process started for version: ${version}: $(date +%F@%H-%M)"
     note "Processing version: ${version}"
-    cd /usr
+    cd /var
     if [ ! -d "${version}-src" ]; then
         svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
         cd ${version}-src
@@ -52,8 +52,8 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     note "Preparing new Jail builds"
     mkdir -p ${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}
     note "Preparing kernel configuration"
-    rm -fv /usr/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-    cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /usr/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
     note "Building world"
     make clean >> ${LOG_OUTPUT}
     make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
