@@ -34,7 +34,7 @@ for pool in $(zpool list -H | awk '{print $1}'); do
 done
 
 # create zvols for special snappable dirs
-for mntpoint in /Jails /Jails/Prison /Jails/Prison/Cells /Jails/Prison/Sentry /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+for mntpoint in /Jails /Jails/Shared /Jails/Prison /Jails/Prison/Cells /Jails/Prison/Sentry /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     if [ ! -d "${mntpoint}" ]; then
         printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
         zfs create -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
