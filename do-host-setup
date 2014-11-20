@@ -5,6 +5,9 @@
 note "Enter new release version"
 read version
 
+note "Synchronizing time"
+ntpdate -u ntp.nask.pl
+
 echo "$version" > /Jails/Prison/Cells/fbsd-9.3/VERSION
 echo "$version" > /Jails/Prison/Cells/fbsd-10.1/VERSION
 
