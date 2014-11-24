@@ -1,0 +1,7 @@
+
+# ServeD svdss autostart
+/usr/sbin/daemon /Software/Thess/exports/svdss
+
+echo ''
+date
+exit 0
