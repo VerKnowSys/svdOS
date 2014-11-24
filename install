@@ -150,6 +150,9 @@ cp -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
 note "Setting up rc configuration"
 grep 'ServeD' /etc/rc.conf > /dev/null || cat ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
 
+note "Setting up rc"
+grep 'ServeD' /etc/rc > /dev/null || (sed -i '' -e '$d' /etc/rc && sed -i '' -e '$d' /etc/rc && sed -i '' -e '$d' /etc/rc && cat ${SERVED_REPO}/etc/rc.served >> /etc/rc)
+
 note "Setting up core services"
 cp -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
 
