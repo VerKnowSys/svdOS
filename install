@@ -147,7 +147,7 @@ note "Setting up periodic"
 cp -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
 
 note "Setting up rc configuration"
-cat ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
+grep 'ServeD' /etc/rc.conf > /dev/null || cat ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
 
 note "Setting up core services"
 cp -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
