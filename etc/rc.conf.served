@@ -1,33 +1,33 @@
 
-# hostname="drahk"
-# ifconfig_re0="DHCP"
-# ifconfig_re0_alias0="inet 192.168.6.2 netmask 255.255.255.0"
+#
+# Options added by ServeD install script:
+#
 
-accounting_enable="YES"
-dumpdev="NO"
 sshd_enable="YES"
-sendmail_enable="NONE"
-named_enable="NO"
-gateway_enable="NO"
-linux_enable="NO"
+accounting_enable="YES"
+icmp_drop_redirect="YES"
+icmp_log_redirect="YES"
+log_in_vain="YES"
+clear_tmp_enable="YES"
 pf_enable="YES"
 pf_rules="/etc/pf.conf"
 pf_flags=""
 pflog_enable="YES"
 pflog_logfile="/var/log/pflog"
 pflog_flags=""
+
+dumpdev="NO"
+sendmail_enable="NONE"
+named_enable="NO"
+gateway_enable="NO"
+linux_enable="NO"
 ntpd_enable="NO"
 rpcbind_enable="NO"
 nfs_server_enable="NO"
 mountd_enable="NO"
 rpc_lockd_enable="NO"
 rpc_statd_enable="NO"
-clear_tmp_enable="YES"
 inetd_enable="NO"
-syslogd_flags="-ss"
-icmp_drop_redirect="YES"
-icmp_log_redirect="YES"
-log_in_vain="YES"
 quota_enable="NO"
 
 # Kerberos5
@@ -63,3 +63,4 @@ afsserver_enable="NO"
 jail_enable="YES"
 
 syslogd_enable="NO"
+syslogd_flags="-ss"
