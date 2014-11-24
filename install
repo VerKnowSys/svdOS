@@ -171,7 +171,7 @@ note "Starting LiveUsers service"
 test -d /SystemUsers/SoftwareData/LiveUsers || mkdir -p /SystemUsers/SoftwareData/LiveUsers
 test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/SoftwareData/LiveUsers/.start
 
-printf "ServeD OS ${VERSION}" > /etc/motd
+printf "\nServeD OS ${VERSION}\n\n" > /etc/motd
 note "Cleaning shared memory state, semaphores and unnecessary directories"
 rm -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 
