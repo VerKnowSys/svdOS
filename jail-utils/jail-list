@@ -1,0 +1,12 @@
+#!/bin/sh
+
+. /etc/sofin.conf.sh
+
+DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
+DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
+DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
+
+cd ${DEFAULT_CELLS_LOCATION}
+for cell in $(${LS_BIN}); do
+    printf "${cell}\n"
+done
