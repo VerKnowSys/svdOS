@@ -27,11 +27,12 @@ $(${JLS_BIN} | ${GREP} ${JAIL_NAME} 2> /dev/null)
 if [ "$?" = "0" ]; then
     STATUS="online"
 fi
-note "Jail: ${JAIL_NAME} is ${STATUS}"
+note "Name: ${JAIL_NAME}"
+note "Status: ${STATUS}"
 note
 if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
     note "Jail attributes:"
-    for i in ${JAIL_ATTRIBUTES_DIR}/*; do
+    for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
         note "  $(${BASENAME_BIN} ${i}): $(${CAT_BIN} ${i})"
     done
     note
