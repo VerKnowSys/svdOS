@@ -3,7 +3,7 @@
 . /etc/sofin.conf.sh
 
 MOUNT_NULLFS="/sbin/mount_nullfs"
-
+RCTL_BIN="/usr/bin/rctl"
 
 usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
@@ -31,6 +31,7 @@ JAIL_VERSION_FILE="${SENTRY}/jail.os.version"
 JAIL_VERSION="$(cat ${JAIL_VERSION_FILE})"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
 JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
+JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
 
 note "Mounting jail directories for system version: ${JAIL_VERSION}"
 for dir in bin lib libexec sbin usr; do
@@ -40,3 +41,40 @@ done
 
 note "Starting jail: ${JAIL_HOSTNAME}"
 ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE}
+
+# example:
+#   in ${JAIL_ATTRIBUTES_DIR} we look for files like:
+#   file: "pcpu" => contains value 140 (140% cpu)
+#   resources from rctl man page:
+#
+#     cputime        CPU time, in seconds
+#     datasize       data size, in bytes
+#     stacksize      stack size, in bytes
+#     coredumpsize       core dump size, in bytes
+#     memoryuse      resident set size, in bytes
+#     memorylocked       locked memory, in bytes
+#     maxproc        number of processes
+#     openfiles      file descriptor table size
+#     vmemoryuse     address space limit, in bytes
+#     pseudoterminals    number of PTYs
+#     swapuse        swap usage, in bytes
+#     nthr           number of threads
+#     msgqqueued     number of queued SysV messages
+#     msgqsize       SysV message queue size, in bytes
+#     nmsgq          number of SysV message queues
+#     nsem           number of SysV semaphores
+#     nsemop         number of SysV semaphores modified in a single semop(2) call
+#     nshm           number of SysV shared memory segments
+#     shmsize        SysV shared memory size, in bytes
+#     wallclock      wallclock time, in seconds
+#
+#   read more: http://www.manualpages.de/FreeBSD/FreeBSD-9.0-RELEASE/man8/rctl.8.html
+#
+note "Applying attributes for ${JAIL_ATTRIBUTES_DIR}"
+${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
+cd ${JAIL_ATTRIBUTES_DIR}
+for attribute in $(${LS_BIN}); do
+    value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
+    note "Attribute for jail: ${JAIL_NAME}. Attribute: ${attribute} set with value: ${value}"
+    ${RCTL_BIN} -a jail:${JAIL_NAME}:pcpu:deny=${value}
+done
