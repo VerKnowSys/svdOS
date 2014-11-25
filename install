@@ -192,6 +192,7 @@ install ${SERVED_REPO}/jail-utils/jail-destroy /usr/bin
 install ${SERVED_REPO}/jail-utils/jail-restart /usr/bin
 install ${SERVED_REPO}/jail-utils/jail-status /usr/bin
 install ${SERVED_REPO}/jail-utils/jail-list /usr/bin
+install ${SERVED_REPO}/jail-utils/jail-set /usr/bin
 
 note "ServeD system installation complete!"
 note

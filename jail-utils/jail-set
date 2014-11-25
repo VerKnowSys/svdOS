@@ -1,0 +1,43 @@
+#!/bin/sh
+
+. /etc/sofin.conf.sh
+
+usage () {
+    note "Usage: $(${BASENAME_BIN} $0) jail.tld.com attribute value"
+}
+
+JLS_BIN="/usr/sbin/jls"
+RCTL_BIN="/usr/bin/rctl"
+
+DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
+DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
+DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
+
+JAIL_HOSTNAME="${1}" # hostname?
+if [ "${1}" = "" ]; then
+    usage
+    error "No jail hostname given"
+fi
+
+JAIL_ATTRIBUTE="${2}"
+if [ "${2}" = "" ]; then
+    usage
+    error "No attribute given"
+fi
+
+JAIL_VALUE="${3}"
+if [ "${3}" = "" ]; then
+    usage
+    error "No value given"
+fi
+
+
+CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
+SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
+JAIL_CONF_FILE="${SENTRY}/jail.conf"
+JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
+JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
+
+note "Setting ${JAIL_ATTRIBUTE}: ${JAIL_VALUE} for jail: ${JAIL_NAME}"
+echo "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
+jail-start "${JAIL_NAME}"
