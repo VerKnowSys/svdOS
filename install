@@ -121,10 +121,11 @@ sofin get atop pstree vim tmux vifm pkgconf qtws53 bacula mc bind subversion mer
 
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/ServeD-OS.git
     cp -Rv usr/ /usr/ >> ${LOG} 2>&1
 else
-    error "Binary snapshot lacks ${SERVED_REPO} directory. Installation aborted!"
-    exit 1
+    cd /var
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone https://github.com/VerKnowSys/ServeD-OS.git
 fi
 
 note "Setting up shell environment"
