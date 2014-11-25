@@ -7,6 +7,8 @@ usage () {
 }
 
 JLS_BIN="/usr/sbin/jls"
+RCTL_BIN="/usr/bin/rctl"
+
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
@@ -35,8 +37,10 @@ if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
     for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
         note "  $(${BASENAME_BIN} ${i}): $(${CAT_BIN} ${i})"
     done
-    note
 fi
-
+note
+note "Applied attributes on jail"
+note "\n$(${RCTL_BIN} jail:${JAIL_NAME})"
+note
 note "Jail configuration:"
 note "$(${CAT_BIN} "${JAIL_CONF_FILE}")"
