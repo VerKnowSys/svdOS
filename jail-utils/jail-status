@@ -1,0 +1,41 @@
+#!/bin/sh
+
+. /etc/sofin.conf.sh
+
+usage () {
+    note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
+}
+
+JLS_BIN="/usr/sbin/jls"
+DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
+DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
+DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
+
+JAIL_HOSTNAME="${1}" # hostname?
+if [ "${1}" = "" ]; then
+    usage
+    error "No jail hostname given"
+fi
+CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
+SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
+JAIL_CONF_FILE="${SENTRY}/jail.conf"
+JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
+JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
+
+STATUS="offline"
+$(${JLS_BIN} | ${GREP} ${JAIL_NAME} 2> /dev/null)
+if [ "$?" = "0" ]; then
+    STATUS="online"
+fi
+note "Jail: ${JAIL_NAME} is ${STATUS}"
+note
+if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
+    note "Jail attributes:"
+    for i in ${JAIL_ATTRIBUTES_DIR}/*; do
+        note "  $(${BASENAME_BIN} ${i}): $(${CAT_BIN} ${i})"
+    done
+    note
+fi
+
+note "Jail configuration:"
+note "$(${CAT_BIN} "${JAIL_CONF_FILE}")"
