@@ -25,7 +25,7 @@ JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 
 STATUS="offline"
-$(${JLS_BIN} | ${GREP} ${JAIL_NAME} 2> /dev/null)
+${JLS_BIN} | ${GREP_BIN} "${JAIL_HOSTNAME}" > /dev/null 2> &1
 if [ "$?" = "0" ]; then
     STATUS="online"
 fi
