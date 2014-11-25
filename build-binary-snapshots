@@ -16,7 +16,7 @@ else
 fi
 
 NAME="ServeD-OS-Base"
-VERSION="v0.4.dev"
+VERSION="v0.4.dev" # TODO: get rid of it, take latest remote version instead
 if [ -f "/VERSION" ]; then
     VERSION="$(cat /VERSION)"
 fi
@@ -62,19 +62,19 @@ compile_snapshot () {
             fi
         done
 
-        note "Updating ServeD-OS repository."
-        if [ ! -d "/var/ServeD-OS" ]; then
-            cd /var
-            git clone https://github.com/VerKnowSys/ServeD-OS.git
-        else
-            cd /var/ServeD-OS
-            git pull https://github.com/VerKnowSys/ServeD-OS.git
-        fi
+        # note "Updating ServeD-OS repository."
+        # if [ ! -d "/var/ServeD-OS" ]; then
+        #     cd /var
+        #     git clone https://github.com/VerKnowSys/ServeD-OS.git
+        # else
+        #     cd /var/ServeD-OS
+        #     git pull https://github.com/VerKnowSys/ServeD-OS.git
+        # fi
 
         note "Preparing Base snapshot: ${SNAPSHOT}"
         cp -v /VERSION "${SNAPSHOT_DIR}"
         cp -Rv /Software "${SNAPSHOT_DIR}"
-        cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
+        # cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
         cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
         cd "${SNAPSHOT_DIR}"
 
