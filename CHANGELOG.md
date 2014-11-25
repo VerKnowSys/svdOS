@@ -1,6 +1,13 @@
 
 ## CHANGELOG
 
+* v0.6.3
+    - Removed bundled version of ServeD-OS in core
+    - Update rc.conf only once on install / update action
+    - Added support for RCTL resources limits
+    - Install action will now automatically behave like update action when launched again on host with ServeD installed
+    - Improved selecting default network interface for jail-create (default route)
+
 * v0.6.2
     - Fixed version determining bugs
     - Fixed multiversioned jails support
