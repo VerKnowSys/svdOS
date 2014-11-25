@@ -39,8 +39,8 @@ for dir in bin lib libexec sbin usr; do
     ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> /dev/null
 done
 
-note "Starting jail: ${JAIL_HOSTNAME}"
-${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE}
+note "Starting / Updating jail: ${JAIL_HOSTNAME}"
+${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -cm -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE}
 
 # example:
 #   in ${JAIL_ATTRIBUTES_DIR} we look for files like:
