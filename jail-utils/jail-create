@@ -134,5 +134,5 @@ ${CP_BIN} -R /Software/Vim ${CELL}/Software
 ${CP_BIN} /etc/zshenv ${CELL}/etc
 
 note "Launching jail: ${JAIL_HOSTNAME}"
-${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -qc -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE}
+jail-start "${JAIL_HOSTNAME}"
 
