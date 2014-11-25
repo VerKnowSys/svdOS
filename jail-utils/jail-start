@@ -70,11 +70,11 @@ ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CO
 #
 #   read more: http://www.manualpages.de/FreeBSD/FreeBSD-9.0-RELEASE/man8/rctl.8.html
 #
-note "Applying attributes for ${JAIL_ATTRIBUTES_DIR}"
+note "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR}"
 ${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
 cd ${JAIL_ATTRIBUTES_DIR}
 for attribute in $(${LS_BIN}); do
     value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
-    note "Attribute for jail: ${JAIL_NAME}. Attribute: ${attribute} set with value: ${value}"
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:pcpu:deny=${value}
+    note "Jail: ${JAIL_NAME}, attribute set: ${attribute}, value: ${value}"
+    ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value}
 done
