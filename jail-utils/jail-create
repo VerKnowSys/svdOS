@@ -10,13 +10,14 @@
 
 MOUNT_BIN="/sbin/mount"
 MOUNT_NULLFS="/sbin/mount_nullfs"
+ROUTE_BIN="/sbin/route"
 
 SERVED_REPO="/var/ServeD-OS"
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_VERSION="10.1"
-DEFAULT_INTERFACE="em0"
+DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
 DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
 DEFAULT_WORKER_UID="501"
 DEFAULT_QUOTA_LIMIT="5G"
@@ -25,7 +26,7 @@ DEFAULT_SENTRY_LIMIT="128M"
 usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail-name.com IP-address fbsd-version net-interface"
     note "fbsd-version -> by default 10.1"
-    note "net-interface -> by default em0"
+    note "net-interface -> by default first interface with default route (${DEFAULT_INTERFACE})"
 }
 
 
