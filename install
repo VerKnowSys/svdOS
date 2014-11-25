@@ -189,6 +189,9 @@ install ${SERVED_REPO}/jail-utils/jail-login /usr/bin
 install ${SERVED_REPO}/jail-utils/jail-start /usr/bin
 install ${SERVED_REPO}/jail-utils/jail-stop /usr/bin
 install ${SERVED_REPO}/jail-utils/jail-destroy /usr/bin
+install ${SERVED_REPO}/jail-utils/jail-restart /usr/bin
+install ${SERVED_REPO}/jail-utils/jail-status /usr/bin
+install ${SERVED_REPO}/jail-utils/jail-list /usr/bin
 
 note "ServeD system installation complete!"
 note
