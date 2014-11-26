@@ -2,6 +2,7 @@
 kernel="verknowsys"
 zfs_load="YES"
 autoboot_delay="1"
+mac_portacl_load="YES"
 aio_load="YES"
 random_load="YES"
 cc_htcp_load="YES"
