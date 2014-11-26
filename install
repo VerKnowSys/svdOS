@@ -24,7 +24,7 @@ if [ "$(uname)" != "FreeBSD" ]; then
 fi
 
 # handle older zpool versions. Try to upgrade them before start
-zpool upgrade ${DEFAULT_ZPOOL} >> ${LOG} 2>&1
+#zpool upgrade ${DEFAULT_ZPOOL} >> ${LOG} 2>&1
 
 # set lz4 compression and checksum mechanism for all pools:
 for pool in $(zpool list -H | awk '{print $1}'); do
