@@ -75,7 +75,6 @@ ${RCTL_BIN} -a jail:${JAIL_NAME}:memoryuse:deny=1024M
 ${RCTL_BIN} -a jail:${JAIL_NAME}:vmemoryuse:deny=2048M
 ${RCTL_BIN} -a jail:${JAIL_NAME}:maxproc:deny=125
 ${RCTL_BIN} -a jail:${JAIL_NAME}:openfiles:deny=1024
-${RCTL_BIN} -a jail:${JAIL_NAME}:swapuse:deny=0
 ${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=16
 
 note "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
