@@ -107,7 +107,7 @@ ${CP_BIN} -R ${JAIL_SOURCE}/var ${CELL}
 
 note "Making required jail directories and user dir"
 ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh
-${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Software
+${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Software ${CELL}/tmp
 
 note "Installing default etc for jail"
 ${TAR_BIN} xf ${DEFAULT_ETC_ARCHIVE} --directory ${CELL}
