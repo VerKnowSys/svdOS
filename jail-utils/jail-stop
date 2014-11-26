@@ -12,7 +12,6 @@ usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
 }
 
-note "Performing sanity checks"
 
 JAIL_HOSTNAME="${1}" # hostname?
 if [ "${1}" = "" ]; then
@@ -25,6 +24,8 @@ SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
 JAIL_CONF_FILE="${SENTRY}/jail.conf"
 JAIL_ID_FILE="${SENTRY}/jail.id"
 JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
+JAIL_ADDRESS_FILE="${SENTRY}/jail.ip.address"
+DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
 
 note "Terminating jail: ${JAIL_HOSTNAME}"
 ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -r "${JAIL_NAME}"
@@ -33,3 +34,8 @@ note "Unmounting jail directories"
 for dir in dev bin lib libexec sbin usr; do
     ${UMOUNT_BIN} "${CELL}/${dir}" 2>/dev/null
 done
+
+IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
+note "Turning off jail IP: ${IP}"
+ifconfig ${DEFAULT_INTERFACE} ${IP} -alias
+

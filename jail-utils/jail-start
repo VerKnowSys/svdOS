@@ -9,11 +9,11 @@ usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
 }
 
-note "Performing sanity checks"
 
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
+DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
 
 JAIL_HOSTNAME="${1}" # hostname?
 if [ "${1}" = "" ]; then
@@ -24,6 +24,7 @@ JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 
 CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
+JAIL_ADDRESS_FILE="${SENTRY}/jail.ip.address"
 JAIL_ID_FILE="${SENTRY}/jail.id"
 JAIL_CONF_FILE="${SENTRY}/jail.conf"
 JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
@@ -32,6 +33,9 @@ JAIL_VERSION="$(cat ${JAIL_VERSION_FILE})"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
 JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
+
+note "Turning on jail IP: ${IP}"
+${IFCONFIG_BIN} ${DEFAULT_INTERFACE} $(${CAT_BIN} ${JAIL_ADDRESS_FILE}) alias
 
 note "Mounting jail directories for system version: ${JAIL_VERSION}"
 for dir in bin lib libexec sbin usr; do
