@@ -194,6 +194,14 @@ install ${SERVED_REPO}/jail-utils/jail-status /usr/bin
 install ${SERVED_REPO}/jail-utils/jail-list /usr/bin
 install ${SERVED_REPO}/jail-utils/jail-set /usr/bin
 
-note "ServeD system installation complete!"
-note
-note "You must reboot to apply new kernel and system configuration."
+${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
+if [ "$?" = "0" ]; then
+    note
+    note "ServeD system update complete!"
+else
+    note
+    note "ServeD system installation complete!"
+    note "You must reboot to apply new kernel and system configuration."
+fi
+
+exit 0
