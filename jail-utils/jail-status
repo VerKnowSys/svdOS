@@ -6,8 +6,6 @@ usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
 }
 
-JLS_BIN="/usr/sbin/jls"
-RCTL_BIN="/usr/bin/rctl"
 
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"

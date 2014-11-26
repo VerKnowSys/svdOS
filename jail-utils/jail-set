@@ -6,8 +6,6 @@ usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail.tld.com attribute value"
 }
 
-JLS_BIN="/usr/sbin/jls"
-RCTL_BIN="/usr/bin/rctl"
 
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
@@ -32,9 +30,7 @@ if [ "${3}" = "" ]; then
 fi
 
 
-CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-JAIL_CONF_FILE="${SENTRY}/jail.conf"
 JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 

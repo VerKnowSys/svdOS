@@ -12,7 +12,6 @@ usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
 }
 
-note "Performing sanity checks"
 
 JAIL_HOSTNAME="${1}" # hostname?
 if [ "${1}" = "" ]; then
@@ -22,9 +21,6 @@ fi
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-JAIL_CONF_FILE="${SENTRY}/jail.conf"
-JAIL_ID_FILE="${SENTRY}/jail.id"
-JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 
 note "Are you sure you want to destroy jail: '${JAIL_HOSTNAME}' with all data? Type 'yes' to confirm."
 read ans

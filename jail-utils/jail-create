@@ -8,10 +8,6 @@
 # testing routine:
 # for i in $(seq 100 250); do AA=$i && ifconfig em0 192.168.1.${AA} netmask 255.255.255.0 alias && jail-create jail${AA}.my.tld 192.168.1.${AA}; done
 
-MOUNT_BIN="/sbin/mount"
-MOUNT_NULLFS="/sbin/mount_nullfs"
-ROUTE_BIN="/sbin/route"
-
 SERVED_REPO="/var/ServeD-OS"
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
