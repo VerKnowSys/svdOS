@@ -13,6 +13,9 @@ SOFIN_REPO="/var/sofin"
 BASE_SOURCE="http://dmilith.verknowsys.com/Public/ServeD"
 SYS_VERSION="$(uname -r | cut -d- -f1)"
 SYS_ARCH="$(uname -m)"
+INTERNAL_NETWORK="10.200.1.0"
+PF_CONF_FILE="/etc/pf.conf"
+RC_FILE="/etc/rc"
 VERSIONS="9.3 10.1"
 if [ "${VERSION}" = "" ]; then
     VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
@@ -150,10 +153,21 @@ note "Setting up periodic"
 ${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
 
 note "Setting up rc configuration"
-${GREP_BIN} 'ServeD' /etc/rc.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
+${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.conf.served >> ${RC_FILE}.conf
+
+note "Setting up firewall"
+DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
+DEFAULT_INTERFACE_ADDRESS="$(${ROUTE_BIN} -n show -net 0 | ${TAIL_BIN} -n 6 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
+${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE} >> ${LOG} 2>&1
+${SED_BIN} -i '' -e "s/__INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE}
+${SED_BIN} -i '' -e "s/__EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FILE}
+${SED_BIN} -i '' -e "s/__EXTERNAL_ADDRESS/${DEFAULT_INTERFACE_ADDRESS}/g" ${PF_CONF_FILE}
+${TOUCH_BIN} ${PF_CONF_FILE}.local
+service pf restart
+note "Applied firewall rules:\n$(${PFCTL_BIN} -sn)"
 
 note "Setting up rc"
-${GREP_BIN} 'ServeD' /etc/rc > /dev/null || (${SED_BIN} -i '' -e '$d' /etc/rc && ${SED_BIN} -i '' -e '$d' /etc/rc && ${SED_BIN} -i '' -e '$d' /etc/rc && ${CAT_BIN} ${SERVED_REPO}/etc/rc.served >> /etc/rc)
+${GREP_BIN} 'ServeD' ${RC_FILE} > /dev/null || (${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.served >> ${RC_FILE})
 
 note "Setting up core services"
 ${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
