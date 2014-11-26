@@ -56,11 +56,6 @@ if [ "${4}" = "" ]; then
     JAIL_INTERFACE="${DEFAULT_INTERFACE}"
 fi
 
-ping -c1 ${2} > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    error "Given IP address: ${2} must be available on host machine"
-fi
-
 
 CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
