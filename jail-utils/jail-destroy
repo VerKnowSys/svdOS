@@ -30,12 +30,7 @@ note "Are you sure you want to destroy jail: '${JAIL_HOSTNAME}' with all data? T
 read ans
 if [ "${ans}" = "yes" ]; then
     note "Terminating jail: ${JAIL_HOSTNAME}"
-    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -r "${JAIL_NAME}" 2>/dev/null
-
-    note "Unmounting jail directories"
-    for dir in dev bin lib libexec sbin usr; do
-        ${UMOUNT_BIN} "${CELL}/${dir}" 2>/dev/null
-    done
+    jail-stop "${JAIL_NAME}"
 
     note "Destroying datasets: ${CELL} and ${SENTRY}"
     zfs destroy zroot${CELL}
