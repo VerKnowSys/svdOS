@@ -2,8 +2,10 @@
 
 set -e
 
+DEFAULT_JAIL_PRISON_LOCATION='/Jails/Prison'
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_ZPOOL="zroot"
+DEFAULT_SYSTEM_PREFIX="/usr/bin"
 BASE="ServeD-OS-Base"
 LOG="/var/log/svd-install.log"
 SERVED_REPO="/var/ServeD-OS"
@@ -34,7 +36,7 @@ for pool in $(zpool list -H | awk '{print $1}'); do
 done
 
 # create zvols for special snappable dirs
-for mntpoint in /Jails /Jails/Shared /Jails/Prison /Jails/Prison/Cells /Jails/Prison/Sentry /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     if [ ! -d "${mntpoint}" ]; then
         printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
         zfs create -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
@@ -89,7 +91,7 @@ else
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/sofin.git
 fi
 
-printf "Installing Sofin\n"
+printf "Installing Sofin environment\n"
 bin/install
 . /etc/sofin.conf.sh
 for version in ${VERSIONS}; do
@@ -99,21 +101,21 @@ done
 
 note "Installing custom kernel"
 if [ ! -d "/boot/verknowsys" ]; then
-    cp -vr /Jails/Shared/FreeBSD-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
 fi
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
     note "Setting up ZSH shell"
-    printf "/Software/Zsh/exports/zsh\n" >> /etc/shells
-    chsh -s /Software/Zsh/exports/zsh >> ${LOG} 2>&1
+    ${PRINTF_BIN} "/Software/Zsh/exports/zsh\n" >> /etc/shells
+    ${CHSH_BIN} -s /Software/Zsh/exports/zsh >> ${LOG} 2>&1
 fi
 
 if [ -d "/SystemUsers" ]; then
     note "Setting up new root home dir: /SystemUsers"
     if [ -d "/root" ]; then
-        cp -R /root/ /SystemUsers
+        ${CP_BIN} -R /root/ /SystemUsers
     fi
-    pw user mod root -d /SystemUsers >> ${LOG} 2>&1
+    ${PW_BIN} user mod root -d /SystemUsers >> ${LOG} 2>&1
 fi
 
 note "Installing additional Software"
@@ -121,78 +123,78 @@ sofin get atop pstree vim tmux vifm pkgconf qtws53 bacula mc bind subversion mer
 
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/ServeD-OS.git
-    cp -Rv usr/ /usr/ >> ${LOG} 2>&1
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/ServeD-OS.git
+    ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
 else
     cd /var
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone https://github.com/VerKnowSys/ServeD-OS.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone https://github.com/VerKnowSys/ServeD-OS.git
 fi
 
 note "Setting up shell environment"
-cp -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
 
 note "Setting up default boot loader configuration"
-cp -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
 
 note "Setting up mime types"
-cp -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
 
 note "Setting up login"
-cp -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
-cap_mkdb /etc/login.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
+${CAP_MKDB_BIN} /etc/login.conf >> ${LOG} 2>&1
 
 note "Setting up sysctl"
-cp -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
 
 note "Setting up periodic"
-cp -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
 
 note "Setting up rc configuration"
-grep 'ServeD' /etc/rc.conf > /dev/null || cat ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
+${GREP_BIN} 'ServeD' /etc/rc.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
 
 note "Setting up rc"
-grep 'ServeD' /etc/rc > /dev/null || (sed -i '' -e '$d' /etc/rc && sed -i '' -e '$d' /etc/rc && sed -i '' -e '$d' /etc/rc && cat ${SERVED_REPO}/etc/rc.served >> /etc/rc)
+${GREP_BIN} 'ServeD' /etc/rc > /dev/null || (${SED_BIN} -i '' -e '$d' /etc/rc && ${SED_BIN} -i '' -e '$d' /etc/rc && ${SED_BIN} -i '' -e '$d' /etc/rc && ${CAT_BIN} ${SERVED_REPO}/etc/rc.served >> /etc/rc)
 
 note "Setting up core services"
-cp -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
 
 note "Setting up default ssl root certificates"
-mkdir -p /etc/ssl >> ${LOG} 2>&1
-cp -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
+${MKDIR_BIN} -p /etc/ssl >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
 
 SNAP_DATE="$(date +%F_%H%M)"
 for snap in /Jails /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     snap="${DEFAULT_ZPOOL}${snap}@${SNAP_DATE}-initial"
     note "Creating ZFS snapshot: ${snap}"
-    zfs snapshot "${snap}"
+    ${ZFS_BIN} snapshot "${snap}"
 done
 
 note "Starting Ntp service"
-test -d /SystemUsers/SoftwareData/Ntp || mkdir -p /SystemUsers/SoftwareData/Ntp
-test -f /SystemUsers/SoftwareData/Ntp/.running || touch /SystemUsers/SoftwareData/Ntp/.start
+${TEST_BIN} -d /SystemUsers/SoftwareData/Ntp || ${MKDIR_BIN} -p /SystemUsers/SoftwareData/Ntp
+${TEST_BIN} -f /SystemUsers/SoftwareData/Ntp/.running || ${TOUCH_BIN} /SystemUsers/SoftwareData/Ntp/.start
 
 note "Starting LiveUsers service"
-test -d /SystemUsers/SoftwareData/LiveUsers || mkdir -p /SystemUsers/SoftwareData/LiveUsers
-test -f /SystemUsers/SoftwareData/LiveUsers/.running || touch /SystemUsers/SoftwareData/LiveUsers/.start
+${TEST_BIN} -d /SystemUsers/SoftwareData/LiveUsers || ${MKDIR_BIN} -p /SystemUsers/SoftwareData/LiveUsers
+${TEST_BIN} -f /SystemUsers/SoftwareData/LiveUsers/.running || ${TOUCH_BIN} /SystemUsers/SoftwareData/LiveUsers/.start
 
-printf "\nServeD OS ${VERSION}\n\n" > /etc/motd
-note "Cleaning shared memory state, semaphores and unnecessary directories"
-rm -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
+${PRINTF_BIN} "\nServeD OS ${VERSION}\n\n" > /etc/motd
+note "Cleaning unnecessary directories"
+${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 
 note "Performing additional system tweaks"
-test -x /usr/bin/gcc || ln -s /Software/Gcc/exports/gcc /usr/bin/gcc
-test -x /usr/bin/g++ || ln -s /Software/Gcc/exports/g++ /usr/bin/g++
+${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/gcc || ${LN_BIN} -s /Software/Gcc/exports/gcc ${DEFAULT_SYSTEM_PREFIX}/gcc
+${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/g++ || ${LN_BIN} -s /Software/Gcc/exports/g++ ${DEFAULT_SYSTEM_PREFIX}/g++
 
 note "Installing jail-utils to host system"
-install ${SERVED_REPO}/jail-utils/jail-create /usr/bin
-install ${SERVED_REPO}/jail-utils/jail-login /usr/bin
-install ${SERVED_REPO}/jail-utils/jail-start /usr/bin
-install ${SERVED_REPO}/jail-utils/jail-stop /usr/bin
-install ${SERVED_REPO}/jail-utils/jail-destroy /usr/bin
-install ${SERVED_REPO}/jail-utils/jail-restart /usr/bin
-install ${SERVED_REPO}/jail-utils/jail-status /usr/bin
-install ${SERVED_REPO}/jail-utils/jail-list /usr/bin
-install ${SERVED_REPO}/jail-utils/jail-set /usr/bin
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-create ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-login ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-start ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-stop ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-destroy ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-restart ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-status ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-list ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-set ${DEFAULT_SYSTEM_PREFIX}
 
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
