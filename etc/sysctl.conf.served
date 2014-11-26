@@ -136,8 +136,8 @@ net.inet.ip.intr_queue_maxlen=4096
 #net.isr.dispatch=direct
 
 # This is for routers only
-#net.inet.ip.forwarding=1
-#net.inet.ip.fastforwarding=1
+net.inet.ip.forwarding=1
+net.inet.ip.fastforwarding=1
 
 # Should be increased when you have A LOT of files on server
 # (Increase until vfs.ufs.dirhash_mem becomes lower)
