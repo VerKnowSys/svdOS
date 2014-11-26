@@ -35,7 +35,9 @@ for dir in dev bin lib libexec sbin usr; do
     ${UMOUNT_BIN} "${CELL}/${dir}" 2>/dev/null
 done
 
-IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
-note "Turning off jail IP: ${IP}"
-ifconfig ${DEFAULT_INTERFACE} ${IP} -alias
+if [ -f "${JAIL_ADDRESS_FILE}" ]; then
+    IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
+    note "Turning off jail IP: ${IP}"
+    ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${IP} -alias
+fi
 

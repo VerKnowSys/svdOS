@@ -32,8 +32,11 @@ JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SY
 JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
 
-note "Turning on jail IP: ${IP}"
-${IFCONFIG_BIN} ${DEFAULT_INTERFACE} $(${CAT_BIN} ${JAIL_ADDRESS_FILE}) alias
+if [ -f "${JAIL_ADDRESS_FILE}" ]; then
+    IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
+    note "Turning on jail IP: ${IP} on interface ${DEFAULT_INTERFACE}"
+    ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} $(${CAT_BIN} ${JAIL_ADDRESS_FILE}) alias
+fi
 
 note "Mounting jail directories for system version: ${JAIL_VERSION}"
 for dir in bin lib libexec sbin usr; do
