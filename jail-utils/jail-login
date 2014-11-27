@@ -7,8 +7,6 @@ usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
 }
 
-note "Performing sanity checks"
-
 JAIL_HOSTNAME="${1}" # hostname?
 if [ "${1}" = "" ]; then
     usage

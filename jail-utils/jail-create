@@ -21,8 +21,6 @@ usage () {
 }
 
 
-note "Performing sanity checks"
-
 if [ ! -f "${DEFAULT_ETC_ARCHIVE}" ]; then
     error "etc archive: ${DEFAULT_ETC_ARCHIVE} wasn't found. Cannot continue"
 fi
