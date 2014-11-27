@@ -30,7 +30,7 @@ compile_jails () {
     for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
         SNAPSHOT_JAIL="${NAME}-Jail-${version}-${VERSION}"
         note "Compiling Jail snapshot: ${SNAPSHOT_JAIL}"
-        tar vcfJ ../${SNAPSHOT_JAIL}.tar.xz /Jails/Shared/FreeBSD-${version}-${SYS_ARCH}
+        tar cfJ ../${SNAPSHOT_JAIL}.tar.xz /Jails/Shared/FreeBSD-${version}-${SYS_ARCH}
         if [ "$?" = "0" ]; then
             note "Compiled successfully."
         else
@@ -73,9 +73,16 @@ compile_snapshot () {
 
         note "Preparing Base snapshot: ${SNAPSHOT}"
         cp -v /VERSION "${SNAPSHOT_DIR}"
+        note "Removing installed software"
+        for app in $(sofin list); do
+            if [ "$app" != "Git" ]; then
+                sofin remove $app
+            fi
+        done
+        sofin get Zsh
         cp -Rv /Software "${SNAPSHOT_DIR}"
         # cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
-        cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
+        # cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
         cd "${SNAPSHOT_DIR}"
 
         note "Compiling Base snapshot: ${SNAPSHOT}"
