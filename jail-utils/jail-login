@@ -12,6 +12,12 @@ if [ "${1}" = "" ]; then
     usage
     error "No jail to enter"
 fi
+
+JAIL_USER="worker"
+if [ "${2}" != "" ]; then
+    JAIL_USER="${2}"
+fi
+
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
@@ -19,4 +25,4 @@ JAIL_EXEC_LOG="${SENTRY}/jail.truss.exec.log"
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 
 note "Logging into jail: ${JAIL_HOSTNAME}"
-${TRUSS_BIN} -o ${JAIL_EXEC_LOG} ${JEXEC_BIN} ${JAIL_NAME} login -f worker
+${TRUSS_BIN} -o ${JAIL_EXEC_LOG} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_USER}
