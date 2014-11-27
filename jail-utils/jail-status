@@ -29,12 +29,13 @@ if [ "$?" = "0" ]; then
     STATUS="${gray}(${green}*on*${gray})${reset}"
 fi
 IP="${cyan}no-IP-assigned${reset}"
-if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_ATTRIBUTE_FILE}" ]; then
-    IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_ATTRIBUTE_FILE}")${reset}"
+if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}/${CELL_ATTRIBUTE_FILE}" ]; then
+    IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}/${CELL_ATTRIBUTE_FILE}")${reset}"
 fi
 
-${PRINTF_BIN} "Name: ${yellow}${JAIL_NAME}${reset}\n"
-${PRINTF_BIN} "IP: ${IP}\n"
+${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
+${PRINTF_BIN} "Hostname: ${cyan}${JAIL_HOSTNAME}${reset}\n"
+${PRINTF_BIN} "IPv4: ${IP}\n"
 ${PRINTF_BIN} "Status: ${STATUS}\n\n"
 
 if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
