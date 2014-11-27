@@ -55,12 +55,12 @@ compile_snapshot () {
         test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
         mkdir -p "${SNAPSHOT_DIR}"
 
-        for dir in etc var; do
-            if [ ! -d "${SNAPSHOT_DIR}/${dir}" ]; then
-                note "Creating destination dir: ${dir}"
-                mkdir -p "${SNAPSHOT_DIR}/${dir}"
-            fi
-        done
+        # for dir in etc var; do
+        #     if [ ! -d "${SNAPSHOT_DIR}/${dir}" ]; then
+        #         note "Creating destination dir: ${dir}"
+        #         mkdir -p "${SNAPSHOT_DIR}/${dir}"
+        #     fi
+        # done
 
         # note "Updating ServeD-OS repository."
         # if [ ! -d "/var/ServeD-OS" ]; then
@@ -72,7 +72,7 @@ compile_snapshot () {
         # fi
 
         note "Preparing Base snapshot: ${SNAPSHOT}"
-        cp -v /VERSION "${SNAPSHOT_DIR}"
+        cp /VERSION "${SNAPSHOT_DIR}"
         note "Removing installed software"
         for app in $(sofin list); do
             if [ "$app" != "Git" ]; then
@@ -80,7 +80,7 @@ compile_snapshot () {
             fi
         done
         sofin get Zsh
-        cp -Rv /Software "${SNAPSHOT_DIR}"
+        cp -R /Software "${SNAPSHOT_DIR}"
         # cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
         # cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
         cd "${SNAPSHOT_DIR}"
