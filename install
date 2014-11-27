@@ -16,6 +16,7 @@ SYS_ARCH="$(uname -m)"
 INTERNAL_NETWORK="10.200.1.0"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
+GIT_BIN="/Software/Git/exports/git"
 VERSIONS="9.3 10.1"
 if [ "${VERSION}" = "" ]; then
     VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
@@ -87,12 +88,12 @@ fi
 
 if [ ! -d "${SOFIN_REPO}" ]; then
     cd /var
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone https://github.com/VerKnowSys/sofin.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone https://github.com/VerKnowSys/sofin.git
     cd ${SOFIN_REPO}
 else
     cd ${SOFIN_REPO}
     ${GIT_BIN} stash save "install-update-$(date +%F)"
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/sofin.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/sofin.git
 fi
 
 printf "Installing Sofin environment\n"
