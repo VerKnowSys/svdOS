@@ -91,6 +91,7 @@ if [ ! -d "${SOFIN_REPO}" ]; then
     cd ${SOFIN_REPO}
 else
     cd ${SOFIN_REPO}
+    ${GIT_BIN} stash save "install-update-$(date +%F)"
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/sofin.git
 fi
 
@@ -134,6 +135,7 @@ sofin get atop pstree vim tmux vifm pkgconf qtws53 bacula mc bind subversion mer
 
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
+    ${GIT_BIN} stash save "install-update-$(date +%F)"
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/ServeD-OS.git
     ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
 else
