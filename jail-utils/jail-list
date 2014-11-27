@@ -13,10 +13,9 @@ cd ${DEFAULT_CELLS_LOCATION}
 for cell in $(${LS_BIN}); do
     cellname="$(${PRINTF_BIN} "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}')" # first 29 chars visible in jls output
     ${PRINTF_BIN} "${cellname}"
+    IP="${cyan}no-IP-assigned${reset}"
     if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_ATTRIBUTE_FILE}" ]; then
         IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_ATTRIBUTE_FILE}")${reset}"
-    else
-        IP="${cyan}no-IP-assigned${reset}"
     fi
     ${JLS_BIN} | ${GREP_BIN} "\ ${cellname}\ " > /dev/null 2>&1
     if [ "$?" = "0" ]; then

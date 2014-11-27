@@ -6,6 +6,7 @@ usage () {
     note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
 }
 
+CELL_ATTRIBUTE_FILE="jail.ip.address"
 
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
@@ -22,23 +23,27 @@ JAIL_CONF_FILE="${SENTRY}/jail.conf"
 JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
 
-STATUS="offline"
-${JLS_BIN} | ${GREP_BIN} "${JAIL_HOSTNAME}" > /dev/null 2>&1
+STATUS="${gray}(${red}*off*${gray})${reset}"
+${JLS_BIN} | ${GREP_BIN} "\ ${JAIL_HOSTNAME}\ " > /dev/null 2>&1
 if [ "$?" = "0" ]; then
-    STATUS="online"
+    STATUS="${gray}(${green}*on*${gray})${reset}"
 fi
-note "Name: ${JAIL_NAME}"
-note "Status: ${STATUS}"
-note
+IP="${cyan}no-IP-assigned${reset}"
+if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_ATTRIBUTE_FILE}" ]; then
+    IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_ATTRIBUTE_FILE}")${reset}"
+fi
+
+${PRINTF_BIN} "Name: ${yellow}${JAIL_NAME}${reset}\n"
+${PRINTF_BIN} "IP: ${IP}\n"
+${PRINTF_BIN} "Status: ${STATUS}\n\n"
+
 if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
-    note "Jail attributes:"
+    ${PRINTF_BIN} "Attributes set:\n"
     for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
-        note "  $(${BASENAME_BIN} ${i}): $(${CAT_BIN} ${i})"
+        ${PRINTF_BIN} "${yellow}$(${BASENAME_BIN} ${i})${reset}: ${cyan}$(${CAT_BIN} ${i})${reset}\n"
     done
+    ${PRINTF_BIN} "\n"
 fi
-note
-note "Applied attributes on jail"
-note "\n$(${RCTL_BIN} jail:${JAIL_NAME})"
-note
-note "Jail configuration:"
-note "$(${CAT_BIN} "${JAIL_CONF_FILE}")"
+${PRINTF_BIN} "All applied attributes:\n${cyan}$(${RCTL_BIN} jail:${JAIL_NAME})${reset}\n"
+${PRINTF_BIN} "\nConfiguration:"
+${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"
