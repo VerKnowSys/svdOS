@@ -226,15 +226,7 @@ ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/gcc || ${LN_BIN} -s /Software/Gcc/export
 ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/g++ || ${LN_BIN} -s /Software/Gcc/exports/g++ ${DEFAULT_SYSTEM_PREFIX}/g++
 
 note "Installing jail-utils to host system"
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-create ${DEFAULT_SYSTEM_PREFIX}
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-login ${DEFAULT_SYSTEM_PREFIX}
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-start ${DEFAULT_SYSTEM_PREFIX}
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-stop ${DEFAULT_SYSTEM_PREFIX}
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-destroy ${DEFAULT_SYSTEM_PREFIX}
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-restart ${DEFAULT_SYSTEM_PREFIX}
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-status ${DEFAULT_SYSTEM_PREFIX}
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-list ${DEFAULT_SYSTEM_PREFIX}
-${INSTALL_BIN} ${SERVED_REPO}/jail-utils/jail-set ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} ${SERVED_REPO}/jail-utils/gvr ${DEFAULT_SYSTEM_PREFIX}
 
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
