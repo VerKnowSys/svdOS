@@ -19,6 +19,7 @@ if [ "${1}" = "" ]; then
 fi
 CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
 SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
+JAIL_DOMAINS_DIR="${SENTRY}/jail-domains"
 JAIL_CONF_FILE="${SENTRY}/jail.conf"
 JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
 JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
@@ -28,23 +29,28 @@ ${JLS_BIN} | ${GREP_BIN} "\ ${JAIL_HOSTNAME}\ " > /dev/null 2>&1
 if [ "$?" = "0" ]; then
     STATUS="${gray}(${green}*on*${gray})${reset}"
 fi
-IP="${cyan}no-IP-assigned${reset}"
-if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}/${CELL_ATTRIBUTE_FILE}" ]; then
-    IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}/${CELL_ATTRIBUTE_FILE}")${reset}"
+IP="${cyan}no-address${reset}"
+if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}/${CELL_IP_ADDRESS_FILE}" ]; then
+    IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}/${CELL_IP_ADDRESS_FILE}")${reset}"
 fi
 
+HOSTNAMES=""
+for hostn in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>/dev/null); do
+    HOSTNAMES="*.$(${BASENAME_BIN} ${hostn}) ${HOSTNAMES}"
+done
+
 ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
-${PRINTF_BIN} "Hostname: ${cyan}${JAIL_HOSTNAME}${reset}\n"
+${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
 ${PRINTF_BIN} "IPv4: ${IP}\n"
 ${PRINTF_BIN} "Status: ${STATUS}\n\n"
 
 if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
-    ${PRINTF_BIN} "Attributes set:\n"
+    ${PRINTF_BIN} "Overriden attributes:\n"
     for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
-        ${PRINTF_BIN} "${yellow}$(${BASENAME_BIN} ${i})${reset}: ${cyan}$(${CAT_BIN} ${i})${reset}\n"
+        ${PRINTF_BIN} "${cyan}$(${BASENAME_BIN} ${i}): $(${CAT_BIN} ${i})${reset}\n"
     done
     ${PRINTF_BIN} "\n"
 fi
-${PRINTF_BIN} "All applied attributes:\n${cyan}$(${RCTL_BIN} jail:${JAIL_NAME})${reset}\n"
-${PRINTF_BIN} "\nConfiguration:"
+${PRINTF_BIN} "Live attributes:\n${cyan}$(${RCTL_BIN} -h jail:${JAIL_NAME} | ${SED_BIN} 's/jail:n1://g' | ${SED_BIN} 's/:deny=/: /g')${reset}\n"
+${PRINTF_BIN} "\nFull configuration:"
 ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"

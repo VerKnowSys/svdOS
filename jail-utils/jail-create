@@ -58,7 +58,9 @@ JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
 JAIL_VERSION_FILE="${SENTRY}/jail.os.version"
 JAIL_ADDRESS_FILE="${SENTRY}/jail.ip.address"
-
+JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
+JAIL_DOMAINS_DIR="${SENTRY}/jail-domains"
+JAIL_WEBSERVER_CONF_DIR="${SENTRY}/jail-webconf"
 
 note "Creating ZFS dataset"
 zfs create -o mountpoint=${CELL} zroot${CELL}
@@ -104,6 +106,9 @@ ${CP_BIN} -R ${JAIL_SOURCE}/etc ${CELL}
 ${CP_BIN} -R ${JAIL_SOURCE}/var ${CELL}
 
 note "Making required jail directories and user dir"
+${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}"
+${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
+${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}"
 ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh
 ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Software ${CELL}/tmp
 

@@ -30,7 +30,9 @@ JAIL_VERSION_FILE="${SENTRY}/jail.os.version"
 JAIL_VERSION="$(cat ${JAIL_VERSION_FILE})"
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
 JAIL_TRACE_LOG="${SENTRY}/jail.truss.log"
+JAIL_DOMAINS_DIR="${SENTRY}/jail-domains"
 JAIL_ATTRIBUTES_DIR="${SENTRY}/jail-attributes"
+JAIL_WEBSERVER_CONF_DIR="${SENTRY}/jail-webconf"
 
 if [ -f "${JAIL_ADDRESS_FILE}" ]; then
     IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
@@ -83,10 +85,12 @@ ${RCTL_BIN} -a jail:${JAIL_NAME}:openfiles:deny=1024
 ${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=16
 
 note "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
+${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}"
 ${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
+${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}"
 cd ${JAIL_ATTRIBUTES_DIR}
 for attribute in $(${LS_BIN}); do
     value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
-    note "  Set: ${attribute}, value: ${value}"
+    note "Overriding attribute: ${attribute}, value: ${value}"
     ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value}
 done
