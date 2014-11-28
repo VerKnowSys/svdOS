@@ -73,6 +73,15 @@ set_values () {
 }
 
 
+check_cell_name () {
+    base="${1}"
+    name="$(${BASENAME_BIN} ${base})"
+    if [ ! -d "${base}" ]; then
+        error "Bad jail name: ${name}"
+    fi
+}
+
+
 jail_status () {
     usage () {
         note "Usage: $(${BASENAME_BIN} $0) status jail-name"
@@ -84,6 +93,7 @@ jail_status () {
     fi
 
     set_values $1
+    check_cell_name ${CELL}
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "Interface: ${DEFAULT_INTERFACE}\n"
@@ -230,6 +240,7 @@ jail_start () {
     JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
 
     set_values $1
+    check_cell_name ${CELL}
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
         note "Turning on jail IP: ${IP} on interface ${DEFAULT_INTERFACE}"
@@ -300,6 +311,7 @@ jail_stop () {
     fi
 
     set_values $1
+    check_cell_name ${CELL}
     note "Terminating jail: ${JAIL_NAME}"
     ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
     note "Unmounting jail directories"
@@ -336,6 +348,7 @@ jail_set () {
     JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
 
     set_values $1
+    check_cell_name ${CELL}
     note "Setting ${JAIL_ATTRIBUTE}: ${JAIL_VALUE} for jail: ${JAIL_NAME}"
     echo "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
     jail_start "${JAIL_NAME}"
@@ -358,6 +371,7 @@ jail_login () {
     JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
 
     set_values $1
+    check_cell_name ${CELL}
     note "Logging into jail as: ${JAIL_USER}@${JAIL_NAME}"
     ${TRUSS_BIN} -o ${JAIL_EXEC_LOG} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_USER} >> ${LOG_FILE} 2>&1
 }
@@ -381,6 +395,7 @@ jail_destroy () {
     JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
 
     set_values $1
+    check_cell_name ${CELL}
 
     note "Are you sure you want to destroy jail: '${JAIL_NAME}' with all data? Type 'yes' to confirm."
     read ans
