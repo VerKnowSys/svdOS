@@ -228,6 +228,7 @@ ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/g++ || ${LN_BIN} -s /Software/Gcc/export
 note "Installing jail-utils to host system"
 ${INSTALL_BIN} ${SERVED_REPO}/jail-utils/gvr ${DEFAULT_SYSTEM_PREFIX}
 
+set +e
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
     note
