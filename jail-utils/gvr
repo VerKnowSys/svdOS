@@ -373,7 +373,7 @@ jail_login () {
     set_values $1
     check_cell_name ${CELL}
     note "Logging into jail as: ${JAIL_USER}@${JAIL_NAME}"
-    ${TRUSS_BIN} -o ${JAIL_EXEC_LOG} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_USER} >> ${LOG_FILE} 2>&1
+    ${TRUSS_BIN} -o ${JAIL_EXEC_LOG} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_USER}
 }
 
 
