@@ -5,6 +5,8 @@
 
 . /etc/sofin.conf.sh
 
+VERSION="0.1.2"
+
 SERVED_REPO="/var/ServeD-OS"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
 DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
@@ -36,42 +38,56 @@ JAIL_TRUSS_EXEC_NAME="jail.truss.exec.log"
 JAIL_ID_NAME="jail.id"
 
 
+set_values () {
+    JAIL_NAME="${1}"
+    export CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_NAME}"
+    export SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}"
+    export JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
+    export JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
+    export JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
+    export JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+    export JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
+    export JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
+    export JAIL_EXEC_LOG="${SENTRY}/${JAIL_TRUSS_EXEC_NAME}"
+    export JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
+    export JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
+    export JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
+    export STATUS="${gray}(${red}*off*${gray})${reset}"
+    ${JLS_BIN} | ${GREP_BIN} "\ ${JAIL_NAME}\ " > ${LOG_FILE} 2>&1
+    if [ "$?" = "0" ]; then
+        export STATUS="${gray}(${green}*on*${gray})${reset}"
+    fi
+    export JAIL_VERSION="${DEFAULT_VERSION}"
+    if [ -f "${JAIL_VERSION_FILE}" ]; then
+        export JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE})"
+    fi
+    export JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
+    export IP="${cyan}no-address${reset}"
+    if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}" ]; then
+        export IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
+    fi
+    export HOSTNAMES=""
+    for hostn in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
+        export HOSTNAMES="*.$(${BASENAME_BIN} ${hostn}) ${HOSTNAMES}"
+    done
+}
+
+
 jail_status () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) status jail.tld.com"
+        note "Usage: $(${BASENAME_BIN} $0) status jail-name"
     }
-
-    JAIL_HOSTNAME="${1}" # hostname?
+    JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
         usage
         error "No jail hostname given"
     fi
-    CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-    JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
-    JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
-    JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
-    STATUS="${gray}(${red}*off*${gray})${reset}"
-    ${JLS_BIN} | ${GREP_BIN} "\ ${JAIL_HOSTNAME}\ " > ${LOG_FILE} 2>&1
-    if [ "$?" = "0" ]; then
-        STATUS="${gray}(${green}*on*${gray})${reset}"
-    fi
-    IP="${cyan}no-address${reset}"
-    if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}/${CELL_IP_ADDRESS_FILE}" ]; then
-        IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}/${CELL_IP_ADDRESS_FILE}")${reset}"
-    fi
 
-    HOSTNAMES=""
-    for hostn in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
-        HOSTNAMES="*.$(${BASENAME_BIN} ${hostn}) ${HOSTNAMES}"
-    done
-
+    set_values $1
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "IPv4: ${IP}\n"
     ${PRINTF_BIN} "Status: ${STATUS}\n\n"
-
     if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
         ${PRINTF_BIN} "Overriden attributes:\n"
         for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
@@ -82,7 +98,6 @@ jail_status () {
     ${PRINTF_BIN} "Live attributes:\n${cyan}$(${RCTL_BIN} -h jail:${JAIL_NAME} | ${SED_BIN} 's/jail:n1://g' | ${SED_BIN} 's/:deny=/: /g')${reset}\n"
     ${PRINTF_BIN} "\nFull configuration:"
     ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"
-
 }
 
 
@@ -92,12 +107,12 @@ jail_create () {
         note "fbsd-version -> by default 10.1"
         note "net-interface -> by default first interface with default route (${DEFAULT_INTERFACE})"
     }
-    JAIL_HOSTNAME="${1}" # hostname?
+    JAIL_NAME="${1}"
     if [ "${1}" = "" ]; then
         usage
         error "No jail hostname given"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
+    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
     JAIL_ADDRESS="${2}"
     if [ "${2}" = "" ]; then
         note "No ip given"
@@ -113,18 +128,7 @@ jail_create () {
         JAIL_INTERFACE="${DEFAULT_INTERFACE}"
     fi
 
-    CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-    JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
-    JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
-    JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
-    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
-    JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
-    JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
-    JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
-    JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
-    JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
-
+    set_values $1 ${JAIL_VERSION}
     note "Creating ZFS dataset"
     ${ZFS_BIN} create -o mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL}
     ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}
@@ -136,24 +140,24 @@ jail_create () {
     else
         note "Generating jail configuration"
         ${PRINTF_BIN} "
-    ${JAIL_NAME} {
-        name = \"${JAIL_NAME}\";
-        host.hostname = \"${JAIL_HOSTNAME}\";
-        ip4.addr = \"${JAIL_ADDRESS}\";
-        interface = ${JAIL_INTERFACE};
-        path = \"${CELL}\";
-        exec.start = \"/bin/sh /etc/rc\";
-        exec.stop = \"/bin/sh /etc/rc.shutdown\";
-        enforce_statfs = 2;
-        allow.mount = 0;
-        allow.mount.nullfs = 0;
-        allow.mount.zfs = 0;
-        allow.mount.tmpfs = 0;
-        allow.raw_sockets = 1;
-        mount.devfs;
-        persist;
-    }
-    " >> ${JAIL_CONF_FILE}
+${JAIL_NAME} {
+    name = \"${JAIL_NAME}\";
+    host.hostname = \"${JAIL_NAME}\";
+    ip4.addr = \"${JAIL_ADDRESS}\";
+    interface = ${JAIL_INTERFACE};
+    path = \"${CELL}\";
+    exec.start = \"/bin/sh /etc/rc\";
+    exec.stop = \"/bin/sh /etc/rc.shutdown\";
+    enforce_statfs = 2;
+    allow.mount = 0;
+    allow.mount.nullfs = 0;
+    allow.mount.zfs = 0;
+    allow.mount.tmpfs = 0;
+    allow.raw_sockets = 1;
+    mount.devfs;
+    persist;
+}
+" >> ${JAIL_CONF_FILE}
     fi
 
     note "Mounting jail directories"
@@ -177,7 +181,7 @@ jail_create () {
 
     note "Installing default etc for jail"
     ${TAR_BIN} xf ${DEFAULT_ETC_ARCHIVE} --directory ${CELL}
-    ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_HOSTNAME}:" ${CELL}/etc/rc.conf
+    ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}:" ${CELL}/etc/rc.conf
 
     note "Removing unnecessary directories"
     ${RM_BIN} -rf ${CELL}/boot ${CELL}/mnt ${CELL}/media ${CELL}/rescue ${CELL}/root ${CELL}/proc
@@ -186,8 +190,8 @@ jail_create () {
     ${CP_BIN} -R /Software/Zsh ${CELL}/Software
     ${CP_BIN} /etc/zshenv ${CELL}/etc
 
-    note "Launching jail: ${JAIL_HOSTNAME}"
-    jail_start "${JAIL_HOSTNAME}"
+    note "Launching jail: ${JAIL_NAME}"
+    jail_start "${JAIL_NAME}"
 }
 
 
@@ -214,27 +218,16 @@ jail_list () {
 # Apply settings and start jail
 jail_start () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) start jail.tld.com"
+        note "Usage: $(${BASENAME_BIN} $0) start jail-name"
     }
-    JAIL_HOSTNAME="${1}" # hostname?
+    JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
         usage
         error "No jail to stop"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
-    CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-    JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
-    JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
-    JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
-    JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
-    JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
-    JAIL_VERSION="$(cat ${JAIL_VERSION_FILE})"
-    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
-    JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
-    JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
-    JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
-    JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
+    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+
+    set_values $1
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
         note "Turning on jail IP: ${IP} on interface ${DEFAULT_INTERFACE}"
@@ -245,8 +238,9 @@ jail_start () {
         ${MKDIR_BIN} -p "${CELL}/${dir}"
         ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> ${LOG_FILE}
     done
-    note "Starting / Updating jail: ${JAIL_HOSTNAME}"
-    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} > ${LOG_FILE} 2>&1
+    note "Starting / Updating jail: ${JAIL_NAME}"
+    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
+
     # example:
     #   in ${JAIL_ATTRIBUTES_DIR} we look for files like:
     #   file: "pcpu" => contains value 140 (140% cpu)
@@ -283,9 +277,7 @@ jail_start () {
     ${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=16
 
     note "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
-    ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}"
-    ${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
-    ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}"
+    ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}"
     cd ${JAIL_ATTRIBUTES_DIR}
     for attribute in $(${LS_BIN}); do
         value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
@@ -297,23 +289,17 @@ jail_start () {
 
 jail_stop () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) stop jail.tld.com"
+        note "Usage: $(${BASENAME_BIN} $0) stop jail-name"
     }
-    JAIL_HOSTNAME="${1}" # hostname?
+    JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
         usage
         error "No jail to stop"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
-    CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-    JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
-    JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
-    JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
-    JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
-    DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
-    note "Terminating jail: ${JAIL_HOSTNAME}"
-    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -r "${JAIL_NAME}"
+
+    set_values $1
+    note "Terminating jail: ${JAIL_NAME}"
+    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
     note "Unmounting jail directories"
     for dir in dev bin lib libexec sbin usr; do
         ${UMOUNT_BIN} "${CELL}/${dir}" 2>${LOG_FILE}
@@ -328,9 +314,9 @@ jail_stop () {
 
 jail_set () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) set jail.tld.com attribute value"
+        note "Usage: $(${BASENAME_BIN} $0) set jail-name attribute value"
     }
-    JAIL_HOSTNAME="${1}"
+    JAIL_NAME="${1}"
     if [ "${1}" = "" ]; then
         usage
         error "No jail hostname given"
@@ -345,9 +331,9 @@ jail_set () {
         usage
         error "No value given"
     fi
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-    JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
+    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+
+    set_values $1
     note "Setting ${JAIL_ATTRIBUTE}: ${JAIL_VALUE} for jail: ${JAIL_NAME}"
     echo "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
     jail_start "${JAIL_NAME}"
@@ -356,9 +342,9 @@ jail_set () {
 
 jail_login () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) login jail.tld.com"
+        note "Usage: $(${BASENAME_BIN} $0) login jail-name"
     }
-    JAIL_HOSTNAME="${1}" # hostname?
+    JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
         usage
         error "No jail to enter"
@@ -367,11 +353,11 @@ jail_login () {
     if [ "${2}" != "" ]; then
         JAIL_USER="${2}"
     fi
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-    JAIL_EXEC_LOG="${SENTRY}/${JAIL_TRUSS_EXEC_NAME}"
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
-    note "Logging into jail: ${JAIL_HOSTNAME}"
-    ${TRUSS_BIN} -o ${JAIL_EXEC_LOG} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_USER}
+    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+
+    set_values $1
+    note "Logging into jail as: ${JAIL_USER}@${JAIL_NAME}"
+    ${TRUSS_BIN} -o ${JAIL_EXEC_LOG} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_USER} >> ${LOG_FILE} 2>&1
 }
 
 
@@ -383,20 +369,21 @@ jail_restart () {
 
 jail_destroy () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) destroy jail.tld.com"
+        note "Usage: $(${BASENAME_BIN} $0) destroy jail-name"
     }
-    JAIL_HOSTNAME="${1}" # hostname?
+    JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
         usage
         error "No jail to destroy"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
-    CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
-    note "Are you sure you want to destroy jail: '${JAIL_HOSTNAME}' with all data? Type 'yes' to confirm."
+    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+
+    set_values $1
+
+    note "Are you sure you want to destroy jail: '${JAIL_NAME}' with all data? Type 'yes' to confirm."
     read ans
     if [ "${ans}" = "yes" ]; then
-        note "Terminating jail: ${JAIL_HOSTNAME}"
+        note "Terminating jail: ${JAIL_NAME}"
         jail_stop "${JAIL_NAME}"
         note "Destroying datasets: ${CELL} and ${SENTRY}"
         ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}${CELL}
