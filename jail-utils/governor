@@ -367,10 +367,41 @@ jail_restart () {
 }
 
 
+jail_destroy () {
+    usage () {
+        note "Usage: $(${BASENAME_BIN} $0) jail.tld.com"
+    }
+    JAIL_HOSTNAME="${1}" # hostname?
+    if [ "${1}" = "" ]; then
+        usage
+        error "No jail to destroy"
+    fi
+    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_HOSTNAME}\n" | ${SED_BIN} 's/\./-/g')"
+    CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_HOSTNAME}"
+    SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_HOSTNAME}"
+    note "Are you sure you want to destroy jail: '${JAIL_HOSTNAME}' with all data? Type 'yes' to confirm."
+    read ans
+    if [ "${ans}" = "yes" ]; then
+        note "Terminating jail: ${JAIL_HOSTNAME}"
+        jail-stop "${JAIL_NAME}"
+        note "Destroying datasets: ${CELL} and ${SENTRY}"
+        zfs destroy zroot${CELL}
+        zfs destroy zroot${SENTRY}
+    else
+        note "Jail left intact"
+    fi
+}
+
+
 case $1 in
     create|c)
         shift
         jail_create $*
+        ;;
+
+    destroy)
+        shift
+        jail_destroy $*
         ;;
 
     status|s|stat)
