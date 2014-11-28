@@ -87,7 +87,8 @@ jail_status () {
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "IPv4: ${IP}\n"
-    ${PRINTF_BIN} "Status: ${STATUS}\n\n"
+    ${PRINTF_BIN} "Status: ${STATUS}\n"
+    ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
     if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
         ${PRINTF_BIN} "Overriden attributes:\n"
         for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
