@@ -197,8 +197,8 @@ jail_list () {
         cellname="$(${PRINTF_BIN} "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}')" # first 29 chars visible in jls output
         ${PRINTF_BIN} "${cell}"
         IP="${cyan}no-IP-assigned${reset}"
-        if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_ATTRIBUTE_FILE}" ]; then
-            IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_ATTRIBUTE_FILE}")${reset}"
+        if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}" ]; then
+            IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
         fi
         ${JLS_BIN} | ${GREP_BIN} "\ ${cellname}\ " > ${LOG_FILE} 2>&1
         if [ "$?" = "0" ]; then
@@ -246,7 +246,7 @@ jail_start () {
         ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> ${LOG_FILE}
     done
     note "Starting / Updating jail: ${JAIL_HOSTNAME}"
-    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} 2> ${LOG_FILE}
+    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} > ${LOG_FILE} 2>&1
     # example:
     #   in ${JAIL_ATTRIBUTES_DIR} we look for files like:
     #   file: "pcpu" => contains value 140 (140% cpu)
