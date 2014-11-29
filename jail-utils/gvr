@@ -96,7 +96,7 @@ jail_status () {
     check_cell_name ${CELL}
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
-    ${PRINTF_BIN} "Interface: ${DEFAULT_INTERFACE}\n"
+    ${PRINTF_BIN} "Interface: ${green}${DEFAULT_INTERFACE}${reset}\n"
     ${PRINTF_BIN} "IPv4: ${IP}\n"
     ${PRINTF_BIN} "Status: ${STATUS}\n"
     ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
@@ -316,7 +316,7 @@ jail_stop () {
     ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
     note "Unmounting jail directories"
     for dir in dev bin lib libexec sbin usr; do
-        ${UMOUNT_BIN} "${CELL}/${dir}" 2>${LOG_FILE}
+        ${UMOUNT_BIN} -f "${CELL}/${dir}" 2>${LOG_FILE}
     done
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
@@ -403,8 +403,10 @@ jail_destroy () {
         note "Terminating jail: ${JAIL_NAME}"
         jail_stop "${JAIL_NAME}"
         note "Destroying datasets: ${CELL} and ${SENTRY}"
-        ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}${CELL}
-        ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}${SENTRY}
+        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${CELL}"
+        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${SENTRY}"
+        ${RM_BIN} -rf "${CELL}"
+        ${RM_BIN} -rf "${SENTRY}"
     else
         note "Jail left intact"
     fi
