@@ -473,15 +473,20 @@ case $1 in
     *)
         CMD="${GVR_SCRIPT_NAME}"
         note "Usage:"
-        note "${CMD} create"
-        note "${CMD} list"
-        note "${CMD} set"
-        note "${CMD} login"
-        note "${CMD} start"
-        note "${CMD} stop"
-        note "${CMD} restart"
-        note "${CMD} status"
-        note "${CMD} destroy"
+        note "${CMD} command arg1 arg2 [...]"
+        note
+        note "List of commands:"
+        note "create"
+        note "list"
+        note "set"
+        note "login"
+        note "start"
+        note "stop"
+        note "restart"
+        note "status"
+        note "destroy"
+        note
+        note "Run '${CMD} [command]' without arguments to see detailed help about command params."
         ;;
 esac
 
