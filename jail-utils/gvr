@@ -40,13 +40,13 @@ JAIL_ID_NAME="jail.id"
 
 
 set_values () {
-    JAIL_NAME="${1}"
-    export CELL="${DEFAULT_CELLS_LOCATION}/${JAIL_NAME}"
-    export SENTRY="${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}"
+    ENTERED_NAME="${1}"
+    export CELL="${DEFAULT_CELLS_LOCATION}/${ENTERED_NAME}"
+    export SENTRY="${DEFAULT_SENTRY_LOCATION}/${ENTERED_NAME}"
     export JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
     export JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
     export JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
-    export JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+    export JAIL_NAME="$(${PRINTF_BIN} "${ENTERED_NAME}\n" | ${SED_BIN} 's/\./-/g')"
     export JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
     export JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
     export JAIL_EXEC_LOG="${SENTRY}/${JAIL_TRUSS_EXEC_NAME}"
