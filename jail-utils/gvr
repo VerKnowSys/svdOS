@@ -142,8 +142,12 @@ apply_attributes () {
     cd ${JAIL_ATTRIBUTES_DIR}
     for attribute in $(${LS_BIN}); do
         value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
-        note "Overriding attribute: ${attribute}, value: ${value}"
-        ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value}
+        ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value} >> ${LOG_FILE} 2>&1
+        if [ "$?" = "0" ]; then
+            note "Overriden attribute: ${attribute} with value: ${value}"
+        else
+            warn "Wrong attribute: ${red}${attribute}${reset}"
+        fi
     done
 }
 
