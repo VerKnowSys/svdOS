@@ -324,34 +324,6 @@ jail_start () {
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
-    # example:
-    #   in ${JAIL_ATTRIBUTES_DIR} we look for files like:
-    #   file: "pcpu" => contains value 140 (140% cpu)
-    #
-    #   resources from rctl man page:
-    #     cputime        CPU time, in seconds
-    #     datasize       data size, in bytes
-    #     stacksize      stack size, in bytes
-    #     coredumpsize       core dump size, in bytes
-    #     memoryuse      resident set size, in bytes
-    #     memorylocked       locked memory, in bytes
-    #     maxproc        number of processes
-    #     openfiles      file descriptor table size
-    #     vmemoryuse     address space limit, in bytes
-    #     pseudoterminals    number of PTYs
-    #     swapuse        swap usage, in bytes
-    #     nthr           number of threads
-    #     msgqqueued     number of queued SysV messages
-    #     msgqsize       SysV message queue size, in bytes
-    #     nmsgq          number of SysV message queues
-    #     nsem           number of SysV semaphores
-    #     nsemop         number of SysV semaphores modified in a single semop(2) call
-    #     nshm           number of SysV shared memory segments
-    #     shmsize        SysV shared memory size, in bytes
-    #     wallclock      wallclock time, in seconds
-    #
-    #   read more: http://www.manualpages.de/FreeBSD/FreeBSD-9.0-RELEASE/man8/rctl.8.html
-    #
     note "Applying default attributes for jail: ${JAIL_NAME}"
     ${RCTL_BIN} -a jail:${JAIL_NAME}:memoryuse:deny=1024M
     ${RCTL_BIN} -a jail:${JAIL_NAME}:vmemoryuse:deny=2048M
@@ -470,7 +442,33 @@ jail_destroy () {
 }
 
 
-howto () {
+attributes_show () {
+    # NOTE: resources, taken from FreeBSD "rctl" man page:
+    note "Attributes with description:"
+    ${PRINTF_BIN} "   ${cyan}cputime${gray}: ${green}CPU time, in seconds${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}datasize${gray}: ${green}data size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}stacksize${gray}: ${green}stack size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}coredumpsize${gray}: ${green}core dump size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}memoryuse${gray}: ${green}resident set size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}memorylocked${gray}: ${green}locked memory, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}maxproc${gray}: ${green}number of processes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}openfiles${gray}: ${green}file descriptor table size${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}vmemoryuse${gray}: ${green}address space limit, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}pseudoterminals${gray}: ${green}number of PTYs${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}swapuse${gray}: ${green}swap usage, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nthr${gray}: ${green}number of threads${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}msgqqueued${gray}: ${green}number of queued SysV messages${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}msgqsize${gray}: ${green}SysV message queue size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nmsgq${gray}: ${green}number of SysV message queues${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nsem${gray}: ${green}number of SysV semaphores${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nsemop${gray}: ${green}number of SysV semaphores modified in a single semop(2) call${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nshm${gray}: ${green}number of SysV shared memory segments${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}shmsize${gray}: ${green}SysV shared memory size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}wallclock${gray}: ${green}wallclock time, in seconds${reset}\n"
+}
+
+
+name_and_version () {
     note "ServeD GoVeRnor v${VERSION}"
 }
 
@@ -478,7 +476,7 @@ howto () {
 case $1 in
     ver|v|version)
         shift
-        howto
+        name_and_version
         ;;
 
     create|c)
@@ -526,12 +524,17 @@ case $1 in
         jail_login $*
         ;;
 
+    attributes|attrs)
+        attributes_show
+        ;;
+
     *)
         CMD="${GVR_SCRIPT_NAME}"
         note "Usage:"
         note "${CMD} command arg1 arg2 [...]"
         note
         note "List of commands:"
+        note "attributes"
         note "create"
         note "list"
         note "set"
