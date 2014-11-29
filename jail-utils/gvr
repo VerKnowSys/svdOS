@@ -53,6 +53,7 @@ set_values () {
     ENTERED_NAME="${1}"
     export CELL="${DEFAULT_CELLS_LOCATION}/${ENTERED_NAME}"
     export SENTRY="${DEFAULT_SENTRY_LOCATION}/${ENTERED_NAME}"
+    debug "Processing CELL: ${CELL}, Sentry: ${SENTRY}"
     export JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
     export JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
     export JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
@@ -69,24 +70,29 @@ set_values () {
     export JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
     export JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
     export JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
-    export STATUS="${gray}(${red}*off*${gray})${reset}"
+    export JAIL_STATUS="${gray}(${red}*off*${gray})${reset}"
     ${JLS_BIN} | ${GREP_BIN} "\ ${JAIL_NAME}\ " > ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
-        export STATUS="${gray}(${green}*on*${gray})${reset}"
+        export JAIL_STATUS="${gray}(${green}*on*${gray})${reset}"
     fi
+    debug "Got jail status: ${JAIL_SOURCE}"
     export JAIL_VERSION="${DEFAULT_VERSION}"
     if [ -f "${JAIL_VERSION_FILE}" ]; then
         export JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE})"
     fi
+    debug "Got jail os version: ${JAIL_VERSION}"
     export JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
-    export IP="${cyan}no-address${reset}"
+    debug "Got jail source: ${JAIL_SOURCE}"
+    export JAIL_IP="${cyan}no-address${reset}"
     if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}" ]; then
-        export IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
+        export JAIL_IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
     fi
+    debug "Got jail IP: ${JAIL_IP}"
     export HOSTNAMES=""
     for hostn in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
         export HOSTNAMES="*.$(${BASENAME_BIN} ${hostn}) ${HOSTNAMES}"
     done
+    debug "Got jail hostnames: ${HOSTNAMES}"
 }
 
 
@@ -114,8 +120,8 @@ jail_status () {
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "Interface: ${green}${DEFAULT_INTERFACE}${reset}\n"
-    ${PRINTF_BIN} "IPv4: ${IP}\n"
-    ${PRINTF_BIN} "Status: ${STATUS}\n"
+    ${PRINTF_BIN} "IPv4: ${JAIL_IP}\n"
+    ${PRINTF_BIN} "Status: ${JAIL_STATUS}\n"
     ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
     if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
         ${PRINTF_BIN} "Overriden attributes:\n"
@@ -272,15 +278,15 @@ jail_list () {
     for cell in $(${LS_BIN}); do
         cellname="$(${PRINTF_BIN} "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}')" # first 29 chars visible in jls output
         ${PRINTF_BIN} "${cell}"
-        IP="${cyan}no-IP-assigned${reset}"
+        JAIL_IP="${cyan}no-IP-assigned${reset}"
         if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}" ]; then
-            IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
+            JAIL_IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
         fi
         ${JLS_BIN} | ${GREP_BIN} "\ ${cellname}\ " > ${LOG_FILE} 2>&1
         if [ "$?" = "0" ]; then
-            ${PRINTF_BIN} " ${IP} ${gray}(${green}*on*${gray})${reset}"
+            ${PRINTF_BIN} " ${JAIL_IP} ${gray}(${green}*on*${gray})${reset}"
         else
-            ${PRINTF_BIN} " ${IP} ${gray}(${red}*off*${gray})${reset}"
+            ${PRINTF_BIN} " ${JAIL_IP} ${gray}(${red}*off*${gray})${reset}"
         fi
         ${PRINTF_BIN} "\n"
     done
@@ -302,8 +308,8 @@ jail_start () {
     set_values $1
     check_cell_name ${CELL}
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
-        IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
-        note "Turning on jail IP: ${IP} on interface ${DEFAULT_INTERFACE}"
+        JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
+        note "Turning on jail IP: ${JAIL_IP} on interface ${DEFAULT_INTERFACE}"
         ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} $(${CAT_BIN} ${JAIL_ADDRESS_FILE}) alias
     fi
     note "Mounting jail directories for system version: ${JAIL_VERSION}"
@@ -373,9 +379,9 @@ jail_stop () {
         ${UMOUNT_BIN} -f "${CELL}/${dir}" 2>${LOG_FILE}
     done
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
-        IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
-        note "Turning off jail IP: ${IP}"
-        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${IP} -alias
+        JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
+        note "Turning off jail IP: ${JAIL_IP}"
+        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_IP} -alias
     fi
 }
 
