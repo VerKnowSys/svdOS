@@ -13,7 +13,8 @@ else
     exit 1
 fi
 
-VERSION="0.1.4"
+
+VERSION="0.1.5"
 
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 SERVED_REPO="/var/ServeD-OS"
@@ -59,6 +60,12 @@ set_values () {
     export JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
     export JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
     export JAIL_EXEC_LOG="${SENTRY}/${JAIL_TRUSS_EXEC_NAME}"
+    export DEBUG_COMMAND=""
+    export DEBUG_EXEC_COMMAND=""
+    if [ "${DEBUG}" = "true" ]; then
+        export DEBUG_COMMAND="${TRUSS_BIN} -o ${JAIL_TRACE_LOG}"
+        export DEBUG_EXEC_COMMAND="${TRUSS_BIN} -o ${JAIL_EXEC_LOG}"
+    fi
     export JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
     export JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
     export JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
@@ -228,6 +235,7 @@ ${JAIL_NAME} {
     note "Mounting jail directories"
     for dir in bin lib libexec sbin usr; do
         ${MKDIR_BIN} -p "${CELL}/${dir}"
+        debug "Mounting ${JAIL_SOURCE}/${dir} => ${CELL}/${dir}"
         ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}"
     done
 
@@ -300,12 +308,13 @@ jail_start () {
     fi
     note "Mounting jail directories for system version: ${JAIL_VERSION}"
     for dir in bin lib libexec sbin usr; do
+        debug "Mounting ${JAIL_SOURCE}/${dir} => ${CELL}/${dir}"
         ${MKDIR_BIN} -p "${CELL}/${dir}"
         ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> ${LOG_FILE}
     done
     update_sofin ${CELL}
     note "Deploying jail: ${JAIL_NAME}"
-    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
+    ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
 
     # example:
     #   in ${JAIL_ATTRIBUTES_DIR} we look for files like:
@@ -358,7 +367,7 @@ jail_stop () {
     set_values $1
     check_cell_name ${CELL}
     note "Terminating jail: ${JAIL_NAME}"
-    ${TRUSS_BIN} -o ${JAIL_TRACE_LOG} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
+    ${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
     note "Unmounting jail directories"
     for dir in dev bin lib libexec sbin usr; do
         ${UMOUNT_BIN} -f "${CELL}/${dir}" 2>${LOG_FILE}
