@@ -5,7 +5,7 @@
 
 . /etc/sofin.conf.sh
 
-VERSION="0.1.3"
+VERSION="0.1.4"
 
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 SERVED_REPO="/var/ServeD-OS"
@@ -126,6 +126,16 @@ apply_attributes () {
 }
 
 
+check_jail_address () {
+    JAIL_ADDRESS="${1}"
+    for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION}); do
+        if [ "$(${CAT_BIN} ${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESS_ATTRIBUTE})" = "${JAIL_ADDRESS}" ]; then
+            error "Address: ${JAIL_ADDRESS} is already assigned to jail: ${jail}"
+        fi
+    done
+}
+
+
 jail_create () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} create jail-name.com IP-address fbsd-version net-interface"
@@ -144,6 +154,8 @@ jail_create () {
         usage
         exit 1
     fi
+    check_jail_address ${JAIL_ADDRESS}
+
     JAIL_VERSION="${3}"
     if [ "${3}" = "" ]; then
         JAIL_VERSION="${DEFAULT_VERSION}"
@@ -270,8 +282,8 @@ jail_start () {
     # example:
     #   in ${JAIL_ATTRIBUTES_DIR} we look for files like:
     #   file: "pcpu" => contains value 140 (140% cpu)
-    #   resources from rctl man page:
     #
+    #   resources from rctl man page:
     #     cputime        CPU time, in seconds
     #     datasize       data size, in bytes
     #     stacksize      stack size, in bytes
