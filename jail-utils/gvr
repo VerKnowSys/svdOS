@@ -7,6 +7,7 @@
 
 VERSION="0.1.2"
 
+GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 SERVED_REPO="/var/ServeD-OS"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
 DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
@@ -84,7 +85,7 @@ check_cell_name () {
 
 jail_status () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) status jail-name"
+        note "Usage: ${GVR_SCRIPT_NAME} status jail-name"
     }
     JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
@@ -115,7 +116,7 @@ jail_status () {
 
 jail_create () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) create jail-name.com IP-address fbsd-version net-interface"
+        note "Usage: ${GVR_SCRIPT_NAME} create jail-name.com IP-address fbsd-version net-interface"
         note "fbsd-version -> by default 10.1"
         note "net-interface -> by default first interface with default route (${DEFAULT_INTERFACE})"
     }
@@ -230,7 +231,7 @@ jail_list () {
 # Apply settings and start jail
 jail_start () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) start jail-name"
+        note "Usage: ${GVR_SCRIPT_NAME} start jail-name"
     }
     JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
@@ -302,7 +303,7 @@ jail_start () {
 
 jail_stop () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) stop jail-name"
+        note "Usage: ${GVR_SCRIPT_NAME} stop jail-name"
     }
     JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
@@ -328,7 +329,7 @@ jail_stop () {
 
 jail_set () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) set jail-name attribute value"
+        note "Usage: ${GVR_SCRIPT_NAME} set jail-name attribute value"
     }
     JAIL_NAME="${1}"
     if [ "${1}" = "" ]; then
@@ -357,7 +358,7 @@ jail_set () {
 
 jail_login () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) login jail-name"
+        note "Usage: ${GVR_SCRIPT_NAME} login jail-name"
     }
     JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
@@ -385,7 +386,7 @@ jail_restart () {
 
 jail_destroy () {
     usage () {
-        note "Usage: $(${BASENAME_BIN} $0) destroy jail-name"
+        note "Usage: ${GVR_SCRIPT_NAME} destroy jail-name"
     }
     JAIL_NAME="${1}" # hostname?
     if [ "${1}" = "" ]; then
@@ -413,7 +414,17 @@ jail_destroy () {
 }
 
 
+howto () {
+    note "ServeD GoVeRnor v${VERSION}"
+}
+
+
 case $1 in
+    ver|v|version)
+        shift
+        howto
+        ;;
+
     create|c)
         shift
         jail_create $*
@@ -460,7 +471,7 @@ case $1 in
         ;;
 
     *)
-        CMD="$(${BASENAME_BIN} $0)"
+        CMD="${GVR_SCRIPT_NAME}"
         note "Usage:"
         note "${CMD} create"
         note "${CMD} list"
