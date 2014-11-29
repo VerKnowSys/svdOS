@@ -5,7 +5,7 @@
 
 . /etc/sofin.conf.sh
 
-VERSION="0.1.2"
+VERSION="0.1.3"
 
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 SERVED_REPO="/var/ServeD-OS"
@@ -111,6 +111,18 @@ jail_status () {
     ${PRINTF_BIN} "Live attributes:\n${cyan}$(${RCTL_BIN} -h jail:${JAIL_NAME} | ${SED_BIN} 's/jail:n1://g' | ${SED_BIN} 's/:deny=/: /g')${reset}\n"
     ${PRINTF_BIN} "\nFull configuration:"
     ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"
+}
+
+
+apply_attributes () {
+    note "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
+    ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}"
+    cd ${JAIL_ATTRIBUTES_DIR}
+    for attribute in $(${LS_BIN}); do
+        value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
+        note "Overriding attribute: ${attribute}, value: ${value}"
+        ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value}
+    done
 }
 
 
@@ -289,15 +301,7 @@ jail_start () {
     ${RCTL_BIN} -a jail:${JAIL_NAME}:maxproc:deny=125
     ${RCTL_BIN} -a jail:${JAIL_NAME}:openfiles:deny=1024
     ${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=16
-
-    note "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
-    ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}"
-    cd ${JAIL_ATTRIBUTES_DIR}
-    for attribute in $(${LS_BIN}); do
-        value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
-        note "Overriding attribute: ${attribute}, value: ${value}"
-        ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value}
-    done
+    apply_attributes
 }
 
 
@@ -352,7 +356,7 @@ jail_set () {
     check_cell_name ${CELL}
     note "Setting ${JAIL_ATTRIBUTE}: ${JAIL_VALUE} for jail: ${JAIL_NAME}"
     echo "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
-    jail_start "${JAIL_NAME}"
+    apply_attributes
 }
 
 
