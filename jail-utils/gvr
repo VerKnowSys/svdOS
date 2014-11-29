@@ -15,92 +15,93 @@ fi
 
 
 VERSION="0.1.5"
-
-GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
+LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
-DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
-DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
-if [ ! -f "${DEFAULT_ETC_ARCHIVE}" ]; then
-    error "etc archive: ${DEFAULT_ETC_ARCHIVE} wasn't found. Cannot continue"
-fi
-
-LOG_FILE="/var/log/governor.log"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="10.1"
 DEFAULT_WORKER_UID="501"
 DEFAULT_QUOTA_LIMIT="5G"
 DEFAULT_SENTRY_LIMIT="128M"
-
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
-
 CELL_IP_ADDRESS_ATTRIBUTE="jail.ip.address"
 CELL_OS_VERSION_ATTRIBUTE="jail.os.version"
-
 CELL_ATTRIBUTES_DIR="jail-attributes"
 CELL_DOMAINS_DIR="jail-domains"
 CELL_WEBCONF_DIR="jail-webconf"
-
 JAIL_CONF_NAME="jail.conf"
 JAIL_TRUSS_NAME="jail.truss.log"
 JAIL_TRUSS_EXEC_NAME="jail.truss.exec.log"
 JAIL_ID_NAME="jail.id"
+JAIL_STATUS_NAME="jail.status"
+GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
+DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
+DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
+if [ ! -f "${DEFAULT_ETC_ARCHIVE}" ]; then
+    error "Sanity check failed: Could not found etc archive: ${DEFAULT_ETC_ARCHIVE}. Governor can't continue"
+fi
 
 
+# This is where all jail settings are put into global scope of script:
 set_values () {
     ENTERED_NAME="${1}"
-    export CELL="${DEFAULT_CELLS_LOCATION}/${ENTERED_NAME}"
-    export SENTRY="${DEFAULT_SENTRY_LOCATION}/${ENTERED_NAME}"
+    CELL="${DEFAULT_CELLS_LOCATION}/${ENTERED_NAME}"
+    SENTRY="${DEFAULT_SENTRY_LOCATION}/${ENTERED_NAME}"
     debug "Processing CELL: ${CELL}, Sentry: ${SENTRY}"
-    export JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
-    export JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
-    export JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
-    export JAIL_NAME="$(${PRINTF_BIN} "${ENTERED_NAME}\n" | ${SED_BIN} 's/\./-/g')"
-    export JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
-    export JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
-    export JAIL_EXEC_LOG="${SENTRY}/${JAIL_TRUSS_EXEC_NAME}"
-    export DEBUG_COMMAND=""
-    export DEBUG_EXEC_COMMAND=""
+    JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
+    JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
+    JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
+    JAIL_NAME="$(${PRINTF_BIN} "${ENTERED_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+    JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
+    JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
+    JAIL_EXEC_LOG="${SENTRY}/${JAIL_TRUSS_EXEC_NAME}"
+    DEBUG_COMMAND=""
+    DEBUG_EXEC_COMMAND=""
     if [ "${DEBUG}" = "true" ]; then
-        export DEBUG_COMMAND="${TRUSS_BIN} -o ${JAIL_TRACE_LOG}"
-        export DEBUG_EXEC_COMMAND="${TRUSS_BIN} -o ${JAIL_EXEC_LOG}"
+        DEBUG_COMMAND="${TRUSS_BIN} -o ${JAIL_TRACE_LOG}"
+        DEBUG_EXEC_COMMAND="${TRUSS_BIN} -o ${JAIL_EXEC_LOG}"
     fi
-    export JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
-    export JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
-    export JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
-    export JAIL_STATUS="${gray}(${red}*off*${gray})${reset}"
+    JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
+    JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
+    JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
+    JAIL_STATUS_FILE="${SENTRY}/${JAIL_STATUS_NAME}"
+    JAIL_STATUS_DETAIL=""
+    if [ -f "${JAIL_STATUS_FILE}" ]; then
+        JAIL_STATUS_DETAIL="$(${CAT_BIN} ${JAIL_STATUS_FILE})"
+    fi
+    JAIL_STATUS="${red}*off*${gray} ${JAIL_STATUS_DETAIL}${reset}"
     ${JLS_BIN} | ${GREP_BIN} "\ ${JAIL_NAME}\ " > ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
-        export JAIL_STATUS="${gray}(${green}*on*${gray})${reset}"
+        JAIL_STATUS="${green}*on*${gray} ${JAIL_STATUS_DETAIL}${reset}"
     fi
     debug "Got jail status: ${JAIL_SOURCE}"
-    export JAIL_VERSION="${DEFAULT_VERSION}"
+    JAIL_VERSION="${DEFAULT_VERSION}"
     if [ -f "${JAIL_VERSION_FILE}" ]; then
-        export JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE})"
+        JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE})"
     fi
     debug "Got jail os version: ${JAIL_VERSION}"
-    export JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
+    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
     debug "Got jail source: ${JAIL_SOURCE}"
-    export JAIL_IP="${cyan}no-address${reset}"
+    JAIL_IP="${cyan}no-address${reset}"
     if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}" ]; then
-        export JAIL_IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
+        JAIL_IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
     fi
     debug "Got jail IP: ${JAIL_IP}"
-    export HOSTNAMES=""
+    HOSTNAMES=""
     for hostn in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
-        export HOSTNAMES="*.$(${BASENAME_BIN} ${hostn}) ${HOSTNAMES}"
+        HOSTNAMES="*.$(${BASENAME_BIN} ${hostn}) ${HOSTNAMES}"
     done
     debug "Got jail hostnames: ${HOSTNAMES}"
 }
 
 
 check_cell_name () {
-    base="${1}"
-    name="$(${BASENAME_BIN} ${base})"
-    if [ ! -d "${base}" ]; then
-        error "Bad jail name: ${name}"
+    GIVEN_NAME="${1}"
+    NAME="$(${BASENAME_BIN} ${GIVEN_NAME})"
+    if [ ! -d "${GIVEN_NAME}" ]; then
+        error "Bad jail name: ${NAME}"
     fi
 }
 
@@ -109,14 +110,13 @@ jail_status () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} status jail-name"
     }
-    JAIL_NAME="${1}" # hostname?
-    if [ "${1}" = "" ]; then
+    GIVEN_NAME="${1}"
+    if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail hostname given"
     fi
-
-    set_values $1
-    check_cell_name ${CELL}
+    set_values "${GIVEN_NAME}"
+    check_cell_name "${CELL}"
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "Interface: ${green}${DEFAULT_INTERFACE}${reset}\n"
@@ -183,14 +183,13 @@ jail_create () {
         note "fbsd-version -> by default 10.1"
         note "net-interface -> by default first interface with default route (${DEFAULT_INTERFACE})"
     }
-    JAIL_NAME="${1}"
-    if [ "${1}" = "" ]; then
+    GIVEN_NAME="${1}"
+    if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail hostname given"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
     JAIL_ADDRESS="${2}"
-    if [ "${2}" = "" ]; then
+    if [ "${JAIL_ADDRESS}" = "" ]; then
         note "No ip given"
         usage
         exit 1
@@ -198,25 +197,25 @@ jail_create () {
     check_jail_address ${JAIL_ADDRESS}
 
     JAIL_VERSION="${3}"
-    if [ "${3}" = "" ]; then
+    if [ "${JAIL_VERSION}" = "" ]; then
         JAIL_VERSION="${DEFAULT_VERSION}"
     fi
     JAIL_INTERFACE="${4}"
-    if [ "${4}" = "" ]; then
+    if [ "${JAIL_INTERFACE}" = "" ]; then
         JAIL_INTERFACE="${DEFAULT_INTERFACE}"
     fi
 
-    set_values $1 ${JAIL_VERSION}
+    set_values "${GIVEN_NAME}"
     note "Creating ZFS dataset"
-    ${ZFS_BIN} create -o mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL}
-    ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}
-    ${ZFS_BIN} create -o mountpoint=${SENTRY} ${DEFAULT_ZPOOL}${SENTRY}
-    ${ZFS_BIN} set quota=${DEFAULT_SENTRY_LIMIT} ${DEFAULT_ZPOOL}${SENTRY}
+    ${ZFS_BIN} create -o mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
+    ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
+    ${ZFS_BIN} create -o mountpoint=${SENTRY} ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
+    ${ZFS_BIN} set quota=${DEFAULT_SENTRY_LIMIT} ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
 
     if [ -f "${JAIL_CONF_FILE}" ]; then
-        warn "Jail configuration already in ${JAIL_CONF_FILE}"
+        warn "Jail already configured"
     else
-        note "Generating jail configuration"
+        note "Configuring jail"
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
     name = \"${JAIL_NAME}\";
@@ -240,9 +239,9 @@ ${JAIL_NAME} {
 
     note "Mounting jail directories"
     for dir in bin lib libexec sbin usr; do
-        ${MKDIR_BIN} -p "${CELL}/${dir}"
+        ${MKDIR_BIN} -p "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
         debug "Mounting ${JAIL_SOURCE}/${dir} => ${CELL}/${dir}"
-        ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}"
+        ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
     done
 
     note "Copying volatile part of jail"
@@ -298,15 +297,13 @@ jail_start () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} start jail-name"
     }
-    JAIL_NAME="${1}" # hostname?
-    if [ "${1}" = "" ]; then
+    GIVEN_NAME="${1}" # hostname?
+    if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail to stop"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
-
-    set_values $1
-    check_cell_name ${CELL}
+    set_values "${GIVEN_NAME}"
+    check_cell_name "${CELL}"
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
         note "Turning on jail IP: ${JAIL_IP} on interface ${DEFAULT_INTERFACE}"
@@ -321,6 +318,7 @@ jail_start () {
     update_sofin ${CELL}
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
+    ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
     # example:
     #   in ${JAIL_ATTRIBUTES_DIR} we look for files like:
@@ -364,24 +362,24 @@ jail_stop () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} stop jail-name"
     }
-    JAIL_NAME="${1}" # hostname?
-    if [ "${1}" = "" ]; then
+    GIVEN_NAME="${1}"
+    if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail to stop"
     fi
-
-    set_values $1
-    check_cell_name ${CELL}
+    set_values "${GIVEN_NAME}"
+    check_cell_name "${CELL}"
     note "Terminating jail: ${JAIL_NAME}"
     ${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
+    ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
     note "Unmounting jail directories"
     for dir in dev bin lib libexec sbin usr; do
-        ${UMOUNT_BIN} -f "${CELL}/${dir}" 2>${LOG_FILE}
+        ${UMOUNT_BIN} -f "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
     done
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
         note "Turning off jail IP: ${JAIL_IP}"
-        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_IP} -alias
+        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_IP} -alias >> ${LOG_FILE} 2>&1
     fi
 }
 
@@ -390,27 +388,25 @@ jail_set () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} set jail-name attribute value"
     }
-    JAIL_NAME="${1}"
-    if [ "${1}" = "" ]; then
+    GIVEN_NAME="${1}"
+    if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail hostname given"
     fi
     JAIL_ATTRIBUTE="${2}"
-    if [ "${2}" = "" ]; then
+    if [ "${JAIL_ATTRIBUTE}" = "" ]; then
         usage
         error "No attribute given"
     fi
     JAIL_VALUE="${3}"
-    if [ "${3}" = "" ]; then
+    if [ "${JAIL_VALUE}" = "" ]; then
         usage
         error "No value given"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
-
-    set_values $1
-    check_cell_name ${CELL}
+    set_values "${GIVEN_NAME}"
+    check_cell_name "${CELL}"
     note "Setting ${JAIL_ATTRIBUTE}: ${JAIL_VALUE} for jail: ${JAIL_NAME}"
-    echo "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
+    ${PRINTF_BIN} "${JAIL_VALUE}\n" > "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
     apply_attributes
 }
 
@@ -419,27 +415,27 @@ jail_login () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} login jail-name"
     }
-    JAIL_NAME="${1}" # hostname?
-    if [ "${1}" = "" ]; then
+    GIVEN_NAME="${1}" # hostname?
+    if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail to enter"
     fi
-    JAIL_USER="worker"
-    if [ "${2}" != "" ]; then
-        JAIL_USER="${2}"
+    JAIL_LOGIN="worker"
+    GIVEN_USER="${2}"
+    if [ "${GIVEN_USER}" != "" ]; then
+        JAIL_LOGIN="${GIVEN_USER}"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
-
-    set_values $1
-    check_cell_name ${CELL}
-    note "Logging into jail as: ${JAIL_USER}@${JAIL_NAME}"
-    ${TRUSS_BIN} -o ${JAIL_EXEC_LOG} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_USER}
+    set_values "${GIVEN_NAME}"
+    check_cell_name "${CELL}"
+    note "Logging as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}"
+    ${DEBUG_EXEC_COMMAND} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_LOGIN}
 }
 
 
 jail_restart () {
-    jail_stop "${1}"
-    jail_start "${1}"
+    GIVEN_NAME="${1}"
+    jail_stop "${GIVEN_NAME}"
+    jail_start "${GIVEN_NAME}"
 }
 
 
@@ -447,28 +443,25 @@ jail_destroy () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} destroy jail-name"
     }
-    JAIL_NAME="${1}" # hostname?
-    if [ "${1}" = "" ]; then
+    GIVEN_NAME="${1}" # hostname?
+    if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail to destroy"
     fi
-    JAIL_NAME="$(${PRINTF_BIN} "${JAIL_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+    set_values "${GIVEN_NAME}"
+    check_cell_name "${CELL}"
 
-    set_values $1
-    check_cell_name ${CELL}
-
-    note "Are you sure you want to destroy jail: '${JAIL_NAME}' with all data? Type 'yes' to confirm."
+    note "Are you sure you want to destroy jail: '${GIVEN_NAME}' with all data? Type 'yes' to confirm."
     read ans
     if [ "${ans}" = "yes" ]; then
-        note "Terminating jail: ${JAIL_NAME}"
-        jail_stop "${JAIL_NAME}"
+        jail_stop "${GIVEN_NAME}"
         note "Destroying datasets: ${CELL} and ${SENTRY}"
-        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${CELL}"
-        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${SENTRY}"
-        ${RM_BIN} -rf "${CELL}"
-        ${RM_BIN} -rf "${SENTRY}"
+        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
+        ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
+        ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
     else
-        note "Jail left intact"
+        note "Jail: ${GIVEN_NAME} left intact"
     fi
 }
 
