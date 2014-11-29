@@ -14,7 +14,7 @@ else
 fi
 
 
-VERSION="0.1.5"
+VERSION="0.1.6"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -387,6 +387,28 @@ jail_set () {
 }
 
 
+jail_unset () {
+    usage () {
+        note "Usage: ${GVR_SCRIPT_NAME} unset jail-name attribute value"
+    }
+    GIVEN_NAME="${1}"
+    if [ "${GIVEN_NAME}" = "" ]; then
+        usage
+        error "No jail hostname given"
+    fi
+    JAIL_ATTRIBUTE="${2}"
+    if [ "${JAIL_ATTRIBUTE}" = "" ]; then
+        usage
+        error "No attribute given"
+    fi
+    set_values "${GIVEN_NAME}"
+    check_cell_name "${CELL}"
+    note "Unsetting ${JAIL_ATTRIBUTE} for jail: ${JAIL_NAME}"
+    ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
+    apply_attributes
+}
+
+
 jail_login () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} login jail-name"
@@ -517,6 +539,11 @@ case $1 in
     set)
         shift
         jail_set $*
+        ;;
+
+    unset)
+        shift
+        jail_unset $*
         ;;
 
     login)
