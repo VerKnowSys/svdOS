@@ -111,36 +111,6 @@ check_cell_name () {
 }
 
 
-jail_status () {
-    usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} status jail-name"
-    }
-    GIVEN_NAME="${1}"
-    if [ "${GIVEN_NAME}" = "" ]; then
-        usage
-        error "No jail hostname given"
-    fi
-    set_values "${GIVEN_NAME}"
-    check_cell_name "${CELL}"
-    ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
-    ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
-    ${PRINTF_BIN} "Interface: ${green}${DEFAULT_INTERFACE}${reset}\n"
-    ${PRINTF_BIN} "IPv4: ${JAIL_IP}\n"
-    ${PRINTF_BIN} "Status: ${JAIL_STATUS}\n"
-    ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
-    if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
-        ${PRINTF_BIN} "Overriden attributes:\n"
-        for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
-            ${PRINTF_BIN} "${cyan}$(${BASENAME_BIN} ${i}): $(${CAT_BIN} ${i})${reset}\n"
-        done
-        ${PRINTF_BIN} "\n"
-    fi
-    ${PRINTF_BIN} "Live attributes:\n${cyan}$(${RCTL_BIN} -h jail:${JAIL_NAME} | ${SED_BIN} 's/jail:n1://g' | ${SED_BIN} 's/:deny=/: /g')${reset}\n"
-    ${PRINTF_BIN} "\nFull configuration:"
-    ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"
-}
-
-
 apply_attributes () {
     debug "Applying default attributes for jail: ${JAIL_NAME}"
     ${RCTL_BIN} -a jail:${JAIL_NAME}:memoryuse:deny=${DEFAULT_LIMIT_MAX_MEMORY}
@@ -203,16 +173,50 @@ check_jail_name () {
 }
 
 
+attributes_show () {
+    # NOTE: resources, taken from FreeBSD "rctl" man page:
+    note "Attributes with description:"
+    ${PRINTF_BIN} "   ${cyan}cputime${gray}: ${green}CPU time, in seconds${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}datasize${gray}: ${green}data size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}stacksize${gray}: ${green}stack size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}coredumpsize${gray}: ${green}core dump size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}memoryuse${gray}: ${green}resident set size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}memorylocked${gray}: ${green}locked memory, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}maxproc${gray}: ${green}number of processes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}openfiles${gray}: ${green}file descriptor table size${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}vmemoryuse${gray}: ${green}address space limit, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}pseudoterminals${gray}: ${green}number of PTYs${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}swapuse${gray}: ${green}swap usage, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nthr${gray}: ${green}number of threads${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}msgqqueued${gray}: ${green}number of queued SysV messages${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}msgqsize${gray}: ${green}SysV message queue size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nmsgq${gray}: ${green}number of SysV message queues${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nsem${gray}: ${green}number of SysV semaphores${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nsemop${gray}: ${green}number of SysV semaphores modified in a single semop(2) call${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}nshm${gray}: ${green}number of SysV shared memory segments${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}shmsize${gray}: ${green}SysV shared memory size, in bytes${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}wallclock${gray}: ${green}wallclock time, in seconds${reset}\n"
+}
+
+
+name_and_version () {
+    note "ServeD GoVeRnor v${VERSION}"
+}
+
+
 jail_create () {
     usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} create myjail IP-address [fbsd-version net-interface]"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP-address ${green}[${cyan}fbsd-version net-interface${green}]${reset}"
+        note
+        note "Default values:"
         note "   fbsd-version: ${cyan}10.1${reset}"
-        note "   net-interface: first interface with default route (current: ${DEFAULT_INTERFACE})"
+        note "   net-interface: ${cyan}${DEFAULT_INTERFACE}${reset}"
+        note
     }
     GIVEN_NAME="${1}"
     if [ "${GIVEN_NAME}" = "" ]; then
         usage
-        error "No jail hostname given"
+        error "No jail name given"
     fi
     check_jail_name ${GIVEN_NAME}
     JAIL_ADDRESS="${2}"
@@ -298,6 +302,36 @@ ${JAIL_NAME} {
 }
 
 
+jail_status () {
+    usage () {
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} status jail-name${reset}"
+    }
+    GIVEN_NAME="${1}"
+    if [ "${GIVEN_NAME}" = "" ]; then
+        usage
+        error "No jail name given"
+    fi
+    set_values "${GIVEN_NAME}"
+    check_cell_name "${CELL}"
+    ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
+    ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
+    ${PRINTF_BIN} "Interface: ${green}${DEFAULT_INTERFACE}${reset}\n"
+    ${PRINTF_BIN} "IPv4: ${JAIL_IP}\n"
+    ${PRINTF_BIN} "Status: ${JAIL_STATUS}\n"
+    ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
+    if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
+        ${PRINTF_BIN} "Overriden attributes:\n"
+        for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
+            ${PRINTF_BIN} "${cyan}$(${BASENAME_BIN} ${i}): $(${CAT_BIN} ${i})${reset}\n"
+        done
+        ${PRINTF_BIN} "\n"
+    fi
+    ${PRINTF_BIN} "Live attributes:\n${cyan}$(${RCTL_BIN} -h jail:${JAIL_NAME} | ${SED_BIN} 's/jail:n1://g' | ${SED_BIN} 's/:deny=/: /g')${reset}\n"
+    ${PRINTF_BIN} "\nFull configuration:"
+    ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"
+}
+
+
 jail_list () {
     cd ${DEFAULT_CELLS_LOCATION}
     for cell in $(${LS_BIN}); do
@@ -309,9 +343,9 @@ jail_list () {
         fi
         ${JLS_BIN} | ${GREP_BIN} "\ ${cellname}\ " > ${LOG_FILE} 2>&1
         if [ "$?" = "0" ]; then
-            ${PRINTF_BIN} " ${JAIL_IP} ${gray}(${green}*on*${gray})${reset}"
+            ${PRINTF_BIN} " ${JAIL_IP} ${green}*on*${reset}"
         else
-            ${PRINTF_BIN} " ${JAIL_IP} ${gray}(${red}*off*${gray})${reset}"
+            ${PRINTF_BIN} " ${JAIL_IP} ${red}*off*${reset}"
         fi
         ${PRINTF_BIN} "\n"
     done
@@ -321,7 +355,7 @@ jail_list () {
 # Apply settings and start jail
 jail_start () {
     usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} start jail-name"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} start jail-name${reset}"
     }
     GIVEN_NAME="${1}" # hostname?
     if [ "${GIVEN_NAME}" = "" ]; then
@@ -351,7 +385,7 @@ jail_start () {
 
 jail_stop () {
     usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} stop jail-name"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} stop jail-name${reset}"
     }
     GIVEN_NAME="${1}"
     if [ "${GIVEN_NAME}" = "" ]; then
@@ -377,13 +411,13 @@ jail_stop () {
 
 jail_set () {
     usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} set jail-name attribute value"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} set jail-name attribute value${reset}"
     }
     GIVEN_NAME="${1}"
     shift
     if [ "${GIVEN_NAME}" = "" ]; then
         usage
-        error "No jail hostname given"
+        error "No jail name given"
     fi
 
     set_values "${GIVEN_NAME}"
@@ -401,12 +435,12 @@ jail_set () {
 
 jail_unset () {
     usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} unset jail-name attribute value"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} unset jail-name attribute value${reset}"
     }
     GIVEN_NAME="${1}"
     if [ "${GIVEN_NAME}" = "" ]; then
         usage
-        error "No jail hostname given"
+        error "No jail name given"
     fi
     JAIL_ATTRIBUTE="${2}"
     if [ "${JAIL_ATTRIBUTE}" = "" ]; then
@@ -424,7 +458,7 @@ jail_unset () {
 
 jail_login () {
     usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} login jail-name"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} login jail-name${reset}"
     }
     GIVEN_NAME="${1}" # hostname?
     if [ "${GIVEN_NAME}" = "" ]; then
@@ -451,7 +485,7 @@ jail_restart () {
 
 jail_destroy () {
     usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} destroy jail-name"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} destroy jail-name${reset}"
     }
     GIVEN_NAME="${1}"
     if [ "${GIVEN_NAME}" = "" ]; then
@@ -473,37 +507,6 @@ jail_destroy () {
     else
         note "Jail: ${GIVEN_NAME} left intact"
     fi
-}
-
-
-attributes_show () {
-    # NOTE: resources, taken from FreeBSD "rctl" man page:
-    note "Attributes with description:"
-    ${PRINTF_BIN} "   ${cyan}cputime${gray}: ${green}CPU time, in seconds${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}datasize${gray}: ${green}data size, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}stacksize${gray}: ${green}stack size, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}coredumpsize${gray}: ${green}core dump size, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}memoryuse${gray}: ${green}resident set size, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}memorylocked${gray}: ${green}locked memory, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}maxproc${gray}: ${green}number of processes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}openfiles${gray}: ${green}file descriptor table size${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}vmemoryuse${gray}: ${green}address space limit, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}pseudoterminals${gray}: ${green}number of PTYs${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}swapuse${gray}: ${green}swap usage, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}nthr${gray}: ${green}number of threads${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}msgqqueued${gray}: ${green}number of queued SysV messages${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}msgqsize${gray}: ${green}SysV message queue size, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}nmsgq${gray}: ${green}number of SysV message queues${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}nsem${gray}: ${green}number of SysV semaphores${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}nsemop${gray}: ${green}number of SysV semaphores modified in a single semop(2) call${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}nshm${gray}: ${green}number of SysV shared memory segments${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}shmsize${gray}: ${green}SysV shared memory size, in bytes${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}wallclock${gray}: ${green}wallclock time, in seconds${reset}\n"
-}
-
-
-name_and_version () {
-    note "ServeD GoVeRnor v${VERSION}"
 }
 
 
