@@ -495,7 +495,8 @@ jail_destroy () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
 
-    note "Are you sure you want to destroy jail: '${GIVEN_NAME}' with all data? Type 'yes' to confirm."
+    note "Are you sure you want to destroy jail: $(${BASENAME_BIN} ${GIVEN_NAME}) with all data?"
+    note "Type 'yes' to confirm"
     read ans
     if [ "${ans}" = "yes" ]; then
         jail_stop $*
@@ -505,7 +506,7 @@ jail_destroy () {
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
     else
-        note "Jail: ${GIVEN_NAME} left intact"
+        note "Jail: $(${BASENAME_BIN} ${GIVEN_NAME}) left intact"
     fi
 }
 
