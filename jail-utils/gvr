@@ -498,7 +498,7 @@ jail_destroy () {
     note "Are you sure you want to destroy jail: '${GIVEN_NAME}' with all data? Type 'yes' to confirm."
     read ans
     if [ "${ans}" = "yes" ]; then
-        jail_stop "${GIVEN_NAME}"
+        jail_stop $*
         note "Destroying datasets: ${CELL} and ${SENTRY}"
         ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
