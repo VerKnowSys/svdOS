@@ -14,7 +14,7 @@ else
 fi
 
 
-VERSION="0.1.6"
+VERSION="0.2.0"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -380,24 +380,21 @@ jail_set () {
         note "Usage: ${GVR_SCRIPT_NAME} set jail-name attribute value"
     }
     GIVEN_NAME="${1}"
+    shift
     if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail hostname given"
     fi
-    JAIL_ATTRIBUTE="${2}"
-    if [ "${JAIL_ATTRIBUTE}" = "" ]; then
-        usage
-        error "No attribute given"
-    fi
-    JAIL_VALUE="${3}"
-    if [ "${JAIL_VALUE}" = "" ]; then
-        usage
-        error "No value given"
-    fi
+
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    note "Setting ${JAIL_ATTRIBUTE}: ${JAIL_VALUE} for jail: ${JAIL_NAME}"
-    ${PRINTF_BIN} "${JAIL_VALUE}\n" > "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
+    for argument_pair in $@; do
+        ATTRIBUTE="$(${PRINTF_BIN} "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' )"
+        JAIL_VALUE="$(${PRINTF_BIN} "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[2];}')"
+        debug "arg: ${ATTRIBUTE}, val: ${JAIL_VALUE} "
+        note "Setting ${ATTRIBUTE}: ${JAIL_VALUE} for jail: ${JAIL_NAME}"
+        ${PRINTF_BIN} "${JAIL_VALUE}\n" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
+    done
     apply_attributes
 }
 
