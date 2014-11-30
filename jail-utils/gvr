@@ -420,6 +420,7 @@ jail_unset () {
     check_cell_name "${CELL}"
     note "Unsetting ${JAIL_ATTRIBUTE} for jail: ${JAIL_NAME}"
     ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
+    ${RCTL_BIN} -r jail:${JAIL_NAME}:${JAIL_ATTRIBUTE} >> ${LOG_FILE} 2>&1
     apply_attributes
 }
 
