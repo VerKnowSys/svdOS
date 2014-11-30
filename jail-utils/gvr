@@ -205,9 +205,9 @@ check_jail_name () {
 
 jail_create () {
     usage () {
-        note "Usage: ${GVR_SCRIPT_NAME} create jail-name.com IP-address fbsd-version net-interface"
-        note "fbsd-version -> by default 10.1"
-        note "net-interface -> by default first interface with default route (${DEFAULT_INTERFACE})"
+        note "Usage: ${GVR_SCRIPT_NAME} create myjail IP-address [fbsd-version net-interface]"
+        note "   fbsd-version: ${cyan}10.1${reset}"
+        note "   net-interface: first interface with default route (current: ${DEFAULT_INTERFACE})"
     }
     GIVEN_NAME="${1}"
     if [ "${GIVEN_NAME}" = "" ]; then
@@ -217,9 +217,8 @@ jail_create () {
     check_jail_name ${GIVEN_NAME}
     JAIL_ADDRESS="${2}"
     if [ "${JAIL_ADDRESS}" = "" ]; then
-        note "No ip given"
         usage
-        exit 1
+        error "No ip given"
     fi
     check_jail_address ${JAIL_ADDRESS}
 
@@ -447,9 +446,8 @@ jail_login () {
 
 
 jail_restart () {
-    GIVEN_NAME="${1}"
-    jail_stop "${GIVEN_NAME}"
-    jail_start "${GIVEN_NAME}"
+    jail_stop $*
+    jail_start $*
 }
 
 
@@ -457,7 +455,7 @@ jail_destroy () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} destroy jail-name"
     }
-    GIVEN_NAME="${1}" # hostname?
+    GIVEN_NAME="${1}"
     if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail to destroy"
