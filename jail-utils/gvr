@@ -137,6 +137,13 @@ jail_status () {
 
 
 apply_attributes () {
+    debug "Applying default attributes for jail: ${JAIL_NAME}"
+    ${RCTL_BIN} -a jail:${JAIL_NAME}:memoryuse:deny=${DEFAULT_LIMIT_MAX_MEMORY}
+    ${RCTL_BIN} -a jail:${JAIL_NAME}:vmemoryuse:deny=${DEFAULT_LIMIT_MAX_VMEMORY}
+    ${RCTL_BIN} -a jail:${JAIL_NAME}:maxproc:deny=${DEFAULT_LIMIT_MAXPROC}
+    ${RCTL_BIN} -a jail:${JAIL_NAME}:openfiles:deny=${DEFAULT_LIMIT_OPENFILES}
+    ${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=${DEFAULT_LIMIT_MAXPTS}
+
     debug "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
     ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}"
     cd ${JAIL_ATTRIBUTES_DIR}
@@ -334,13 +341,6 @@ jail_start () {
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
-
-    note "Applying default attributes for jail: ${JAIL_NAME}"
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:memoryuse:deny=1024M
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:vmemoryuse:deny=2048M
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:maxproc:deny=125
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:openfiles:deny=1024
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=16
     apply_attributes
 }
 
