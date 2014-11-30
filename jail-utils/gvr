@@ -181,6 +181,16 @@ check_jail_address () {
 }
 
 
+check_jail_name () {
+    GIVEN_NAME="${1}"
+    for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION}); do
+        if [ "${jail}" = "${GIVEN_NAME}" ]; then
+            error "Name: ${GIVEN_NAME} is already used"
+        fi
+    done
+}
+
+
 jail_create () {
     usage () {
         note "Usage: ${GVR_SCRIPT_NAME} create jail-name.com IP-address fbsd-version net-interface"
@@ -192,6 +202,7 @@ jail_create () {
         usage
         error "No jail hostname given"
     fi
+    check_jail_name ${GIVEN_NAME}
     JAIL_ADDRESS="${2}"
     if [ "${JAIL_ADDRESS}" = "" ]; then
         note "No ip given"
