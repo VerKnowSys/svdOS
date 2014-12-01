@@ -14,12 +14,15 @@ else
 fi
 
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
+SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
+IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="10.1"
+DEFAULT_JAIL_USER="worker"
 DEFAULT_WORKER_UID="501"
 DEFAULT_QUOTA_LIMIT="5G"
 DEFAULT_SENTRY_LIMIT="128M"
@@ -289,17 +292,17 @@ ${JAIL_NAME} {
     ${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
     ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}"
     ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh
-    ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
 
     note "Installing default etc for jail"
     ${TAR_BIN} xf ${DEFAULT_ETC_ARCHIVE} --directory ${CELL}
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}:" ${CELL}/etc/rc.conf
 
     update_sofin ${CELL}
-
+    ${CP_BIN} -R /Software/Thess ${CELL}/Software
     ${CP_BIN} -R /Software/Git ${CELL}/Software
     ${CP_BIN} -R /Software/Zsh ${CELL}/Software
     ${CP_BIN} /etc/zshenv ${CELL}/etc
+    ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
 
     note "Launching jail: ${JAIL_NAME}"
     jail_start "${JAIL_NAME}"
@@ -382,8 +385,15 @@ jail_start () {
     update_sofin ${CELL}
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
-    ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
-    apply_attributes
+    if [ "$?" = "0" ]; then
+        ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
+        note "Launching Service Spawner daemon"
+        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN}
+        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
+        apply_attributes
+    else
+        error "Jail launch failed. Look into log file: ${LOG_FILE}"
+    fi
 }
 
 
@@ -468,7 +478,7 @@ jail_login () {
         usage
         error "No jail to enter"
     fi
-    JAIL_LOGIN="worker"
+    JAIL_LOGIN="${DEFAULT_JAIL_USER}"
     GIVEN_USER="${2}"
     if [ "${GIVEN_USER}" != "" ]; then
         JAIL_LOGIN="${GIVEN_USER}"
