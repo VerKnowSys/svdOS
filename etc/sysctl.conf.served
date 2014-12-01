@@ -180,6 +180,9 @@ vfs.usermount=1
 # setup basic jails
 security.jail.allow_raw_sockets=1
 
+# Postgresql in jail:
+security.jail.sysvipc_allowed=1
+
 # MAC PortACL:
 net.inet.ip.portrange.reservedlow=0
 net.inet.ip.portrange.reservedhigh=70
