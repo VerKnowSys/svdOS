@@ -446,16 +446,15 @@ jail_unset () {
         usage
         error "No jail name given"
     fi
-    JAIL_ATTRIBUTE="${2}"
-    if [ "${JAIL_ATTRIBUTE}" = "" ]; then
-        usage
-        error "No attribute given"
-    fi
+    shift
+
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    note "Unsetting ${JAIL_ATTRIBUTE} for jail: ${JAIL_NAME}"
-    ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${JAIL_ATTRIBUTE}"
-    ${RCTL_BIN} -r jail:${JAIL_NAME}:${JAIL_ATTRIBUTE} >> ${LOG_FILE} 2>&1
+    for jail_attribute in $*; do
+        note "Unsetting ${jail_attribute} for jail: ${JAIL_NAME}"
+        ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${jail_attribute}"
+        ${RCTL_BIN} -r jail:${JAIL_NAME}:${jail_attribute} >> ${LOG_FILE} 2>&1
+    done
     apply_attributes
 }
 
