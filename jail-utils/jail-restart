@@ -1,4 +1,0 @@
-#!/bin/sh
-
-jail-stop "${1}"
-jail-start "${1}"
