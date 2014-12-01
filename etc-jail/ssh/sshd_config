@@ -100,29 +100,28 @@ ChallengeResponseAuthentication no
 
 UsePAM yes
 
-#AllowAgentForwarding yes
-#AllowTcpForwarding yes
+AllowAgentForwarding yes
+AllowTcpForwarding yes
 #GatewayPorts no
 #X11Forwarding yes
 #X11DisplayOffset 10
 #X11UseLocalhost yes
 #PermitTTY yes
-#PrintMotd yes
+PrintMotd yes
 #PrintLastLog yes
 #TCPKeepAlive yes
-#UseLogin no
+UseLogin yes
 #UsePrivilegeSeparation sandbox
 #PermitUserEnvironment no
 #Compression delayed
 #ClientAliveInterval 0
 #ClientAliveCountMax 3
-#UseDNS yes
+UseDNS no
 #PidFile /var/run/sshd.pid
 #MaxStartups 10:30:100
 #PermitTunnel no
 #ChrootDirectory /SystemUsers
 
-#
 #VersionAddendum FreeBSD-20140420
 
 # no default banner path
