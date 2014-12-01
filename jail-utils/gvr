@@ -46,9 +46,9 @@ JAIL_ID_NAME="jail.id"
 JAIL_STATUS_NAME="jail.status"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
-DEFAULT_ETC_ARCHIVE="${SERVED_REPO}/jail-utils/etc-jail.tar.xz"
-if [ ! -f "${DEFAULT_ETC_ARCHIVE}" ]; then
-    error "Sanity check failed: Could not found etc archive: ${DEFAULT_ETC_ARCHIVE}. Governor can't continue"
+DEFAULT_JAIL_ETC_SOURCE="${SERVED_REPO}/etc-jail/"
+if [ ! -d "${DEFAULT_JAIL_ETC_SOURCE}" ]; then
+    error "Sanity check failed: Could not found etc source location: ${DEFAULT_JAIL_ETC_SOURCE}. Governor can't continue"
 fi
 
 
@@ -284,7 +284,6 @@ ${JAIL_NAME} {
     note "Copying volatile part of jail"
     ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
     ${PRINTF_BIN} "${JAIL_ADDRESS}\n" > ${JAIL_ADDRESS_FILE}
-    ${CP_BIN} -R ${JAIL_SOURCE}/etc ${CELL}
     ${CP_BIN} -R ${JAIL_SOURCE}/var ${CELL}
 
     note "Making required jail directories and user dir"
@@ -293,9 +292,10 @@ ${JAIL_NAME} {
     ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}"
     ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh
 
-    note "Installing default etc for jail"
-    ${TAR_BIN} xf ${DEFAULT_ETC_ARCHIVE} --directory ${CELL}
+    note "Building initial jail environment"
+    ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}:" ${CELL}/etc/rc.conf
+    ${PRINTF_BIN} "export PATH=/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/bin:/usr/bin:/sbin:/usr/sbin\nexport MANPATH='/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/usr/share/man:/usr/share/openssl/man'\n" > ${CELL}/User/.profile
 
     update_sofin ${CELL}
     ${CP_BIN} -R /Software/Thess ${CELL}/Software
@@ -388,7 +388,7 @@ jail_start () {
     if [ "$?" = "0" ]; then
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
         note "Launching Service Spawner daemon"
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN}
+        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
     else
