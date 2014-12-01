@@ -34,13 +34,13 @@ default:\
     :cputime=unlimited:\
     :datasize=unlimited:\
     :stacksize=unlimited:\
-    :memorylocked=256K:\
+    :memorylocked=unlimited:\
     :memoryuse=unlimited:\
     :filesize=unlimited:\
-    :coredumpsize=0:\
+    :coredumpsize=unlimited:\
     :openfiles=unlimited:\
-    :maxproc=512:\
-    :swapuse=0:\
+    :maxproc=unlimited:\
+    :swapuse=unlimited:\
     :sbsize=unlimited:\
     :vmemoryuse=unlimited:\
     :pseudoterminals=unlimited:\
@@ -61,7 +61,7 @@ xuser:\
 staff:\
     :tc=default:
 daemon:\
-    :memorylocked=64M:\
+    :memorylocked=unlimited:\
     :tc=default:
 news:\
     :tc=default:
