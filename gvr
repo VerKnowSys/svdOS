@@ -31,6 +31,8 @@ DEFAULT_LIMIT_MAX_VMEMORY="2048M"
 DEFAULT_LIMIT_MAXPROC="125"
 DEFAULT_LIMIT_OPENFILES="1024"
 DEFAULT_LIMIT_MAXPTS="16"
+DEFAULT_NETMASK="/27" # 255.255.255.224
+DEFAULT_NETMASK_FULL="255.255.255.224" # /27
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
@@ -256,7 +258,7 @@ jail_create () {
 ${JAIL_NAME} {
     name = \"${JAIL_NAME}\";
     host.hostname = \"${JAIL_NAME}\";
-    ip4.addr = \"${JAIL_ADDRESS}\";
+    ip4.addr = \"${JAIL_ADDRESS}/${DEFAULT_NETMASK_FULL}\";
     interface = ${JAIL_INTERFACE};
     path = \"${CELL}\";
     exec.start = \"/bin/sh /etc/rc\";
@@ -374,7 +376,7 @@ jail_start () {
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
         note "Turning on jail IP: ${JAIL_IP} on interface ${DEFAULT_INTERFACE}"
-        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} $(${CAT_BIN} ${JAIL_ADDRESS_FILE}) alias
+        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "$(${CAT_BIN} ${JAIL_ADDRESS_FILE}) netmask ${DEFAULT_NETMASK_FULL}" alias
     fi
     note "Mounting jail directories for system version: ${JAIL_VERSION}"
     for dir in bin lib libexec sbin usr; do
