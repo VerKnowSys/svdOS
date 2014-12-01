@@ -475,8 +475,13 @@ jail_login () {
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    note "Logging as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}"
-    ${DEBUG_EXEC_COMMAND} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_LOGIN}
+    ${JLS_BIN} | ${GREP_BIN} "\ $(${BASENAME_BIN} ${CELL})\ " > ${LOG_FILE} 2>&1
+    if [ "$?" = "0" ]; then
+        note "Logging as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}"
+        ${DEBUG_EXEC_COMMAND} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_LOGIN}
+    else
+        error "Start jail first"
+    fi
 }
 
 
