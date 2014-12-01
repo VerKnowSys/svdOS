@@ -264,6 +264,7 @@ ${JAIL_NAME} {
     allow.mount.zfs = 0;
     allow.mount.tmpfs = 0;
     allow.raw_sockets = 1;
+    allow.sysvipc = 1;
     mount.devfs;
     persist;
 }
