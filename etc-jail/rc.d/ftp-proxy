@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# $FreeBSD: releng/10.1/etc/rc.d/ftp-proxy 230099 2012-01-14 02:18:41Z dougb $
+#
+
+# PROVIDE: ftp-proxy
+# REQUIRE: DAEMON pf
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="ftpproxy"
+rcvar="ftpproxy_enable"
+command="/usr/sbin/ftp-proxy"
+
+load_rc_config $name
+run_rc_command "$1"

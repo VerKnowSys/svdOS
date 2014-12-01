@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# $FreeBSD: releng/10.1/etc/rc.d/automountd 270892 2014-08-31 21:18:23Z trasz $
+#
+
+# PROVIDE: automountd
+# REQUIRE: automount
+# KEYWORD: nojail
+
+. /etc/rc.subr
+
+name="automountd"
+rcvar="autofs_enable"
+pidfile="/var/run/${name}.pid"
+command="/usr/sbin/${name}"
+required_modules="autofs"
+
+load_rc_config $name
+run_rc_command "$1"

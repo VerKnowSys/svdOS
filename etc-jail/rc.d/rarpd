@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# $FreeBSD: releng/10.1/etc/rc.d/rarpd 240336 2012-09-11 05:04:59Z obrien $
+#
+
+# PROVIDE: rarpd
+# REQUIRE: DAEMON FILESYSTEMS
+# BEFORE:  LOGIN
+# KEYWORD: nojail
+
+. /etc/rc.subr
+
+name="rarpd"
+rcvar="rarpd_enable"
+command="/usr/sbin/${name}"
+required_files="/etc/ethers"
+
+load_rc_config $name
+pidfile="${rarpd_pidfile:-/var/run/${name}.pid}"
+
+run_rc_command "$1"

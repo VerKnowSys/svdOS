@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# $FreeBSD: releng/10.1/etc/rc.d/SERVERS 273188 2014-10-16 22:00:24Z hrs $
+#
+
+# PROVIDE: SERVERS
+# REQUIRE: mountcritremote abi ldconfig savecore watchdogd kdc
+
+#	This is a dummy dependency, for early-start servers relying on
+#	some basic configuration.

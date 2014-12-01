@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# $FreeBSD: releng/10.1/etc/rc.d/inetd 240336 2012-09-11 05:04:59Z obrien $
+#
+
+# PROVIDE: inetd
+# REQUIRE: DAEMON LOGIN FILESYSTEMS
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="inetd"
+rcvar="inetd_enable"
+command="/usr/sbin/${name}"
+pidfile="/var/run/${name}.pid"
+required_files="/etc/${name}.conf"
+extra_commands="reload"
+
+load_rc_config $name
+run_rc_command "$1"

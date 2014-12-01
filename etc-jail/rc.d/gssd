@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# $FreeBSD: releng/10.1/etc/rc.d/gssd 273188 2014-10-16 22:00:24Z hrs $
+#
+
+# PROVIDE: gssd
+# REQUIRE: root
+# KEYWORD: nojail shutdown
+
+. /etc/rc.subr
+
+name=gssd
+rcvar=gssd_enable
+
+load_rc_config $name
+run_rc_command "$1"

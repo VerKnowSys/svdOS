@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# $FreeBSD: releng/10.1/etc/rc.d/cron 240336 2012-09-11 05:04:59Z obrien $
+#
+
+# PROVIDE: cron
+# REQUIRE: LOGIN FILESYSTEMS
+# BEFORE: securelevel
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="cron"
+rcvar="cron_enable"
+command="/usr/sbin/${name}"
+pidfile="/var/run/${name}.pid"
+
+load_rc_config $name
+if checkyesno cron_dst
+then
+	cron_flags="$cron_flags -s"
+fi
+run_rc_command "$1"

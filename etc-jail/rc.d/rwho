@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# $FreeBSD: releng/10.1/etc/rc.d/rwho 230099 2012-01-14 02:18:41Z dougb $
+#
+
+# PROVIDE: rwho
+# REQUIRE: DAEMON
+# BEFORE:  LOGIN
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="rwhod"
+rcvar="rwhod_enable"
+command="/usr/sbin/${name}"
+
+load_rc_config $name
+run_rc_command "$1"

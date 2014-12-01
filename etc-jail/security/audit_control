@@ -1,0 +1,12 @@
+#
+# $P4: //depot/projects/trustedbsd/openbsm/etc/audit_control#9 $
+# $FreeBSD: releng/10.1/contrib/openbsm/etc/audit_control 243750 2012-12-01 11:58:08Z rwatson $
+#
+dir:/var/audit
+dist:off
+flags:lo,aa
+minfree:5
+naflags:lo,aa
+policy:cnt,argv
+filesz:2M
+expire-after:10M
