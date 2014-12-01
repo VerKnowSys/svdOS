@@ -244,6 +244,9 @@ jail_create () {
     fi
 
     set_values "${GIVEN_NAME}"
+    note "Paste SSH2 public key of worker user below, followed by [enter] and ctrl-D"
+    ${CAT_BIN} > /tmp/pubkey-${GIVEN_NAME}
+
     note "Creating ZFS dataset"
     ${ZFS_BIN} create -o mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
@@ -293,6 +296,8 @@ ${JAIL_NAME} {
     ${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
     ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}"
     ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh
+    ${CAT_BIN} "/tmp/pubkey-${GIVEN_NAME}" > ${CELL}/User/.ssh/authorized_keys
+    ${RM_BIN} -f "/tmp/pubkey-${GIVEN_NAME}"
 
     note "Building initial jail environment"
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
