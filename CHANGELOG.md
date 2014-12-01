@@ -1,6 +1,13 @@
 
 ## CHANGELOG
 
+* HEAD
+    - Merged jail-utils into one script. Introduced - Governor
+    - A lots of improvements to worker environment
+    - Automatically launch svdss on jail start
+    - Replaced xz archive with minimal etc dir tree
+    - Removed limits from login.conf
+
 * v0.6.3
     - Removed bundled version of ServeD-OS in core
     - Update rc.conf only once on install / update action
