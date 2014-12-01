@@ -1,0 +1,10 @@
+etc-jail/ssh/ssh_host_dsa_key
+etc-jail/ssh/ssh_host_dsa_key.pub
+etc-jail/ssh/ssh_host_ecdsa_key
+etc-jail/ssh/ssh_host_ecdsa_key.pub
+etc-jail/ssh/ssh_host_ed25519_key
+etc-jail/ssh/ssh_host_ed25519_key.pub
+etc-jail/ssh/ssh_host_key
+etc-jail/ssh/ssh_host_key.pub
+etc-jail/ssh/ssh_host_rsa_key
+etc-jail/ssh/ssh_host_rsa_key.pub
