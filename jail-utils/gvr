@@ -156,8 +156,11 @@ update_sofin () {
 check_jail_address () {
     JAIL_ADDRESS="${1}"
     for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION}); do
-        if [ "$(${CAT_BIN} ${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESS_ATTRIBUTE})" = "${JAIL_ADDRESS}" ]; then
-            error "Address: ${JAIL_ADDRESS} is already assigned to jail: ${jail}"
+        IP_FILE="${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESS_ATTRIBUTE}"
+        if [ -f "${IP_FILE}" ]; then
+            if [ "$(${CAT_BIN} ${IP_FILE})" = "${JAIL_ADDRESS}" ]; then
+                error "Address: ${JAIL_ADDRESS} is already assigned to jail: ${jail}"
+            fi
         fi
     done
 }
