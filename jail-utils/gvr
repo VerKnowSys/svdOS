@@ -90,8 +90,8 @@ set_values () {
     JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
     debug "Got jail source: ${JAIL_SOURCE}"
     JAIL_IP="${cyan}no-address${reset}"
-    if [ -f "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}" ]; then
-        JAIL_IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
+    if [ -f "${JAIL_ADDRESS_FILE}" ]; then
+        JAIL_IP="${cyan}$(${CAT_BIN} "${JAIL_ADDRESS_FILE}")${reset}"
     fi
     debug "Got jail IP: ${JAIL_IP}"
     HOSTNAMES=""
