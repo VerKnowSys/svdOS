@@ -14,10 +14,11 @@ else
 fi
 
 
-VERSION="0.2.1"
+VERSION="0.2.2"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
+DEFAULT_SOFIN_REPO="https://github.com/VerKnowSys/sofin.git"
 SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
 IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 DEFAULT_ZPOOL="zroot"
@@ -145,13 +146,13 @@ update_sofin () {
         note "Updating Sofin from official repository"
         cd ${SOFIN_REPO}
         ${GIT_BIN} stash save "sofin-local-changes-$(date +%F)" >> ${LOG_FILE} 2>&1
-        GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/sofin.git >> ${LOG_FILE} 2>&1
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPO} >> ${LOG_FILE} 2>&1
         PREFIX="${JAIL_SOURCE}" bin/install >> ${LOG_FILE} 2>&1
         ${CP_BIN} "${SOFIN_REPO}/src/${CONF_NAME}" "${DESTINATION_CELL}/etc/"
     else
         note "Installing Sofin installed in system path"
         cd /var
-        GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone https://github.com/VerKnowSys/sofin.git >> ${LOG_FILE} 2>&1
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${DEFAULT_SOFIN_REPO} >> ${LOG_FILE} 2>&1
         PREFIX="${JAIL_SOURCE}" bin/install >> ${LOG_FILE} 2>&1
         ${CP_BIN} "${SOFIN_REPO}/src/${CONF_NAME}" "${DESTINATION_CELL}/etc/"
     fi
@@ -244,7 +245,7 @@ jail_create () {
     fi
 
     set_values "${GIVEN_NAME}"
-    note "Paste SSH2 public key of worker user below, followed by [enter] and ctrl-D"
+    note "Paste SSH2 public key of worker user below, followed by [enter] and [ctrl-d]"
     ${CAT_BIN} > /tmp/pubkey-${GIVEN_NAME}
 
     note "Creating ZFS dataset"
@@ -295,7 +296,7 @@ ${JAIL_NAME} {
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}"
     ${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
     ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}"
-    ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh
+    ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh ${CELL}/Public
     ${CAT_BIN} "/tmp/pubkey-${GIVEN_NAME}" > ${CELL}/User/.ssh/authorized_keys
     ${RM_BIN} -f "/tmp/pubkey-${GIVEN_NAME}"
 
@@ -309,7 +310,7 @@ ${JAIL_NAME} {
     ${CP_BIN} -R /Software/Git ${CELL}/Software
     ${CP_BIN} -R /Software/Zsh ${CELL}/Software
     ${CP_BIN} /etc/zshenv ${CELL}/etc
-    ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
+    ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Public ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
 
     note "Launching jail: ${JAIL_NAME}"
     jail_start "${JAIL_NAME}"
