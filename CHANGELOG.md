@@ -1,7 +1,8 @@
 
 ## CHANGELOG
 
-* HEAD
+* v0.6.4
+    - Updated default Git bundle to version 2.2.x.
     - Merged jail-utils into one script. Introduced - Governor
     - A lots of improvements to worker environment
     - Automatically launch svdss on jail start
