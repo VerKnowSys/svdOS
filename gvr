@@ -185,6 +185,7 @@ check_jail_name () {
 attributes_show () {
     # NOTE: resources, taken from FreeBSD "rctl" man page:
     note "Attributes with description:"
+    ${PRINTF_BIN} "   ${cyan}pcpu${gray}: ${green}CPU percentage${reset}\n"
     ${PRINTF_BIN} "   ${cyan}cputime${gray}: ${green}CPU time, in seconds${reset}\n"
     ${PRINTF_BIN} "   ${cyan}datasize${gray}: ${green}data size, in bytes${reset}\n"
     ${PRINTF_BIN} "   ${cyan}stacksize${gray}: ${green}stack size, in bytes${reset}\n"
