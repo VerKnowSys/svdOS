@@ -219,7 +219,7 @@ jail_create () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP-address ${green}[${cyan}fbsd-version net-interface${green}]${reset}"
         note
         note "Default values:"
-        note "   fbsd-version: ${cyan}10.1${reset}"
+        note "   fbsd-version: ${cyan}${DEFAULT_VERSION}${reset}"
         note "   net-interface: ${cyan}${DEFAULT_INTERFACE}${reset}"
         note
     }
