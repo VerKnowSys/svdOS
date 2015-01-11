@@ -198,6 +198,9 @@ ${GREP_BIN} 'ServeD' ${RC_FILE} > /dev/null || (${SED_BIN} -i '' -e '$d' ${RC_FI
 note "Setting up core services"
 ${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
 
+note "Setting up Unbound DNS resolver for domains bound to Jails"
+test ! -f /etc/unbound/conf.d/jailed.conf && ${PRINTF_BIN} "include: ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry/*/jail-domains/*.conf\n" > /etc/unbound/conf.d/jailed.conf
+
 note "Setting up default ssl root certificates"
 ${MKDIR_BIN} -p /etc/ssl >> ${LOG} 2>&1
 ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
