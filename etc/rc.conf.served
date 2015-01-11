@@ -16,6 +16,7 @@ pflog_enable="YES"
 pflog_logfile="/var/log/pflog"
 pflog_flags=""
 gateway_enable="YES"
+local_unbound_enable="YES"
 
 dumpdev="NO"
 sendmail_enable="NONE"
