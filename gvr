@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.4.1"
+VERSION="0.4.2"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -467,15 +467,10 @@ jail_stop () {
         ${UMOUNT_BIN} -f "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
     done
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
-        JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
-        # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
-        ${PRINTF_BIN} "${JAIL_IP}" | ${GREP_BIN} '/' > /dev/null 2>&1
-        if [ "$?" = "0" ]; then
-            # if full address specified:
-            JAIL_IP="$(${PRINTF_BIN} ${JAIL_IP} | ${SED_BIN} 's/\/.*//')"
-        fi
-        note "Turning off jail IP: ${JAIL_IP}"
-        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_IP} -alias >> ${LOG_FILE} 2>&1
+        JAIL_FULL_ADDRESS="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
+        JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_FULL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
+        note "Turning off jail IP: ${JAIL_FULL_ADDRESS}"
+        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_ADDRESS} -alias >> ${LOG_FILE} 2>&1
     fi
 }
 
