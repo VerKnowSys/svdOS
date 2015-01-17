@@ -51,6 +51,9 @@ JAIL_ID_NAME="jail.id"
 JAIL_STATUS_NAME="jail.status"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
+if [ "${DEFAULT_INTERFACE}" = "" ]; then
+    error "Something is wrong with network routing. Governor can't continue"
+fi
 DEFAULT_JAIL_ETC_SOURCE="${SERVED_REPO}/etc-jail/"
 if [ ! -d "${DEFAULT_JAIL_ETC_SOURCE}" ]; then
     error "Sanity check failed: Could not found etc source location: ${DEFAULT_JAIL_ETC_SOURCE}. Governor can't continue"
