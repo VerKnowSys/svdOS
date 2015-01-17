@@ -1,2 +1,2 @@
 Defaults    env_reset
-worker ALL=NOPASSWD: /usr/sbin/daemon svdss, /Software/Thess/exports/ignitersinstall
+worker ALL=NOPASSWD: /usr/sbin/daemon svdss, /Software/Thess/exports/ignitersinstall, /bin/pkill *, /bin/ps *
