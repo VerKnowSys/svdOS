@@ -312,6 +312,9 @@ ${JAIL_NAME} {
         ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
     done
 
+    note "Updating sudo for jail"
+    ${CP_BIN} /Software/Sudo-static/bin/sudo ${JAIL_SOURCE}/usr/bin/
+
     note "Copying volatile part of jail"
     ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
     ${PRINTF_BIN} "${JAIL_ADDRESS}\n" > ${JAIL_ADDRESS_FILE}
