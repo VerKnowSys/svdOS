@@ -134,6 +134,9 @@ fi
 note "Installing additional Software"
 sofin get Atop Pstree Vim Tmux Vifm Bacula Mc Bind Subversion Mercurial Gcc Syslog-ng Sudo-static Thess
 
+note "Updating sudo for ${SYS_VERSION} jail base"
+${CP_BIN} /Software/Sudo-static/bin/sudo ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/usr/bin/
+
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
     ${GIT_BIN} stash save "install-update-$(date +%F)"
