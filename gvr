@@ -169,7 +169,9 @@ check_jail_address () {
     for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION}); do
         IP_FILE="${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESS_ATTRIBUTE}"
         if [ -f "${IP_FILE}" ]; then
-            if [ "$(${CAT_BIN} ${IP_FILE})" = "${JAIL_ADDRESS}" ]; then
+            JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
+            ${CAT_BIN} ${IP_FILE} | ${SED_BIN} 's/\/.*//' | ${GREP_BIN} "${JAIL_ADDRESS}" > /dev/null 2>&1
+            if [ "$?" = "0" ]; then
                 error "Address: ${JAIL_ADDRESS} is already assigned to jail: ${jail}"
             fi
         fi
