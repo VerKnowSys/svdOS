@@ -136,6 +136,7 @@ sofin get Atop Pstree Vim Tmux Vifm Bacula Mc Bind Subversion Mercurial Gcc Sysl
 
 note "Updating sudo for ${SYS_VERSION} jail base"
 ${CP_BIN} /Software/Sudo-static/bin/sudo ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/usr/bin/
+${CHMOD_BIN} 4755 ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/usr/bin/sudo
 
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
