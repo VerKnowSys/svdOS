@@ -2,6 +2,7 @@
 #
 # @author Daniel (dmilith) Dettaff
 #
+# TODO: gvr copy-attrs sourcejailname destjailname
 
 # load configuration from sofin.conf
 readonly CONF_NAME="sofin.conf.sh"
@@ -14,7 +15,7 @@ else
 fi
 
 
-VERSION="0.2.2"
+VERSION="0.4.0"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -33,7 +34,8 @@ DEFAULT_LIMIT_MAXPROC="125"
 DEFAULT_LIMIT_OPENFILES="1024"
 DEFAULT_LIMIT_MAXPTS="16"
 DEFAULT_NETMASK="/27" # 255.255.255.224
-DEFAULT_NETMASK_FULL="255.255.255.224" # /27
+DEFAULT_NETMASK_INTERNAL="255.255.255.224" # /27
+DEFAULT_NETMASK_EXTERNAL="255.255.255.0" # /24
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
@@ -216,9 +218,12 @@ name_and_version () {
 
 jail_create () {
     usage () {
-        note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP-address ${green}[${cyan}fbsd-version net-interface${green}]${reset}"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP-address[/netmask] ${green}[${cyan}fbsd-version net-interface${green}]${reset}"
         note
         note "Default values:"
+        note "   netmask:"
+        note"      - default internal network mask: ${cyan}${DEFAULT_NETMASK_INTERNAL}${reset}"
+        note"      - default external network mask: ${cyan}${DEFAULT_NETMASK_EXTERNAL}${reset}"
         note "   fbsd-version: ${cyan}${DEFAULT_VERSION}${reset}"
         note "   net-interface: ${cyan}${DEFAULT_INTERFACE}${reset}"
         note
@@ -258,12 +263,26 @@ jail_create () {
     if [ -f "${JAIL_CONF_FILE}" ]; then
         warn "Jail already configured"
     else
+        # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
+        ${PRINTF_BIN} "${JAIL_ADDRESS}" | ${GREP_BIN} '/' > /dev/null 2>&1
+        if [ "$?" = "0" ]; then
+            # if full address specified:
+            FULL_ADDRESS="${JAIL_ADDRESS}"
+        else
+            # if specified only IP address, check which kind of address this is: internal/ external
+            ${PRINTF_BIN} "${JAIL_ADDRESS}" | ${GREP_BIN} '^10.' > /dev/null 2>&1
+            if [ "$?" = "0" ]; then
+                FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_INTERNAL}"
+            else
+                FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_EXTERNAL}"
+            fi
+        fi
         note "Configuring jail"
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
     name = \"${JAIL_NAME}\";
     host.hostname = \"${JAIL_NAME}\";
-    ip4.addr = \"${JAIL_ADDRESS}/${DEFAULT_NETMASK_FULL}\";
+    ip4.addr = \"${FULL_ADDRESS}\";
     interface = ${JAIL_INTERFACE};
     path = \"${CELL}\";
     exec.start = \"/bin/sh /etc/rc\";
@@ -382,8 +401,24 @@ jail_start () {
     check_cell_name "${CELL}"
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
-        note "Turning on jail IP: ${JAIL_IP} on interface ${DEFAULT_INTERFACE}"
-        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "$(${CAT_BIN} ${JAIL_ADDRESS_FILE}) netmask ${DEFAULT_NETMASK_FULL}" alias
+        JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
+        # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
+        ${PRINTF_BIN} "${JAIL_IP}" | ${GREP_BIN} '/' > /dev/null 2>&1
+        if [ "$?" = "0" ]; then
+            # if full address specified:
+            JAIL_NETMASK="$(${PRINTF_BIN} ${JAIL_IP} | ${SED_BIN} -e 's/.*\///')"
+            JAIL_IP="$(${PRINTF_BIN} ${JAIL_IP} | ${SED_BIN} -e 's/\/.*//')"
+        else
+            # if specified only IP address, check which kind of address this is: internal/ external
+            ${PRINTF_BIN} "${JAIL_IP}" | ${GREP_BIN} '^10.' > /dev/null 2>&1
+            if [ "$?" = "0" ]; then
+                JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
+            else
+                JAIL_NETMASK="${DEFAULT_NETMASK_EXTERNAL}"
+            fi
+        fi
+        note "Turning on jail IP: ${JAIL_IP}/${JAIL_NETMASK} on interface ${DEFAULT_INTERFACE}"
+        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "${JAIL_IP} netmask ${JAIL_NETMASK}" alias
     fi
     note "Mounting jail directories for system version: ${JAIL_VERSION}"
     for dir in bin lib libexec sbin usr; do
@@ -426,6 +461,12 @@ jail_stop () {
     done
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
+        # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
+        ${PRINTF_BIN} "${JAIL_IP}" | ${GREP_BIN} '/' > /dev/null 2>&1
+        if [ "$?" = "0" ]; then
+            # if full address specified:
+            JAIL_IP="$(${PRINTF_BIN} ${JAIL_IP} | ${SED_BIN} 's/\/.*//')"
+        fi
         note "Turning off jail IP: ${JAIL_IP}"
         ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_IP} -alias >> ${LOG_FILE} 2>&1
     fi
