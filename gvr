@@ -282,7 +282,7 @@ jail_create () {
                 FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_EXTERNAL}"
             fi
         fi
-        note "Configuring jail"
+        note "Configuring jail for address: ${FULL_ADDRESS}"
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
     name = \"${JAIL_NAME}\";
@@ -314,7 +314,7 @@ ${JAIL_NAME} {
 
     note "Copying volatile part of jail"
     ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
-    ${PRINTF_BIN} "${JAIL_ADDRESS}\n" > ${JAIL_ADDRESS_FILE}
+    ${PRINTF_BIN} "${FULL_ADDRESS}\n" > ${JAIL_ADDRESS_FILE}
     ${CP_BIN} -R ${JAIL_SOURCE}/var ${CELL}
 
     note "Making required jail directories and user dir"
