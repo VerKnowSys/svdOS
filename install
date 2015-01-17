@@ -132,7 +132,7 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get Atop Pstree Vim Tmux Vifm Bacula Mc Bind Subversion Mercurial Openvpn Openssl Gcc Syslog-ng Thess
+sofin get Atop Pstree Vim Tmux Vifm Bacula Mc Bind Subversion Mercurial Gcc Syslog-ng Sudo-static Thess
 
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
