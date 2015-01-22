@@ -2,5 +2,14 @@
 
 set -e
 
+unset CXX
+unset CPP
+unset CC
+unset PKG_CONFIG_PATH
+unset MANPATH
+unset LDFLAGS
+unset CXXFLAGS
+unset CFLAGS
+
 /bin/sh ./build-jail-base
 /bin/sh ./build-binary-snapshots
