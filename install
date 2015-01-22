@@ -154,6 +154,10 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
 note "Setting up default boot loader configuration"
 ${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
 
+note "Setting up make.conf and src.conf"
+${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/make.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/src.conf >> ${LOG} 2>&1
+
 note "Setting up mime types"
 ${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
 

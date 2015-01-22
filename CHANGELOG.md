@@ -1,6 +1,12 @@
 
 ## CHANGELOG
 
+* v0.6.6
+    - Updated Git to version 2.2.2.
+    - Added src.conf to build lldb with base system.
+    - Install src.conf and make.conf with system.
+    - Base FreeBSD revision: 277538.
+
 * v0.6.4
     - Updated default Git bundle to version 2.2.x.
     - Merged jail-utils into one script. Introduced - Governor
