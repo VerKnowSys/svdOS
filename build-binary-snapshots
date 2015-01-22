@@ -23,7 +23,7 @@ fi
 SYS_ARCH="$(uname -m)"
 SNAPSHOT="${NAME}-${VERSION}"
 SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
-DESTINATION="dmilith@verknowsys.com:/home/dmilith/Web/Public/ServeD/"
+DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
 
 
 compile_jails () {
