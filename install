@@ -217,9 +217,9 @@ note "Setting up default ssl root certificates"
 ${MKDIR_BIN} -p /etc/ssl >> ${LOG} 2>&1
 ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
 
-SNAP_DATE="$(date +%F_%H%M)"
-for snap in /Jails /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
-    snap="${DEFAULT_ZPOOL}${snap}@${SNAP_DATE}-initial"
+SNAP_DATE="$(date +%F_%H%M%S)"
+for snap_ in /Jails /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+    snap="${DEFAULT_ZPOOL}${snap_}@${SNAP_DATE}"
     note "Creating ZFS snapshot: ${snap}"
     ${ZFS_BIN} snapshot "${snap}"
 done
