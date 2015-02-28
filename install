@@ -115,6 +115,10 @@ done
 note "Installing custom kernel"
 if [ ! -d "/boot/verknowsys" ]; then
     ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
+else
+    ${RM_BIN} -rf /boot/verknowsys.old >> ${LOG} 2>&1
+    ${MV_BIN} /boot/verknowsys /boot/verknowsys.old >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
 fi
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
