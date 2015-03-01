@@ -180,22 +180,22 @@ ${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${R
 
 note "Setting up network"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
-CURRENT_IP_FILE="/tmp/net-default"
+DEFAULT_HOST_ADDRESS="/etc/host.default"
 NETS_LIST="$(${IFCONFIG_BIN} ${DEFAULT_INTERFACE} | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
 AMOUNT=$(${PRINTF_BIN} "${NETS_LIST}\n" | ${WC_BIN} -l)
 NETS=""
 if [ ${AMOUNT} -eq 1 ]; then
-    ${PRINTF_BIN} "${NETS_LIST}\n" > ${CURRENT_IP_FILE}
+    ${PRINTF_BIN} "${NETS_LIST}\n" > ${DEFAULT_HOST_ADDRESS}
 else
     note "Detected several IP addresses"
     for net in ${NETS_LIST}; do
         NETS="$NETS $net - "
     done
-    ${DIALOG_BIN} --menu "Pick main IP address:" 0 0 0 ${NETS} 2> ${CURRENT_IP_FILE}
+    ${DIALOG_BIN} --menu "Pick main IP address:" 0 0 0 ${NETS} 2> ${DEFAULT_HOST_ADDRESS}
 fi
 
 note "Setting up firewall"
-DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${CURRENT_IP_FILE})"
+DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS})"
 ${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE} >> ${LOG} 2>&1
 ${SED_BIN} -i '' -e "s/__INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE}
 ${SED_BIN} -i '' -e "s/__EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FILE}
