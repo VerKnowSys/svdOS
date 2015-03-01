@@ -1,4 +1,7 @@
 
+# ServeD Governor jails boot
+gvr boot
+
 # ServeD svdss autostart
 /usr/sbin/daemon /Software/Thess/exports/svdss
 
