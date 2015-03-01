@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.6.0"
+VERSION="0.6.1"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -49,6 +49,7 @@ JAIL_TRUSS_NAME="jail.truss.log"
 JAIL_TRUSS_EXEC_NAME="jail.truss.exec.log"
 JAIL_ID_NAME="jail.id"
 JAIL_STATUS_NAME="jail.status"
+JAIL_RUNNING_INDICATOR="jail.running"
 DEFAULT_HOST_ADDRESS="/etc/host.default"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
@@ -224,7 +225,7 @@ name_and_version () {
 
 
 mark_running () {
-    ${PRINTF_BIN} "$(${DATE_BIN} +%F-%H%M%S)\n" > ${SENTRY}/jail.running
+    ${PRINTF_BIN} "$(${DATE_BIN} +%F-%H%M%S)\n" > ${SENTRY}/${JAIL_RUNNING_INDICATOR}
 }
 
 
@@ -425,7 +426,7 @@ jail_start () {
     GIVEN_NAME="${1}" # hostname?
     if [ "${GIVEN_NAME}" = "" ]; then
         usage
-        error "No jail to stop"
+        error "No jail to start"
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
@@ -497,7 +498,7 @@ jail_stop () {
         JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_FULL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
         note "Turning off jail IP: ${JAIL_FULL_ADDRESS}"
         ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_ADDRESS} -alias >> ${LOG_FILE} 2>&1
-        ${RM_BIN} -f ${SENTRY}/jail.running
+        ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
     fi
 }
 
@@ -668,6 +669,17 @@ case $1 in
         attributes_show
         ;;
 
+    boot)
+        cd ${DEFAULT_SENTRY_LOCATION}
+        for jail in *; do
+            if [ -f "${DEFAULT_SENTRY_LOCATION}/${jail}/${JAIL_RUNNING_INDICATOR}" ]; then
+                note "Booting ${jail}"
+                $0 start ${jail}
+                note "Booted ${jail}"
+            fi
+        done
+        ;;
+
     *)
         CMD="${GVR_SCRIPT_NAME}"
         note "Usage:"
@@ -675,6 +687,7 @@ case $1 in
         note
         note "List of commands:"
         note "attributes"
+        note "boot"
         note "create"
         note "list"
         note "set"
