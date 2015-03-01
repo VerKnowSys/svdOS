@@ -347,14 +347,14 @@ ${JAIL_NAME} {
 
     note "Launching jail: ${JAIL_NAME}"
     jail_start "${JAIL_NAME}"
-    note "Setting up local domain"
+    note "Setting up home domain"
     ${PRINTF_BIN} "
-# Default local zone template:
-local-zone: \"${JAIL_NAME}.local.\" redirect
-local-data: \"${JAIL_NAME}.local. 10800 IN NS ns1.${JAIL_NAME}.local.\"
-local-data: \"${JAIL_NAME}.local. 10800 IN SOA ns1.${JAIL_NAME}.local. ns2.${JAIL_NAME}.local. $(${DATE_BIN} +%s) 3600 600 86400 3600\"
-local-data: \"${JAIL_NAME}.local. 10800 IN A ${JAIL_IP}\"
-local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.local\"
+# Default home zone template:
+local-zone: \"${JAIL_NAME}.home.\" redirect
+local-data: \"${JAIL_NAME}.home. 10800 IN NS ns1.${JAIL_NAME}.home.\"
+local-data: \"${JAIL_NAME}.home. 10800 IN SOA ns1.${JAIL_NAME}.home. ns2.${JAIL_NAME}.home. $(${DATE_BIN} +%s) 3600 600 86400 3600\"
+local-data: \"${JAIL_NAME}.home. 10800 IN A ${JAIL_IP}\"
+local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.home\"
 " > ${JAIL_LOCAL_DOMAIN_CONF}
     note "Reloading Unbound"
     service local_unbound configtest && service local_unbound restart
