@@ -351,7 +351,7 @@ local-data: \"${JAIL_NAME}.local. 10800 IN A ${JAIL_IP}\"
 local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.local\"
 " > ${JAIL_LOCAL_DOMAIN_CONF}
     note "Reloading Unbound"
-    service local_unbound restart
+    service local_unbound configtest && service local_unbound restart
     if [ "$?" = "0" ]; then
         note "Setting default DNS resolver for jail."
         if [ -f ${DEFAULT_HOST_ADDRESS} ]; then
