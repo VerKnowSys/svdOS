@@ -223,6 +223,11 @@ name_and_version () {
 }
 
 
+mark_running () {
+    ${PRINTF_BIN} "$(${DATE_BIN} +%F-%H%M%S)\n" > ${SENTRY}/jail.running
+}
+
+
 jail_create () {
     usage () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP-address[/netmask] ${green}[${cyan}fbsd-version net-interface${green}]${reset}"
@@ -455,13 +460,14 @@ jail_start () {
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
-        ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
+        ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S)]" > "${JAIL_STATUS_FILE}"
         note "Launching Service Spawner daemon"
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
+        mark_running
     else
         error "Jail launch failed. Look into log file: ${LOG_FILE}"
     fi
@@ -491,6 +497,7 @@ jail_stop () {
         JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_FULL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
         note "Turning off jail IP: ${JAIL_FULL_ADDRESS}"
         ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_ADDRESS} -alias >> ${LOG_FILE} 2>&1
+        ${RM_BIN} -f ${SENTRY}/jail.running
     fi
 }
 
