@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.4.2"
+VERSION="0.6.0"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -49,6 +49,7 @@ JAIL_TRUSS_NAME="jail.truss.log"
 JAIL_TRUSS_EXEC_NAME="jail.truss.exec.log"
 JAIL_ID_NAME="jail.id"
 JAIL_STATUS_NAME="jail.status"
+DEFAULT_HOST_ADDRESS="/etc/host.default"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
 if [ "${DEFAULT_INTERFACE}" = "" ]; then
@@ -110,6 +111,7 @@ set_values () {
         HOSTNAMES="*.$(${BASENAME_BIN} ${hostn}) ${HOSTNAMES}"
     done
     debug "Got jail hostnames: ${HOSTNAMES}"
+    JAIL_LOCAL_DOMAIN_CONF="${JAIL_DOMAINS_DIR}/local.conf"
 }
 
 
@@ -339,6 +341,24 @@ ${JAIL_NAME} {
 
     note "Launching jail: ${JAIL_NAME}"
     jail_start "${JAIL_NAME}"
+    note "Setting up local domain"
+    ${PRINTF_BIN} "
+# Default local zone template:
+local-zone: \"${JAIL_NAME}.local.\" redirect
+local-data: \"${JAIL_NAME}.local. 10800 IN NS ns1.${JAIL_NAME}.local.\"
+local-data: \"${JAIL_NAME}.local. 10800 IN SOA ns1.${JAIL_NAME}.local. ns2.${JAIL_NAME}.local. $(${DATE_BIN} +%s) 3600 600 86400 3600\"
+local-data: \"${JAIL_NAME}.local. 10800 IN A ${JAIL_IP}\"
+local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.local\"
+" > ${JAIL_LOCAL_DOMAIN_CONF}
+    note "Reloading Unbound"
+    service local_unbound restart
+    if [ "$?" = "0" ]; then
+        note "Setting default DNS resolver for jail."
+        if [ -f ${DEFAULT_HOST_ADDRESS} ]; then
+            HOST_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS})"
+            ${PRINTF_BIN} "nameserver ${HOST_ADDRESS}\n" > ${CELL}/etc/resolv.conf
+        fi
+    fi
 }
 
 
