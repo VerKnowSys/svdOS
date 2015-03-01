@@ -31,3 +31,4 @@ kern.ipc.shmmax=68719476736
 kern.ipc.semmni=4096
 kern.ipc.semmns=8194
 kern.ipc.semmnu=4096
+kern.maxusers=2048
