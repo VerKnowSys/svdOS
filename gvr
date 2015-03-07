@@ -619,6 +619,7 @@ jail_destroy () {
         ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
+        service local_unbound configtest && service local_unbound restart
     else
         note "Jail: $(${BASENAME_BIN} ${GIVEN_NAME}) left intact"
     fi
