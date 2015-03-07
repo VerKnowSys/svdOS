@@ -364,7 +364,7 @@ source s_${JAIL_NAME}_${logger} {
     pipe(\"${CELL}/var/log/${logger}\");
 };
 destination d_${JAIL_NAME}_${logger}_file {
-    file(\"/var/log/${JAIL_NAME}-${logger}.log\");
+    file(\"/var/log/${JAIL_NAME}-${logger}.log\" template(t_default_format));
 };
 log {
     source(s_${JAIL_NAME}_${logger});
