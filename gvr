@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.6.3"
+VERSION="0.6.4"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -355,6 +355,12 @@ ${JAIL_NAME} {
     ${CP_BIN} /etc/zshenv ${CELL}/etc
     ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Public ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
 
+    note "Creating user loggers"
+    for logger in messages production.log user.log auth.log; do
+        ${MKFIFO_BIN} -m "a=-rwx,u=rw" "${CELL}/var/log/${logger}"
+        ${CHOWN_BIN} ${DEFAULT_WORKER_UID} "${CELL}/var/log/${logger}"
+    done
+
     note "Launching jail: ${JAIL_NAME}"
     jail_start "${JAIL_NAME}"
     note "Setting up home domain"
@@ -615,8 +621,8 @@ jail_destroy () {
     if [ "${ans}" = "yes" ]; then
         jail_stop $*
         note "Destroying datasets: ${CELL} and ${SENTRY}"
-        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
         service local_unbound configtest && service local_unbound restart
