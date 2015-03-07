@@ -109,7 +109,7 @@ set_values () {
     debug "Got jail IP: ${JAIL_IP}"
     HOSTNAMES=""
     for hostnfile in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
-        hostn="$(${CAT_BIN} ${hostnfile} | ${GREP_BIN} "local-zone:" | ${SED_BIN} 's/local-zone: "//;s/\." .*$//')"
+        hostn="$(${CAT_BIN} ${hostnfile} | ${GREP_BIN} "local-zone:" | ${SED_BIN} 's/^.* "//;s/.".*//')"
         debug "hostn: ${hostn}"
         HOSTNAMES="*.${hostn} ${HOSTNAMES}"
     done
