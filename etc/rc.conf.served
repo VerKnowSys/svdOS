@@ -1,6 +1,6 @@
 
 #
-# Options added by ServeD install script:
+# Start of options added by ServeD install script:
 #
 
 sshd_enable="YES"
@@ -68,3 +68,7 @@ syslogd_enable="NO"
 syslog_ng_enable="YES"
 syslog_ng_program="/Software/Syslog-ng/exports/syslog-ng"
 syslog_ng_flags=""
+
+#
+# End of options added by ServeD install script.
+#

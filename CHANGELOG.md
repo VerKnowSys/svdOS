@@ -1,6 +1,11 @@
 
 ## CHANGELOG
 
+* v0.6.7
+    - Use Syslog-ng as system default.
+    - Base FreeBSD revision: 279726.
+
+
 * v0.6.6
     - Updated Git to version 2.2.2.
     - Added src.conf to build lldb with base system.
