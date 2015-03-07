@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.6.2"
+VERSION="0.6.3"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -44,6 +44,7 @@ CELL_OS_VERSION_ATTRIBUTE="jail.os.version"
 CELL_ATTRIBUTES_DIR="jail-attributes"
 CELL_DOMAINS_DIR="jail-domains"
 CELL_WEBCONF_DIR="jail-webconf"
+CELL_LOGS_DIR="jail-logger"
 JAIL_CONF_NAME="jail.conf"
 JAIL_TRUSS_NAME="jail.truss.log"
 JAIL_TRUSS_EXEC_NAME="jail.truss.exec.log"
@@ -84,6 +85,7 @@ set_values () {
     JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
     JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
     JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
+    JAIL_LOGS_CONF_DIR="${SENTRY}/${CELL_LOGS_DIR}"
     JAIL_STATUS_FILE="${SENTRY}/${JAIL_STATUS_NAME}"
     JAIL_STATUS_DETAIL=""
     if [ -f "${JAIL_STATUS_FILE}" ]; then
@@ -136,7 +138,7 @@ apply_attributes () {
     ${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=${DEFAULT_LIMIT_MAXPTS}
 
     debug "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
-    ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}"
+    ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}" "${JAIL_LOGS_CONF_DIR}"
     cd ${JAIL_ATTRIBUTES_DIR}
     for attribute in $(${LS_BIN}); do
         value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
@@ -328,10 +330,16 @@ ${JAIL_NAME} {
     ${CP_BIN} -R ${JAIL_SOURCE}/var ${CELL}
 
     note "Making required jail directories and user dir"
-    ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}"
-    ${MKDIR_BIN} -p "${JAIL_ATTRIBUTES_DIR}"
-    ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}"
-    ${MKDIR_BIN} -p ${CELL}/tmp ${CELL}/dev ${CELL}/Software ${CELL}/SystemUsers ${CELL}/User/.ssh ${CELL}/Public
+    ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
+                    "${JAIL_ATTRIBUTES_DIR}" \
+                    "${JAIL_DOMAINS_DIR}" \
+                    "${JAIL_LOGS_CONF_DIR}" \
+                    "${CELL}/tmp" \
+                    "${CELL}/dev" \
+                    "${CELL}/Software" \
+                    "${CELL}/SystemUsers" \
+                    "${CELL}/User/.ssh" \
+                    "${CELL}/Public"
     ${CAT_BIN} "/tmp/pubkey-${GIVEN_NAME}" > ${CELL}/User/.ssh/authorized_keys
     ${RM_BIN} -f "/tmp/pubkey-${GIVEN_NAME}"
 
