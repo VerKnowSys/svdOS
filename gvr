@@ -376,6 +376,7 @@ jail_status () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} status jail-name${reset}"
     }
     GIVEN_NAME="${1}"
+    VERBOSE="${2}"
     if [ "${GIVEN_NAME}" = "" ]; then
         usage
         error "No jail name given"
@@ -396,8 +397,12 @@ jail_status () {
         ${PRINTF_BIN} "\n"
     fi
     ${PRINTF_BIN} "Live attributes:\n${cyan}$(${RCTL_BIN} -h jail:${JAIL_NAME} | ${SED_BIN} 's/jail:n1://g' | ${SED_BIN} 's/:deny=/: /g')${reset}\n"
-    ${PRINTF_BIN} "\nFull configuration:"
-    ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"
+    case ${VERBOSE} in
+        v|-v|-verbose|verbose|more)
+            ${PRINTF_BIN} "\nFull configuration:"
+            ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"
+            ;;
+    esac
 }
 
 
@@ -698,7 +703,7 @@ case $1 in
         note "start"
         note "stop"
         note "restart"
-        note "status"
+        note "status [-v]"
         note "destroy"
         note
         note "Run '${CMD} [command]' without arguments to see detailed help about command params."
