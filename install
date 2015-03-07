@@ -167,6 +167,10 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/src.conf >> ${LOG} 2>&1
 note "Setting up mime types"
 ${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
 
+note "Setting up system logger"
+${MKDIR_BIN} -p /etc/syslog-ng
+${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng.conf.served /etc/syslog-ng/syslog-ng.conf >> ${LOG} 2>&1
+
 note "Setting up login"
 ${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
 ${CAP_MKDB_BIN} /etc/login.conf >> ${LOG} 2>&1
