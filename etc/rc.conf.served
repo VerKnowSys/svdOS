@@ -63,5 +63,8 @@ oss_enable="NO"
 afsserver_enable="NO"
 jail_enable="YES"
 
+# System log
 syslogd_enable="NO"
-syslogd_flags="-ss"
+syslog_ng_enable="YES"
+syslog_ng_program="/Software/Syslog-ng/exports/syslog-ng"
+syslog_ng_flags=""
