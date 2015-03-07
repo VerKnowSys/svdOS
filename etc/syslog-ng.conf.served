@@ -1,0 +1,31 @@
+@version: 3.6
+@include "scl.conf"
+
+source s_local {
+    system();
+    internal();
+    use_fqdn(no);
+    owner("root");
+    perm(0600);
+    stats_freq(0);
+    flush_lines(1);
+    log_fifo_size(65535);
+};
+
+destination d_local {
+    file("/var/log/messages");
+};
+
+source s_network {
+    udp();
+};
+
+log {
+    source(s_local);
+
+    # uncomment this line to open port 514 to receive messages
+    #source(s_network);
+    destination(d_local);
+};
+
+@include "/Jails/Prison/Sentry/*/jail-loggers/*.conf"
