@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.6.5"
+VERSION="0.6.6"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -350,10 +350,13 @@ ${JAIL_NAME} {
 
     update_sofin ${CELL}
     ${CP_BIN} -R /Software/Thess ${CELL}/Software
-    ${CP_BIN} -R /Software/Git ${CELL}/Software
     ${CP_BIN} -R /Software/Zsh ${CELL}/Software
     ${CP_BIN} /etc/zshenv ${CELL}/etc
     ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Public ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
+
+    note "Mounting /Software/Git"
+    ${MKDIR_BIN} -p "${CELL}/Software/Git"
+    ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
 
     note "Creating user loggers"
     for logger in messages production user auth; do
@@ -527,7 +530,7 @@ jail_stop () {
     ${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
     ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
     note "Unmounting jail directories"
-    for dir in dev bin lib libexec sbin usr; do
+    for dir in dev bin lib libexec sbin usr Software/Git; do
         ${UMOUNT_BIN} -f "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
     done
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
