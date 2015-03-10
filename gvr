@@ -639,8 +639,8 @@ jail_destroy () {
     if [ "${ans}" = "yes" ]; then
         jail_stop $*
         note "Destroying datasets: ${CELL} and ${SENTRY}"
-        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy -f "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy -f "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
         service local_unbound configtest && service local_unbound restart
