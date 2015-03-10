@@ -32,8 +32,8 @@ inetd_enable="NO"
 quota_enable="NO"
 
 # Kerberos5
-kerberos5_server_enable="NO"
-kadmind5_server_enable="NO"
+kdc_enable="NO"
+kadmind_enable="NO"
 
 # DHCP
 dhcpd_enable="NO"
