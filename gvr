@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.6.6"
+VERSION="0.6.7"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -31,7 +31,7 @@ DEFAULT_SENTRY_LIMIT="128M"
 DEFAULT_LIMIT_MAX_MEMORY="1024M"
 DEFAULT_LIMIT_MAX_VMEMORY="2048M"
 DEFAULT_LIMIT_MAXPROC="125"
-DEFAULT_LIMIT_OPENFILES="1024"
+DEFAULT_LIMIT_OPENFILES="2048" # this is required for Postgresql workers to work properly
 DEFAULT_LIMIT_MAXPTS="16"
 DEFAULT_NETMASK="/27" # 255.255.255.224
 DEFAULT_NETMASK_INTERNAL="255.255.255.224" # /27
@@ -717,6 +717,8 @@ case $1 in
                 note "Booting ${jail}"
                 $0 start ${jail}
                 note "Booted ${jail}"
+            else
+                warn "Boot skipped: ${jail}"
             fi
         done
         ;;
