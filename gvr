@@ -355,6 +355,9 @@ ${JAIL_NAME} {
     ${CP_BIN} /etc/zshenv ${CELL}/etc
     ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Public ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
 
+    note "Updating system version"
+    ${CP_BIN} -f /VERSION ${CELL}/VERSION
+
     note "Creating user loggers"
     for logger in messages production staging devlopment; do
         ${MKFIFO_BIN} -m "a=-rwx,u=rw" "${CELL}/var/log/${logger}"
@@ -503,6 +506,8 @@ jail_start () {
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
+        # TODO: web panel installation here, should be deployed using:
+        # /Public/00000000-0000-0000-0000-000000000000.conf
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S)]" > "${JAIL_STATUS_FILE}"
         note "Launching Service Spawner daemon"
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${TOUCH_BIN} /User/SoftwareData/Nginx/.autostart
