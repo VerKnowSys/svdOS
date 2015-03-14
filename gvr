@@ -339,6 +339,7 @@ ${JAIL_NAME} {
                     "${CELL}/Software" \
                     "${CELL}/SystemUsers" \
                     "${CELL}/User/.ssh" \
+                    "${CELL}/User/SoftwareData/Nginx" \
                     "${CELL}/Public"
     ${CAT_BIN} "/tmp/pubkey-${GIVEN_NAME}" > ${CELL}/User/.ssh/authorized_keys
     ${RM_BIN} -f "/tmp/pubkey-${GIVEN_NAME}"
@@ -346,7 +347,7 @@ ${JAIL_NAME} {
     note "Building initial jail environment"
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}:" ${CELL}/etc/rc.conf
-    ${PRINTF_BIN} "export PATH=/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/bin:/usr/bin:/sbin:/usr/sbin\nexport MANPATH='/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/usr/share/man:/usr/share/openssl/man'\n" > ${CELL}/User/.profile
+    ${PRINTF_BIN} "export PATH=/Software/Nginx/exports:/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/bin:/usr/bin:/sbin:/usr/sbin\nexport MANPATH='/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/usr/share/man:/usr/share/openssl/man'\n" > ${CELL}/User/.profile
 
     update_sofin ${CELL}
     ${CP_BIN} -R /Software/Thess ${CELL}/Software
@@ -504,6 +505,7 @@ jail_start () {
     if [ "$?" = "0" ]; then
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S)]" > "${JAIL_STATUS_FILE}"
         note "Launching Service Spawner daemon"
+        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${TOUCH_BIN} /User/SoftwareData/Nginx/.autostart
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
