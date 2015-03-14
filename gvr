@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.6.7"
+VERSION="0.6.8"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -354,10 +354,6 @@ ${JAIL_NAME} {
     ${CP_BIN} /etc/zshenv ${CELL}/etc
     ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Public ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
 
-    note "Mounting /Software/Git"
-    ${MKDIR_BIN} -p "${CELL}/Software/Git"
-    ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
-
     note "Creating user loggers"
     for logger in messages production staging devlopment; do
         ${MKFIFO_BIN} -m "a=-rwx,u=rw" "${CELL}/var/log/${logger}"
@@ -497,6 +493,11 @@ jail_start () {
         ${MKDIR_BIN} -p "${CELL}/${dir}"
         ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> ${LOG_FILE}
     done
+
+    note "Mounting /Software/Git"
+    ${MKDIR_BIN} -p "${CELL}/Software/Git"
+    ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
+
     update_sofin ${CELL}
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
