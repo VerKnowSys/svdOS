@@ -11,7 +11,7 @@ options {
 };
 
 template t_default_format {
-    template("${YEAR}-${MONTH}-${DAY}-${HOUR}${MIN}${SEC} ${HOST} ${MSG}\n");
+    template("${YEAR}-${MONTH}-${DAY}-${HOUR}${MIN}${SEC} ${HOST} ${MSGHDR}${MSG}\n");
     template_escape(no);
 };
 
