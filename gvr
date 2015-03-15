@@ -359,7 +359,7 @@ ${JAIL_NAME} {
     ${CP_BIN} -f /VERSION ${CELL}/VERSION
 
     note "Creating user loggers"
-    for logger in messages production staging devlopment; do
+    for logger in messages production staging development; do
         ${MKFIFO_BIN} -m "a=-rwx,u=rw" "${CELL}/var/log/${logger}"
         ${CHOWN_BIN} ${DEFAULT_WORKER_UID} "${CELL}/var/log/${logger}"
         ${PRINTF_BIN} "
