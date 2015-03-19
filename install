@@ -138,7 +138,7 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get Atop Pstree Vim Tmux Vifm Bacula Mc Bind Subversion Mercurial Gcc Syslog-ng Sudo-static Thess
+sofin get Atop Pstree Vim Tmux Vifm Bacula Mc Bind Subversion Mercurial Gcc Syslog-ng Sudo-static Thess Unbound
 
 note "Updating sudo for ${SYS_VERSION} jail base"
 ${CP_BIN} /Software/Sudo-static/bin/sudo ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/usr/bin/
@@ -170,6 +170,8 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
 note "Setting up system logger"
 ${MKDIR_BIN} -p /etc/syslog-ng
 ${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng.conf.served /etc/syslog-ng/syslog-ng.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/rc.d/syslog-ng /etc/rc.d >> ${LOG} 2>&1
+${CHMOD_BIN} a+x /etc/rc.d/syslog-ng
 
 note "Setting up login"
 ${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
