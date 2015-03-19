@@ -167,11 +167,32 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/src.conf >> ${LOG} 2>&1
 note "Setting up mime types"
 ${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
 
+# replace default syslogd with preconfigured syslog-ng
 note "Setting up system logger"
-${MKDIR_BIN} -p /etc/syslog-ng
-${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng.conf.served /etc/syslog-ng/syslog-ng.conf >> ${LOG} 2>&1
-${CP_BIN} -v ${SERVED_REPO}/etc/rc.d/syslog-ng /etc/rc.d >> ${LOG} 2>&1
-${CHMOD_BIN} a+x /etc/rc.d/syslog-ng
+SYSLOGNG_PREFIX="/Software/Syslog-ng"
+note "Checking jail-loggers entry presence"
+${GREP_BIN} "jail-loggers" ${SYSLOGNG_PREFIX}/etc/syslog-ng.conf > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    printf '@include "/Jails/Prison/Sentry/*/jail-loggers/*.conf"' >> ${SYSLOGNG_PREFIX}/etc/syslog-ng.conf
+fi
+
+note "Checking links to /etc"
+if [ ! -d /etc/syslog-ng ]; then
+    test -d ${SYSLOGNG_PREFIX}/etc && ${MV_BIN} ${SYSLOGNG_PREFIX}/etc /etc/syslog-ng && ${LN_BIN} -s /etc/syslog-ng ${SYSLOGNG_PREFIX}/etc
+    test -L ${SYSLOGNG_PREFIX}/etc || error "Symlink not created: ${SYSLOGNG_PREFIX}/etc"
+else
+    ${RM_BIN} -rf ${SYSLOGNG_PREFIX}/etc
+    ${LN_BIN} -s /etc/syslog-ng ${SYSLOGNG_PREFIX}/etc
+fi
+test -d ${SYSLOGNG_PREFIX}/var && ${RM_BIN} -rf ${SYSLOGNG_PREFIX}/var && ${LN_BIN} -s /var/run ${SYSLOGNG_PREFIX}/var
+
+note "Creating rc script for syslog-ng"
+test ! -x /etc/rc.d/syslog-ng && ${CP_BIN} /etc/rc.d/syslogd /etc/rc.d/syslog-ng
+${SED_BIN} -i '' -e 's#pidfile=.*#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
+${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
+
+note "Starting syslog-ng"
+service syslog-ng restart
 
 note "Setting up login"
 ${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
