@@ -276,10 +276,6 @@ note "Starting Ntp service"
 ${TEST_BIN} -d /SystemUsers/SoftwareData/Ntp || ${MKDIR_BIN} -p /SystemUsers/SoftwareData/Ntp
 ${TEST_BIN} -f /SystemUsers/SoftwareData/Ntp/.running || ${TOUCH_BIN} /SystemUsers/SoftwareData/Ntp/.start
 
-note "Starting LiveUsers service"
-${TEST_BIN} -d /SystemUsers/SoftwareData/LiveUsers || ${MKDIR_BIN} -p /SystemUsers/SoftwareData/LiveUsers
-${TEST_BIN} -f /SystemUsers/SoftwareData/LiveUsers/.running || ${TOUCH_BIN} /SystemUsers/SoftwareData/LiveUsers/.start
-
 ${PRINTF_BIN} "\nServeD OS ${VERSION}\n\n" > /etc/motd
 note "Cleaning unnecessary directories"
 ${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
