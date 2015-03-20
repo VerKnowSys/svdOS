@@ -180,8 +180,9 @@ test -d ${SYSLOGNG_PREFIX}/var && ${RM_BIN} -rf ${SYSLOGNG_PREFIX}/var && ${LN_B
 
 note "Creating rc script for syslog-ng"
 test ! -x /etc/rc.d/syslog-ng && ${CP_BIN} /etc/rc.d/syslogd /etc/rc.d/syslog-ng
-${SED_BIN} -i '' -e 's#pidfile=.*#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
+${SED_BIN} -i '' -e 's#pidfile=.*$#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
 ${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
+${SED_BIN} -i '' -e 's#command=.*$#command="/Software/Unbound/exports/unbound"#' /etc/rc.d/local_unbound
 
 note "Setting up login"
 ${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
