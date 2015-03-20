@@ -169,30 +169,19 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
 
 # replace default syslogd with preconfigured syslog-ng
 note "Setting up system logger"
-SYSLOGNG_PREFIX="/Software/Syslog-ng"
-note "Checking jail-loggers entry presence"
-${GREP_BIN} "jail-loggers" ${SYSLOGNG_PREFIX}/etc/syslog-ng.conf > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    printf '@include "/Jails/Prison/Sentry/*/jail-loggers/*.conf"' >> ${SYSLOGNG_PREFIX}/etc/syslog-ng.conf
-fi
+${MKDIR_BIN} -p /etc/syslog-ng
+${CP_BIN} ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf /etc/syslog-ng/
+${CP_BIN} ${SERVED_REPO}/etc/syslog-ng/scl.conf /etc/syslog-ng/
 
-note "Checking links to /etc"
-if [ ! -d /etc/syslog-ng ]; then
-    test -d ${SYSLOGNG_PREFIX}/etc && ${MV_BIN} ${SYSLOGNG_PREFIX}/etc /etc/syslog-ng && ${LN_BIN} -s /etc/syslog-ng ${SYSLOGNG_PREFIX}/etc
-    test -L ${SYSLOGNG_PREFIX}/etc || error "Symlink not created: ${SYSLOGNG_PREFIX}/etc"
-else
-    ${RM_BIN} -rf ${SYSLOGNG_PREFIX}/etc
-    ${LN_BIN} -s /etc/syslog-ng ${SYSLOGNG_PREFIX}/etc
-fi
+SYSLOGNG_PREFIX="/Software/Syslog-ng"
+${RM_BIN} -rf ${SYSLOGNG_PREFIX}/etc
+${LN_BIN} -s /etc/syslog-ng ${SYSLOGNG_PREFIX}/etc
 test -d ${SYSLOGNG_PREFIX}/var && ${RM_BIN} -rf ${SYSLOGNG_PREFIX}/var && ${LN_BIN} -s /var/run ${SYSLOGNG_PREFIX}/var
 
 note "Creating rc script for syslog-ng"
 test ! -x /etc/rc.d/syslog-ng && ${CP_BIN} /etc/rc.d/syslogd /etc/rc.d/syslog-ng
 ${SED_BIN} -i '' -e 's#pidfile=.*#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
 ${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
-
-note "Starting syslog-ng"
-service syslog-ng restart
 
 note "Setting up login"
 ${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
@@ -281,6 +270,10 @@ ${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 note "Performing additional system tweaks"
 ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/gcc || ${LN_BIN} -s /Software/Gcc/exports/gcc ${DEFAULT_SYSTEM_PREFIX}/gcc
 ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/g++ || ${LN_BIN} -s /Software/Gcc/exports/g++ ${DEFAULT_SYSTEM_PREFIX}/g++
+
+note "Replacing syslogd with syslog-ng"
+service syslogd stop
+service syslog-ng start
 
 note "Installing Governor to host system"
 ${INSTALL_BIN} ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
