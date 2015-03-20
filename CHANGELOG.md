@@ -1,6 +1,10 @@
 
 ## CHANGELOG
 
+* v0.6.8
+    - Base FreeBSD revision: 280294.
+
+
 * v0.6.7
     - Use Syslog-ng as system default.
     - Base FreeBSD revision: 279726.
