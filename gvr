@@ -344,6 +344,13 @@ ${JAIL_NAME} {
     ${CAT_BIN} "/tmp/pubkey-${GIVEN_NAME}" > ${CELL}/User/.ssh/authorized_keys
     ${RM_BIN} -f "/tmp/pubkey-${GIVEN_NAME}"
 
+    note "Creating default user environment file"
+    if [ -e "${CELL}/User/.zshenv" ]; then
+        ${GREP_BIN} -R "sofin reload" "${CELL}/User/.zshenv" || ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshenv"
+    else
+        ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshenv"
+    fi
+
     note "Building initial jail environment"
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}:" ${CELL}/etc/rc.conf
