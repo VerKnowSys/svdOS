@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.6.8"
+VERSION="0.6.9"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -502,6 +502,9 @@ jail_start () {
     note "Mounting /Software/Git"
     ${MKDIR_BIN} -p "${CELL}/Software/Git"
     ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
+    note "Mounting /Software/Mosh"
+    ${MKDIR_BIN} -p "${CELL}/Software/Mosh"
+    ${MOUNT_NULLFS} -o ro "/Software/Mosh" "${CELL}/Software/Mosh" >> ${LOG_FILE} 2>&1
 
     update_sofin ${CELL}
     note "Deploying jail: ${JAIL_NAME}"
