@@ -345,10 +345,10 @@ ${JAIL_NAME} {
     ${RM_BIN} -f "/tmp/pubkey-${GIVEN_NAME}"
 
     note "Creating default user environment file"
-    if [ -e "${CELL}/User/.zshenv" ]; then
-        ${GREP_BIN} -R "sofin reload" "${CELL}/User/.zshenv" || ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshenv"
+    if [ -e "${CELL}/User/.zshrc" ]; then
+        ${GREP_BIN} -R "sofin reload" "${CELL}/User/.zshrc" || ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshrc"
     else
-        ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshenv"
+        ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshrc"
     fi
 
     note "Building initial jail environment"
