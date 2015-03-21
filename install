@@ -272,14 +272,14 @@ note "Performing additional system tweaks"
 ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/gcc || ${LN_BIN} -s /Software/Gcc/exports/gcc ${DEFAULT_SYSTEM_PREFIX}/gcc
 ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/g++ || ${LN_BIN} -s /Software/Gcc/exports/g++ ${DEFAULT_SYSTEM_PREFIX}/g++
 
+set +e
 note "Replacing syslogd with syslog-ng"
-service syslogd stop
-service syslog-ng start
+service syslogd stop >/dev/null 2>&1
+service syslog-ng restart
 
 note "Installing Governor to host system"
 ${INSTALL_BIN} ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
 
-set +e
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
     note
