@@ -138,7 +138,7 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get Atop Pstree Vim Tmux Vifm Bacula Mc Bind Subversion Mercurial Gcc Syslog-ng Sudo-static Thess Unbound
+sofin get Syslog-ng Sudo-static Thess Unbound Mosh Pstree Vim Tmux Atop Vifm Mc Bind Subversion Mercurial Gcc
 
 note "Updating sudo for ${SYS_VERSION} jail base"
 ${CP_BIN} /Software/Sudo-static/bin/sudo ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/usr/bin/
