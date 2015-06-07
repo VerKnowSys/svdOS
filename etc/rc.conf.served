@@ -23,14 +23,24 @@ sendmail_enable="NONE"
 named_enable="NO"
 linux_enable="NO"
 ntpd_enable="YES"
-ntpd_flags="${ntpd_flags} -g"
-rpcbind_enable="NO"
-nfs_server_enable="NO"
-mountd_enable="NO"
-rpc_lockd_enable="NO"
-rpc_statd_enable="NO"
+ntpd_flags="${ntpd_flags} -g -L -N"
 inetd_enable="NO"
 quota_enable="NO"
+
+# NFS
+nfs_client_enable="YES"                                       # Enable NFS client
+nfscbd_enable="NO"                                            # NFSv4 client side callback daemon
+nfscbd_flags=""                                               # Flags for nfscbd
+nfs_server_enable="YES"                                       # Enable the NFS Server
+nfs_server_flags="-t -n 6"                                    # -u(dp), -t(cp), -n(umber of servers to create)
+nfsv4_server_enable="YES"                                     # Enable NFSv4 server
+nfsuserd_enable="YES"                                         # NFSv4 user/group name mapping daemon
+nfsuserd_flags=""                                             # Flags for nfsuserd
+mountd_enable="YES"
+mountd_flags="-r"                                             # Flags to mountd
+rpcbind_enable="YES"                                          # Run the portmapper service
+rpc_statd_enable="YES"
+rpc_lockd_enable="YES"
 
 # Kerberos5
 kdc_enable="NO"
