@@ -1,6 +1,10 @@
 
 ## CHANGELOG
 
+* v0.6.10
+    - Base FreeBSD revision: 284126.
+    - Internal NFS server enabled.
+
 * v0.6.9
     - Base FreeBSD revision: 282245.
     - Added WITH_BSD_JDK=TRUE to make.conf
