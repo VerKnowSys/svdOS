@@ -1,6 +1,9 @@
 
 ## CHANGELOG
 
+* v0.6.11
+    - Base FreeBSD revision: 284378.
+
 * v0.6.10
     - Base FreeBSD revision: 284126.
     - Internal NFS server enabled.
