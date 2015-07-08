@@ -1,6 +1,9 @@
 
 ## CHANGELOG
 
+* v0.6.12
+    - Base FreeBSD revision: 285283.
+
 * v0.6.11
     - Base FreeBSD revision: 284378.
 
