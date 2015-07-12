@@ -2,7 +2,7 @@
 # VERKNOWSYS -- kernel configuration file for FreeBSD/amd64
 # 2014-11-16 16:43:06
 
-makeoptions    DEBUG=-gdwarf-2     # Build kernel with gdb(1) debug symbols
+makeoptions    DEBUG="-g"     # Build kernel with gdb(1) debug symbols
 makeoptions    WITH_CTF=1      # Run ctfconvert(1) for DTrace support
 makeoptions    COPTFLAGS="-O2 -pipe -funroll-loops -ffast-math -fno-strict-aliasing"
 
