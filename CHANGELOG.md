@@ -1,6 +1,9 @@
 
 ## CHANGELOG
 
+* v0.6.13
+    - Fixed broken Dtrace support in kernel build.
+
 * v0.6.12
     - Base FreeBSD revision: 285283.
 
