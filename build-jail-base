@@ -58,9 +58,9 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     make clean >> ${LOG_OUTPUT}
     make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
     note "Building kernel"
-    make buildkernel DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT} 2>&1
+    make buildkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT} 2>&1
     note "Installing kernel"
-    make installkernel DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
+    make installkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
     note "Installing world"
     make installworld DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
     note "Cleaning up"
