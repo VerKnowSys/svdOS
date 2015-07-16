@@ -549,7 +549,7 @@ jail_stop () {
     ${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
     ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
     note "Unmounting jail directories"
-    for dir in dev bin lib libexec sbin usr Software/Git; do
+    for dir in dev bin lib libexec sbin usr Software/Git Software/Mosh; do
         ${UMOUNT_BIN} -f "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
     done
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
