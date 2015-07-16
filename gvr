@@ -239,8 +239,8 @@ jail_create () {
         note
         note "Default values:"
         note "   netmask:"
-        note"      - default internal network mask: ${cyan}${DEFAULT_NETMASK_INTERNAL}${reset}"
-        note"      - default external network mask: ${cyan}${DEFAULT_NETMASK_EXTERNAL}${reset}"
+        note "      - default internal network mask: ${cyan}${DEFAULT_NETMASK_INTERNAL}${reset}"
+        note "      - default external network mask: ${cyan}${DEFAULT_NETMASK_EXTERNAL}${reset}"
         note "   fbsd-version: ${cyan}${DEFAULT_VERSION}${reset}"
         note "   net-interface: ${cyan}${DEFAULT_INTERFACE}${reset}"
         note
