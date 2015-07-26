@@ -285,6 +285,11 @@ service syslog-ng restart
 note "Installing Governor to host system"
 ${INSTALL_BIN} ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
 
+note "Updating VERSION file in each governed cells"
+for cell in $(ls ${DEFAULT_JAIL_PRISON_LOCATION}/Cells); do
+    cp /VERSION ${DEFAULT_JAIL_PRISON_LOCATION}/Cells/${cell}/
+done
+
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
     note
