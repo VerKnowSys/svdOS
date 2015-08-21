@@ -6,7 +6,7 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Subversion/exports
 
 set -e
 
-readonly PARALLEL_JOBS="8"
+readonly PARALLEL_JOBS="10"
 readonly ARCH="$(uname -m)"
 readonly SHARED_DIR="/Jails/Shared"
 readonly CONF_FILE="/etc/sofin.conf.sh"
@@ -54,15 +54,17 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
     note "Building world"
     make clean >> ${LOG_OUTPUT}
-    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
+    TIMESTAMP="$(date +%F-%s)"
+    DESTDIR="${SHARED_DIR}/FreeBSD-${version}-${ARCH}-${TIMESTAMP}"
+    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
     note "Building kernel"
-    make buildkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT} 2>&1
+    make buildkernel DESTDIR=${DESTDIR} >> ${LOG_OUTPUT} 2>&1
     note "Installing kernel"
-    make installkernel DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
+    make installkernel DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
     note "Installing world"
-    make installworld DEBUG= DESTDIR=${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}  2>&1
+    make installworld DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
     note "Cleaning up"
-    rm -vrf ${SHARED_DIR}/FreeBSD-${version}-${ARCH}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
+    rm -vrf ${DESTDIR}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
     echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
     note "Process finished: $(date +%F@%H-%M)"
 done
