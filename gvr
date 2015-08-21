@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.6.9"
+VERSION="0.8.0"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -23,7 +23,7 @@ DEFAULT_SOFIN_REPO="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
 SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
 IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 DEFAULT_ZPOOL="zroot"
-DEFAULT_VERSION="10.1"
+DEFAULT_VERSION="10.2"
 DEFAULT_JAIL_USER="worker"
 DEFAULT_WORKER_UID="501"
 DEFAULT_QUOTA_LIMIT="5G"
@@ -91,8 +91,8 @@ set_values () {
     if [ -f "${JAIL_STATUS_FILE}" ]; then
         JAIL_STATUS_DETAIL="$(${CAT_BIN} ${JAIL_STATUS_FILE})"
     fi
-    JAIL_STATUS="${red}*off*${gray} ${JAIL_STATUS_DETAIL}${reset}"
-    ${JLS_BIN} | ${GREP_BIN} "\ ${JAIL_NAME}\ " > ${LOG_FILE} 2>&1
+    JAIL_STATUS="${red}*off*${gray} ${JAIL_STATUS_DETAIL}${reset} -JAILNAME: ${JAIL_NAME}"
+    ${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*ACTIVE" >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
         JAIL_STATUS="${green}*on*${gray} ${JAIL_STATUS_DETAIL}${reset}"
     fi
@@ -399,15 +399,15 @@ local-data: \"${JAIL_NAME}.home. 10800 IN SOA ns1.${JAIL_NAME}.home. ns2.${JAIL_
 local-data: \"${JAIL_NAME}.home. 10800 IN A ${JAIL_IP}\"
 local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.home\"
 " > ${JAIL_LOCAL_DOMAIN_CONF}
-    note "Reloading Unbound"
-    service local_unbound configtest && service local_unbound restart
-    if [ "$?" = "0" ]; then
-        note "Setting default DNS resolver for jail."
-        if [ -f ${DEFAULT_HOST_ADDRESS} ]; then
-            HOST_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS})"
-            ${PRINTF_BIN} "nameserver ${HOST_ADDRESS}\n" > ${CELL}/etc/resolv.conf
-        fi
-    fi
+    # note "Reloading Unbound"
+    # service local_unbound configtest && service local_unbound restart
+    # if [ "$?" = "0" ]; then
+    #     note "Setting default DNS resolver for jail."
+    #     if [ -f ${DEFAULT_HOST_ADDRESS} ]; then
+    #         HOST_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS})"
+    #         ${PRINTF_BIN} "nameserver ${HOST_ADDRESS}\n" > ${CELL}/etc/resolv.conf
+    #     fi
+    # fi
 }
 
 
@@ -455,7 +455,7 @@ jail_list () {
         if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}" ]; then
             JAIL_IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
         fi
-        ${JLS_BIN} | ${GREP_BIN} "\ ${cellname}\ " > ${LOG_FILE} 2>&1
+        ${JLS_BIN} -v | ${GREP_BIN} "${cellname}.*ACTIVE" >> ${LOG_FILE} 2>&1
         if [ "$?" = "0" ]; then
             ${PRINTF_BIN} " ${JAIL_IP} ${green}*on*${reset}"
         else
@@ -624,7 +624,7 @@ jail_login () {
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    ${JLS_BIN} | ${GREP_BIN} "\ $(${BASENAME_BIN} ${CELL})\ " > ${LOG_FILE} 2>&1
+    ${JLS_BIN} -v | ${GREP_BIN} "$(${BASENAME_BIN} ${CELL}).*ACTIVE" >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
         note "Logging as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}"
         ${DEBUG_EXEC_COMMAND} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_LOGIN}
@@ -662,7 +662,7 @@ jail_destroy () {
         ${ZFS_BIN} destroy -f "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
-        service local_unbound configtest && service local_unbound restart
+        # service local_unbound configtest && service local_unbound restart
     else
         note "Jail: $(${BASENAME_BIN} ${GIVEN_NAME}) left intact"
     fi
