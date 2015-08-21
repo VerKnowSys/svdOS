@@ -40,11 +40,12 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     note "Processing version: ${version}"
     cd /var
     if [ ! -d "${version}-src" ]; then
-        svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
+        # svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
+        /Software/Git/exports/git clone --single-branch --branch hardened/10-stable/master https://github.com/hardenedbsd/hardenedbsd-stable/ ${version}-src
         cd ${version}-src
     else
         cd ${version}-src
-        svn up
+        /Software/Git/exports/git pull
     fi
     # find ${SHARED_DIR}/FreeBSD-*-${ARCH} -exec chflags -R noschg {} \;
     note "Removing old Jail build for ${version}"
