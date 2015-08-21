@@ -8,13 +8,13 @@ read version
 note "Synchronizing time"
 ntpdate -u ntp.nask.pl
 
-echo "$version" > /Jails/Prison/Cells/fbsd-9.3/VERSION
-echo "$version" > /Jails/Prison/Cells/fbsd-10.1/VERSION
+# echo "$version" > /Jails/Prison/Cells/fbsd-9.3/VERSION
+# echo "$version" > /Jails/Prison/Cells/fbsd-10.1/VERSION
 
-${MKDIR_BIN} -p /Jails/Prison/Cells/fbsd-9.3/var/obj /Jails/Prison/Cells/fbsd-9.3/usr/obj
-${MKDIR_BIN} -p /Jails/Prison/Cells/fbsd-10.1/var/obj /Jails/Prison/Cells/fbsd-10.1/usr/obj
+# ${MKDIR_BIN} -p /Jails/Prison/Cells/fbsd-9.3/var/obj /Jails/Prison/Cells/fbsd-9.3/usr/obj
+# ${MKDIR_BIN} -p /Jails/Prison/Cells/fbsd-10.1/var/obj /Jails/Prison/Cells/fbsd-10.1/usr/obj
 
-mount_nullfs /Jails/Prison/Cells/fbsd-9.3/var/obj /Jails/Prison/Cells/fbsd-9.3/usr/obj
-mount_nullfs /Jails/Prison/Cells/fbsd-10.1/var/obj /Jails/Prison/Cells/fbsd-10.1/usr/obj
+# mount_nullfs /Jails/Prison/Cells/fbsd-9.3/var/obj /Jails/Prison/Cells/fbsd-9.3/usr/obj
+# mount_nullfs /Jails/Prison/Cells/fbsd-10.2/var/obj /Jails/Prison/Cells/fbsd-10.2/usr/obj
 
 note "Ready. You may proceed with launching build-jail-base and do_binary_snapshot"
