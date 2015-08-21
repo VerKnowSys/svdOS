@@ -19,7 +19,7 @@ INTERNAL_NETWORK="10.2.1.0"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
 GIT_BIN="/Software/Git/exports/git"
-VERSIONS="10.1" # 9.3
+VERSIONS="10.2" # 9.3
 if [ "${VERSION}" = "" ]; then
     VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
     printf "No version specified. Picking last version: ${VERSION}\n"
