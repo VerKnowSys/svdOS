@@ -35,6 +35,19 @@ options DUMMYNET
 # Divert, i.e. for userspace NAT
 options IPDIVERT
 options SC_DISABLE_REBOOT
+options INCLUDE_CONFIG_FILE
+
+# HardenedBSD hardening options
+options     PAX         # PaX framework
+options     PAX_SYSCTLS     # sysctls for run-time options
+options     PAX_ASLR        # Address Space Layout Randomization
+options     PAX_NOEXEC      # Remove WX pages from user-space and enforce W^X
+options     PAX_HARDENING       # Various hardening options
+options     PAX_SEGVGUARD       # prevent brute-force attacks
+#options    PAX_PTRACE_HARDENING
+#options    PAX_PTRACE_HARDENING_GRP=50000
+options     INVARIANTS      # Check and enforce proper kernel state.
+options     INVARIANT_SUPPORT
 
 device pf
 device pflog
@@ -118,6 +131,9 @@ device      pci
 
 # Floppy drives
 # device      fdc
+
+# VMware support
+device      vmx         # VMware VMXNET3 Ethernet
 
 # ATA controllers
 device      ahci        # AHCI-compatible SATA controllers
@@ -388,3 +404,6 @@ device      vtnet       # VirtIO Ethernet device
 device      virtio_blk  # VirtIO Block device
 device      virtio_scsi # VirtIO SCSI device
 device      virtio_balloon  # VirtIO Memory Balloon device
+
+# Other stuff
+device      aesni
