@@ -45,24 +45,36 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
         /Software/Git/exports/git pull
     fi
     # find ${SHARED_DIR}/FreeBSD-*-${ARCH} -exec chflags -R noschg {} \;
-    note "Removing old Jail build for ${version}"
-    rm -rfv ${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}
-    note "Preparing new Jail builds"
-    mkdir -p ${SHARED_DIR}/FreeBSD-${version}-${ARCH} >> ${LOG_OUTPUT}
+
+    TIMESTAMP="$(date +%F-%s)"
+    DESTBASE="${SHARED_DIR}/FreeBSD-${version}-${ARCH}"
+    DESTDIR="${DESTBASE}-${TIMESTAMP}"
+
+    note "Moving 'current' to 'oldcurrent' for ${version}"
+    rm -f ${DESTBASE}.oldversion || true
+    mv ${DESTBASE} ${DESTBASE}.oldversion >> ${LOG_OUTPUT}
+
+    note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
+    mkdir -p ${DESTDIR} >> ${LOG_OUTPUT}
     note "Preparing kernel configuration"
     rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
     cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+
     note "Building world"
-    # make clean >> ${LOG_OUTPUT}
-    TIMESTAMP="$(date +%F-%s)"
-    DESTDIR="${SHARED_DIR}/FreeBSD-${version}-${ARCH}-${TIMESTAMP}"
     make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+
     note "Building kernel"
     make buildkernel DESTDIR=${DESTDIR} >> ${LOG_OUTPUT} 2>&1
+
     note "Installing kernel"
     make installkernel DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+
     note "Installing world"
     make installworld DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+
+    note "Linking current"
+    ln -s ${DESTDIR} ${DESTBASE}
+
     note "Cleaning up"
     rm -vrf ${DESTDIR}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
     echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
