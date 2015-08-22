@@ -1,0 +1,14 @@
+"applications": [
+    {
+        path: "/Software/Elixir/lib/erlang/erts-7.0.3/bin/beam",
+        features: {
+                "pageexec" : false
+        }
+    },
+    {
+        path: "/Software/Elixir/lib/erlang/erts-7.0.3/bin/beam.smp",
+        features: {
+                "pageexec" : false
+        }
+    },
+]
