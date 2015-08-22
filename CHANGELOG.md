@@ -1,6 +1,16 @@
 
 ## CHANGELOG
 
+* v0.8.1
+    - Build hosts (ng0x) now use HBSD base.
+    - Fixed missing kernel security options.
+    - Several changes to default configuration and devices.
+    - Switched from Subversion to Git.
+    - Switched whole project repository from vanilla FreeBSD 10.x to HardenedBSD 10-STABLE.
+
+* v0.8.0
+    - First attempts to build HBSD base system.
+
 * v0.6.14
     - Base FreeBSD revision: 285875.
 
