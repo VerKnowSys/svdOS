@@ -193,3 +193,8 @@ net.inet.ipsec.filtertunnel=1
 
 # RACCT
 kern.racct.enable=1
+
+# Security settings
+
+# This is required for several intepreters like Elixir to not crash with SIGABRT:
+hardening.allow_map32bit=1
