@@ -2,6 +2,11 @@
 
 set -e
 
+# OS version same as destination system version 1:1
+SYSTEM_VERSION="10.2"
+
+# TODO: add routine that will trap unclean shutdown and revert /VERSION file to old state
+
 DEFAULT_JAIL_PRISON_LOCATION='/Jails/Prison'
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_ZPOOL="zroot"
@@ -13,13 +18,11 @@ LOG="/var/log/svd-install.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
 BASE_SOURCE="http://served.verknowsys.com/"
-SYS_VERSION="$(uname -r | cut -d- -f1)"
 SYS_ARCH="$(uname -m)"
 INTERNAL_NETWORK="10.2.1.0"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
 GIT_BIN="/Software/Git/exports/git"
-VERSIONS="10.2" # 9.3
 if [ "${VERSION}" = "" ]; then
     VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
     printf "No version specified. Picking last version: ${VERSION}\n"
@@ -64,16 +67,17 @@ if [ ! -f "/tmp/.cache/${BASE}-${VERSION}.tar.xz" ]; then
     fi
 fi
 
-for version in ${VERSIONS}; do
-    if [ ! -f "/tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz" ]; then
-        printf "Jails archive wasn't downloaded yet\n"
-        fetch ${BASE_SOURCE}/${BASE}-Jail-${version}-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz
-        if [ "$?" != "0" ]; then
-            printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
-            exit 1
-        fi
+if [ ! -f "/tmp/.cache/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz" ]; then
+    printf "Jails archive wasn't downloaded yet\n"
+    fetch ${BASE_SOURCE}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz
+    if [ "$?" != "0" ]; then
+        printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
+        exit 1
     fi
-done
+fi
+
+printf "Flushing secadm rules before installation\n"
+test -x /usr/sbin/secadm && secadm flush
 
 printf "Installing ServeD-Base ${VERSION}\n"
 tar xf /tmp/.cache/${BASE}-${VERSION}.tar.xz --directory /
@@ -83,10 +87,8 @@ if [ "$?" != "0" ]; then
     exit 1
 fi
 
-for version in ${VERSIONS}; do
-    printf "Installing Jail-Base ${version}-${VERSION}\n"
-    tar xf /tmp/.cache/${BASE}-Jail-${version}-${VERSION}.tar.xz --directory /
-done
+printf "Installing Jail-Base ${SYSTEM_VERSION}-${VERSION}\n"
+tar xf /tmp/.cache/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz --directory /
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Jails snapshot is corrupted or something just went wrong with archive\n"
@@ -103,13 +105,11 @@ else
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://verknowsys@bitbucket.org/verknowsys/sofin.git
 fi
 
-printf "Installing Sofin environment\n"
 bin/install
 . /etc/sofin.conf.sh
-for version in ${VERSIONS}; do
-    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${version}-${SYSTEM_ARCH}"
-    PREFIX="${JAIL_SOURCE}" bin/install
-done
+JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
+printf "Installing Sofin environment with jail source: ${JAIL_SOURCE}\n"
+PREFIX="${JAIL_SOURCE}" bin/install
 # DEFAULT_CELLS_DIR="/Jails/Prison/Cells"
 # for jail in $(${LS_BIN} ${DEFAULT_CELLS_DIR}); do
 #     DESTINATION="${DEFAULT_CELLS_DIR}/${jail}/etc"
@@ -121,11 +121,11 @@ done
 
 note "Installing custom kernel"
 if [ ! -d "/boot/verknowsys" ]; then
-    ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
 else
     ${RM_BIN} -rf /boot/verknowsys.old >> ${LOG} 2>&1
     ${MV_BIN} /boot/verknowsys /boot/verknowsys.old >> ${LOG} 2>&1
-    ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
 fi
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
@@ -145,9 +145,9 @@ fi
 note "Installing additional Software"
 sofin get Syslog-ng Sudo-static Thess Unbound Mosh Pstree Vim Tmux Atop Vifm Mc Bind Subversion Mercurial Gcc
 
-note "Updating sudo for ${SYS_VERSION} jail base"
-${CP_BIN} /Software/Sudo-static/bin/sudo ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/usr/bin/
-${CHMOD_BIN} 4755 ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYS_VERSION}-${SYS_ARCH}/usr/bin/sudo
+note "Updating sudo for ${SYSTEM_VERSION} jail base"
+${CP_BIN} /Software/Sudo-static/bin/sudo ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYS_ARCH}/usr/bin/
+${CHMOD_BIN} 4755 ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYS_ARCH}/usr/bin/sudo
 
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
@@ -204,11 +204,14 @@ ${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${R
 
 note "Installing sysadm"
 ${MKDIR_BIN} -p /etc/rules
+${CP_BIN} -v ${SERVED_REPO}/kernel/modules/${SYSTEM_VERSION}/secadm.ko /boot/modules/
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.d/secadm /etc/rc.d/
 ${CP_BIN} -v ${SERVED_REPO}/etc/secadm.rules /etc/
+${CP_BIN} -v ${SERVED_REPO}/etc/secadm.rules ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}/etc/
 ${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
+${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}/usr/sbin/
 ${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
-${CP_BIN} -v ${SERVED_REPO}/kernel/modules/10.2/secadm.ko /boot/modules/
+${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}/usr/lib/
 
 note "Setting up network"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
