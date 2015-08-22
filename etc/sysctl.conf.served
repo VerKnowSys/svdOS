@@ -200,4 +200,4 @@ kern.racct.enable=1
 hardening.allow_map32bit=1
 
 # This solves SIGSEGV under Elixir
-hardening.pax.pageexec.status=1
+# hardening.pax.pageexec.status=1
