@@ -1,6 +1,10 @@
 
 ## CHANGELOG
 
+* v0.8.2
+    - SecAdm imported to base os.
+    - Exported Libucl to be available with C/C++ API
+
 * v0.8.1
     - Build hosts (ng0x) now use HBSD base.
     - Fixed missing kernel security options.

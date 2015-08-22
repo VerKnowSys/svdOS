@@ -76,6 +76,12 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     note "Installing world"
     make installworld DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
 
+    if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
+        note "Installing private headers (ucl)"
+        cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
+        cp /usr/src/contrib/libucl/include/ucl.h ${DESTDIR}/usr/include/ucl.h
+    fi
+
     note "Linking current"
     ln -s ${DESTDIR} ${DESTBASE}
 

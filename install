@@ -202,6 +202,14 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG
 note "Setting up rc configuration"
 ${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.conf.served >> ${RC_FILE}.conf
 
+note "Installing sysadm"
+${MKDIR_BIN} -p /etc/secadm.rules
+${CP_BIN} -v ${SERVED_REPO}/etc/rc.d/secadm /etc/rc.d/
+${CP_BIN} -v ${SERVED_REPO}/etc/secadm.rules/* /etc/secadm.rules/
+${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
+${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
+${CP_BIN} -v ${SERVED_REPO}/kernel/modules/10.2/secadm.ko /boot/modules/
+
 note "Setting up network"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
 DEFAULT_HOST_ADDRESS="/etc/host.default"
