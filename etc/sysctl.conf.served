@@ -198,3 +198,6 @@ kern.racct.enable=1
 
 # This is required for several intepreters like Elixir to not crash with SIGABRT:
 hardening.allow_map32bit=1
+
+# This solves SIGSEGV under Elixir
+hardening.pax.pageexec.status=1
