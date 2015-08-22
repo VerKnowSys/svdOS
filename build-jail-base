@@ -61,6 +61,9 @@ for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
     rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
     cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
+    note "Patching sources (exporting libucl)"
+    sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+
     note "Building world"
     make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
 
