@@ -34,3 +34,4 @@ kern.ipc.semmnu=4096
 kern.maxusers=2048
 nvme_load="YES"
 nvd_load="YES"
+secadm_load="YES"
