@@ -107,7 +107,7 @@ fi
 
 bin/install
 . /etc/sofin.conf.sh
-JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
+JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}-current"
 printf "Installing Sofin environment with jail source: ${JAIL_SOURCE}\n"
 PREFIX="${JAIL_SOURCE}" bin/install
 # DEFAULT_CELLS_DIR="/Jails/Prison/Cells"
@@ -121,11 +121,11 @@ PREFIX="${JAIL_SOURCE}" bin/install
 
 note "Installing custom kernel"
 if [ ! -d "/boot/verknowsys" ]; then
-    ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
 else
     ${RM_BIN} -rf /boot/verknowsys.old >> ${LOG} 2>&1
     ${MV_BIN} /boot/verknowsys /boot/verknowsys.old >> ${LOG} 2>&1
-    ${CP_BIN} -vr ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYS_ARCH}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
 fi
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
@@ -146,8 +146,8 @@ note "Installing additional Software"
 sofin get Syslog-ng Sudo-static Thess Unbound Mosh Pstree Vim Tmux Atop Vifm Mc Bind Subversion Mercurial Gcc
 
 note "Updating sudo for ${SYSTEM_VERSION} jail base"
-${CP_BIN} /Software/Sudo-static/bin/sudo ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYS_ARCH}/usr/bin/
-${CHMOD_BIN} 4755 ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYS_ARCH}/usr/bin/sudo
+${CP_BIN} /Software/Sudo-static/bin/sudo ${JAIL_SOURCE}/usr/bin/
+${CHMOD_BIN} 4755 ${JAIL_SOURCE}/usr/bin/sudo
 
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
@@ -202,16 +202,20 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG
 note "Setting up rc configuration"
 ${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.conf.served >> ${RC_FILE}.conf
 
-note "Installing sysadm"
+note "Installing secadm"
 ${MKDIR_BIN} -p /etc/rules
 ${CP_BIN} -v ${SERVED_REPO}/kernel/modules/${SYSTEM_VERSION}/secadm.ko /boot/modules/
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.d/secadm /etc/rc.d/
 ${CP_BIN} -v ${SERVED_REPO}/etc/secadm.rules /etc/
-${CP_BIN} -v ${SERVED_REPO}/etc/secadm.rules ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}/etc/
 ${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
-${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}/usr/sbin/
+${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm ${JAIL_SOURCE}/usr/sbin/
 ${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
-${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* ${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}/usr/lib/
+${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* ${JAIL_SOURCE}/usr/lib/
+
+note "Updating secadm.rules file in each governed cells"
+for cell in $(ls ${DEFAULT_JAIL_PRISON_LOCATION}/Cells); do
+    cp ${SERVED_REPO}/etc/secadm.rules ${DEFAULT_JAIL_PRISON_LOCATION}/Cells/${cell}/etc/
+done
 
 note "Setting up network"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
