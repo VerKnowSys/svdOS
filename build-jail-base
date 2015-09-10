@@ -6,7 +6,7 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Subversion/exports
 
 set -e
 
-readonly PARALLEL_JOBS="10"
+readonly PARALLEL_JOBS="8"
 readonly ARCH="$(uname -m)"
 readonly SHARED_DIR="/Jails/Shared"
 readonly CONF_FILE="/etc/sofin.conf.sh"
@@ -27,66 +27,69 @@ else
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/ServeD-OS.git
 fi
 
-note "Setting up make.conf"
-${RM_BIN} -f /etc/make.conf
-${CP_BIN} /var/ServeD-OS/etc/make.conf /etc/make.conf
+note "Setting up src.conf and make.conf"
+${RM_BIN} -f /etc/make.conf /etc/src.conf
+${CP_BIN} -v /var/ServeD-OS/etc/{src.conf,make.conf} /etc/
 
-for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
-    echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
-    note "Process started for version: ${version}: $(date +%F@%H-%M)"
-    note "Processing version: ${version}"
-    rm -f /usr/src
-    cd /var
-    if [ ! -d "${version}-src" ]; then
-        # svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
-        /Software/Git/exports/git clone --single-branch --branch hardened/10-stable/master https://github.com/hardenedbsd/hardenedbsd-stable/ ${version}-src
-        cd ${version}-src
-    else
-        cd ${version}-src
-        /Software/Git/exports/git pull
-    fi
-    ln -s /var/${version}-src /usr/src
 
-    TIMESTAMP="$(date +%F-%s)"
-    DESTBASE="${SHARED_DIR}/FreeBSD-${version}-${ARCH}"
-    DESTDIR="${DESTBASE}-${TIMESTAMP}"
+# main()
+version="10.2"
+echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
+note "Process started for version: ${version}: $(date +%F@%H-%M)"
+note "Processing version: ${version}"
+rm -f /usr/src
+cd /var
+if [ ! -d "${version}-src" ]; then
+    # svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
+    /Software/Git/exports/git clone --single-branch --branch hardened/10-stable/master https://github.com/hardenedbsd/hardenedbsd-stable/ ${version}-src
+    /Software/Git/exports/git checkout -b HardenedBSD-10-STABLE-v29
+    cd ${version}-src
+else
+    cd ${version}-src
+    /Software/Git/exports/git pull
+fi
+ln -s /var/${version}-src /usr/src
 
-    note "Moving 'current' to 'oldcurrent' for ${version}"
-    rm -f ${DESTBASE}.oldversion || true
-    mv ${DESTBASE} ${DESTBASE}.oldversion >> ${LOG_OUTPUT}
+TIMESTAMP="$(date +%F-%s)"
+DESTBASE="${SHARED_DIR}/FreeBSD-${version}-${ARCH}"
+# OLDBASE="$(readlink -f ${DESTBASE}-current)"
+DESTDIR="${DESTBASE}-${TIMESTAMP}"
 
-    note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
-    mkdir -p ${DESTDIR} >> ${LOG_OUTPUT}
-    note "Preparing kernel configuration"
-    rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-    cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
+mkdir -p ${DESTDIR} >> ${LOG_OUTPUT}
+note "Preparing kernel configuration"
+rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
-    note "Patching sources (exporting libucl)"
-    sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+note "Patching sources (exporting libucl)"
+sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
 
+if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
     make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+fi
 
-    note "Building kernel"
-    make buildkernel DESTDIR=${DESTDIR} >> ${LOG_OUTPUT} 2>&1
+note "Building kernel"
+make buildkernel -j2 DESTDIR=${DESTDIR} >> ${LOG_OUTPUT} 2>&1
 
-    note "Installing kernel"
-    make installkernel DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+note "Installing kernel"
+make installkernel DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
 
+if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Installing world"
     make installworld DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+fi
 
-    if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
-        note "Installing private headers (ucl)"
-        cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
-        cp /usr/src/contrib/libucl/include/ucl.h ${DESTDIR}/usr/include/ucl.h
-    fi
+if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
+    note "Installing private headers (ucl)"
+    cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
+    cp /usr/src/contrib/libucl/include/ucl.h ${DESTDIR}/usr/include/ucl.h || true
+fi
 
-    note "Linking current"
-    ln -s ${DESTDIR} ${DESTBASE}
+note "Linking current"
+ln -s ${DESTDIR} ${DESTBASE}
 
-    note "Cleaning up"
-    rm -vrf ${DESTBASE}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
-    echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
-    note "Process finished: $(date +%F@%H-%M)"
-done
+note "Cleaning up"
+rm -vrf ${DESTBASE}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
+echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
+note "Process finished: $(date +%F@%H-%M)"
