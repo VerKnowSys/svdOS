@@ -30,7 +30,7 @@ compile_jails () {
     for version in $(${SOFIN_VERSION_UTILITY_BIN}); do
         SNAPSHOT_JAIL="${NAME}-Jail-${version}-${VERSION}"
         note "Compiling Jail snapshot: ${SNAPSHOT_JAIL}"
-        REALPATH="$(readlink -f /Jails/Shared/FreeBSD-${version}-${SYS_ARCH})"
+        REALPATH="$(readlink -f /Jails/Shared/FreeBSD-${version}-${SYS_ARCH}-current)"
         tar cfJ ../${SNAPSHOT_JAIL}.tar.xz "${REALPATH}"
         if [ "$?" = "0" ]; then
             note "Compiled successfully."
