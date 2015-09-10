@@ -36,3 +36,5 @@ nvme_load="YES"
 nvd_load="YES"
 secadm_load="YES"
 boot_mute="YES"
+if_vlan_load="YES"
+net.fibs=16
