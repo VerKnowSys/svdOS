@@ -9,8 +9,11 @@ makeoptions    COPTFLAGS="-O2 -pipe -funroll-loops -ffast-math -fno-strict-alias
 # dmilith:
 cpu HAMMER
 ident VERKNOWSYS
-options VIMAGE
-device epair
+
+# Too unstable to be enabled, causes kernel crash
+# options VIMAGE
+# device epair
+
 options MAXFILES=32768
 options SHMMAX=68719476736
 options SEMMNU=4096
