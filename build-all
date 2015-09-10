@@ -13,3 +13,6 @@ unset CFLAGS
 
 /bin/sh ./build-jail-base
 /bin/sh ./build-binary-snapshots
+
+printf "Removing /VERSION from build host.\n"
+rm -f /VERSION
