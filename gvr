@@ -102,7 +102,7 @@ set_values () {
         JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE})"
     fi
     debug "Got jail os version: ${JAIL_VERSION}"
-    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
+    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}-current"
     debug "Got jail source: ${JAIL_SOURCE}"
     JAIL_IP="${cyan}no-address${reset}"
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
