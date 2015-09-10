@@ -304,6 +304,7 @@ ${JAIL_NAME} {
     path = \"${CELL}\";
     exec.start = \"/bin/sh /etc/rc\";
     exec.stop = \"/bin/sh /etc/rc.shutdown\";
+    exec.poststart = \"/sbin/ifconfig lo0 up 127.0.0.1/8\";
     enforce_statfs = 2;
     allow.mount = 0;
     allow.mount.nullfs = 0;
