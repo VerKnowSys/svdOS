@@ -28,19 +28,19 @@ inetd_enable="NO"
 quota_enable="NO"
 
 # NFS
-nfs_client_enable="YES"                                       # Enable NFS client
+nfs_client_enable="NO"                                       # Enable NFS client
 nfscbd_enable="NO"                                            # NFSv4 client side callback daemon
 nfscbd_flags=""                                               # Flags for nfscbd
-nfs_server_enable="YES"                                       # Enable the NFS Server
+nfs_server_enable="NO"                                       # Enable the NFS Server
 nfs_server_flags="-t -n 6"                                    # -u(dp), -t(cp), -n(umber of servers to create)
-nfsv4_server_enable="YES"                                     # Enable NFSv4 server
-nfsuserd_enable="YES"                                         # NFSv4 user/group name mapping daemon
+nfsv4_server_enable="NO"                                     # Enable NFSv4 server
+nfsuserd_enable="NO"                                         # NFSv4 user/group name mapping daemon
 nfsuserd_flags=""                                             # Flags for nfsuserd
-mountd_enable="YES"
+mountd_enable="NO"
 mountd_flags="-r"                                             # Flags to mountd
-rpcbind_enable="YES"                                          # Run the portmapper service
-rpc_statd_enable="YES"
-rpc_lockd_enable="YES"
+rpcbind_enable="NO"                                          # Run the portmapper service
+rpc_statd_enable="NO"
+rpc_lockd_enable="NO"
 
 # Kerberos5
 kdc_enable="NO"
