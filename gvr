@@ -102,7 +102,7 @@ set_values () {
         JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE})"
     fi
     debug "Got jail os version: ${JAIL_VERSION}"
-    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}-current"
+    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
     debug "Got jail source: ${JAIL_SOURCE}"
     JAIL_IP="${cyan}no-address${reset}"
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
@@ -297,19 +297,20 @@ jail_create () {
         note "Configuring jail for address: ${FULL_ADDRESS}"
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
-    name = \"${JAIL_NAME}\";
+    # name = \"${JAIL_NAME}\";
     host.hostname = \"${JAIL_NAME}\";
     ip4.addr = \"${FULL_ADDRESS}\";
     interface = ${JAIL_INTERFACE};
     path = \"${CELL}\";
+    exec.fib = ${DEFAULT_JAILS_FIB};
     exec.start = \"/bin/sh /etc/rc\";
     exec.stop = \"/bin/sh /etc/rc.shutdown\";
-    exec.poststart = \"/sbin/ifconfig lo0 up 127.0.0.1/8\";
-    enforce_statfs = 2;
-    allow.mount = 0;
-    allow.mount.nullfs = 0;
-    allow.mount.zfs = 0;
-    allow.mount.tmpfs = 0;
+    # exec.poststart = \"/sbin/ifconfig lo0 up 127.0.0.1/8\";
+    enforce_statfs = 1;
+    allow.mount = 1;
+    allow.mount.zfs = 1;
+    allow.mount.nullfs = 1;
+    allow.mount.tmpfs = 1;
     allow.raw_sockets = 1;
     allow.sysvipc = 1;
     mount.devfs;
@@ -318,17 +319,25 @@ ${JAIL_NAME} {
 " >> ${JAIL_CONF_FILE}
     fi
 
-    note "Mounting jail directories"
-    for dir in bin lib libexec sbin usr; do
-        ${MKDIR_BIN} -p "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
-        debug "Mounting ${JAIL_SOURCE}/${dir} => ${CELL}/${dir}"
-        ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
-    done
+    DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
 
-    note "Copying volatile part of jail"
-    ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
-    ${PRINTF_BIN} "${FULL_ADDRESS}\n" > ${JAIL_ADDRESS_FILE}
-    ${CP_BIN} -R ${JAIL_SOURCE}/var ${CELL}
+    note "Looking for snapshots of ${DEFAULT_JAILS_ROOT_DIR}"
+    LAST=""
+    zfs list -t snap | grep "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" > /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        LAST="$(zfs list -t snap | grep "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" | sed 's/.*@//;s/ .*//' | tail -n 1)"
+    fi
+    if [ "${LAST}" = "" ]; then
+        warn "No snapshots found of ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}. Creating first one"
+        LAST="$(date +%F-%s)"
+        ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}
+    fi
+    note "Cloning last jail base"
+    TIMESTAMP="$(date +%F-%s)"
+    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
+
+    note "Setting up ZFS dataset"
+    ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} #>> ${LOG_FILE} 2>&1
 
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
@@ -338,6 +347,7 @@ ${JAIL_NAME} {
                     "${CELL}/tmp" \
                     "${CELL}/dev" \
                     "${CELL}/Software" \
+                    "${CELL}/Services" \
                     "${CELL}/SystemUsers" \
                     "${CELL}/User/.ssh" \
                     "${CELL}/User/SoftwareData/Nginx" \
@@ -352,6 +362,11 @@ ${JAIL_NAME} {
         ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshrc"
     fi
 
+    note "Copying volatile part of jail"
+    ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
+    ${PRINTF_BIN} "${FULL_ADDRESS}\n" > ${JAIL_ADDRESS_FILE}
+    ${CP_BIN} -R ${JAIL_SOURCE}/var/ ${CELL}/var
+
     note "Building initial jail environment"
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}.home:" ${CELL}/etc/rc.conf
@@ -361,7 +376,7 @@ ${JAIL_NAME} {
     ${CP_BIN} -R /Software/Thess ${CELL}/Software
     ${CP_BIN} -R /Software/Zsh ${CELL}/Software
     ${CP_BIN} /etc/zshenv ${CELL}/etc
-    ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Public ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
+    ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/Services ${CELL}/User ${CELL}/Public ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
 
     note "Updating system version"
     ${CP_BIN} -f /VERSION ${CELL}/VERSION
@@ -385,10 +400,8 @@ log {
     done
 
     note "Reloading syslog"
-    service syslog-ng reload
+    service syslog-ng reload || service syslog-ng restart
 
-    note "Launching jail: ${JAIL_NAME}"
-    jail_start "${JAIL_NAME}"
     note "Setting up home domain"
     ${PRINTF_BIN} "
 # Default home zone template:
@@ -409,6 +422,13 @@ local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.home\"
     #         ${PRINTF_BIN} "nameserver ${HOST_ADDRESS}\n" > ${CELL}/etc/resolv.conf
     #     fi
     # fi
+
+    ${ZFS_BIN} create ${DEFAULT_ZPOOL}/Services > /dev/null 2>&1
+    ${ZFS_BIN} create -o mountpoint=/Services ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} > /dev/null 2>&1
+    ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} #>> ${LOG_FILE} 2>&1
+
+    note "Launching jail: ${JAIL_NAME}"
+    jail_start "${JAIL_NAME}"
 }
 
 
@@ -500,22 +520,24 @@ jail_start () {
         note "Turning on jail IP: ${JAIL_IP}/${JAIL_NETMASK} on interface ${DEFAULT_INTERFACE}"
         ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "${JAIL_IP} netmask ${JAIL_NETMASK}" alias
     fi
-    note "Mounting jail directories for system version: ${JAIL_VERSION}"
-    for dir in bin lib libexec sbin usr; do
-        debug "Mounting ${JAIL_SOURCE}/${dir} => ${CELL}/${dir}"
-        ${MKDIR_BIN} -p "${CELL}/${dir}"
-        ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> ${LOG_FILE}
-    done
+    # note "Mounting jail directories for system version: ${JAIL_VERSION}"
+    # for dir in bin lib libexec sbin usr; do
+    #     debug "Mounting ${JAIL_SOURCE}/${dir} => ${CELL}/${dir}"
+    #     ${MKDIR_BIN} -p "${CELL}/${dir}"
+    #     ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> ${LOG_FILE}
+    # done
 
-    note "Mounting /Software/Git"
-    ${MKDIR_BIN} -p "${CELL}/Software/Git"
-    ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
-    note "Mounting /Software/Mosh"
-    ${MKDIR_BIN} -p "${CELL}/Software/Mosh"
-    ${MOUNT_NULLFS} -o ro "/Software/Mosh" "${CELL}/Software/Mosh" >> ${LOG_FILE} 2>&1
+    # note "Mounting /Software/Git"
+    # ${MKDIR_BIN} -p "${CELL}/Software/Git"
+    # ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
+    # note "Mounting /Software/Mosh"
+    # ${MKDIR_BIN} -p "${CELL}/Software/Mosh"
+    # ${MOUNT_NULLFS} -o ro "/Software/Mosh" "${CELL}/Software/Mosh" >> ${LOG_FILE} 2>&1
 
     update_sofin ${CELL}
     note "Deploying jail: ${JAIL_NAME}"
+    # ${ZFS_BIN} mount ${DEFAULT_ZPOOL}${CELL}
+    # ${ZFS_BIN} mount ${DEFAULT_ZPOOL}${SENTRY}
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
         # TODO: web panel installation here, should be deployed using:
@@ -528,6 +550,17 @@ jail_start () {
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
+
+        JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
+        note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
+        # ${UMOUNT_BIN} -f ${CELL}/dev
+
+        # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} "/sbin/mount -t devfs /dev"
+        # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} "/sbin/zfs create zroot/Jails/Prison/Cells/dmilith/ROOT"
+
+        ${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/Services
+        ${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+        ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
         mark_running
     else
         error "Jail launch failed. Look into log file: ${LOG_FILE}"
@@ -547,7 +580,12 @@ jail_stop () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
     note "Terminating jail: ${JAIL_NAME}"
+    # ${ZFS_BIN} unjail ${DEFAULT_ZPOOL}${CELL}
     ${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
+    ${UMOUNT_BIN} -f ${CELL}/dev
+    ${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}${CELL}
+    ${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}${SENTRY}
+
     ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
     note "Unmounting jail directories"
     for dir in dev bin lib libexec sbin usr Software/Git Software/Mosh; do
@@ -659,8 +697,8 @@ jail_destroy () {
     if [ "${ans}" = "yes" ]; then
         jail_stop $*
         note "Destroying datasets: ${CELL} and ${SENTRY}"
-        ${ZFS_BIN} destroy -f "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} destroy -f "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
         # service local_unbound configtest && service local_unbound restart
