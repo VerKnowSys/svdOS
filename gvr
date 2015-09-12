@@ -424,8 +424,9 @@ local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.home\"
     #     fi
     # fi
 
-    ${ZFS_BIN} create ${DEFAULT_ZPOOL}/Services > /dev/null 2>&1
-    ${ZFS_BIN} create -o mountpoint=/Services ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} > /dev/null 2>&1
+    ${ZFS_BIN} create ${DEFAULT_ZPOOL}/Services >> ${LOG_FILE} 2>&1
+    ${ZFS_BIN} create ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} >> ${LOG_FILE} 2>&1
+    ${ZFS_BIN} quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
     ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} #>> ${LOG_FILE} 2>&1
 
     note "Launching jail: ${JAIL_NAME}"
@@ -499,6 +500,7 @@ jail_start () {
         error "No jail to start"
     fi
     set_values "${GIVEN_NAME}"
+
     check_cell_name "${CELL}"
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
