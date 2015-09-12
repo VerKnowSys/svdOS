@@ -6,9 +6,11 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Subversion/exports
 
 set -e
 
+readonly ZROOT="zroot"
 readonly PARALLEL_JOBS="8"
 readonly ARCH="$(uname -m)"
 readonly SHARED_DIR="/Jails/Shared"
+readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
 readonly CONF_FILE="/etc/sofin.conf.sh"
 readonly LOG_OUTPUT="/var/log/build-$(date +%F).log"
 if [ -e "${CONF_FILE}" ]; then
@@ -50,46 +52,74 @@ else
 fi
 ln -s /var/${version}-src /usr/src
 
+note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
 TIMESTAMP="$(date +%F-%s)"
 DESTBASE="${SHARED_DIR}/FreeBSD-${version}-${ARCH}"
-# OLDBASE="$(readlink -f ${DESTBASE}-current)"
-DESTDIR="${DESTBASE}-${TIMESTAMP}"
+zfs create ${ZROOT}${DESTBASE} 2>> ${LOG_OUTPUT} || true
+# DESTDIR="${DESTBASE}-${TIMESTAMP}"
 
-note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
-mkdir -p ${DESTDIR} >> ${LOG_OUTPUT}
 note "Preparing kernel configuration"
 rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
-note "Patching sources (exporting libucl)"
-sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+# note "Patching sources (exporting libucl)"
+# sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
-    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
 fi
 
 note "Building kernel"
-make buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTDIR} >> ${LOG_OUTPUT} 2>&1
+make buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} >> ${LOG_OUTPUT} 2>&1
+
+note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
+zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin
+
+# note "Cloning ${ZROOT}${DESTBASE}@${TIMESTAMP} to ${ZROOT}${DESTBASE}"
+# zfs clone ${ZROOT}${DESTBASE}@${TIMESTAMP} ${ZROOT}${DESTBASE}
+# zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin
 
 note "Installing kernel"
-make installkernel DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+make installkernel DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Installing world"
-    make installworld DEBUG= DESTDIR=${DESTDIR} >> ${LOG_OUTPUT}  2>&1
+    make installworld DEBUG= DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
 fi
 
-if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
-    note "Installing private headers (ucl)"
-    cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
-    cp /usr/src/contrib/libucl/include/ucl.h ${DESTDIR}/usr/include/ucl.h || true
-fi
-
-note "Linking current"
-ln -s ${DESTDIR} ${DESTBASE}
+# if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
+#     note "Installing private headers (ucl)"
+#     cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
+#     cp /usr/src/contrib/libucl/include/ucl.h ${DESTBASE}/usr/include/ucl.h || true
+# fi
 
 note "Cleaning up"
 rm -vrf ${DESTBASE}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
+
+note "Snapshotting after installation"
+zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_end
+
+note "Storing fs diff"
+mkdir -p ${DIFFS_DIR} > /dev/null 2>&1
+zfs send -i ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin ${ZROOT}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
+
+# note "Stopping any running jails"
+# for node in $(gvr list | awk '{print $1;}'); do
+#     gvr stop ${node}
+# done
+
+# note "Installing base update in: ${ZROOT}${DESTBASE}-new"
+# zfs receive ${ZROOT}${DESTBASE}-new < /tmp/build-${TIMESTAMP}.zfs
+
+# note "Switching to new kernel and software base"
+# zfs rename ${ZROOT}${DESTBASE} ${ZROOT}${DESTBASE}-old
+# zfs rename ${ZROOT}${DESTBASE}-new ${ZROOT}${DESTBASE}
+
+# note "Destroying additional datasets"
+# zfs destroy -R ${ZROOT}${DESTBASE}@${TIMESTAMP}
+# zfs destroy -R ${ZROOT}${DESTBASE}-old
+# zfs destroy -R ${ZROOT}${DESTBASE}
+
 echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
 note "Process finished: $(date +%F@%H-%M)"
