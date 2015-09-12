@@ -49,11 +49,13 @@ for pool in $(zpool list -H | awk '{print $1}'); do
     zfs set checksum=fletcher4 ${pool}
 done
 
+DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/$(uname -s)-${SYSTEM_VERSION}-$(uname -m)"
+
 # create zvols for special snappable dirs
-for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
     if [ ! -d "${mntpoint}" ]; then
         printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
-        zfs create -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
+        zfs create -o compression=lz4 -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
     fi
 done
 
@@ -107,7 +109,7 @@ fi
 
 bin/install
 . /etc/sofin.conf.sh
-JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}-current"
+JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
 printf "Installing Sofin environment with jail source: ${JAIL_SOURCE}\n"
 PREFIX="${JAIL_SOURCE}" bin/install
 # DEFAULT_CELLS_DIR="/Jails/Prison/Cells"
