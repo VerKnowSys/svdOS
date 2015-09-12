@@ -529,22 +529,20 @@ jail_start () {
     #     ${MKDIR_BIN} -p "${CELL}/${dir}"
     #     ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> ${LOG_FILE}
     # done
-
-    # note "Mounting /Software/Git"
-    # ${MKDIR_BIN} -p "${CELL}/Software/Git"
-    # ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
-    # note "Mounting /Software/Mosh"
-    # ${MKDIR_BIN} -p "${CELL}/Software/Mosh"
-    # ${MOUNT_NULLFS} -o ro "/Software/Mosh" "${CELL}/Software/Mosh" >> ${LOG_FILE} 2>&1
+    # note "Mounting filesystems"
+    # ${ZFS_BIN} mount ${DEFAULT_ZPOOL}${CELL}
+    # ${ZFS_BIN} mount ${DEFAULT_ZPOOL}${SENTRY}
 
     update_sofin ${CELL}
     note "Deploying jail: ${JAIL_NAME}"
-    # ${ZFS_BIN} mount ${DEFAULT_ZPOOL}${CELL}
-    # ${ZFS_BIN} mount ${DEFAULT_ZPOOL}${SENTRY}
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
-        # TODO: web panel installation here, should be deployed using:
-        # /Public/00000000-0000-0000-0000-000000000000.conf
+        note "Mounting shared software"
+        ${MKDIR_BIN} -p "${CELL}/Software/Git"
+        ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
+        ${MKDIR_BIN} -p "${CELL}/Software/Mosh"
+        ${MOUNT_NULLFS} -o ro "/Software/Mosh" "${CELL}/Software/Mosh" >> ${LOG_FILE} 2>&1
+
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S)]" > "${JAIL_STATUS_FILE}"
         note "Launching Service Spawner daemon"
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${TOUCH_BIN} /User/SoftwareData/Nginx/.autostart
@@ -556,14 +554,13 @@ jail_start () {
 
         JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
         note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
-        # ${UMOUNT_BIN} -f ${CELL}/dev
 
-        # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} "/sbin/mount -t devfs /dev"
-        # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} "/sbin/zfs create zroot/Jails/Prison/Cells/dmilith/ROOT"
-
-        ${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/Services
+        ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/Services
         ${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${ZFS_BIN} mount ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services
         mark_running
     else
         error "Jail launch failed. Look into log file: ${LOG_FILE}"
@@ -585,15 +582,16 @@ jail_stop () {
     note "Terminating jail: ${JAIL_NAME}"
     # ${ZFS_BIN} unjail ${DEFAULT_ZPOOL}${CELL}
     ${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
-    ${UMOUNT_BIN} -f ${CELL}/dev
-    ${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}${CELL}
-    ${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}${SENTRY}
+    note "Unmounting jail directories"
+    for dir in /dev; do
+        ${UMOUNT_BIN} -f "${CELL}${dir}" >> ${LOG_FILE} 2>&1
+    done
+    for dir in /Software/Git /Software/Mosh; do # dev bin lib libexec sbin usr
+        ${UMOUNT_BIN} -f "${dir}" >> ${LOG_FILE} 2>&1
+    done
+    ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
 
     ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
-    note "Unmounting jail directories"
-    for dir in dev bin lib libexec sbin usr Software/Git Software/Mosh; do
-        ${UMOUNT_BIN} -f "${CELL}/${dir}" >> ${LOG_FILE} 2>&1
-    done
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         JAIL_FULL_ADDRESS="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
         JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_FULL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
@@ -601,6 +599,8 @@ jail_stop () {
         ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_ADDRESS} -alias >> ${LOG_FILE} 2>&1
         ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
     fi
+    ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
+    ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
 }
 
 
@@ -694,14 +694,15 @@ jail_destroy () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
 
-    note "Are you sure you want to destroy jail: $(${BASENAME_BIN} ${GIVEN_NAME}) with all data?"
-    note "Type 'yes' to confirm"
+    note "Are you sure you want to destroy jail: $(${BASENAME_BIN} ${GIVEN_NAME}) with all /Services/dmilith data?"
+    note "Type 'YES' to confirm"
     read ans
-    if [ "${ans}" = "yes" ]; then
+    if [ "${ans}" = "YES" ]; then
         jail_stop $*
         note "Destroying datasets: ${CELL} and ${SENTRY}"
         ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
         # service local_unbound configtest && service local_unbound restart
