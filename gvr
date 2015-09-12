@@ -548,6 +548,7 @@ jail_start () {
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${TOUCH_BIN} /User/SoftwareData/Nginx/.autostart
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
+        ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
