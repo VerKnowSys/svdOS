@@ -27,6 +27,7 @@ DEFAULT_VERSION="10.2"
 DEFAULT_JAIL_USER="worker"
 DEFAULT_WORKER_UID="501"
 DEFAULT_QUOTA_LIMIT="5G"
+DEFAULT_ROOT_QUOTA_LIMIT="512M"
 DEFAULT_SENTRY_LIMIT="128M"
 DEFAULT_LIMIT_MAX_MEMORY="512M"
 DEFAULT_LIMIT_MAX_VMEMORY="1024M"
@@ -52,6 +53,7 @@ JAIL_ID_NAME="jail.id"
 JAIL_STATUS_NAME="jail.status"
 JAIL_RUNNING_INDICATOR="jail.running"
 DEFAULT_HOST_ADDRESS="/etc/host.default"
+DEFAULT_JAILS_FIB="1"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
 if [ "${DEFAULT_INTERFACE}" = "" ]; then
@@ -268,12 +270,9 @@ jail_create () {
     fi
 
     set_values "${GIVEN_NAME}"
-    note "Paste SSH2 public key of worker user below, followed by [enter] and [ctrl-d]"
-    ${CAT_BIN} > /tmp/pubkey-${GIVEN_NAME}
-
-    note "Creating ZFS dataset"
-    ${ZFS_BIN} create -o mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
-    ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
+    warn "GoVeRnor will automatically take your SSH2 public key (~/.ssh/id_rsa.pub) and append it to allowed hosts on jail side."
+    # ${CAT_BIN} > /tmp/pubkey-${GIVEN_NAME}
+    echo "$(cat ~/.ssh/id_rsa.pub)" > /tmp/pubkey-${GIVEN_NAME}
     ${ZFS_BIN} create -o mountpoint=${SENTRY} ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} set quota=${DEFAULT_SENTRY_LIMIT} ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
 
@@ -337,7 +336,7 @@ ${JAIL_NAME} {
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
 
     note "Setting up ZFS dataset"
-    ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} #>> ${LOG_FILE} 2>&1
+    ${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} #>> ${LOG_FILE} 2>&1
 
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
