@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.10.1"
+VERSION="0.10.2"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -602,7 +602,7 @@ jail_start () {
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${ZFS_BIN} mount ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s /sbin/zfs # Make sure that /sbin/zfs has setuid set!
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s /sbin/zfs /sbin/sysctl # Make sure that these have setuid set!
         mark_running
     else
         error "Jail launch failed. Look into log file: ${LOG_FILE}"
