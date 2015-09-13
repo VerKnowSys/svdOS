@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.10.0"
+VERSION="0.10.1"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -42,6 +42,7 @@ DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 CELL_IP_ADDRESS_ATTRIBUTE="jail.ip.address"
 CELL_OS_VERSION_ATTRIBUTE="jail.os.version"
+CELL_VLAN_NUMBER_ATTRIBUTE="jail.vlan.number"
 CELL_ATTRIBUTES_DIR="jail-attributes"
 CELL_DOMAINS_DIR="jail-domains"
 CELL_WEBCONF_DIR="jail-webconfs"
@@ -84,6 +85,7 @@ set_values () {
         DEBUG_COMMAND="${TRUSS_BIN} -o ${JAIL_TRACE_LOG}"
         DEBUG_EXEC_COMMAND="${TRUSS_BIN} -o ${JAIL_EXEC_LOG}"
     fi
+    JAIL_VLAN_NUMBER_FILE="${SENTRY}/${CELL_VLAN_NUMBER_ATTRIBUTE}"
     JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
     JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
     JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
@@ -102,6 +104,9 @@ set_values () {
     JAIL_VERSION="${DEFAULT_VERSION}"
     if [ -f "${JAIL_VERSION_FILE}" ]; then
         JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE})"
+    fi
+    if [ -f "${JAIL_VLAN_NUMBER_FILE}" ]; then
+        VLAN_NUMBER="$(${CAT_BIN} ${JAIL_VLAN_NUMBER_FILE})"
     fi
     debug "Got jail os version: ${JAIL_VERSION}"
     JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
@@ -285,8 +290,15 @@ jail_create () {
     if [ "${JAIL_INTERFACE}" = "" ]; then
         JAIL_INTERFACE="${DEFAULT_INTERFACE}"
     fi
+    VLAN_NUMBER="$(jot -r 1 10 4090)" # pick Random vlan Number between 10 and 4090
+    ifconfig vlan${VLAN_NUMBER} > /dev/null 2>&1
+    while [ "$?" = "0" ]; do
+        VLAN_NUMBER="$(jot -r 1 10 4090)"
+        ifconfig vlan${VLAN_NUMBER} > /dev/null 2>&1
+    done
 
     set_values "${GIVEN_NAME}"
+
     warn "GoVeRnor will automatically take your SSH2 public key (~/.ssh/id_rsa.pub) and append it to allowed hosts on jail side."
     # ${CAT_BIN} > /tmp/pubkey-${GIVEN_NAME}
     echo "$(cat ~/.ssh/id_rsa.pub)" > /tmp/pubkey-${GIVEN_NAME}
@@ -310,18 +322,21 @@ jail_create () {
                 FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_EXTERNAL}"
             fi
         fi
-        note "Configuring jail for address: ${FULL_ADDRESS}"
+        note "Configuring jail for address: ${JAIL_ADDRESS}"
+        ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
+        ifconfig vlan${VLAN_NUMBER} ${JAIL_ADDRESS} netmask ${DEFAULT_NETMASK_EXTERNAL} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
     # name = \"${JAIL_NAME}\";
     host.hostname = \"${JAIL_NAME}\";
-    ip4.addr = \"${FULL_ADDRESS}\";
-    interface = ${JAIL_INTERFACE};
+    ip4.addr = \"${JAIL_ADDRESS}\";
+    interface = vlan${VLAN_NUMBER};
     path = \"${CELL}\";
     exec.fib = ${DEFAULT_JAILS_FIB};
     exec.start = \"/bin/sh /etc/rc\";
     exec.stop = \"/bin/sh /etc/rc.shutdown\";
-    # exec.poststart = \"/sbin/ifconfig lo0 up 127.0.0.1/8\";
+    exec.clean;
+    exec.poststart = \"/sbin/ifconfig lo0 127.0.0.1/8 up\";
     enforce_statfs = 1;
     allow.mount = 1;
     allow.mount.zfs = 1;
@@ -378,6 +393,7 @@ ${JAIL_NAME} {
     fi
 
     note "Copying volatile part of jail"
+    ${PRINTF_BIN} "${VLAN_NUMBER}\n" > ${JAIL_VLAN_NUMBER_FILE}
     ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
     ${PRINTF_BIN} "${FULL_ADDRESS}\n" > ${JAIL_ADDRESS_FILE}
     ${CP_BIN} -R ${JAIL_SOURCE}/var/ ${CELL}/var
@@ -536,23 +552,22 @@ jail_start () {
                 JAIL_NETMASK="${DEFAULT_NETMASK_EXTERNAL}"
             fi
         fi
-        note "Turning on jail IP: ${JAIL_IP}/${JAIL_NETMASK} on interface ${DEFAULT_INTERFACE}"
-        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "${JAIL_IP} netmask ${JAIL_NETMASK}" alias
+        # note "Turning on jail IP: ${JAIL_IP}/${JAIL_NETMASK} on interface ${DEFAULT_INTERFACE}"
+        # ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "${JAIL_IP} netmask ${JAIL_NETMASK}" alias
     fi
-    # note "Mounting jail directories for system version: ${JAIL_VERSION}"
-    # for dir in bin lib libexec sbin usr; do
-    #     debug "Mounting ${JAIL_SOURCE}/${dir} => ${CELL}/${dir}"
-    #     ${MKDIR_BIN} -p "${CELL}/${dir}"
-    #     ${MOUNT_NULLFS} -o ro "${JAIL_SOURCE}/${dir}" "${CELL}/${dir}" 2> ${LOG_FILE}
-    # done
-    # note "Mounting filesystems"
-    # ${ZFS_BIN} mount ${DEFAULT_ZPOOL}${CELL}
-    # ${ZFS_BIN} mount ${DEFAULT_ZPOOL}${SENTRY}
 
     update_sofin ${CELL}
+
+    note "Configuring vlan${VLAN_NUMBER}"
+    ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
+    ifconfig vlan${VLAN_NUMBER} ${JAIL_IP} netmask ${DEFAULT_NETMASK_INTERNAL} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
+        JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
+        note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
+
         note "Mounting shared software"
         for soft in Git Mosh Sudo-static; do
             ${MKDIR_BIN} -p "${CELL}/Software/${soft}"
@@ -568,9 +583,6 @@ jail_start () {
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
-
-        JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
-        note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
 
         ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/Services
         ${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
@@ -612,12 +624,14 @@ jail_stop () {
     if [ -f "${JAIL_ADDRESS_FILE}" ]; then
         JAIL_FULL_ADDRESS="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
         JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_FULL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
-        note "Turning off jail IP: ${JAIL_FULL_ADDRESS}"
+        note "Shutting down vlan${VLAN_NUMBER} with IP: ${JAIL_FULL_ADDRESS}"
         ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_ADDRESS} -alias >> ${LOG_FILE} 2>&1
         ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
     fi
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
+    # ifconfig vlan${VLAN_NUMBER} down
+    ifconfig vlan${VLAN_NUMBER} destroy
 }
 
 
