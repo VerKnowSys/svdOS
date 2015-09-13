@@ -741,7 +741,7 @@ jail_destroy () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
 
-    note "Are you sure you want to destroy jail: $(${BASENAME_BIN} ${GIVEN_NAME}) with all /Services/dmilith data?"
+    note "Are you sure you want to destroy jail: $(${BASENAME_BIN} ${GIVEN_NAME}) with all /Services/${JAIL_NAME} data?"
     note "Type 'YES' to confirm"
     read ans
     if [ "${ans}" = "YES" ]; then
