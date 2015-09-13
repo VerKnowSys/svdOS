@@ -638,6 +638,7 @@ jail_stop () {
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
     # ifconfig vlan${VLAN_NUMBER} down
+    ifconfig bridge0 deletem vlan${VLAN_NUMBER}
     ifconfig vlan${VLAN_NUMBER} destroy
 }
 
