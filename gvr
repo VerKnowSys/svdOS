@@ -481,11 +481,17 @@ jail_status () {
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
-    ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
-    ${PRINTF_BIN} "Interface: ${green}${DEFAULT_INTERFACE}${reset}\n"
-    ${PRINTF_BIN} "IPv4: ${JAIL_IP}\n"
+
     ${PRINTF_BIN} "Status: ${JAIL_STATUS}\n"
+    echo ${JAIL_STATUS} | ${GREP_BIN} '\*on\*' > /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
+        ${PRINTF_BIN} "JID: ${green}${JAIL_NUM_ID}${reset}\n"
+    fi
+    ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
+    ${PRINTF_BIN} "IPv4: ${JAIL_IP}\n"
+    ${PRINTF_BIN} "Interface: ${green}vlan${VLAN_NUMBER}${reset}\n"
+    ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
     if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
         ${PRINTF_BIN} "Overriden attributes:\n"
