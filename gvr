@@ -325,6 +325,9 @@ jail_create () {
         note "Configuring jail for address: ${JAIL_ADDRESS}"
         ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
         ifconfig vlan${VLAN_NUMBER} ${JAIL_ADDRESS} netmask ${DEFAULT_NETMASK_EXTERNAL} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        ifconfig bridge0 create > /dev/null 2>&1
+        ifconfig bridge0 addm ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        ifconfig bridge0 addm vlan${VLAN_NUMBER} > /dev/null 2>&1
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
     # name = \"${JAIL_NAME}\";
@@ -561,6 +564,9 @@ jail_start () {
     note "Configuring vlan${VLAN_NUMBER}"
     ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
     ifconfig vlan${VLAN_NUMBER} ${JAIL_IP} netmask ${DEFAULT_NETMASK_INTERNAL} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+    ifconfig bridge0 create > /dev/null 2>&1
+    ifconfig bridge0 addm ${DEFAULT_INTERFACE} > /dev/null 2>&1
+    ifconfig bridge0 addm vlan${VLAN_NUMBER} > /dev/null 2>&1
 
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
