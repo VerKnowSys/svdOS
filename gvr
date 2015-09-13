@@ -113,9 +113,8 @@ set_values () {
     debug "Got jail source: ${JAIL_SOURCE}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
         JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}")"
-        JAIL_IPS_FORMATTED="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" | ${TR_BIN} '\n' ',' | ${SED_BIN} -e 's/,$//')"
     fi
-    debug "Got jail IP(s): ${JAIL_IPS_FORMATTED}"
+    debug "Got jail IP(s): ${JAIL_IPS}"
     HOSTNAMES=""
     for hostnfile in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
         hostn="$(${CAT_BIN} ${hostnfile} | ${GREP_BIN} "local-zone:" | ${SED_BIN} 's/^.* "//;s/.".*//')"
@@ -151,7 +150,8 @@ apply_attributes () {
         value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
         case "${attribute}" in
             ip)
-                note "Setting IPs: ${value} for jail: ${JAIL_NAME} conf: ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+                note "Setting IPs: ${value} for jail: ${JAIL_NAME}"
+                debug "conf: ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
                 ${PRINTF_BIN} "${value}" > ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}
                 ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${value};#" ${JAIL_CONF_FILE}
                 ${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${attribute}
@@ -160,10 +160,9 @@ apply_attributes () {
             +ip)
                 file_size="$(stat -f%z ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE})"
                 if [ "${file_size}" -gt "0" ]; then
-                    note "Adding IPs: ${value} for jail: ${JAIL_NAME}"
                     ${PRINTF_BIN} ",${value}" >> ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}
-                    current_value="$(${CAT_BIN} ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE})"
-                    note "Current value: ${current_value}"
+                    current_value="$(${CAT_BIN} ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE} | ${TR_BIN} '\n' ',' | ${SED_BIN} -e 's/,$//')"
+                    debug "Current value: ${current_value}"
                     ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${current_value};#" ${JAIL_CONF_FILE}
                 fi
                 ${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${attribute}
@@ -525,7 +524,7 @@ jail_status () {
         ${PRINTF_BIN} "JID: ${green}${JAIL_NUM_ID}${reset}\n"
     fi
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
-    ${PRINTF_BIN} "IPv4s: ${green}${JAIL_IPS_FORMATTED}${reset}\n"
+    ${PRINTF_BIN} "IPv4s: ${green}${JAIL_IPS}${reset}\n"
     ${PRINTF_BIN} "Interface: ${green}vlan${VLAN_NUMBER}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
@@ -552,13 +551,13 @@ jail_list () {
         cellname="$(${PRINTF_BIN} "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}')" # first 29 chars visible in jls output
         ${PRINTF_BIN} "${cell}"
         if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
-            JAIL_IPS_FORMATTED="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" | ${TR_BIN} '\n' ',' | ${SED_BIN} -e 's/,$//')"
+            JAIL_IPS="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" | ${TR_BIN} '\n' ',' | ${SED_BIN} -e 's/,$//')"
         fi
         ${JLS_BIN} -v | ${GREP_BIN} "${cellname}.*ACTIVE" >> ${LOG_FILE} 2>&1
         if [ "$?" = "0" ]; then
-            ${PRINTF_BIN} " ${cyan}${JAIL_IPS_FORMATTED}${reset} ${green}*on*${reset}"
+            ${PRINTF_BIN} " ${cyan}${JAIL_IPS}${reset} ${green}*on*${reset}"
         else
-            ${PRINTF_BIN} " ${cyan}${JAIL_IPS_FORMATTED}${reset} ${red}*off*${reset}"
+            ${PRINTF_BIN} " ${cyan}${JAIL_IPS}${reset} ${red}*off*${reset}"
         fi
         ${PRINTF_BIN} "\n"
     done
@@ -580,7 +579,7 @@ jail_start () {
     check_cell_name "${CELL}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
         JAIL_IPS="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE} | ${TR_BIN} ',' '\n')"
-        JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
+        # JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
 
         # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
         # for ip in ${JAIL_IPS}; do
