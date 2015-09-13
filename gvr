@@ -144,12 +144,27 @@ apply_attributes () {
     cd ${JAIL_ATTRIBUTES_DIR}
     for attribute in $(${LS_BIN}); do
         value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
-        ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value} >> ${LOG_FILE} 2>&1
-        if [ "$?" = "0" ]; then
-            note "Overriden attribute: ${attribute} with value: ${value}"
-        else
-            warn "Wrong attribute: ${red}${attribute}${reset}"
-        fi
+        case "${attribute}" in
+            rootquota)
+                note "Setting root dir quota of: ${value} to ${DEFAULT_ZPOOL}${CELL}"
+                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}${CELL}
+                ;;
+
+            quota)
+                note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
+                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+                ;;
+
+            *)
+                ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value} >> ${LOG_FILE} 2>&1
+                if [ "$?" = "0" ]; then
+                    note "Overriden attribute: ${attribute} with value: ${value}"
+                else
+                    warn "Wrong attribute: ${red}${attribute}${reset}"
+                fi
+                ;;
+
+        esac
     done
 }
 
@@ -222,6 +237,8 @@ attributes_show () {
     ${PRINTF_BIN} "   ${cyan}nshm${gray}: ${green}number of SysV shared memory segments${reset}\n"
     ${PRINTF_BIN} "   ${cyan}shmsize${gray}: ${green}SysV shared memory size, in bytes${reset}\n"
     ${PRINTF_BIN} "   ${cyan}wallclock${gray}: ${green}wallclock time, in seconds${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota${gray}: ${green}Quota value for /Services dataset (fmt: 1G 512M 128K). ${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}rootquota${gray}: ${green}Quota value for jail base system dataset (fmt: 1G 512M 128K)${reset}\n"
 }
 
 
