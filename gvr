@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.10.2"
+VERSION="0.10.3"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -40,7 +40,7 @@ DEFAULT_NETMASK_EXTERNAL="255.255.255.0" # /24
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
-CELL_IP_ADDRESS_ATTRIBUTE="jail.ip.address"
+CELL_IP_ADDRESSES_ATTRIBUTE="jail.ip.addresses"
 CELL_OS_VERSION_ATTRIBUTE="jail.os.version"
 CELL_VLAN_NUMBER_ATTRIBUTE="jail.vlan.number"
 CELL_ATTRIBUTES_DIR="jail-attributes"
@@ -87,7 +87,7 @@ set_values () {
     fi
     JAIL_VLAN_NUMBER_FILE="${SENTRY}/${CELL_VLAN_NUMBER_ATTRIBUTE}"
     JAIL_VERSION_FILE="${SENTRY}/${CELL_OS_VERSION_ATTRIBUTE}"
-    JAIL_ADDRESS_FILE="${SENTRY}/${CELL_IP_ADDRESS_ATTRIBUTE}"
+    JAIL_ADDRESSES_FILE="${SENTRY}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
     JAIL_WEBSERVER_CONF_DIR="${SENTRY}/${CELL_WEBCONF_DIR}"
     JAIL_LOGS_CONF_DIR="${SENTRY}/${CELL_LOGS_DIR}"
     JAIL_STATUS_FILE="${SENTRY}/${JAIL_STATUS_NAME}"
@@ -111,11 +111,11 @@ set_values () {
     debug "Got jail os version: ${JAIL_VERSION}"
     JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
     debug "Got jail source: ${JAIL_SOURCE}"
-    JAIL_IP="${cyan}no-address${reset}"
-    if [ -f "${JAIL_ADDRESS_FILE}" ]; then
-        JAIL_IP="${cyan}$(${CAT_BIN} "${JAIL_ADDRESS_FILE}")${reset}"
+    if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
+        JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}")"
+        JAIL_IPS_FORMATTED="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" | ${TR_BIN} '\n' ',' | ${SED_BIN} -e 's/,$//')"
     fi
-    debug "Got jail IP: ${JAIL_IP}"
+    debug "Got jail IP(s): ${JAIL_IPS_FORMATTED}"
     HOSTNAMES=""
     for hostnfile in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
         hostn="$(${CAT_BIN} ${hostnfile} | ${GREP_BIN} "local-zone:" | ${SED_BIN} 's/^.* "//;s/.".*//')"
@@ -196,13 +196,17 @@ update_sofin () {
 check_jail_address () {
     JAIL_ADDRESS_CHECK="${1}"
     for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION}); do
-        IP_FILE="${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESS_ATTRIBUTE}"
+        IP_FILE="${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
         if [ -f "${IP_FILE}" ]; then
-            JAIL_ADDRESS_CHECK="$(${PRINTF_BIN} ${JAIL_ADDRESS_CHECK} | ${SED_BIN} 's/\/.*//')"
-            ${CAT_BIN} ${IP_FILE} | ${SED_BIN} 's/\/.*//' | ${GREP_BIN} "${JAIL_ADDRESS_CHECK}" > /dev/null 2>&1
-            if [ "$?" = "0" ]; then
-                error "Address: ${JAIL_ADDRESS_CHECK} is already assigned to jail: ${jail}"
-            fi
+            for ip in $(${CAT_BIN} ${IP_FILE} | ${TR_BIN} ',' '\n'); do
+                JAIL_ADDRESS_CHECK="$(${PRINTF_BIN} ${JAIL_ADDRESS_CHECK} | ${TR_BIN} ',' '\n')"
+                for addrchk in ${JAIL_ADDRESS_CHECK}; do
+                    echo "${ip}" | ${GREP_BIN} "${addrchk}" > /dev/null 2>&1
+                    if [ "$?" = "0" ]; then
+                        error "Address: ${addrchk} is already assigned to jail: ${jail}"
+                    fi
+                done
+            done
         fi
     done
 }
@@ -275,12 +279,13 @@ jail_create () {
         error "No jail name given"
     fi
     check_jail_name ${GIVEN_NAME}
-    JAIL_ADDRESS="${2}"
-    if [ "${JAIL_ADDRESS}" = "" ]; then
+    JAIL_ADDRESSES="${2}"
+    if [ "${JAIL_ADDRESSES}" = "" ]; then
         usage
         error "No ip given"
     fi
-    check_jail_address ${JAIL_ADDRESS}
+    check_jail_address ${JAIL_ADDRESSES}
+
 
     JAIL_VERSION="${3}"
     if [ "${JAIL_VERSION}" = "" ]; then
@@ -308,23 +313,27 @@ jail_create () {
     if [ -f "${JAIL_CONF_FILE}" ]; then
         warn "Jail already configured"
     else
-        # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
-        ${PRINTF_BIN} "${JAIL_ADDRESS}" | ${GREP_BIN} '/' > /dev/null 2>&1
-        if [ "$?" = "0" ]; then
-            # if full address specified:
-            FULL_ADDRESS="${JAIL_ADDRESS}"
-        else
-            # if specified only IP address, check which kind of address this is: internal/ external
-            ${PRINTF_BIN} "${JAIL_ADDRESS}" | ${GREP_BIN} '^10.' > /dev/null 2>&1
-            if [ "$?" = "0" ]; then
-                FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_INTERNAL}"
-            else
-                FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_EXTERNAL}"
-            fi
-        fi
-        note "Configuring jail for address: ${JAIL_ADDRESS}"
+        # # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
+        # ${PRINTF_BIN} "${JAIL_ADDRESS}" | ${GREP_BIN} '/' > /dev/null 2>&1
+        # if [ "$?" = "0" ]; then
+        #     # if full address specified:
+        #     FULL_ADDRESS="${JAIL_ADDRESS}"
+        # else
+        #     # if specified only IP address, check which kind of address this is: internal/ external
+        #     ${PRINTF_BIN} "${JAIL_ADDRESS}" | ${GREP_BIN} '^10.' > /dev/null 2>&1
+        #     if [ "$?" = "0" ]; then
+        #         FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_INTERNAL}"
+        #     else
+        #         FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_EXTERNAL}"
+        #     fi
+        # fi
+        ADDRESSES_LIST="$(echo ${JAIL_ADDRESSES} | ${TR_BIN} ',' '\n')"
+        note "Configuring jail for addresses: ${JAIL_ADDRESSES}"
         ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
-        ifconfig vlan${VLAN_NUMBER} ${JAIL_ADDRESS} netmask ${DEFAULT_NETMASK_EXTERNAL} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        ifconfig vlan${VLAN_NUMBER} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        for ip in ${ADDRESSES_LIST}; do
+            ifconfig vlan${VLAN_NUMBER} ${ip} alias
+        done
         ifconfig bridge0 create > /dev/null 2>&1
         ifconfig bridge0 addm ${DEFAULT_INTERFACE} > /dev/null 2>&1
         ifconfig bridge0 addm vlan${VLAN_NUMBER} > /dev/null 2>&1
@@ -332,7 +341,7 @@ jail_create () {
 ${JAIL_NAME} {
     # name = \"${JAIL_NAME}\";
     host.hostname = \"${JAIL_NAME}\";
-    ip4.addr = \"${JAIL_ADDRESS}\";
+    ip4.addr = ${JAIL_ADDRESSES};
     interface = vlan${VLAN_NUMBER};
     path = \"${CELL}\";
     exec.fib = ${DEFAULT_JAILS_FIB};
@@ -398,7 +407,7 @@ ${JAIL_NAME} {
     note "Copying volatile part of jail"
     ${PRINTF_BIN} "${VLAN_NUMBER}\n" > ${JAIL_VLAN_NUMBER_FILE}
     ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
-    ${PRINTF_BIN} "${FULL_ADDRESS}\n" > ${JAIL_ADDRESS_FILE}
+    ${PRINTF_BIN} "${JAIL_ADDRESSES}\n" >> ${JAIL_ADDRESSES_FILE}
     ${CP_BIN} -R ${JAIL_SOURCE}/var/ ${CELL}/var
 
     note "Building initial jail environment"
@@ -436,7 +445,15 @@ log {
     note "Reloading syslog"
     service syslog-ng reload || service syslog-ng restart
 
-    note "Setting up home domain"
+    note "Setting up home domains"
+    PTR_BLOCK=""
+    for ip in ${JAIL_IPS}; do
+        PTR_BLOCK="
+${PTR_BLOCK}
+local-data: \"${JAIL_NAME}.home. 10800 IN A ${ip}\"
+local-data-ptr: \"${ip} ${JAIL_NAME}.home\"
+"
+    done
     ${PRINTF_BIN} "
 # Default home zone template:
 local-zone: \"${JAIL_NAME}.home.\" redirect
@@ -444,9 +461,9 @@ local-data: \"${JAIL_NAME}.home. 10800 IN NS ns1.${JAIL_NAME}.home.\"
 local-data: \"${JAIL_NAME}.home. 10800 IN NS ns2.${JAIL_NAME}.home.\"
 local-data: \"${JAIL_NAME}.home. 1800  IN SRV 10 10 22 ${JAIL_NAME}.home.\"
 local-data: \"${JAIL_NAME}.home. 10800 IN SOA ns1.${JAIL_NAME}.home. ns2.${JAIL_NAME}.home. $(${DATE_BIN} +%s) 3600 600 86400 3600\"
-local-data: \"${JAIL_NAME}.home. 10800 IN A ${JAIL_IP}\"
-local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.home\"
-" > ${JAIL_LOCAL_DOMAIN_CONF}
+$PTR_BLOCK
+" >> ${JAIL_LOCAL_DOMAIN_CONF}
+
     # note "Reloading Unbound"
     # service local_unbound configtest && service local_unbound restart
     # if [ "$?" = "0" ]; then
@@ -489,7 +506,7 @@ jail_status () {
         ${PRINTF_BIN} "JID: ${green}${JAIL_NUM_ID}${reset}\n"
     fi
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
-    ${PRINTF_BIN} "IPv4: ${JAIL_IP}\n"
+    ${PRINTF_BIN} "IPv4s: ${green}${JAIL_IPS_FORMATTED}${reset}\n"
     ${PRINTF_BIN} "Interface: ${green}vlan${VLAN_NUMBER}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
@@ -515,15 +532,14 @@ jail_list () {
     for cell in $(${LS_BIN}); do
         cellname="$(${PRINTF_BIN} "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}')" # first 29 chars visible in jls output
         ${PRINTF_BIN} "${cell}"
-        JAIL_IP="${cyan}no-IP-assigned${reset}"
-        if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}" ]; then
-            JAIL_IP="${cyan}$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESS_ATTRIBUTE}")${reset}"
+        if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
+            JAIL_IPS_FORMATTED="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" | ${TR_BIN} '\n' ',' | ${SED_BIN} -e 's/,$//')"
         fi
         ${JLS_BIN} -v | ${GREP_BIN} "${cellname}.*ACTIVE" >> ${LOG_FILE} 2>&1
         if [ "$?" = "0" ]; then
-            ${PRINTF_BIN} " ${JAIL_IP} ${green}*on*${reset}"
+            ${PRINTF_BIN} " ${cyan}${JAIL_IPS_FORMATTED}${reset} ${green}*on*${reset}"
         else
-            ${PRINTF_BIN} " ${JAIL_IP} ${red}*off*${reset}"
+            ${PRINTF_BIN} " ${cyan}${JAIL_IPS_FORMATTED}${reset} ${red}*off*${reset}"
         fi
         ${PRINTF_BIN} "\n"
     done
@@ -543,33 +559,41 @@ jail_start () {
     set_values "${GIVEN_NAME}"
 
     check_cell_name "${CELL}"
-    if [ -f "${JAIL_ADDRESS_FILE}" ]; then
-        JAIL_IP="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
+    if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
+        JAIL_IPS="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE} | ${TR_BIN} ',' '\n')"
         JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
+
         # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
-        ${PRINTF_BIN} "${JAIL_IP}" | ${GREP_BIN} '/' > /dev/null 2>&1
-        if [ "$?" = "0" ]; then
-            # if full address specified:
-            JAIL_NETMASK="$(${PRINTF_BIN} ${JAIL_IP} | ${SED_BIN} -e 's/.*\///')"
-            JAIL_IP="$(${PRINTF_BIN} ${JAIL_IP} | ${SED_BIN} -e 's/\/.*//')"
-        else
-            # if specified only IP address, check which kind of address this is: internal/ external
-            ${PRINTF_BIN} "${JAIL_IP}" | ${GREP_BIN} '^10.' > /dev/null 2>&1
-            if [ "$?" = "0" ]; then
-                JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
-            else
-                JAIL_NETMASK="${DEFAULT_NETMASK_EXTERNAL}"
-            fi
-        fi
-        # note "Turning on jail IP: ${JAIL_IP}/${JAIL_NETMASK} on interface ${DEFAULT_INTERFACE}"
-        # ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "${JAIL_IP} netmask ${JAIL_NETMASK}" alias
+        # for ip in ${JAIL_IPS}; do
+        #     note "Processing IP: ${ip}"
+
+        #     ${PRINTF_BIN} "${ip}" | ${GREP_BIN} '/' > /dev/null 2>&1
+        #     if [ "$?" = "0" ]; then
+        #         # if full address specified:
+        #         JAIL_NETMASK="$(${PRINTF_BIN} ${ip} | ${SED_BIN} -e 's/.*\///')"
+        #         JAIL_IPS="$(${PRINTF_BIN} ${ip} | ${SED_BIN} -e 's/\/.*//')"
+        #     else
+        #         # if specified only IP address, check which kind of address this is: internal/ external
+        #         ${PRINTF_BIN} "${ip}" | ${GREP_BIN} '^10.' > /dev/null 2>&1
+        #         if [ "$?" = "0" ]; then
+        #             JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
+        #         else
+        #             JAIL_NETMASK="${DEFAULT_NETMASK_EXTERNAL}"
+        #         fi
+        #     fi
+        # done
+        # note "Turning on jail IP: ${JAIL_IPS}/${JAIL_NETMASK} on interface ${DEFAULT_INTERFACE}"
+        # ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "${JAIL_IPS} netmask ${JAIL_NETMASK}" alias
     fi
 
     update_sofin ${CELL}
 
     note "Configuring vlan${VLAN_NUMBER}"
     ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
-    ifconfig vlan${VLAN_NUMBER} ${JAIL_IP} netmask ${DEFAULT_NETMASK_INTERNAL} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+    ifconfig vlan${VLAN_NUMBER} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+    for ip in ${JAIL_IPS}; do
+        ifconfig vlan${VLAN_NUMBER} ${ip} alias
+    done
     ifconfig bridge0 create > /dev/null 2>&1
     ifconfig bridge0 addm ${DEFAULT_INTERFACE} > /dev/null 2>&1
     ifconfig bridge0 addm vlan${VLAN_NUMBER} > /dev/null 2>&1
@@ -636,13 +660,14 @@ jail_stop () {
     ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
 
     ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
-    if [ -f "${JAIL_ADDRESS_FILE}" ]; then
-        JAIL_FULL_ADDRESS="$(${CAT_BIN} ${JAIL_ADDRESS_FILE})"
-        JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_FULL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
-        note "Shutting down vlan${VLAN_NUMBER} with IP: ${JAIL_FULL_ADDRESS}"
-        ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_ADDRESS} -alias >> ${LOG_FILE} 2>&1
-        ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
-    fi
+    # if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
+    #     JAIL_FULL_ADDRESSES="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE})"
+
+    #     # JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_FULL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
+    #     note "Shutting down vlan${VLAN_NUMBER} with IP: ${JAIL_FULL_ADDRESS}"
+    #     ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_ADDRESS} -alias >> ${LOG_FILE} 2>&1
+    #     ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
+    # fi
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
     # ifconfig vlan${VLAN_NUMBER} down
