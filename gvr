@@ -335,9 +335,6 @@ ${JAIL_NAME} {
     TIMESTAMP="$(date +%F-%s)"
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
 
-    note "Setting up ZFS dataset"
-    ${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} #>> ${LOG_FILE} 2>&1
-
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
                     "${JAIL_ATTRIBUTES_DIR}" \
@@ -371,7 +368,7 @@ ${JAIL_NAME} {
     note "Building initial jail environment"
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}.home:" ${CELL}/etc/rc.conf
-    ${PRINTF_BIN} "export PATH=/Software/Mosh/exports:/Software/Nginx/exports:/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/Software/Zsh/exports:/Software/Thess/exports:/bin:/usr/bin:/sbin:/usr/sbin\nexport MANPATH='/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/usr/share/man:/usr/share/openssl/man'\n" > ${CELL}/User/.profile
+    ${PRINTF_BIN} "export PATH=/Software/Sudo-static/exports:/Software/Mosh/exports:/Software/Nginx/exports:/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/Software/Zsh/exports:/Software/Thess/exports:/bin:/usr/bin:/sbin:/usr/sbin\nexport MANPATH='/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/usr/share/man:/usr/share/openssl/man'\n" > ${CELL}/User/.profile
 
     update_sofin ${CELL}
     ${CP_BIN} -R /Software/Thess ${CELL}/Software
@@ -423,10 +420,12 @@ local-data-ptr: \"${JAIL_IP} ${JAIL_NAME}.home\"
     #         ${PRINTF_BIN} "nameserver ${HOST_ADDRESS}\n" > ${CELL}/etc/resolv.conf
     #     fi
     # fi
+    note "Setting up ZFS Services dataset"
 
     ${ZFS_BIN} create ${DEFAULT_ZPOOL}/Services >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} create ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} >> ${LOG_FILE} 2>&1
-    ${ZFS_BIN} quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+    ${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} #>> ${LOG_FILE} 2>&1
+    ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
     ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} #>> ${LOG_FILE} 2>&1
 
     note "Launching jail: ${JAIL_NAME}"
@@ -538,10 +537,10 @@ jail_start () {
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
         note "Mounting shared software"
-        ${MKDIR_BIN} -p "${CELL}/Software/Git"
-        ${MOUNT_NULLFS} -o ro "/Software/Git" "${CELL}/Software/Git" >> ${LOG_FILE} 2>&1
-        ${MKDIR_BIN} -p "${CELL}/Software/Mosh"
-        ${MOUNT_NULLFS} -o ro "/Software/Mosh" "${CELL}/Software/Mosh" >> ${LOG_FILE} 2>&1
+        for soft in Git Mosh Sudo-static; do
+            ${MKDIR_BIN} -p "${CELL}/Software/${soft}"
+            ${MOUNT_NULLFS} -o ro "/Software/${soft}" "${CELL}/Software/${soft}" >> ${LOG_FILE} 2>&1
+        done
 
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S)]" > "${JAIL_STATUS_FILE}"
         note "Launching Service Spawner daemon"
@@ -587,7 +586,7 @@ jail_stop () {
     for dir in /dev; do
         ${UMOUNT_BIN} -f "${CELL}${dir}" >> ${LOG_FILE} 2>&1
     done
-    for dir in /Software/Git /Software/Mosh; do # dev bin lib libexec sbin usr
+    for dir in /Software/Git /Software/Mosh /Software/Sudo-static; do
         ${UMOUNT_BIN} -f "${dir}" >> ${LOG_FILE} 2>&1
     done
     ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
