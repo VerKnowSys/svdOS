@@ -417,6 +417,7 @@ ${JAIL_NAME} {
     for dset in Software Services User; do
         ${ZFS_BIN} create ${DEFAULT_ZPOOL}/${dset} >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} create ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}
         ${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
         ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
         ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
@@ -610,11 +611,11 @@ jail_start () {
     ifconfig bridge0 addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
     ifconfig bridge0 addm vlan${VLAN_NUMBER} sticky vlan${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
 
-    note "Running jail static configuration"
-    for dset in Services Software User; do
-        ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
-        ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
-    done
+    # note "Running jail static configuration"
+    # for dset in Services Software User; do
+    #     ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
+    #     ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
+    # done
 
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
