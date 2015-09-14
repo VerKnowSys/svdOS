@@ -149,6 +149,21 @@ apply_attributes () {
     for attribute in $(${LS_BIN}); do
         value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
         case "${attribute}" in
+            key)
+                ${MKDIR_BIN} -p ${CELL}/User/.ssh
+                ${CHOWN_BIN} -R 501:501 ${CELL}/User/.ssh
+                echo "${key}" | ${GREP_BIN} -e '^AAAAC3N' > /dev/null 2>&1
+                if [ "$?" = "0" ]; then
+                    a_key="ssh-ed ${value}== ${JAIL_NAME}\n"
+                    debug "ED SSH key given: ${a_key}"
+                    ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
+                else
+                    a_key="ssh-rsa ${value}== ${JAIL_NAME}\n"
+                    debug "RSA SSH key given: ${a_key}"
+                    ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
+                fi
+                ;;
+
             ip)
                 note "Setting IPs: ${value} for jail: ${JAIL_NAME}"
                 debug "conf: ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
