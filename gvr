@@ -682,7 +682,7 @@ jail_stop () {
 
 jail_set () {
     usage () {
-        note "Usage: ${cyan}${GVR_SCRIPT_NAME} set jail-name attribute value${reset}"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} set jail-name attribute=value attr2=val2 (...)${reset}"
     }
     GIVEN_NAME="${1}"
     shift
