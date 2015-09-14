@@ -322,9 +322,6 @@ jail_create () {
 
     set_values "${GIVEN_NAME}"
 
-    warn "GoVeRnor will automatically take your SSH2 public key (~/.ssh/id_rsa.pub) and append it to allowed hosts on jail side."
-    # ${CAT_BIN} > /tmp/pubkey-${GIVEN_NAME}
-    echo "$(cat ~/.ssh/id_rsa.pub)" > /tmp/pubkey-${GIVEN_NAME}
     ${ZFS_BIN} create -o mountpoint=${SENTRY} ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} set quota=${DEFAULT_SENTRY_LIMIT} ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
 
