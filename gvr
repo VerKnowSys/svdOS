@@ -350,7 +350,7 @@ ${JAIL_NAME} {
     exec.start = \"/bin/sh /etc/rc\";
     exec.stop = \"/bin/sh /etc/rc.shutdown\";
     exec.clean;
-    exec.poststart = \"/sbin/ifconfig lo0 127.0.0.1/8 up\";
+    # exec.prestart = \"\";
     enforce_statfs = 1;
     allow.mount = 1;
     allow.mount.zfs = 1;
