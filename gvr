@@ -353,8 +353,9 @@ jail_create () {
             ifconfig vlan${VLAN_NUMBER} ${ip} alias
         done
         ifconfig bridge0 create > /dev/null 2>&1
-        ifconfig bridge0 addm ${DEFAULT_INTERFACE} > /dev/null 2>&1
-        ifconfig bridge0 addm vlan${VLAN_NUMBER} > /dev/null 2>&1
+        ifconfig bridge0  > /dev/null 2>&1
+        ifconfig bridge0 addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
+        ifconfig bridge0 addm vlan${VLAN_NUMBER} sticky vlan${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
     # name = \"${JAIL_NAME}\";
@@ -613,8 +614,8 @@ jail_start () {
         ifconfig vlan${VLAN_NUMBER} ${ip} alias
     done
     ifconfig bridge0 create > /dev/null 2>&1
-    ifconfig bridge0 addm ${DEFAULT_INTERFACE} > /dev/null 2>&1
-    ifconfig bridge0 addm vlan${VLAN_NUMBER} > /dev/null 2>&1
+    ifconfig bridge0 addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
+    ifconfig bridge0 addm vlan${VLAN_NUMBER} sticky vlan${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
 
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
