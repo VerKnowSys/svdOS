@@ -217,7 +217,7 @@ check_jail_address () {
         IP_FILE="${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
         if [ -f "${IP_FILE}" ]; then
             for ip in $(${CAT_BIN} ${IP_FILE} | ${TR_BIN} ',' '\n'); do
-                JAIL_ADDRESS_CHECK="$(${PRINTF_BIN} ${JAIL_ADDRESS_CHECK} | ${TR_BIN} ',' '\n')"
+                JAIL_ADDRESS_CHECK=$(${PRINTF_BIN} "${JAIL_ADDRESS_CHECK}" | ${TR_BIN} ',' '\n')
                 for addrchk in ${JAIL_ADDRESS_CHECK}; do
                     echo "${ip}" | ${GREP_BIN} "${addrchk}" > /dev/null 2>&1
                     if [ "$?" = "0" ]; then
