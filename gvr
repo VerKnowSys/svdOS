@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.11.0"
+VERSION="0.12.0"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -331,20 +331,6 @@ jail_create () {
     if [ -f "${JAIL_CONF_FILE}" ]; then
         warn "Jail already configured"
     else
-        # # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
-        # ${PRINTF_BIN} "${JAIL_ADDRESS}" | ${GREP_BIN} '/' > /dev/null 2>&1
-        # if [ "$?" = "0" ]; then
-        #     # if full address specified:
-        #     FULL_ADDRESS="${JAIL_ADDRESS}"
-        # else
-        #     # if specified only IP address, check which kind of address this is: internal/ external
-        #     ${PRINTF_BIN} "${JAIL_ADDRESS}" | ${GREP_BIN} '^10.' > /dev/null 2>&1
-        #     if [ "$?" = "0" ]; then
-        #         FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_INTERNAL}"
-        #     else
-        #         FULL_ADDRESS="${JAIL_ADDRESS}/${DEFAULT_NETMASK_EXTERNAL}"
-        #     fi
-        # fi
         ADDRESSES_LIST="$(echo ${JAIL_ADDRESSES} | ${TR_BIN} ',' '\n')"
         note "Configuring jail for addresses: ${JAIL_ADDRESSES}"
         ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
@@ -385,9 +371,9 @@ ${JAIL_NAME} {
 
     note "Looking for snapshots of ${DEFAULT_JAILS_ROOT_DIR}"
     LAST=""
-    zfs list -t snap | grep "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" > /dev/null 2>&1
+    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        LAST="$(zfs list -t snap | grep "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" | sed 's/.*@//;s/ .*//' | tail -n 1)"
+        LAST="$(${ZFS_BIN} list -t snap | ${GREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" | ${SED_BIN} 's/.*@//;s/ .*//' | tail -n 1)"
     fi
     if [ "${LAST}" = "" ]; then
         warn "No snapshots found of ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}. Creating first one"
@@ -398,23 +384,50 @@ ${JAIL_NAME} {
     TIMESTAMP="$(date +%F-%s)"
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
 
+    note "Looking for snapshots of ${DEFAULT_ZPOOL}/Software"
+    LAST_SOFT_SNAP=""
+    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software@" > /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        LAST_SOFT_SNAP="$(${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software@" | ${SED_BIN} 's/.*@//;s/ .*//' | tail -n 1)"
+    fi
+    if [ "${LAST_SOFT_SNAP}" = "" ]; then
+        warn "No snapshots found of ${DEFAULT_ZPOOL}/Software. Creating first one"
+        LAST_SOFT_SNAP="$(date +%F-%s)"
+        ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/Software@${LAST_SOFT_SNAP}
+    fi
+    debug "Last snap: ${LAST_SOFT_SNAP}"
+    note "Cloning from last /Software base snapshot"
+    TIMESTAMP="$(date +%F-%s)"
+    debug "Cloning /Software: ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software@${LAST_SOFT_SNAP} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software@${LAST_SOFT_SNAP} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+
+    note "Creating jail filesystems"
+    for dset in Software Services User; do
+        ${ZFS_BIN} create ${DEFAULT_ZPOOL}/${dset} >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} create ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
+        ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
+        ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
+        ${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
+    done
+    ${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}
+
+    note "Setting up ZFS deduplication on Jails and Software"
+    ${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Software
+    ${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Jails
+    ${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Software
+
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
                     "${JAIL_ATTRIBUTES_DIR}" \
                     "${JAIL_DOMAINS_DIR}" \
                     "${JAIL_LOGS_CONF_DIR}" \
+                    "${CELL}/SystemUsers" \
                     "${CELL}/tmp" \
                     "${CELL}/dev" \
                     "${CELL}/var/log" \
                     "${CELL}/var/tmp" \
-                    "${CELL}/Software" \
-                    "${CELL}/Services" \
-                    "${CELL}/SystemUsers" \
-                    "${CELL}/User/.ssh" \
-                    "${CELL}/User/SoftwareData/Nginx" \
-                    "${CELL}/Public"
-    ${CAT_BIN} "/tmp/pubkey-${GIVEN_NAME}" > ${CELL}/User/.ssh/authorized_keys
-    ${RM_BIN} -f "/tmp/pubkey-${GIVEN_NAME}"
+                    "${CELL}/User/.ssh"
 
     note "Creating default user environment file"
     if [ -e "${CELL}/User/.zshrc" ]; then
@@ -435,10 +448,8 @@ ${JAIL_NAME} {
     ${PRINTF_BIN} "export PATH=/Software/Sudo-static/exports:/Software/Mosh/exports:/Software/Nginx/exports:/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/Software/Zsh/exports:/Software/Thess/exports:/bin:/usr/bin:/sbin:/usr/sbin\nexport MANPATH='/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/usr/share/man:/usr/share/openssl/man'\n" > ${CELL}/User/.profile
 
     update_sofin ${CELL}
-    ${CP_BIN} -R /Software/Thess ${CELL}/Software
-    ${CP_BIN} -R /Software/Zsh ${CELL}/Software
     ${CP_BIN} /etc/zshenv ${CELL}/etc
-    ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/User ${CELL}/Public ${CELL}/Software ${CELL}/tmp ${CELL}/var/tmp
+    # ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/tmp ${CELL}/var/tmp
 
     note "Updating system version"
     ${CP_BIN} -f /VERSION ${CELL}/VERSION
@@ -492,13 +503,6 @@ $PTR_BLOCK
     #         ${PRINTF_BIN} "nameserver ${HOST_ADDRESS}\n" > ${CELL}/etc/resolv.conf
     #     fi
     # fi
-    note "Setting up ZFS Services dataset"
-
-    ${ZFS_BIN} create ${DEFAULT_ZPOOL}/Services >> ${LOG_FILE} 2>&1
-    ${ZFS_BIN} create ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} >> ${LOG_FILE} 2>&1
-    ${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL} #>> ${LOG_FILE} 2>&1
-    ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
-    ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/Services/${JAIL_NAME} #>> ${LOG_FILE} 2>&1
 
     note "Launching jail: ${JAIL_NAME}"
     jail_start "${JAIL_NAME}"
@@ -580,29 +584,6 @@ jail_start () {
     check_cell_name "${CELL}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
         JAIL_IPS="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE} | ${TR_BIN} ',' '\n')"
-        # JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
-
-        # format: 1.2.3.4 or 1.2.3.4/255.255.255.0
-        # for ip in ${JAIL_IPS}; do
-        #     note "Processing IP: ${ip}"
-
-        #     ${PRINTF_BIN} "${ip}" | ${GREP_BIN} '/' > /dev/null 2>&1
-        #     if [ "$?" = "0" ]; then
-        #         # if full address specified:
-        #         JAIL_NETMASK="$(${PRINTF_BIN} ${ip} | ${SED_BIN} -e 's/.*\///')"
-        #         JAIL_IPS="$(${PRINTF_BIN} ${ip} | ${SED_BIN} -e 's/\/.*//')"
-        #     else
-        #         # if specified only IP address, check which kind of address this is: internal/ external
-        #         ${PRINTF_BIN} "${ip}" | ${GREP_BIN} '^10.' > /dev/null 2>&1
-        #         if [ "$?" = "0" ]; then
-        #             JAIL_NETMASK="${DEFAULT_NETMASK_INTERNAL}"
-        #         else
-        #             JAIL_NETMASK="${DEFAULT_NETMASK_EXTERNAL}"
-        #         fi
-        #     fi
-        # done
-        # note "Turning on jail IP: ${JAIL_IPS}/${JAIL_NETMASK} on interface ${DEFAULT_INTERFACE}"
-        # ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} "${JAIL_IPS} netmask ${JAIL_NETMASK}" alias
     fi
 
     update_sofin ${CELL}
@@ -617,36 +598,35 @@ jail_start () {
     ifconfig bridge0 addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
     ifconfig bridge0 addm vlan${VLAN_NUMBER} sticky vlan${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
 
+    note "Running jail static configuration"
+    for dset in Services Software User; do
+        ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
+        ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
+    done
+
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
         JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
         note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
 
-        note "Mounting shared software"
-        for soft in Git Mosh Sudo-static; do
-            ${MKDIR_BIN} -p "${CELL}/Software/${soft}"
-            ${MOUNT_NULLFS} -o ro "/Software/${soft}" "${CELL}/Software/${soft}" >> ${LOG_FILE} 2>&1
-        done
-
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S)]" > "${JAIL_STATUS_FILE}"
         note "Launching Service Spawner daemon"
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${TOUCH_BIN} /User/SoftwareData/Nginx/.autostart
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
+        # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
+        # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
-        ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
+        # ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
 
-        note "Running jail static configuration"
-        ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/Services
-        ${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+        ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+        ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} sysctl kern.securelevel=1 >> ${LOG_FILE} 2>&1
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${ZFS_BIN} mount ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${ZFS_BIN} mount ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${ZFS_BIN} mount ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s /sbin/zfs /sbin/sysctl # Make sure that these have setuid set!
         mark_running
     else
@@ -667,29 +647,22 @@ jail_stop () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
     note "Terminating jail: ${JAIL_NAME}"
-    # ${ZFS_BIN} unjail ${DEFAULT_ZPOOL}${CELL}
+
     ${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
-    note "Unmounting jail directories"
+    ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
+
+    note "Unmounting jail datasets"
     for dir in /dev; do
         ${UMOUNT_BIN} -f "${CELL}${dir}" >> ${LOG_FILE} 2>&1
     done
-    for dir in /Software/Git /Software/Mosh /Software/Sudo-static; do
-        ${UMOUNT_BIN} -f "${dir}" >> ${LOG_FILE} 2>&1
+    for dset in Services User Software; do
+        ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} >> ${LOG_FILE} 2>&1
+        ${UMOUNT_BIN} -f ${CELL}/${dset} >> ${LOG_FILE} 2>&1
     done
-    ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
-
-    ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
-    # if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
-    #     JAIL_FULL_ADDRESSES="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE})"
-
-    #     # JAIL_ADDRESS="$(${PRINTF_BIN} ${JAIL_FULL_ADDRESS} | ${SED_BIN} 's/\/.*//')"
-    #     note "Shutting down vlan${VLAN_NUMBER} with IP: ${JAIL_FULL_ADDRESS}"
-    #     ${IFCONFIG_BIN} ${DEFAULT_INTERFACE} ${JAIL_ADDRESS} -alias >> ${LOG_FILE} 2>&1
-    #     ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
-    # fi
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
-    # ifconfig vlan${VLAN_NUMBER} down
+
+    note "Stopping vlan interface"
     ifconfig bridge0 deletem vlan${VLAN_NUMBER}
     ifconfig vlan${VLAN_NUMBER} destroy
 }
@@ -785,15 +758,17 @@ jail_destroy () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
 
-    note "Are you sure you want to destroy jail: $(${BASENAME_BIN} ${GIVEN_NAME}) with all /Services/${JAIL_NAME} data?"
+    note "Are you sure you want to destroy jail: $(${BASENAME_BIN} ${GIVEN_NAME}) with ALL SERVICES data?"
     note "Type 'YES' to confirm"
     read ans
     if [ "${ans}" = "YES" ]; then
         jail_stop $*
-        note "Destroying datasets: ${CELL} and ${SENTRY}"
+        note "Destroying datasets."
         ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/User/${JAIL_NAME}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
         # service local_unbound configtest && service local_unbound restart
