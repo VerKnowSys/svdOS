@@ -23,20 +23,23 @@ INTERNAL_NETWORK="10.2.1.0"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
 GIT_BIN="/Software/Git/exports/git"
-if [ "${VERSION}" = "" ]; then
-    VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
-    printf "No version specified. Picking last version: ${VERSION}\n"
+LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
+VERSION=$(zfs get -H -o value custom:svd_version ${DEFAULT_ZPOOL}/ROOT)
+if [ "${VERSION}" = "-" ]; then
+    zfs set custom:svd_version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
+    printf "No version specified. Picking last version: ${LATEST_VERSION}\n"
+else
+    if [ "${VERSION}" = "${LATEST_VERSION}" ]; then
+        printf "You are already using latest version of ServeD base system\n"
+        exit 0
+    fi
 fi
+VERSION="${LATEST_VERSION}"
 
 # sanity checks
 if [ "$(uname)" != "FreeBSD" ]; then
-    printf "Only 64bit FreeBSD hosts are supported by installer\n"
+    printf "Only 64bit HardenedBSD hosts are supported by installer\n"
     exit 1
-fi
-
-if [ "${VERSION}" = "$(cat /VERSION)" ]; then
-    printf "You are already using latest version of ServeD base system\n"
-    exit 0
 fi
 
 # handle older zpool versions. Try to upgrade them before start
@@ -52,12 +55,22 @@ done
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/$(uname -s)-${SYSTEM_VERSION}-$(uname -m)"
 
 # create zvols for special snappable dirs
-for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /Users /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /User /User/root /Software /Software/root /SystemUsers /Services /Services/root; do
     if [ ! -d "${mntpoint}" ]; then
         printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
-        zfs create -o compression=lz4 -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}"
+        case ${mntpoint} in
+            /Software|/User|/Services)
+                zfs create -o compression=lz4 -o dedup=on -o mountpoint=none -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}" || true
+                    ;;
+            *)
+                zfs create -o compression=lz4 -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}" || true
+                ;;
+        esac
     fi
 done
+
+zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root || true
+zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root || true
 
 mkdir -p /tmp/.cache >> ${LOG} 2>&1
 if [ ! -f "/tmp/.cache/${BASE}-${VERSION}.tar.xz" ]; then
@@ -79,7 +92,7 @@ if [ ! -f "/tmp/.cache/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz" ]; then
 fi
 
 printf "Flushing secadm rules before installation\n"
-test -x /usr/sbin/secadm && secadm flush
+test -x /usr/sbin/secadm && secadm flush || true
 
 printf "Installing ServeD-Base ${VERSION}\n"
 tar xf /tmp/.cache/${BASE}-${VERSION}.tar.xz --directory /
@@ -276,7 +289,7 @@ ${MKDIR_BIN} -p /etc/ssl >> ${LOG} 2>&1
 ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
 
 SNAP_DATE="$(date +%F_%H%M%S)"
-for snap_ in /Jails /Software /SystemUsers /SystemUsers/SoftwareData /SystemUsers/Igniters; do
+for snap_ in /Software; do
     snap="${DEFAULT_ZPOOL}${snap_}@${SNAP_DATE}"
     note "Creating ZFS snapshot: ${snap}"
     ${ZFS_BIN} snapshot "${snap}"
@@ -302,10 +315,10 @@ service syslog-ng restart
 note "Installing Governor to host system"
 ${INSTALL_BIN} ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
 
-note "Updating VERSION file in each governed cells"
-for cell in $(ls ${DEFAULT_JAIL_PRISON_LOCATION}/Cells); do
-    cp /VERSION ${DEFAULT_JAIL_PRISON_LOCATION}/Cells/${cell}/
-done
+# note "Updating VERSION file in each governed cells"
+# for cell in $(ls ${DEFAULT_JAIL_PRISON_LOCATION}/Cells); do
+#     cp /VERSION ${DEFAULT_JAIL_PRISON_LOCATION}/Cells/${cell}/
+# done
 
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
@@ -316,5 +329,6 @@ else
     note "ServeD system installation complete!"
     note "You must reboot to apply new kernel and system configuration."
 fi
+zfs set custom:svd_version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
 
 exit 0
