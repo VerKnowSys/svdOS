@@ -400,26 +400,26 @@ ${JAIL_NAME} {
 
     note "Looking for snapshots of ${DEFAULT_ZPOOL}/Software"
     LAST_SOFT_SNAP=""
-    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software@" > /dev/null 2>&1
+    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        LAST_SOFT_SNAP="$(${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software@" | ${SED_BIN} 's/.*@//;s/ .*//' | tail -n 1)"
+        LAST_SOFT_SNAP="$(${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@" | ${SED_BIN} 's/.*@//;s/ .*//' | tail -n 1)"
     fi
     if [ "${LAST_SOFT_SNAP}" = "" ]; then
         warn "No snapshots found of ${DEFAULT_ZPOOL}/Software. Creating first one"
         LAST_SOFT_SNAP="$(date +%F-%s)"
-        ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/Software@${LAST_SOFT_SNAP}
+        ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/Software/root@${LAST_SOFT_SNAP}
     fi
     debug "Last snap: ${LAST_SOFT_SNAP}"
-    note "Cloning from last /Software base snapshot"
+    note "Cloning from last /Software/root base snapshot"
     TIMESTAMP="$(date +%F-%s)"
-    debug "Cloning /Software: ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software@${LAST_SOFT_SNAP} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
-    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software@${LAST_SOFT_SNAP} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+    debug "Cloning /Software/root: ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${LAST_SOFT_SNAP} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${LAST_SOFT_SNAP} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
 
     note "Creating jail filesystems"
     for dset in Software Services User; do
         ${ZFS_BIN} create ${DEFAULT_ZPOOL}/${dset} >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} create ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}
+        ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset} >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
         ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
         ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
