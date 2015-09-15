@@ -6,9 +6,11 @@
 autoload colors zsh/terminfo
 colors
 
-#Completion online
 autoload -U compinit
-compinit
+if [ "$(id -u)" != "0" ]; then
+    #Completion online
+    compinit
+fi
 
 #ZSH completion caching
 #ie, cache things so they show up faster next time
