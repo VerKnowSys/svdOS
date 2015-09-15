@@ -189,8 +189,10 @@ apply_attributes () {
                 ;;
 
             quota)
-                note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
-                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+                note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/*/${JAIL_NAME}"
+                for dest in Software Services User; do
+                    ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/${dest}/${JAIL_NAME}
+                done
                 ;;
 
             *)
