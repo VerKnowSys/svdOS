@@ -605,25 +605,27 @@ jail_start () {
 
     update_sofin ${CELL}
 
-    note "Configuring vlan${VLAN_NUMBER}"
-    ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
-    ifconfig vlan${VLAN_NUMBER} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
-    for ip in ${JAIL_IPS}; do
-        ifconfig vlan${VLAN_NUMBER} ${ip} alias
-    done
-    ifconfig bridge0 create > /dev/null 2>&1
-    ifconfig bridge0 addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
-    ifconfig bridge0 addm vlan${VLAN_NUMBER} sticky vlan${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
-
     # note "Running jail static configuration"
     # for dset in Services Software User; do
     #     ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
     #     ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
     # done
 
+    # sanity check - required to spawn jail
+    ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
+
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
+        note "Configuring vlan${VLAN_NUMBER}"
+        ifconfig vlan${VLAN_NUMBER} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        for ip in ${JAIL_IPS}; do
+            ifconfig vlan${VLAN_NUMBER} ${ip} alias
+        done
+        ifconfig bridge0 create > /dev/null 2>&1
+        ifconfig bridge0 addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
+        ifconfig bridge0 addm vlan${VLAN_NUMBER} sticky vlan${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
+
         JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
         note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
 
@@ -645,6 +647,7 @@ jail_start () {
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s /sbin/zfs /sbin/sysctl # Make sure that these have setuid set!
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software
