@@ -287,7 +287,9 @@ attributes_show () {
 
 
 name_and_version () {
-    note "ServeD GoVeRnor v${VERSION}"
+    SYSTEM_VERSION="$(${ZFS_BIN} get -H -o value custom:svd_version ${DEFAULT_ZPOOL}/ROOT)"
+    note "ServeD-OS: ${cyan}${SYSTEM_VERSION}${reset}"
+    note "ServeD GoVeRnor: ${cyan}v${VERSION}${reset}"
 }
 
 
