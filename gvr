@@ -690,6 +690,8 @@ jail_stop () {
     note "Stopping vlan interface"
     ifconfig bridge0 deletem vlan${VLAN_NUMBER}
     ifconfig vlan${VLAN_NUMBER} destroy
+
+    ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
 }
 
 
