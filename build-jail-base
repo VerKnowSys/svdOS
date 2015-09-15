@@ -31,8 +31,8 @@ fi
 
 note "Setting up src.conf and make.conf"
 ${RM_BIN} -f /etc/make.conf /etc/src.conf
-${CP_BIN} -v /var/ServeD-OS/etc/{src.conf,make.conf} /etc/
-
+${CP_BIN} -v /var/ServeD-OS/etc/src.conf /etc/
+${CP_BIN} -v /var/ServeD-OS/etc/make.conf /etc/
 
 # main()
 version="10.2"
