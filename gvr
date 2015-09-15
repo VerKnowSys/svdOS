@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.12.0"
+VERSION="0.12.1"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -440,14 +440,9 @@ ${JAIL_NAME} {
                     "${CELL}/dev" \
                     "${CELL}/var/log" \
                     "${CELL}/var/tmp" \
-                    "${CELL}/User/.ssh"
-
-    note "Creating default user environment file"
-    if [ -e "${CELL}/User/.zshrc" ]; then
-        ${GREP_BIN} -R "sofin reload" "${CELL}/User/.zshrc" || ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshrc"
-    else
-        ${PRINTF_BIN} "sofin reload" >> "${CELL}/User/.zshrc"
-    fi
+                    "${CELL}/Software" \
+                    "${CELL}/Services" \
+                    "${CELL}/User"
 
     note "Copying volatile part of jail"
     ${PRINTF_BIN} "${VLAN_NUMBER}\n" > ${JAIL_VLAN_NUMBER_FILE}
@@ -458,14 +453,13 @@ ${JAIL_NAME} {
     note "Building initial jail environment"
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}.home:" ${CELL}/etc/rc.conf
-    ${PRINTF_BIN} "export PATH=/Software/Sudo-static/exports:/Software/Mosh/exports:/Software/Nginx/exports:/Software/Zsh/exports:/Software/Thess/exports:/Software/Git/exports:/Software/Zsh/exports:/Software/Thess/exports:/bin:/usr/bin:/sbin:/usr/sbin\nexport MANPATH='/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/Software/Zsh/share/man:/Software/Thess/share/man:/Software/Git/share/man:/Software/Git/man:/usr/share/man:/usr/share/openssl/man'\n" > ${CELL}/User/.profile
 
     update_sofin ${CELL}
     ${CP_BIN} /etc/zshenv ${CELL}/etc
     # ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/tmp ${CELL}/var/tmp
 
-    note "Updating system version"
-    ${CP_BIN} -f /VERSION ${CELL}/VERSION
+    note "Updating system version property"
+    ${ZFS_BIN} set custom:svd_version=$(${CAT_BIN} /VERSION) ${DEFAULT_ZPOOL}${CELL}
 
     note "Creating user loggers"
     for logger in messages production staging development; do
@@ -594,6 +588,12 @@ jail_start () {
     fi
     set_values "${GIVEN_NAME}"
 
+    ${JLS_BIN} -v | ${GREP_BIN} "${GIVEN_NAME}.*${GIVEN_NAME}" > /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        note "Jail ${GIVEN_NAME} is already running"
+        exit 0
+    fi
+
     check_cell_name "${CELL}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
         JAIL_IPS="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE} | ${TR_BIN} ',' '\n')"
@@ -624,23 +624,33 @@ jail_start () {
         note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
 
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S)]" > "${JAIL_STATUS_FILE}"
-        note "Launching Service Spawner daemon"
+        # note "Launching Service Spawner daemon"
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
+
+        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} sysctl kern.securelevel=1 >> ${LOG_FILE} 2>&1
+
+        # alow users creating / in their tree. why not.
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 777 / >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${LOG_FILE} 2>&1
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
+
+        # ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         # ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
 
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} sysctl kern.securelevel=1 >> ${LOG_FILE} 2>&1
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${ZFS_BIN} mount ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${ZFS_BIN} mount ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${ZFS_BIN} mount ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s /sbin/zfs /sbin/sysctl # Make sure that these have setuid set!
+        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 4755 /Software/Sudo-static/exports/sudo
+
+        if [ ! -e "${CELL}/User/.zshrc" ]; then
+            note "Creating default user environment file for zsh"
+            ${GREP_BIN} -R "sofin reload" "${CELL}/User/.zshrc" > /dev/null 2>&1 || ${PRINTF_BIN} "sofin reload\n" >> "${CELL}/User/.zshrc"
+        fi
+
         mark_running
     else
         error "Jail launch failed. Look into log file: ${LOG_FILE}"
