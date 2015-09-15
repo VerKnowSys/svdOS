@@ -867,9 +867,8 @@ case $1 in
         cd ${DEFAULT_SENTRY_LOCATION}
         for jail in *; do
             if [ -f "${DEFAULT_SENTRY_LOCATION}/${jail}/${JAIL_RUNNING_INDICATOR}" ]; then
-                note "Booting ${jail}"
-                $0 start ${jail}
-                note "Booted ${jail}"
+                note "Initializing boot of jail: ${jail}"
+                nohup $0 start ${jail} > /dev/null 2>&1 &
             else
                 warn "Boot skipped: ${jail}"
             fi
