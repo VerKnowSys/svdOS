@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.12.1"
+VERSION="0.12.2"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -296,8 +296,14 @@ attributes_show () {
     ${PRINTF_BIN} "   ${cyan}nshm${gray}: ${green}number of SysV shared memory segments${reset}\n"
     ${PRINTF_BIN} "   ${cyan}shmsize${gray}: ${green}SysV shared memory size, in bytes${reset}\n"
     ${PRINTF_BIN} "   ${cyan}wallclock${gray}: ${green}wallclock time, in seconds${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}quota${gray}: ${green}Quota value for /Services dataset (fmt: 1G 512M 128K). ${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}rootquota${gray}: ${green}Quota value for jail base system dataset (fmt: 1G 512M 128K)${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota${gray}: ${green}quota value for /Services, /User and /Software datasets (fmt: 1G 512M 128K). ${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota_services${gray}: ${green}quota value for /Services dataset only (fmt: 1G 512M 128K). ${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota_user${gray}: ${green}quota value for /User dataset only (fmt: 1G 512M 128K). ${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota_software${gray}: ${green}quota value for /Software dataset only (fmt: 1G 512M 128K). ${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota_root${gray}: ${green}quota value for jail base (/) system dataset only (fmt: 1G 512M 128K)${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}key${gray}: ${green}SSH public key (Skip public key header and comment parts) to be added to authorized keys of jail${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}ip${gray}: ${green}change jail IP addresses (comma separated) [requires jail restart]${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}+ip${gray}: ${green}adds specified (comma separated) IP addresses to jail [requires jail restart]${reset}\n"
 }
 
 
@@ -315,14 +321,7 @@ mark_running () {
 
 jail_create () {
     usage () {
-        note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP-address[/netmask] ${green}[${cyan}fbsd-version net-interface${green}]${reset}"
-        note
-        note "Default values:"
-        note "   netmask:"
-        note "      - default internal network mask: ${cyan}${DEFAULT_NETMASK_INTERNAL}${reset}"
-        note "      - default external network mask: ${cyan}${DEFAULT_NETMASK_EXTERNAL}${reset}"
-        note "   fbsd-version: ${cyan}${DEFAULT_VERSION}${reset}"
-        note "   net-interface: ${cyan}${DEFAULT_INTERFACE}${reset}"
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP/Netmask,IP2/Netmask(, … )"
         note
     }
     GIVEN_NAME="${1}"
@@ -337,7 +336,6 @@ jail_create () {
         error "No ip given"
     fi
     check_jail_address ${JAIL_ADDRESSES}
-
 
     JAIL_VERSION="${3}"
     if [ "${JAIL_VERSION}" = "" ]; then
@@ -908,20 +906,21 @@ case $1 in
     *)
         CMD="${GVR_SCRIPT_NAME}"
         note "Usage:"
-        note "${CMD} command arg1 arg2 [...]"
+        note "  ${CMD} command arg1 arg2 [...]"
         note
         note "List of commands:"
-        note "attributes"
-        note "boot"
-        note "create"
-        note "list"
-        note "set"
-        note "login"
-        note "start"
-        note "stop"
-        note "restart"
-        note "status [-v]"
-        note "destroy"
+        note "  ${cyan}ver${reset}: ${green}prints Governor and ServeD-OS versions${reset}"
+        note "  ${cyan}boot${reset}: ${green}launches all previously running jails${reset}"
+        note "  ${cyan}create${reset}: ${green}creates new jail${reset}"
+        note "  ${cyan}list${reset} | ${cyan}lst${reset} | ${cyan}l${reset}: ${green}lists created jails${reset}"
+        note "  ${cyan}set${reset}: ${green}set attributes for jails${reset}"
+        note "  ${cyan}attributes${reset} | ${cyan}attrs${reset}: ${green}shows attributes list modifiable by '${CMD} set …' ${reset}"
+        note "  ${cyan}login${reset}: ${green}logins to jail${reset}"
+        note "  ${cyan}start${reset}: ${green}starts created, non running jail${reset}"
+        note "  ${cyan}stop${reset}: ${green}stops running jail${reset}"
+        note "  ${cyan}restart${reset}: ${green}restarts a jail${reset}"
+        note "  ${cyan}status${reset}: ${green}shows detailed configuration of a jail${reset}"
+        note "  ${cyan}destroy${reset}: ${green}destroys a jail${reset}"
         note
         note "Run '${CMD} [command]' without arguments to see detailed help about command params."
         ;;
