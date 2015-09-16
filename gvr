@@ -660,6 +660,7 @@ jail_start () {
 
         mark_running
     else
+        ifconfig vlan${VLAN_NUMBER} destroy > /dev/null 2>&1
         error "Jail launch failed. Look into log file: ${LOG_FILE}"
     fi
 }
