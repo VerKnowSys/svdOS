@@ -147,6 +147,7 @@ apply_attributes () {
     ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}" "${JAIL_LOGS_CONF_DIR}"
     cd ${JAIL_ATTRIBUTES_DIR}
     for attribute in $(${LS_BIN}); do
+        debug "List: $(${LS_BIN})"
         value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
         case "${attribute}" in
             key)
@@ -183,7 +184,7 @@ apply_attributes () {
                 ${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${attribute}
                 ;;
 
-            quota_root)
+            quota-root)
                 note "Setting root dir quota of: ${value} to ${DEFAULT_ZPOOL}${CELL}"
                 ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}${CELL}
                 ;;
@@ -195,17 +196,17 @@ apply_attributes () {
                 done
                 ;;
 
-            quota_software)
+            quota-software)
                 note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
                 ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
                 ;;
 
-            quota_services)
+            quota-services)
                 note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
                 ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
                 ;;
 
-            quota_user)
+            quota-user)
                 note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
                 ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
                 ;;
@@ -297,10 +298,10 @@ attributes_show () {
     ${PRINTF_BIN} "   ${cyan}shmsize${gray}: ${green}SysV shared memory size, in bytes${reset}\n"
     ${PRINTF_BIN} "   ${cyan}wallclock${gray}: ${green}wallclock time, in seconds${reset}\n"
     ${PRINTF_BIN} "   ${cyan}quota${gray}: ${green}quota value for /Services, /User and /Software datasets (fmt: 1G 512M 128K). ${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}quota_services${gray}: ${green}quota value for /Services dataset only (fmt: 1G 512M 128K). ${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}quota_user${gray}: ${green}quota value for /User dataset only (fmt: 1G 512M 128K). ${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}quota_software${gray}: ${green}quota value for /Software dataset only (fmt: 1G 512M 128K). ${reset}\n"
-    ${PRINTF_BIN} "   ${cyan}quota_root${gray}: ${green}quota value for jail base (/) system dataset only (fmt: 1G 512M 128K)${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota-services${gray}: ${green}quota value for /Services dataset only (fmt: 1G 512M 128K). ${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota-user${gray}: ${green}quota value for /User dataset only (fmt: 1G 512M 128K). ${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota-software${gray}: ${green}quota value for /Software dataset only (fmt: 1G 512M 128K). ${reset}\n"
+    ${PRINTF_BIN} "   ${cyan}quota-root${gray}: ${green}quota value for jail base (/) system dataset only (fmt: 1G 512M 128K)${reset}\n"
     ${PRINTF_BIN} "   ${cyan}key${gray}: ${green}SSH public key (Skip public key header and comment parts) to be added to authorized keys of jail${reset}\n"
     ${PRINTF_BIN} "   ${cyan}ip${gray}: ${green}change jail IP addresses (comma separated) [requires jail restart]${reset}\n"
     ${PRINTF_BIN} "   ${cyan}+ip${gray}: ${green}adds specified (comma separated) IP addresses to jail [requires jail restart]${reset}\n"
