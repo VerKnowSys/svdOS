@@ -193,8 +193,10 @@ net.inet.ipsec.filtertunnel=1
 
 # Security settings
 
-# This is required for several intepreters like Elixir to not crash with SIGABRT:
+# This is required for several intepreters like Elixir to not crash with SIGABRT/SIGSEGV:
 hardening.allow_map32bit=1
+hardening.pax.mprotect.status=1
+hardening.pax.pageexec.status=1
 
 # This solves SIGSEGV under Elixir
 # hardening.pax.pageexec.status=1
