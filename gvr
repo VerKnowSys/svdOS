@@ -152,17 +152,11 @@ apply_attributes () {
         case "${attribute}" in
             key)
                 ${MKDIR_BIN} -p ${CELL}/User/.ssh
+                a_key="ssh-ed25519 ${value} ${JAIL_NAME}\n"
+                ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
+                a_key="ssh-rsa ${value}== ${JAIL_NAME}\n"
+                ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
                 ${CHOWN_BIN} -R 501:501 ${CELL}/User/.ssh
-                echo "${key}" | ${GREP_BIN} -e '^AAAAC3N' > /dev/null 2>&1
-                if [ "$?" = "0" ]; then
-                    a_key="ssh-ed ${value}== ${JAIL_NAME}\n"
-                    debug "ED SSH key given: ${a_key}"
-                    ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
-                else
-                    a_key="ssh-rsa ${value}== ${JAIL_NAME}\n"
-                    debug "RSA SSH key given: ${a_key}"
-                    ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
-                fi
                 ;;
 
             ip)
