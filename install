@@ -125,14 +125,6 @@ bin/install
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
 printf "Installing Sofin environment with jail source: ${JAIL_SOURCE}\n"
 PREFIX="${JAIL_SOURCE}" bin/install
-# DEFAULT_CELLS_DIR="/Jails/Prison/Cells"
-# for jail in $(${LS_BIN} ${DEFAULT_CELLS_DIR}); do
-#     DESTINATION="${DEFAULT_CELLS_DIR}/${jail}/etc"
-#     if [ -d ${DESTINATION} ]; then
-#         note "Updating Sofin's environments in jail: ${jail}"
-#         ${CP_BIN} /etc/sofin.conf.sh ${DESTINATION}/sofin.conf.sh
-#     fi
-# done
 
 note "Installing custom kernel"
 if [ ! -d "/boot/verknowsys" ]; then
