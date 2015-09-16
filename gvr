@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.12.2"
+VERSION="0.12.3"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -34,9 +34,6 @@ DEFAULT_LIMIT_MAX_VMEMORY="1024M"
 DEFAULT_LIMIT_MAXPROC="64"
 DEFAULT_LIMIT_OPENFILES="16384" # this is required f.e. for Postgresql to work properly
 DEFAULT_LIMIT_MAXPTS="16"
-DEFAULT_NETMASK="/27" # 255.255.255.224
-DEFAULT_NETMASK_INTERNAL="255.255.255.224" # /27
-DEFAULT_NETMASK_EXTERNAL="255.255.255.0" # /24
 DEFAULT_CELLS_LOCATION="/Jails/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="/Jails/Prison/Sentry"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
@@ -336,10 +333,7 @@ jail_create () {
     if [ "${JAIL_VERSION}" = "" ]; then
         JAIL_VERSION="${DEFAULT_VERSION}"
     fi
-    JAIL_INTERFACE="${4}"
-    if [ "${JAIL_INTERFACE}" = "" ]; then
-        JAIL_INTERFACE="${DEFAULT_INTERFACE}"
-    fi
+
     VLAN_NUMBER="$(jot -r 1 10 4090)" # pick Random vlan Number between 10 and 4090
     ifconfig vlan${VLAN_NUMBER} > /dev/null 2>&1
     while [ "$?" = "0" ]; do
