@@ -15,7 +15,9 @@ else
 fi
 
 
-VERSION="0.12.3"
+VERSION="0.12.4"
+BRIDGE_DEVICE="bridge0"
+VLAN_DEVICE="vlan"
 LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -153,7 +155,7 @@ apply_attributes () {
                 ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
                 a_key="ssh-rsa ${value}== ${JAIL_NAME}\n"
                 ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
-                ${CHOWN_BIN} -R 501:501 ${CELL}/User/.ssh
+                ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID}:${DEFAULT_WORKER_UID} ${CELL}/User/.ssh
                 ;;
 
             ip)
@@ -335,10 +337,10 @@ jail_create () {
     fi
 
     VLAN_NUMBER="$(jot -r 1 10 4090)" # pick Random vlan Number between 10 and 4090
-    ifconfig vlan${VLAN_NUMBER} > /dev/null 2>&1
+    ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} > /dev/null 2>&1
     while [ "$?" = "0" ]; do
         VLAN_NUMBER="$(jot -r 1 10 4090)"
-        ifconfig vlan${VLAN_NUMBER} > /dev/null 2>&1
+        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} > /dev/null 2>&1
     done
 
     set_values "${GIVEN_NAME}"
@@ -351,21 +353,21 @@ jail_create () {
     else
         ADDRESSES_LIST="$(echo ${JAIL_ADDRESSES} | ${TR_BIN} ',' '\n')"
         note "Configuring jail for addresses: ${JAIL_ADDRESSES}"
-        ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
-        ifconfig vlan${VLAN_NUMBER} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} create > /dev/null 2>&1
+        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
         for ip in ${ADDRESSES_LIST}; do
-            ifconfig vlan${VLAN_NUMBER} ${ip} alias
+            ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias
         done
-        ifconfig bridge0 create > /dev/null 2>&1
-        ifconfig bridge0  > /dev/null 2>&1
-        ifconfig bridge0 addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
-        ifconfig bridge0 addm vlan${VLAN_NUMBER} sticky vlan${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
+        ifconfig ${BRIDGE_DEVICE} create > /dev/null 2>&1
+        ifconfig ${BRIDGE_DEVICE}  > /dev/null 2>&1
+        ifconfig ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
+        ifconfig ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
     # name = \"${JAIL_NAME}\";
     host.hostname = \"${JAIL_NAME}\";
     ip4.addr = ${JAIL_ADDRESSES};
-    interface = vlan${VLAN_NUMBER};
+    interface = ${VLAN_DEVICE}${VLAN_NUMBER};
     path = \"${CELL}\";
     exec.fib = ${DEFAULT_JAILS_FIB};
     exec.start = \"/bin/sh /etc/rc\";
@@ -542,7 +544,7 @@ jail_status () {
     fi
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
     ${PRINTF_BIN} "IPv4s: ${green}${JAIL_IPS}${reset}\n"
-    ${PRINTF_BIN} "Interface: ${green}vlan${VLAN_NUMBER}${reset}\n"
+    ${PRINTF_BIN} "Interface: ${green}${VLAN_DEVICE}${VLAN_NUMBER}${reset}\n"
     ${PRINTF_BIN} "Hostnames: ${green}${HOSTNAMES}${reset}\n"
     ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
     if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
@@ -613,19 +615,19 @@ jail_start () {
     # done
 
     # sanity check - required to spawn jail
-    ifconfig vlan${VLAN_NUMBER} create > /dev/null 2>&1
+    ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} create > /dev/null 2>&1
 
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
-        note "Configuring vlan${VLAN_NUMBER}"
-        ifconfig vlan${VLAN_NUMBER} vlan ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        note "Configuring ${VLAN_DEVICE}${VLAN_NUMBER}"
+        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
         for ip in ${JAIL_IPS}; do
-            ifconfig vlan${VLAN_NUMBER} ${ip} alias
+            ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias
         done
-        ifconfig bridge0 create > /dev/null 2>&1
-        ifconfig bridge0 addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
-        ifconfig bridge0 addm vlan${VLAN_NUMBER} sticky vlan${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
+        ifconfig ${BRIDGE_DEVICE} create > /dev/null 2>&1
+        ifconfig ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
+        ifconfig ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private ${VLAN_DEVICE}${VLAN_NUMBER}
 
         JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
         note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
@@ -661,7 +663,7 @@ jail_start () {
 
         mark_running
     else
-        ifconfig vlan${VLAN_NUMBER} destroy > /dev/null 2>&1
+        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} destroy > /dev/null 2>&1
         error "Jail launch failed. Look into log file: ${LOG_FILE}"
     fi
 }
@@ -694,9 +696,9 @@ jail_stop () {
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
     ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
 
-    note "Stopping vlan interface"
-    ifconfig bridge0 deletem vlan${VLAN_NUMBER}
-    ifconfig vlan${VLAN_NUMBER} destroy
+    note "Stopping ${VLAN_DEVICE} interface"
+    ifconfig ${BRIDGE_DEVICE} deletem ${VLAN_DEVICE}${VLAN_NUMBER}
+    ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} destroy
 
     ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
 }
