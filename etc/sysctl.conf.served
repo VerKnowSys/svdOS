@@ -197,6 +197,3 @@ net.inet.ipsec.filtertunnel=1
 hardening.allow_map32bit=1
 hardening.pax.mprotect.status=1
 hardening.pax.pageexec.status=1
-
-# This solves SIGSEGV under Elixir
-# hardening.pax.pageexec.status=1
