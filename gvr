@@ -183,7 +183,7 @@ apply_attributes () {
                 ${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${attribute}
                 ;;
 
-            rootquota)
+            quota_root)
                 note "Setting root dir quota of: ${value} to ${DEFAULT_ZPOOL}${CELL}"
                 ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}${CELL}
                 ;;
@@ -193,6 +193,21 @@ apply_attributes () {
                 for dest in Software Services User; do
                     ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/${dest}/${JAIL_NAME}
                 done
+                ;;
+
+            quota_software)
+                note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+                ;;
+
+            quota_services)
+                note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
+                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+                ;;
+
+            quota_user)
+                note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
+                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
                 ;;
 
             *)
