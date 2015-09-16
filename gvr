@@ -168,7 +168,7 @@ apply_attributes () {
                 file_size="$(stat -f%z ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE})"
                 if [ "${file_size}" -gt "0" ]; then
                     ${PRINTF_BIN} ",${value}" >> ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}
-                    current_value="$(${CAT_BIN} ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE} | ${TR_BIN} '\n' ',' | ${SED_BIN} -E 's/[,]{2,}/,/g')"
+                    current_value="$(${CAT_BIN} ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE} | ${TR_BIN} '\n' ',' | ${SED_BIN} -E 's/[,]{2,}/,/g;s/,$//')"
                     debug "Current value: ${current_value}"
                     ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${current_value};#" ${JAIL_CONF_FILE}
                 fi
