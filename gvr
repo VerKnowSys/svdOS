@@ -788,6 +788,14 @@ jail_login () {
 
 
 jail_restart () {
+    usage () {
+        note "Usage: ${cyan}${GVR_SCRIPT_NAME} restart jail-name${reset}"
+    }
+    GIVEN_NAME="${1}"
+    if [ "${GIVEN_NAME}" = "" ]; then
+        usage
+        error "No jail to restart"
+    fi
     jail_stop $*
     jail_start $*
 }
