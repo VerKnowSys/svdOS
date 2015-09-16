@@ -434,8 +434,7 @@ ${JAIL_NAME} {
 
     note "Creating jail filesystems"
     for dset in Software Services User; do
-        ${ZFS_BIN} create ${DEFAULT_ZPOOL}/${dset} >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} create ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset} >> ${LOG_FILE} 2>&1
         ${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
         ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
