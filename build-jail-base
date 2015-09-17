@@ -62,8 +62,8 @@ note "Preparing kernel configuration"
 rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
-# note "Patching sources (exporting libucl)"
-# sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+note "Patching sources (exporting libucl)"
+sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
@@ -88,11 +88,11 @@ if [ -z "${DONT_BUILD_WORLD}" ]; then
     make installworld DEBUG= DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
 fi
 
-# if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
-#     note "Installing private headers (ucl)"
-#     cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
-#     cp /usr/src/contrib/libucl/include/ucl.h ${DESTBASE}/usr/include/ucl.h || true
-# fi
+if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
+    note "Installing private headers (ucl)"
+    cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
+    cp /usr/src/contrib/libucl/include/ucl.h ${DESTBASE}/usr/include/ucl.h || true
+fi
 
 note "Cleaning up"
 rm -vrf ${DESTBASE}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
