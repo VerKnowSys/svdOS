@@ -2,7 +2,7 @@
 
 unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
 
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Subversion/exports
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 set -e
 
