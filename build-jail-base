@@ -6,6 +6,7 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Subversion/exports
 
 set -e
 
+readonly CURRENT_BRANCH="HardenedBSD-10-STABLE-v29.2"
 readonly ZROOT="zroot"
 readonly PARALLEL_JOBS="8"
 readonly ARCH="$(uname -m)"
@@ -44,11 +45,12 @@ cd /var
 if [ ! -d "${version}-src" ]; then
     # svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
     /Software/Git/exports/git clone --single-branch --branch hardened/10-stable/master https://github.com/hardenedbsd/hardenedbsd-stable/ ${version}-src
-    /Software/Git/exports/git checkout -b HardenedBSD-10-STABLE-v29
+    /Software/Git/exports/git checkout -b ${CURRENT_BRANCH}
     cd ${version}-src
 else
     cd ${version}-src
     /Software/Git/exports/git pull
+    /Software/Git/exports/git checkout -b ${CURRENT_BRANCH} || true
 fi
 ln -s /var/${version}-src /usr/src
 
