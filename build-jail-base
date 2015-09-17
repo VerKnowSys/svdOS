@@ -64,8 +64,9 @@ note "Preparing kernel configuration"
 rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
-note "Patching sources (exporting libucl)"
+note "Patching sources (exporting libucl, libxo)"
 sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile || true # not available in 10.2
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
