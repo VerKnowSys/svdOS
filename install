@@ -5,8 +5,6 @@ set -e
 # OS version same as destination system version 1:1
 SYSTEM_VERSION="10.2"
 
-# TODO: add routine that will trap unclean shutdown and revert /VERSION file to old state
-
 DEFAULT_JAIL_PRISON_LOCATION='/Jails/Prison'
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_ZPOOL="zroot"

@@ -11,8 +11,11 @@ unset LDFLAGS
 unset CXXFLAGS
 unset CFLAGS
 
-/bin/sh ./build-jail-base
-/bin/sh ./build-binary-snapshots
+VERSION="$1"
+if [ "${VERSION}" = "" ]; then
+    echo "No version specified! Specify f.e.: v0.99.10"
+    exit 1
+fi
 
-printf "Removing /VERSION from build host.\n"
-rm -f /VERSION
+/bin/sh ./build-jail-base # TODO: ${VERSION}
+/bin/sh ./build-binary-snapshots ${VERSION}
