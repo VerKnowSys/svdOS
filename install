@@ -5,6 +5,7 @@ set -e
 # OS version same as destination system version 1:1
 SYSTEM_VERSION="10.2"
 
+CACHE_DIR="/var/.cache"
 DEFAULT_JAIL_PRISON_LOCATION='/Jails/Prison'
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_ZPOOL="zroot"
@@ -52,6 +53,24 @@ done
 
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/$(uname -s)-${SYSTEM_VERSION}-$(uname -m)"
 
+mkdir -p ${CACHE_DIR} >> ${LOG} 2>&1
+if [ ! -f "${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz" ]; then
+    printf "Base snapshot archive wasn't downloaded yet\n"
+    fetch ${BASE_SOURCE}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz -o ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz
+    if [ "$?" != "0" ]; then
+        printf "Software snapshot isn't available, or something just went wrong while fetching archive\n"
+        exit 1
+    fi
+fi
+
+if [ ! -f "${CACHE_DIR}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz" ]; then
+    printf "Jails archive wasn't downloaded yet\n"
+    fetch ${BASE_SOURCE}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz -o ${CACHE_DIR}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz
+    if [ "$?" != "0" ]; then
+        printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
+        exit 1
+    fi
+fi
 # create zvols for special snappable dirs
 for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /User /User/root /Software /Software/root /SystemUsers /Services /Services/root; do
     if [ ! -d "${mntpoint}" ]; then
@@ -70,30 +89,11 @@ done
 zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root || true
 zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root || true
 
-mkdir -p /tmp/.cache >> ${LOG} 2>&1
-if [ ! -f "/tmp/.cache/${BASE}-${VERSION}.tar.xz" ]; then
-    printf "Base archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/${BASE}-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-${VERSION}.tar.xz
-    if [ "$?" != "0" ]; then
-        printf "Binary snapshot isn't available, or something just went wrong while fetching archive\n"
-        exit 1
-    fi
-fi
-
-if [ ! -f "/tmp/.cache/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz" ]; then
-    printf "Jails archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz -o /tmp/.cache/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz
-    if [ "$?" != "0" ]; then
-        printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
-        exit 1
-    fi
-fi
-
 printf "Flushing secadm rules before installation\n"
 test -x /usr/sbin/secadm && secadm flush || true
 
-printf "Installing ServeD-Base ${VERSION}\n"
-tar xf /tmp/.cache/${BASE}-${VERSION}.tar.xz --directory /
+# printf "Installing ServeD-Base ${VERSION}\n"
+# tar xf ${CACHE_DIR}/${BASE}-${VERSION}.tar.xz --directory /
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Binary snapshot is corrupted or something just went wrong with archive\n"
@@ -101,7 +101,7 @@ if [ "$?" != "0" ]; then
 fi
 
 printf "Installing Jail-Base ${SYSTEM_VERSION}-${VERSION}\n"
-tar xf /tmp/.cache/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz --directory /
+tar xf ${CACHE_DIR}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz --directory /
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Jails snapshot is corrupted or something just went wrong with archive\n"
