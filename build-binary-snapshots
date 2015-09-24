@@ -15,14 +15,14 @@ else
     exit 1
 fi
 
-NAME="ServeD-OS-Base"
-# VERSION="v0.4.dev" # TODO: get rid of it, take latest remote version instead
-if [ -f "/VERSION" ]; then
-    VERSION="$(cat /VERSION)"
+# NAME="ServeD-OS-Base"
+VERSION="$1"
+if [ "${VERSION}" = "" ]; then
+    error "No version specified!"
 fi
-SYS_ARCH="$(uname -m)"
-SNAPSHOT="${NAME}-${VERSION}"
-SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
+SYS_ARCH="$(${UNAME_BIN} -m)"
+# SNAPSHOT="${NAME}-${VERSION}"
+# SNAPSHOT_DIR="/VKS-SNAPSHOTS/${SNAPSHOT}"
 DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
 SYS_VERSION="10.2"
 
@@ -49,10 +49,10 @@ compile_jails () {
 }
 
 
-compile_snapshot () {
+# compile_snapshot () {
     # if [ "$(${SOFIN_VERSION_UTILITY_BIN})" != "9.3" ]; then # don't build snapshot on legacy version
-    test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
-    mkdir -p "${SNAPSHOT_DIR}"
+    # test -d "${SNAPSHOT_DIR}" && (note "Cleaning up old snapshot from today.." && rm -rf "${SNAPSHOT_DIR}")
+    # mkdir -p "${SNAPSHOT_DIR}"
 
     # for dir in etc var; do
     #     if [ ! -d "${SNAPSHOT_DIR}/${dir}" ]; then
@@ -70,38 +70,37 @@ compile_snapshot () {
     #     git pull https://github.com/VerKnowSys/ServeD-OS.git
     # fi
 
-    note "Preparing Base snapshot: ${SNAPSHOT}"
-    cp /VERSION "${SNAPSHOT_DIR}"
-    note "Removing installed software"
-    for app in $(sofin list); do
-        if [ "$app" != "Git" -a "$app" != "Zsh" -a "$app" != "Elixir" ]; then
-            sofin remove $app
-        fi
-    done
-    sofin get Git Zsh Elixir
-    cp -R /Software "${SNAPSHOT_DIR}"
+    # note "Preparing Base snapshot: ${SNAPSHOT}"
+    # cp /VERSION "${SNAPSHOT_DIR}"
+    # note "Removing installed software"
+    # for app in $(sofin list); do
+    #     if [ "$app" != "Git" -a "$app" != "Zsh" -a "$app" != "Elixir" ]; then
+    #         sofin remove $app
+    #     fi
+    # done
+    # sofin get Git Zsh Elixir
+    # cp -R /Software "${SNAPSHOT_DIR}"
     # cp -vr /var/ServeD-OS "${SNAPSHOT_DIR}/var"
     # cp -v /etc/profile* "${SNAPSHOT_DIR}/etc"
-    cd "${SNAPSHOT_DIR}"
 
-    note "Compiling Base snapshot: ${SNAPSHOT}"
-    tar cfJ ../${SNAPSHOT}.tar.xz ./
-    if [ "$?" = "0" ]; then
-        note "Compiled successfully."
-    else
-        error "Something went wrong while compiling Base."
-        exit 1
-    fi
-
-    note "Uploading Base snapshot"
-    scp ../${SNAPSHOT}.tar.xz ${DESTINATION}
-    if [ "$?" = "0" ]; then
-        note "Finished successfully."
-    else
-        error "Something went wrong while uploading Base snapshot."
-        exit 1
-    fi
-}
+    # note "Compiling Base snapshot: ${SNAPSHOT}"
+    # tar cfJ ../${SNAPSHOT}.tar.xz ./
+    # if [ "$?" = "0" ]; then
+    #     note "Compiled successfully."
+    # else
+    #     error "Something went wrong while compiling Base."
+    #     exit 1
+    # fi
+    # cd "${SNAPSHOT_DIR}"
+    # note "Uploading Base snapshot"
+    # scp ../${SNAPSHOT}.tar.xz ${DESTINATION}
+    # if [ "$?" = "0" ]; then
+    #     note "Finished successfully."
+    # else
+    #     error "Something went wrong while uploading Base snapshot."
+    #     exit 1
+    # fi
+# }
 
 
 case "${1}" in
@@ -110,12 +109,12 @@ case "${1}" in
         compile_jails
         ;;
 
-    SNAPSHOT)
-        compile_snapshot
-        ;;
+    # SNAPSHOT)
+    #     compile_snapshot
+    #     ;;
 
     *)
-        compile_snapshot
+        # compile_snapshot
         compile_jails
         ;;
 
