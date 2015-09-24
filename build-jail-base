@@ -8,7 +8,7 @@ set -e
 
 readonly CURRENT_BRANCH="HardenedBSD-10-STABLE-v29.2"
 readonly ZROOT="zroot"
-readonly PARALLEL_JOBS="8"
+readonly PARALLEL_JOBS="12"
 readonly ARCH="$(uname -m)"
 readonly SHARED_DIR="/Jails/Shared"
 readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
@@ -40,6 +40,7 @@ version="10.2"
 echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
 note "Process started for version: ${version}: $(date +%F@%H-%M)"
 note "Processing version: ${version}"
+rm -rf /usr/obj
 rm -f /usr/src
 cd /var
 if [ ! -d "${version}-src" ]; then
@@ -52,7 +53,24 @@ else
     /Software/Git/exports/git pull
     /Software/Git/exports/git checkout -b ${CURRENT_BRANCH} || true
 fi
-ln -s /var/${version}-src /usr/src
+
+mkdir -p /usr/obj /var/ccache /usr/ramdisk-src /usr/ramdisk-obj > /dev/null 2>&1 || true
+set +e
+grep '/usr/ramdisk-' /etc/fstab > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    printf "md     /usr/ramdisk-src    mfs   rw,-s3G 0 0\n" >> /etc/fstab
+    printf "md     /usr/ramdisk-obj    mfs   rw,-s4G 0 0\n" >> /etc/fstab
+fi
+set -e
+
+note "Mounting ramdisks"
+mount /usr/ramdisk-src > /dev/null 2>&1 || true
+mount /usr/ramdisk-obj > /dev/null 2>&1 || true
+
+note "Syncing sources to ramdisk-src"
+time cp -R /var/${version}-src/ /usr/ramdisk-src/
+ln -s /usr/ramdisk-src /usr/src
+ln -s /usr/ramdisk-obj /usr/obj
 cd /usr/src
 
 note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
@@ -65,9 +83,10 @@ note "Preparing kernel configuration"
 rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
-note "Patching sources (exporting libucl, libxo)"
+note "Patching sources (exporting libucl, libxo, adding svdsysup to init apps)"
 sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
 sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile || true # not available in 10.2
+sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdsysup:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
@@ -99,7 +118,7 @@ if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
 fi
 
 note "Cleaning up"
-make clean
+make clean >> ${LOG_OUTPUT} 2>&1
 rm -vrf ${DESTBASE}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
 
 note "Snapshotting after installation"
