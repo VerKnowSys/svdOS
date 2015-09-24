@@ -1,6 +1,12 @@
 
 ## CHANGELOG
 
+* v0.9.x
+    - Lots of improvements to Governor
+    - Switched to ZFS datasets managed under jails
+    - Switched to ZFS origin of /Software
+    - Exported Libucl to be available with C/C++ API
+
 * v0.8.2
     - SecAdm imported to base os.
     - Exported Libucl to be available with C/C++ API
