@@ -253,7 +253,7 @@ ${SED_BIN} -i '' -e "s/__EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FI
 ${SED_BIN} -i '' -e "s/__EXTERNAL_ADDRESS/${DEFAULT_INTERFACE_ADDRESS}/g" ${PF_CONF_FILE}
 ${TOUCH_BIN} ${PF_CONF_FILE}.local
 service pf restart
-note "Applied firewall rules:\n$(${PFCTL_BIN} -sn)"
+debug "Applied firewall rules:\n$(${PFCTL_BIN} -sn)"
 
 note "Setting up rc"
 ${GREP_BIN} 'ServeD' ${RC_FILE} > /dev/null || (${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.served >> ${RC_FILE})
@@ -293,8 +293,13 @@ for snap_ in /Software; do
 done
 
 ${PRINTF_BIN} "\nServeD OS ${VERSION}\n\n" > /etc/motd
+
+note "Destroying unnecessary datasets.."
+${TEST_BIN} -d /usr/src && ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
+${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/var/mail >> ${LOG} 2>&1 || true
+${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software@--head-- >> ${LOG} 2>&1 || true
+
 note "Cleaning unnecessary directories"
-${TEST_BIN} -d /usr/src && ${RM_BIN} -rf /usr/src
 ${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 
 note "Performing additional system tweaks"
