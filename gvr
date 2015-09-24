@@ -15,7 +15,9 @@ else
 fi
 
 
-VERSION="0.12.4"
+VERSION="0.14.0"
+ORIGIN="origin"
+KERN_SECURELEVEL="1"
 BRIDGE_DEVICE="bridge0"
 VLAN_DEVICE="vlan"
 LOG_FILE="/var/log/governor.log"
@@ -302,7 +304,7 @@ attributes_show () {
 
 
 name_and_version () {
-    SYSTEM_VERSION="$(${ZFS_BIN} get -H -o value custom:svd_version ${DEFAULT_ZPOOL}/ROOT)"
+    SYSTEM_VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
     note "ServeD-OS: ${cyan}${SYSTEM_VERSION}${reset}"
     note "ServeD GoVeRnor: ${cyan}v${VERSION}${reset}"
 }
@@ -404,22 +406,15 @@ ${JAIL_NAME} {
     TIMESTAMP="$(date +%F-%s)"
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
 
-    note "Looking for snapshots of ${DEFAULT_ZPOOL}/Software"
-    LAST_SOFT_SNAP=""
-    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@" > /dev/null 2>&1
-    if [ "$?" = "0" ]; then
-        LAST_SOFT_SNAP="$(${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@" | ${SED_BIN} 's/.*@//;s/ .*//' | tail -n 1)"
+    note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software"
+    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software@" > /dev/null 2>&1
+    if [ "$?" != "0" ]; then
+        error "Something went wrong. No /Software origin snapshot found. You require ServeD >= v0.9.4"
     fi
-    if [ "${LAST_SOFT_SNAP}" = "" ]; then
-        warn "No snapshots found of ${DEFAULT_ZPOOL}/Software. Creating first one"
-        LAST_SOFT_SNAP="$(date +%F-%s)"
-        ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/Software/root@${LAST_SOFT_SNAP}
-    fi
-    debug "Last snap: ${LAST_SOFT_SNAP}"
-    note "Cloning from last /Software/root base snapshot"
+    note "Cloning from origin: ${DEFAULT_ZPOOL}/Software@${ORIGIN}"
     TIMESTAMP="$(date +%F-%s)"
-    debug "Cloning /Software/root: ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${LAST_SOFT_SNAP} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
-    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${LAST_SOFT_SNAP} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+    debug "Cloning /Software : ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
 
     note "Creating jail filesystems"
     for dset in Software Services User; do
@@ -465,8 +460,9 @@ ${JAIL_NAME} {
     ${CP_BIN} /etc/zshenv ${CELL}/etc
     # ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/tmp ${CELL}/var/tmp
 
-    note "Updating system version property"
-    ${ZFS_BIN} set custom:svd_version=$(${CAT_BIN} /VERSION) ${DEFAULT_ZPOOL}${CELL}
+    note "Updating client system version property from base system"
+    VER=$(${ZFS_BIN} get -H -o value com.vks:version ${DEFAULT_ZPOOL}/ROOT)
+    ${ZFS_BIN} set com.vks:version="${VER}" ${DEFAULT_ZPOOL}${CELL}
 
     note "Creating user loggers"
     for logger in messages production staging development; do
@@ -637,7 +633,7 @@ jail_start () {
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
 
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} sysctl kern.securelevel=1 >> ${LOG_FILE} 2>&1
+        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} sysctl kern.securelevel=${KERN_SECURELEVEL} >> ${LOG_FILE} 2>&1
 
         # alow users creating / in their tree. why not.
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 777 / >> ${LOG_FILE} 2>&1
