@@ -15,7 +15,7 @@ else
     exit 1
 fi
 
-# NAME="ServeD-OS-Base"
+NAME="ServeD-OS-Base"
 VERSION="$1"
 if [ "${VERSION}" = "" ]; then
     error "No version specified!"
