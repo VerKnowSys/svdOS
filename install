@@ -287,8 +287,8 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
 
 TIMESTAMP="$(date +%F-%s)"
 for snap_ in /Software; do
-    snap="${DEFAULT_ZPOOL}${snap_}/root@${TIMESTAMP}"
-    note "Creating ZFS snapshot: ${snap}"
+    snap="${DEFAULT_ZPOOL}${snap_}/root@${SYSTEM_VERSION}-${VERSION}-${TIMESTAMP}"
+    note "Creating Software/root snapshot: ${snap}"
     ${ZFS_BIN} snapshot "${snap}"
 done
 
@@ -330,6 +330,6 @@ else
 fi
 
 note "Updating system version property"
-zfs set com.vks:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
+${ZFS_BIN} set com.vks:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
 
 exit 0
