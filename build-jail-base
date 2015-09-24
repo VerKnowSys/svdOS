@@ -99,6 +99,7 @@ if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
 fi
 
 note "Cleaning up"
+make clean
 rm -vrf ${DESTBASE}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
 
 note "Snapshotting after installation"
