@@ -45,14 +45,15 @@ cd /var
 if [ ! -d "${version}-src" ]; then
     # svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
     /Software/Git/exports/git clone --single-branch --branch hardened/10-stable/master https://github.com/hardenedbsd/hardenedbsd-stable/ ${version}-src
-    /Software/Git/exports/git checkout -b ${CURRENT_BRANCH}
     cd ${version}-src
+    /Software/Git/exports/git checkout -b ${CURRENT_BRANCH}
 else
     cd ${version}-src
     /Software/Git/exports/git pull
     /Software/Git/exports/git checkout -b ${CURRENT_BRANCH} || true
 fi
 ln -s /var/${version}-src /usr/src
+cd /usr/src
 
 note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
 TIMESTAMP="$(date +%F-%s)"
