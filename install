@@ -29,8 +29,12 @@ if [ "${VERSION}" = "-" ]; then
     printf "No version specified. Picking last version: ${LATEST_VERSION}\n"
 else
     if [ "${VERSION}" = "${LATEST_VERSION}" ]; then
-        printf "You are already using latest version of ServeD base system: ${VERSION}\n"
-        exit 0
+        if [ "$1" = "-f" ]; then
+            printf "Forcing installation of ServeD base system in version: ${VERSION}\n"
+        else
+            printf "You are already using latest version: ${VERSION} of ServeD base system\n"
+            exit 0
+        fi
     fi
 fi
 VERSION="${LATEST_VERSION}"
