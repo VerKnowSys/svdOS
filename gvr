@@ -461,8 +461,8 @@ ${JAIL_NAME} {
     # ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/tmp ${CELL}/var/tmp
 
     note "Updating client system version property from base system"
-    VER=$(${ZFS_BIN} get -H -o value com.vks:version ${DEFAULT_ZPOOL}/ROOT)
-    ${ZFS_BIN} set com.vks:version="${VER}" ${DEFAULT_ZPOOL}${CELL}
+    VER=$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)
+    ${ZFS_BIN} set com.svd:version="${VER}" ${DEFAULT_ZPOOL}${CELL}
 
     note "Creating user loggers"
     for logger in messages production staging development; do
