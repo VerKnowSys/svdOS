@@ -170,6 +170,9 @@ if [ -d "${SERVED_REPO}" ]; then
     ${GIT_BIN} reset --hard
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/ServeD-OS.git
     ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
+
+    note "Updating svdsysup"
+    clang -static -o /sbin/svdsysup src/svdsysup.c -lutil -lcrypt
 else
     cd /var
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone https://github.com/VerKnowSys/ServeD-OS.git
