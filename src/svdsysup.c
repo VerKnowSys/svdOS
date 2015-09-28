@@ -79,7 +79,14 @@ static const char rcsid[] =
 #include <login_cap.h>
 #endif
 
-#include "pathnames.h"
+#include <paths.h>
+
+#define _PATH_INITLOG   "/var/log/init.log"
+#define _PATH_SLOGGER   "/sbin/session_logger"
+#define _PATH_RUNCOM    "/etc/rc"
+#define _PATH_RUNSVDSYSUP "/etc/rc.svdsysup"
+#define _PATH_RUNDOWN   "/etc/rc.shutdown"
+#define _PATH_SYSUP_PENDING "/.svdsysup"
 
 /*
  * Sleep times; used to prevent thrashing.
@@ -378,9 +385,7 @@ invalid:
     /*  2015-09-28 22:06:01 - dmilith:
         check udpate file existance and perform update
         or simply boot the system */
-    if (access("/.sys-update", F_OK) != -1) {
-        warning("svdsysup: Performing binary system update");
-        const char* script = "/etc/rc.svdsysup";
+    if (access(_PATH_SYSUP_PENDING, F_OK) != -1) {
         pid_t pid, wpid;
         int status;
         char *argv[4];
@@ -401,7 +406,7 @@ invalid:
             char _sh[]      = "sh";
 
             argv[0] = _sh;
-            argv[1] = __DECONST(char *, script);
+            argv[1] = __DECONST(char *, _PATH_RUNSVDSYSUP);
             argv[2] = 0;
 
             sigprocmask(SIG_SETMASK, &sa.sa_mask, (sigset_t *) 0);
@@ -410,13 +415,13 @@ invalid:
                     setprocresources(RESOURCE_RC);
             #endif
             execv(shell, argv);
-            stall("can't exec %s for %s: %m", shell, script);
+            stall("can't exec %s for %s: %m", shell, _PATH_RUNSVDSYSUP);
             _exit(1);   /* force single user mode */
         }
-        warning("svdsysup: Done binary system update");
+        warning("Done ServeD binary update");
 
     } else {
-        warning("svdsysup: No system update pending");
+        warning("No system updates pending");
     }
 
     /*
