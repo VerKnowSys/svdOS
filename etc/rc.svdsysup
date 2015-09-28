@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# system script to perform lockless filesystem binary updates
+
+stty status '^T' 2> /dev/null
+
+# Set shell to ignore SIGINT (2), but not children;
+# shell catches SIGQUIT (3) and returns to single user.
+#
+trap : 2
+trap "echo 'Boot interrupted'; exit 1" 3
+
+HOME=/
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+export HOME PATH
+
+echo "Performing system binary updates. Please wait."
+zfs set readonly=off zroot/ROOT/default
+zfs set readonly=off zroot/usr
+
+RESULT="0"
+# NIY
+# update routine goes here:
+
+# TODO: ...
+
+
+if [ "${RESULT}" = "0" ]; then
+    echo "Cleaning up after update process."
+    rm -f /.sys-update
+fi
+zfs set readonly=on zroot/ROOT/default
+zfs set readonly=on zroot/usr
+
+echo ''
+date
+exit 0
