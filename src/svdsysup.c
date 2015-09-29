@@ -419,7 +419,8 @@ invalid:
             _exit(1);   /* force single user mode */
         }
         while(access(_PATH_SYSUP_PENDING, F_OK) != -1) {
-            sleep(1); /* wait until file will be deleted by rc.svdsysup */
+            warning("Update process in progress.");
+            sleep(3); /* wait until file will be deleted by rc.svdsysup */
         }
         warning("Done ServeD binary update");
 
