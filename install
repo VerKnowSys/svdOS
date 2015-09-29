@@ -170,14 +170,14 @@ if [ -d "${SERVED_REPO}" ]; then
     ${GIT_BIN} reset --hard
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/ServeD-OS.git
     ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
-
-    note "Updating svdsysup"
-    ${CP_BIN} -v etc/rc.svdsysup /etc/
-    clang -static -o /sbin/svdsysup src/svdsysup.c -lutil -lcrypt
 else
     cd /var
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone https://github.com/VerKnowSys/ServeD-OS.git
 fi
+
+note "Installing svdsysup"
+${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
+clang -static -o /sbin/svdsysup ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
 
 note "Setting up shell environment"
 ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
@@ -339,5 +339,6 @@ fi
 
 note "Updating system version property"
 ${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
+${TOUCH_BIN} /.svdsysup
 
 exit 0

@@ -386,8 +386,7 @@ invalid:
         check udpate file existance and perform update
         or simply boot the system */
     if (access(_PATH_SYSUP_PENDING, F_OK) != -1) {
-        pid_t pid, wpid;
-        int status;
+        pid_t pid;
         char *argv[4];
         const char *shell;
         struct sigaction sa;
@@ -418,15 +417,12 @@ invalid:
             stall("can't exec %s for %s: %m", shell, _PATH_RUNSVDSYSUP);
             _exit(1);   /* force single user mode */
         }
-        while(access(_PATH_SYSUP_PENDING, F_OK) != -1) {
+        while (access(_PATH_SYSUP_PENDING, F_OK) != -1) {
             warning("Update process in progress.");
-            sleep(3); /* wait until file will be deleted by rc.svdsysup */
+            sleep(5); /* wait until file will be deleted by rc.svdsysup */
         }
-        warning("Done ServeD binary update");
-
-    } else {
-        warning("No system updates pending");
     }
+    warning("Starting ServeD OS");
 
     /*
      * Start the state machine.
