@@ -74,21 +74,23 @@ zfs set readonly=off ${DEFAULT_ZPOOL}/ROOT/default || true
 zfs set readonly=off ${DEFAULT_ZPOOL}/usr || true
 
 # lower your voices
-chflags noschg /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/ypchfn /usr/bin/chfn /usr/bin/chsh /usr/bin/ypchpass /usr/bin/ypchsh /usr/bin/rsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/yppasswd /usr/bin/rlogin /usr/bin/login /bin/rcp
+chflags noschg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/ypchfn /usr/bin/chfn /usr/bin/chsh /usr/bin/ypchpass /usr/bin/ypchsh /usr/bin/rsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/yppasswd /usr/bin/rlogin /usr/bin/login /bin/rcp
 
 zfs mount ${DEFAULT_ZPOOL}/Software/root || true
 zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/FreeBSD-10.2-amd64 || true
+rm -f /svdsysupdate-sync-${TIMESTAMP}.log || true
+touch /svdsysupdate-sync-${TIMESTAMP}.log || true
 for folder in bin lib libexec sbin usr; do
     note "Synchronizing: ${folder}"
-    /Software/Rsync/exports/rsync -l --progress --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} > /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
+    /Software/Rsync/exports/rsync -l --progress --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
 done
-
-# return my powers
-chflags schg /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/ypchfn /usr/bin/chfn /usr/bin/chsh /usr/bin/ypchpass /usr/bin/ypchsh /usr/bin/rsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/yppasswd /usr/bin/rlogin /usr/bin/login /bin/rcp
 
 note "Installing core software"
 /usr/bin/install /var/ServeD-OS/gvr /usr/bin
-clang -static -o /sbin/svdsysup /var/ServeD-OS/src/svdsysup.c -lutil -lcrypt
+clang -static -o /sbin/svdinit /var/ServeD-OS/src/svdsysup.c -lutil -lcrypt
+
+# return my powers
+chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/ypchfn /usr/bin/chfn /usr/bin/chsh /usr/bin/ypchpass /usr/bin/ypchsh /usr/bin/rsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/yppasswd /usr/bin/rlogin /usr/bin/login /bin/rcp
 
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_after
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
