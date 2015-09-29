@@ -95,6 +95,7 @@ zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
 
 note "Cleaning up after update process."
 rm -f ${UPDATE_PENDING_INDICATOR}
+mkdir -p /usr/ramdisk /usr/ramdisk-src /usr/ramdisk-obj
 
 note "Upgrading ZFS pool features"
 zpool upgrade ${DEFAULT_ZPOOL}
