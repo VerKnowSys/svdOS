@@ -81,6 +81,7 @@ zfs set compression=lz4 ${DEFAULT_ZPOOL}/Software
 zfs set dedup=on ${DEFAULT_ZPOOL}/Software
 zfs snapshot ${DEFAULT_ZPOOL}/Software@${ORIGIN} >> ${LOG} 2>&1 || true
 zfs clone ${DEFAULT_ZPOOL}/Software@${ORIGIN} ${DEFAULT_ZPOOL}/Software/root >> ${LOG} 2>&1 || true
+zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN} >> ${LOG} 2>&1 || true
 
 # create zvols for special snappable dirs
 for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /User /User/root /SystemUsers /Services /Services/root; do
