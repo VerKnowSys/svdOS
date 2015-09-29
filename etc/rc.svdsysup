@@ -15,9 +15,55 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 UPDATE_PENDING_INDICATOR="/.svdsysup"
 DEFAULT_ZPOOL="zroot"
 
+# ANSI color definitions
+readonly red='\033[31;40m'
+readonly green='\033[32;40m'
+readonly yellow='\033[33;40m'
+readonly blue='\033[34;40m'
+readonly magenta='\033[35;40m'
+readonly cyan='\033[36;40m'
+readonly gray='\033[37;40m'
+readonly white='\033[38;40m'
+readonly reset='\033[0m'
 export HOME PATH
 
-. /etc/sofin.conf.sh
+
+# svd part:
+
+TTY="false"
+if [ -t 1 ]; then
+    TTY="true"
+fi
+
+cecho () {
+    if [ "${TTY}" = "true" ]; then # if it's terminal then use colors
+        printf "${2}${1}${reset}\n"
+    else
+        printf "${1}\n"
+    fi
+}
+
+debug () {
+    if [ "${DEBUG}" = "true" ]; then
+        cecho "# $1" ${magenta} # NOTE: this "#" is required for debug mode to work properly with generation of ~/.profile and /etc/profile_sofin files!
+    else
+        cecho "# $1" ${magenta} >> ${LOG} 2>/dev/null
+        # cecho " ~ $1" ${magenta} >> ${LOG}
+    fi
+}
+
+warn () {
+    cecho "$1" ${yellow}
+}
+
+note () {
+    cecho "$1" ${green}
+}
+
+error () {
+    cecho "${ERROR_CHAR} $1" ${red}
+    exit 1
+}
 
 TIMESTAMP="$(date +%F-%s)"
 note "Performing ServeD Binary System Updates #${TIMESTAMP}. Please wait.."
@@ -36,7 +82,7 @@ for folder in bin lib libexec sbin usr; do
 done
 chflags schg /sbin/init
 
-note "Updating core software"
+note "Installing core software"
 /usr/bin/install /var/ServeD-OS/gvr /usr/bin
 clang -static -o /sbin/svdsysup /var/ServeD-OS/src/svdsysup.c -lutil -lcrypt
 
@@ -52,8 +98,8 @@ for disk in $disks; do
     note "Updating ZFS bootcode for disk: ${disk}"
     gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
     if [ "$?" != "0" ]; then
-        warn "Bootcode update finished with and error!"
-        sleep 5
+        warn "Bootcode update finished with and error for disk: ${disk}!"
+        sleep 2
     fi
 done
 
