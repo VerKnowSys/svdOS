@@ -17,27 +17,47 @@ DEFAULT_ZPOOL="zroot"
 
 export HOME PATH
 
+. /etc/sofin.conf.sh
+
 TIMESTAMP="$(date +%F-%s)"
-echo "Performing ServeD Binary System Updates #${TIMESTAMP}. Please wait.."
+note "Performing ServeD Binary System Updates #${TIMESTAMP}. Please wait.."
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_before
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_before
 
 zfs set readonly=off ${DEFAULT_ZPOOL}/ROOT/default || true
 zfs set readonly=off ${DEFAULT_ZPOOL}/usr || true
 
+chflags noschg /sbin/init
 zfs mount ${DEFAULT_ZPOOL}/Software/root || true
 zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/FreeBSD-10.2-amd64 || true
 for folder in bin lib libexec sbin usr; do
-    echo "Synchronizing: ${folder}"
-    /Software/Rsync/exports/rsync --progress --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} >> /svdsysupdate-sync.log 2>&1
+    note "Synchronizing: ${folder}"
+    /Software/Rsync/exports/rsync -l --progress --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} >> /svdsysupdate-sync.log 2>&1
 done
+chflags schg /sbin/init
 
+note "Updating core software"
 /usr/bin/install /var/ServeD-OS/gvr /usr/bin
+clang -static -o /sbin/svdsysup /var/ServeD-OS/src/svdsysup.c -lutil -lcrypt
+
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_after
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
 
-echo "Cleaning up after update process."
+note "Cleaning up after update process."
 rm -f ${UPDATE_PENDING_INDICATOR}
 
-echo ''
+disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
+
+for disk in $disks; do
+    note "Updating ZFS bootcode for disk: ${disk}"
+    gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
+    if [ "$?" != "0" ]; then
+        warn "Bootcode update finished with and error!"
+        sleep 5
+    fi
+done
+
+sleep 3
+
+note
 exit 0
