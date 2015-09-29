@@ -78,7 +78,7 @@ zfs mount ${DEFAULT_ZPOOL}/Software/root || true
 zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/FreeBSD-10.2-amd64 || true
 for folder in bin lib libexec sbin usr; do
     note "Synchronizing: ${folder}"
-    /Software/Rsync/exports/rsync -l --progress --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} >> /svdsysupdate-sync.log 2>&1
+    /Software/Rsync/exports/rsync -l --progress --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} > /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
 done
 chflags schg /sbin/init
 
