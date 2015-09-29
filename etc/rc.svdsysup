@@ -98,7 +98,7 @@ for disk in $disks; do
     note "Updating ZFS bootcode for disk: ${disk}"
     gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
     if [ "$?" != "0" ]; then
-        warn "Bootcode update finished with and error for disk: ${disk}!"
+        warn "Bootcode update finished with an error for disk: ${disk}!"
         sleep 2
     fi
 done
