@@ -25,7 +25,7 @@ GIT_BIN="/Software/Git/exports/git"
 LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
 VERSION="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${VERSION}" = "-" ]; then
-    zfs set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
+    # zfs set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
     printf "No version specified. Picking last version: ${LATEST_VERSION}\n"
 else
     if [ "${VERSION}" = "${LATEST_VERSION}" ]; then
