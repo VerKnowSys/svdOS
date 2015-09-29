@@ -311,9 +311,9 @@ ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software@--head-- >> ${LOG} 2>&1 || true
 note "Cleaning unnecessary directories"
 ${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 
-note "Performing additional system tweaks"
-${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/gcc || ${LN_BIN} -s /Software/Gcc/exports/gcc ${DEFAULT_SYSTEM_PREFIX}/gcc
-${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/g++ || ${LN_BIN} -s /Software/Gcc/exports/g++ ${DEFAULT_SYSTEM_PREFIX}/g++
+# note "Performing additional system tweaks"
+# ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/gcc || ${LN_BIN} -s /Software/Gcc/exports/gcc ${DEFAULT_SYSTEM_PREFIX}/gcc
+# ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/g++ || ${LN_BIN} -s /Software/Gcc/exports/g++ ${DEFAULT_SYSTEM_PREFIX}/g++
 
 set +e
 note "Replacing syslogd with syslog-ng"
