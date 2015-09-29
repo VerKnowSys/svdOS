@@ -172,6 +172,7 @@ if [ -d "${SERVED_REPO}" ]; then
     ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
 
     note "Updating svdsysup"
+    ${CP_BIN} -v etc/rc.svdsysup /etc/
     clang -static -o /sbin/svdsysup src/svdsysup.c -lutil -lcrypt
 else
     cd /var
