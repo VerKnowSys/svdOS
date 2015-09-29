@@ -6,7 +6,7 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 set -e
 
-readonly CURRENT_BRANCH="HardenedBSD-10-STABLE-v29.2"
+readonly CURRENT_BRANCH="hardened/10-stable/master"
 readonly ZROOT="zroot"
 readonly PARALLEL_JOBS="12"
 readonly ARCH="$(uname -m)"
@@ -47,11 +47,12 @@ if [ ! -d "${version}-src" ]; then
     # svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
     /Software/Git/exports/git clone --single-branch --branch hardened/10-stable/master https://github.com/hardenedbsd/hardenedbsd-stable/ ${version}-src
     cd ${version}-src
-    /Software/Git/exports/git checkout -b ${CURRENT_BRANCH}
+    /Software/Git/exports/git checkout ${CURRENT_BRANCH}
+    /Software/Git/exports/git pull
 else
     cd ${version}-src
+    /Software/Git/exports/git checkout ${CURRENT_BRANCH} || true
     /Software/Git/exports/git pull
-    /Software/Git/exports/git checkout -b ${CURRENT_BRANCH} || true
 fi
 
 mkdir -p /usr/obj /var/ccache /usr/ramdisk-src /usr/ramdisk-obj > /dev/null 2>&1 || true
