@@ -64,7 +64,9 @@ if [ "$?" != "0" ]; then
 fi
 set -e
 
-note "Mounting ramdisks"
+note "ReMounting ramdisks"
+umount -f /usr/ramdisk-src > /dev/null 2>&1 || true
+umount -f /usr/ramdisk-obj > /dev/null 2>&1 || true
 mount /usr/ramdisk-src > /dev/null 2>&1 || true
 mount /usr/ramdisk-obj > /dev/null 2>&1 || true
 
