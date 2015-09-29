@@ -92,8 +92,10 @@ zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
 note "Cleaning up after update process."
 rm -f ${UPDATE_PENDING_INDICATOR}
 
-disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
+note "Upgrading ZFS pool features"
+zpool upgrade ${DEFAULT_ZPOOL}
 
+disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
 for disk in $disks; do
     note "Updating ZFS bootcode for disk: ${disk}"
     gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
