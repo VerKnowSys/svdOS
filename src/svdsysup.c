@@ -418,8 +418,8 @@ invalid:
             _exit(1);   /* force single user mode */
         }
         while (access(_PATH_SYSUP_PENDING, F_OK) != -1) {
-            warning("Update process in progress.");
-            sleep(5); /* wait until file will be deleted by rc.svdsysup */
+            warning("Update process in progress. Be patient.");
+            sleep(10); /* wait until file will be deleted by rc.svdsysup */
         }
     }
     warning("Starting ServeD OS");
