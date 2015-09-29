@@ -160,7 +160,7 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get Rsync Syslog-ng Sudo-static Thess Unbound Mosh Pstree Vim Tmux Atop Vifm Mc Bind Subversion Mercurial Gcc
+sofin get Rsync Syslog-ng Thess Mosh Pstree Vim Tmux Atop Vifm Mc
 
 note "Updating sudo for ${SYSTEM_VERSION} jail base"
 ${CP_BIN} /Software/Sudo-static/bin/sudo ${JAIL_SOURCE}/usr/bin/
@@ -178,7 +178,7 @@ fi
 
 note "Installing svdsysup"
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
-clang -static -o /sbin/svdsysup ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
+clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
 
 note "Setting up shell environment"
 ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
