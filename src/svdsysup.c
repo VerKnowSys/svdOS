@@ -387,7 +387,7 @@ invalid:
         or simply boot the system */
     if (access(_PATH_SYSUP_PENDING, F_OK) != -1) {
         pid_t pid;
-        char *argv[4];
+        char *argv[3];
         const char *shell;
         struct sigaction sa;
 
