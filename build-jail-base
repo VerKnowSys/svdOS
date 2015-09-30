@@ -40,8 +40,7 @@ version="10.2"
 echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
 note "Process started for version: ${version}: $(date +%F@%H-%M)"
 note "Processing version: ${version}"
-rm -rf /usr/obj
-rm -f /usr/src
+rm -rf /usr/obj /usr/src
 cd /var
 if [ ! -d "${version}-src" ]; then
     # svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
