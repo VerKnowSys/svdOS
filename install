@@ -178,7 +178,9 @@ fi
 
 note "Installing svdsysup"
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
+chflags noschg /sbin/svdinit
 clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
+chflags schg /sbin/svdinit
 
 note "Setting up shell environment"
 ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
