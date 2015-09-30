@@ -89,7 +89,7 @@ cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH
 note "Patching sources (exporting libucl, libxo, adding svdsysup to init apps)"
 sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
 sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile || true # not available in 10.2
-sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdsysup:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
+sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
