@@ -178,9 +178,9 @@ fi
 
 note "Installing svdsysup"
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
-chflags noschg /sbin/svdinit
+chflags noschg /sbin/svdinit || true
 clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
-chflags schg /sbin/svdinit
+chflags schg /sbin/svdinit || true
 
 note "Setting up shell environment"
 ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
@@ -313,10 +313,6 @@ ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software@--head-- >> ${LOG} 2>&1 || true
 note "Cleaning unnecessary directories"
 ${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 
-# note "Performing additional system tweaks"
-# ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/gcc || ${LN_BIN} -s /Software/Gcc/exports/gcc ${DEFAULT_SYSTEM_PREFIX}/gcc
-# ${TEST_BIN} -x ${DEFAULT_SYSTEM_PREFIX}/g++ || ${LN_BIN} -s /Software/Gcc/exports/g++ ${DEFAULT_SYSTEM_PREFIX}/g++
-
 set +e
 note "Replacing syslogd with syslog-ng"
 service syslogd stop >/dev/null 2>&1
@@ -324,11 +320,6 @@ service syslog-ng restart
 
 note "Installing Governor to host system"
 ${INSTALL_BIN} ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
-
-# note "Updating VERSION file in each governed cells"
-# for cell in $(ls ${DEFAULT_JAIL_PRISON_LOCATION}/Cells); do
-#     cp /VERSION ${DEFAULT_JAIL_PRISON_LOCATION}/Cells/${cell}/
-# done
 
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
