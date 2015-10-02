@@ -22,6 +22,7 @@ INTERNAL_NETWORK="10.2.1.0"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
 GIT_BIN="/Software/Git/exports/git"
+SVDINIT_BIN="/sbin/svdinit"
 LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
 VERSION="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${VERSION}" = "-" ]; then
@@ -175,9 +176,9 @@ fi
 
 note "Installing svdsysup"
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
-chflags noschg /sbin/svdinit || true
-clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
-chflags schg /sbin/svdinit || true
+chflags noschg ${SVDINIT_BIN} || true
+clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
+chflags schg ${SVDINIT_BIN} || true
 
 note "Setting up shell environment"
 ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
