@@ -104,9 +104,6 @@ zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root || true
 printf "Flushing secadm rules before installation\n"
 test -x /usr/sbin/secadm && secadm flush || true
 
-# printf "Installing ServeD-Base ${VERSION}\n"
-# tar xf ${CACHE_DIR}/${BASE}-${VERSION}.tar.xz --directory /
-
 if [ "$?" != "0" ]; then
     printf "ERROR: Binary snapshot is corrupted or something just went wrong with archive\n"
     exit 1

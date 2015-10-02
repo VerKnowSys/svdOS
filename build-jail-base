@@ -82,6 +82,7 @@ zfs create ${ZROOT}${DESTBASE} 2>> ${LOG_OUTPUT} || true
 # DESTDIR="${DESTBASE}-${TIMESTAMP}"
 
 note "Preparing kernel configuration"
+GIT_SSL_NO_VERIFY=true /Software/Git/exports/git reset --hard
 rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
