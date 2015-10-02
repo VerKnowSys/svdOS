@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.14.0"
+VERSION="0.14.1"
 ORIGIN="origin"
 KERN_SECURELEVEL="1"
 BRIDGE_DEVICE="bridge0"
@@ -154,8 +154,6 @@ apply_attributes () {
             key)
                 ${MKDIR_BIN} -p ${CELL}/User/.ssh
                 a_key="ssh-ed25519 ${value} ${JAIL_NAME}\n"
-                ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
-                a_key="ssh-rsa ${value}== ${JAIL_NAME}\n"
                 ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
                 ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID}:${DEFAULT_WORKER_UID} ${CELL}/User/.ssh
                 ;;
