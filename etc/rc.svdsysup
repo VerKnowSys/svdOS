@@ -13,6 +13,7 @@ trap "echo 'Update interrupted'; exit 1" 3
 HOME=/
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 UPDATE_PENDING_INDICATOR="/.svdsysup"
+SERVED_REPO="/var/ServeD-OS"
 DEFAULT_ZPOOL="zroot"
 
 # ANSI color definitions
@@ -84,9 +85,11 @@ for folder in bin lib libexec sbin usr; do
     /Software/Rsync/exports/rsync --links --verbose --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
 done
 
-note "Installing core software"
-/usr/bin/install /var/ServeD-OS/gvr /usr/bin
-clang -static -o /sbin/svdinit /var/ServeD-OS/src/svdsysup.c -lutil -lcrypt
+note "Installing core software (gvr, svdinit, secadm)"
+/usr/bin/install ${SERVED_REPO}/gvr /usr/bin
+clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
+cp ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
+cp ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
 
 # return my powers
 chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/ypchfn /usr/bin/chfn /usr/bin/chsh /usr/bin/ypchpass /usr/bin/ypchsh /usr/bin/rsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/yppasswd /usr/bin/rlogin /usr/bin/login /bin/rcp
