@@ -64,9 +64,9 @@ if [ ! -f "${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz" ]; then
     fi
 fi
 
-if [ ! -f "${CACHE_DIR}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz" ]; then
+if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz" ]; then
     printf "Jails archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz -o ${CACHE_DIR}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz
+    fetch ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz
     if [ "$?" != "0" ]; then
         printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
         exit 1
@@ -110,7 +110,7 @@ if [ "$?" != "0" ]; then
 fi
 
 printf "Installing Jail-Base ${SYSTEM_VERSION}-${VERSION}\n"
-tar xf ${CACHE_DIR}/${BASE}-Jail-${SYSTEM_VERSION}-${VERSION}.tar.xz --directory /
+tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz --directory /
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Jails snapshot is corrupted or something just went wrong with archive\n"

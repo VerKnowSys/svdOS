@@ -27,14 +27,14 @@ DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
 SYS_VERSION="10.2"
 
 compile_jails () {
-    SNAPSHOT_JAIL="${NAME}-Jail-${SYS_VERSION}-${VERSION}"
-    note "Compiling Jail snapshot: ${SNAPSHOT_JAIL}"
+    SNAPSHOT_JAIL="${NAME}-${SYS_VERSION}-${VERSION}"
+    note "Compiling snapshot: ${SNAPSHOT_JAIL}"
     REALPATH="/Jails/Shared/FreeBSD-${SYS_VERSION}-${SYS_ARCH}"
     tar cfJ ../${SNAPSHOT_JAIL}.tar.xz "${REALPATH}"
     if [ "$?" = "0" ]; then
         note "Compiled successfully."
     else
-        error "Something went wrong while compiling Jail Base."
+        error "Something went wrong while compiling snapshot!"
         exit 1
     fi
 
