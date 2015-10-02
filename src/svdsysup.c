@@ -101,6 +101,7 @@ static const char rcsid[] =
 #define RESOURCE_RC     "daemon"
 #define RESOURCE_WINDOW     "default"
 #define RESOURCE_GETTY      "default"
+#define SECONDS_INTERVAL 30 /* time interval in seconds */
 
 static void handle(sig_t, ...);
 static void delset(sigset_t *, ...);
@@ -417,9 +418,15 @@ invalid:
             stall("can't exec %s for %s: %m", shell, _PATH_RUNSVDSYSUP);
             _exit(1);   /* force single user mode */
         }
+        int max_iterations = 6; /* 6 * 30s == 3 minutes max */
         while (access(_PATH_SYSUP_PENDING, F_OK) != -1) {
+            max_iterations--;
+            if (max_iterations <= 0) {
+                warning("Aborting update process after 180s of inactivity");
+                break;
+            }
+            sleep(SECONDS_INTERVAL); /* wait until file will be deleted by rc.svdsysup */
             warning("Update process in progress. Be patient.");
-            sleep(10); /* wait until file will be deleted by rc.svdsysup */
         }
     }
     warning("Starting ServeD OS");
