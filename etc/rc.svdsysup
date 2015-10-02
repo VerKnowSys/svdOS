@@ -66,7 +66,7 @@ error () {
 }
 
 TIMESTAMP="$(date +%F-%s)"
-note "Performing ServeD Binary System Updates #${TIMESTAMP}. Please wait.."
+note "ServeD Binary Updates working on an update: #${TIMESTAMP}. Please wait.."
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_before
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_before
 
@@ -81,7 +81,6 @@ zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/FreeBSD-10.2-amd64 || true
 rm -f /svdsysupdate-sync-${TIMESTAMP}.log || true
 touch /svdsysupdate-sync-${TIMESTAMP}.log || true
 for folder in bin lib libexec sbin usr; do
-    note "Synchronizing: ${folder}"
     /Software/Rsync/exports/rsync --links --verbose --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
 done
 
@@ -95,13 +94,9 @@ chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcr
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_after
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
 
-note "Cleaning up after update process."
 rm -f ${UPDATE_PENDING_INDICATOR}
-mkdir -p /usr/ramdisk /usr/ramdisk-src /usr/ramdisk-obj
-
-note "Upgrading ZFS pool features"
-zpool upgrade ${DEFAULT_ZPOOL}
-
+mkdir -p /usr/ramdisk /usr/ramdisk-src /usr/ramdisk-obj 2> /dev/null
+zpool upgrade ${DEFAULT_ZPOOL} >> /svdsysupdate-sync-${TIMESTAMP}.log
 disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
 for disk in $disks; do
     note "Updating ZFS bootcode for disk: ${disk}"
