@@ -27,10 +27,10 @@ DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
 SYS_VERSION="10.2"
 
 compile_jails () {
-    SNAPSHOT_JAIL="${NAME}-${SYS_VERSION}-${VERSION}"
-    note "Compiling snapshot: ${SNAPSHOT_JAIL}"
+    BASE_SNAPSHOT="${NAME}-${SYS_VERSION}-${VERSION}"
+    note "Compiling snapshot: ${BASE_SNAPSHOT}"
     REALPATH="/Jails/Shared/FreeBSD-${SYS_VERSION}-${SYS_ARCH}"
-    tar cfJ ../${SNAPSHOT_JAIL}.tar.xz "${REALPATH}"
+    tar cfJ ../${BASE_SNAPSHOT}.tar.xz "${REALPATH}"
     if [ "$?" = "0" ]; then
         note "Compiled successfully."
     else
@@ -38,8 +38,8 @@ compile_jails () {
         exit 1
     fi
 
-    note "Uploading Jail snapshot: ${SNAPSHOT_JAIL}"
-    scp ../${SNAPSHOT_JAIL}.tar.xz ${DESTINATION}
+    note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
+    scp ../${BASE_SNAPSHOT}.tar.xz ${DESTINATION}
     if [ "$?" = "0" ]; then
         note "Finished successfully."
     else
