@@ -110,11 +110,11 @@ if [ "$?" != "0" ]; then
     exit 1
 fi
 
-printf "Installing Jail-Base ${SYSTEM_VERSION}-${VERSION}\n"
+printf "Installing Base ${SYSTEM_VERSION}-${VERSION}\n"
 tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz --directory /
 
 if [ "$?" != "0" ]; then
-    printf "ERROR: Jails snapshot is corrupted or something just went wrong with archive\n"
+    printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
     exit 1
 fi
 
