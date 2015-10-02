@@ -289,6 +289,9 @@ include: /var/unbound/forward.conf
 include: /var/unbound/lan-zones.conf
 include: /var/unbound/conf.d/*.conf
 " > ${UNBOUND_CONF}
+# XXX: these should be generated more precisely:
+${TOUCH_BIN} /var/unbound/forward.conf
+${TOUCH_BIN} /var/unbound/lan-zones.conf
 
 note "Setting up default ssl root certificates"
 ${MKDIR_BIN} -p /etc/ssl >> ${LOG} 2>&1
