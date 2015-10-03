@@ -448,7 +448,6 @@ ${JAIL_NAME} {
     ${PRINTF_BIN} "${VLAN_NUMBER}\n" > ${JAIL_VLAN_NUMBER_FILE}
     ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
     ${PRINTF_BIN} "${JAIL_ADDRESSES}\n" >> ${JAIL_ADDRESSES_FILE}
-    ${CP_BIN} -R ${JAIL_SOURCE}/var/ ${CELL}/var
 
     note "Building initial jail environment"
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
