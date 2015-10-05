@@ -177,7 +177,7 @@ fi
 note "Installing svdsysup"
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
 chflags noschg ${SVDINIT_BIN} || true
-clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
+clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP
 chflags schg ${SVDINIT_BIN} || true
 
 note "Setting up shell environment"

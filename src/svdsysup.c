@@ -2,6 +2,9 @@
  * Copyright (c) 1991, 1993
  *  The Regents of the University of California.  All rights reserved.
  *
+ * Copyright (c) 2015
+ *  Daniel (dmilith) Dettlaff. All rights reserved.
+ *
  * This code is derived from software contributed to Berkeley by
  * Donn Seeley at Berkeley Software Design, Inc.
  *

@@ -87,7 +87,7 @@ done
 
 note "Installing core software (gvr, svdinit, secadm)"
 /usr/bin/install ${SERVED_REPO}/gvr /usr/bin
-clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt
+clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP
 cp ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
 cp ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
 
