@@ -67,7 +67,7 @@ error () {
 }
 
 TIMESTAMP="$(date +%F-%s)"
-note "ServeD Binary Updates working on an update: #${TIMESTAMP}. Please wait.."
+note "ServeD Binary Updates working on an update #${TIMESTAMP}. Please wait.."
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_before
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_before
 
