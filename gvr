@@ -15,9 +15,9 @@ else
 fi
 
 
-VERSION="0.14.1"
+VERSION="0.14.2"
 ORIGIN="origin"
-KERN_SECURELEVEL="1"
+KERN_SECURELEVEL="0"
 BRIDGE_DEVICE="bridge0"
 VLAN_DEVICE="vlan"
 LOG_FILE="/var/log/governor.log"
@@ -630,8 +630,6 @@ jail_start () {
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
 
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} sysctl kern.securelevel=${KERN_SECURELEVEL} >> ${LOG_FILE} 2>&1
-
         # alow users creating / in their tree. why not.
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 777 / >> ${LOG_FILE} 2>&1
         ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${LOG_FILE} 2>&1
@@ -648,6 +646,7 @@ jail_start () {
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 4755 /Software/Sudo-static/exports/sudo
+        ${JEXEC_BIN} -U root ${JAIL_NAME} sysctl kern.securelevel=${KERN_SECURELEVEL}
 
         if [ ! -e "${CELL}/User/.zshrc" ]; then
             note "Creating default user environment file for zsh"
