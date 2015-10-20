@@ -6,7 +6,7 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 set -e
 
-readonly CURRENT_BRANCH="hardened/10-stable/master"
+readonly CURRENT_BRANCH="HardenedBSD-10-STABLE-v32.4"
 readonly ZROOT="zroot"
 readonly PARALLEL_JOBS="12"
 readonly ARCH="$(uname -m)"

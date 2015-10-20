@@ -646,7 +646,7 @@ jail_start () {
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 4755 /Software/Sudo-static/exports/sudo
-        ${JEXEC_BIN} -U root ${JAIL_NAME} sysctl kern.securelevel=${KERN_SECURELEVEL}
+        ${JEXEC_BIN} -U root ${JAIL_NAME} sysctl kern.securelevel=${KERN_SECURELEVEL} > /dev/null 2>&1
 
         if [ ! -e "${CELL}/User/.zshrc" ]; then
             note "Creating default user environment file for zsh"
