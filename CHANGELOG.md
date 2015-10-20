@@ -2,6 +2,8 @@
 ## CHANGELOG
 
 * v0.9.x
+    - /sbin/svdinit replaced original /sbin/init
+    - Updated to HBSD branch: HardenedBSD-10-STABLE-v32.4
     - Lots of improvements to Governor
     - Switched to ZFS datasets managed under jails
     - Switched to ZFS origin of /Software
