@@ -2,6 +2,8 @@
 # VERKNOWSYS -- kernel configuration file for FreeBSD/amd64
 # 2015-08-21 22:18:19
 
+# include GENERIC
+
 makeoptions    DEBUG="-g"     # Build kernel with gdb(1) debug symbols
 makeoptions    WITH_CTF=1      # Run ctfconvert(1) for DTrace support
 makeoptions    COPTFLAGS="-O2 -pipe -funroll-loops -ffast-math -fno-strict-aliasing"
@@ -212,13 +214,18 @@ device      atkbd       # AT keyboard
 
 device      kbdmux      # keyboard multiplexer
 device      vga         # VGA video card driver
-device      agp         # support several AGP chipsets
 options     VESA        # Add support for VESA BIOS Extensions (VBE)
 device      splash      # Splash screen and screen saver support
 device      sc          # syscons is the default console driver, resembling an SCO console
 options     SC_PIXEL_MODE   # add support for the raster text mode
 device      uart        # Generic UART driver - Serial (COM) ports
 device      puc         # Multi I/O cards and multi-channel UARTs
+device      agp         # support several AGP chipsets
+
+# vt is the new video console driver
+device      vt
+device      vt_vga
+device      vt_efifb
 
 # Parallel port
 #device      ppc
@@ -391,3 +398,8 @@ device      vtnet       # VirtIO Ethernet device
 device      virtio_blk  # VirtIO Block device
 device      virtio_scsi # VirtIO SCSI device
 device      virtio_balloon  # VirtIO Memory Balloon device
+
+# MMC/SD
+device          mmc                     # MMC/SD bus
+device          mmcsd                   # MMC/SD memory card
+device          sdhci                   # Generic PCI SD Host Controller
