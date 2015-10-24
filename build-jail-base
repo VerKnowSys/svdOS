@@ -133,7 +133,7 @@ if [ -z "${DONT_BUILD_WORLD}" ]; then
     mergemaster -a -P -D${DESTBASE} >> ${LOG_OUTPUT}  2>&1
 
     note "Deleting old dirs, files and libs"
-    printf "y\n" | make delete-old delete-old-libs DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1 || true
+    yes y | make delete-old delete-old-libs DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1 || true
 fi
 
 if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
