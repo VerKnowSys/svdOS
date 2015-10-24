@@ -6,9 +6,24 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 set -e
 
-readonly CURRENT_BRANCH="HardenedBSD-10-STABLE-v32.4"
+# FreeBSD base version:
+readonly OS_VER="$1"
+if [ "${OS_VER}" = "" ]; then
+    error "No version specified!"
+fi
+
+readonly MAIN_REPOSITORY="$2"
+if [ "${MAIN_REPOSITORY}" = "" ]; then
+    error "No main repository specified!"
+fi
+
+readonly CURRENT_BRANCH="$3"
+if [ "${CURRENT_BRANCH}" = "" ]; then
+    error "No current branch specified!"
+fi
+
 readonly ZROOT="zroot"
-readonly PARALLEL_JOBS="12"
+readonly PARALLEL_JOBS="10"
 readonly ARCH="$(uname -m)"
 readonly SHARED_DIR="/Jails/Shared"
 readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
@@ -36,25 +51,19 @@ ${CP_BIN} -v /var/ServeD-OS/etc/src.conf /etc/
 ${CP_BIN} -v /var/ServeD-OS/etc/make.conf /etc/
 
 # main()
-version="10.2"
-echo "Process started for version: ${version}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
-note "Process started for version: ${version}: $(date +%F@%H-%M)"
-note "Processing version: ${version}"
+echo "Process started for version: ${OS_VER}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
+note "Process started for version: ${OS_VER}: $(date +%F@%H-%M)"
+note "Processing version: ${OS_VER}"
 rm -rf /usr/obj /usr/src
 cd /var
-if [ ! -d "${version}-src" ]; then
-    # svn co http://svn0.eu.FreeBSD.org/base/releng/${version} ${version}-src
-    /Software/Git/exports/git clone --single-branch --branch hardened/10-stable/master https://github.com/hardenedbsd/hardenedbsd-stable/ ${version}-src
-    cd ${version}-src
-    /Software/Git/exports/git checkout ${CURRENT_BRANCH}
-    /Software/Git/exports/git pull
-else
-    cd ${version}-src
-    /Software/Git/exports/git checkout ${CURRENT_BRANCH} || true
-    /Software/Git/exports/git pull
+if [ ! -d "${OS_VER}-src" ]; then
+    # svn co http://svn0.eu.FreeBSD.org/base/releng/${OS_VER} ${OS_VER}-src
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${OS_VER}-src
+    cd ${OS_VER}-src
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true
 fi
 
-mkdir -p /usr/obj /var/ccache /usr/ramdisk-src /usr/ramdisk-obj > /dev/null 2>&1 || true
+mkdir -p /var/ccache /usr/ramdisk-src /usr/ramdisk-obj > /dev/null 2>&1 || true
 set +e
 grep '/usr/ramdisk-' /etc/fstab > /dev/null 2>&1
 if [ "$?" != "0" ]; then
@@ -62,6 +71,7 @@ if [ "$?" != "0" ]; then
     printf "md     /usr/ramdisk-obj    mfs   rw,-s4G 0 0\n" >> /etc/fstab
 fi
 set -e
+cd /
 
 note "ReMounting ramdisks"
 umount -f /usr/ramdisk-src > /dev/null 2>&1 || true
@@ -70,26 +80,33 @@ mount /usr/ramdisk-src > /dev/null 2>&1 || true
 mount /usr/ramdisk-obj > /dev/null 2>&1 || true
 
 note "Syncing sources to ramdisk-src"
-time cp -R /var/${version}-src/ /usr/ramdisk-src/
+time cp -R /var/${OS_VER}-src/ /usr/ramdisk-src/
+note "Linking src and obj"
 ln -s /usr/ramdisk-src /usr/src
 ln -s /usr/ramdisk-obj /usr/obj
+
 cd /usr/src
+GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout ${CURRENT_BRANCH} > /dev/null 2>&1
+note "Working on branch: $(/Software/Git/exports/git branch)"
 
 note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
 TIMESTAMP="$(date +%F-%s)"
-DESTBASE="${SHARED_DIR}/FreeBSD-${version}-${ARCH}"
+DESTBASE="${SHARED_DIR}/FreeBSD-${OS_VER}-${ARCH}"
 zfs create ${ZROOT}${DESTBASE} 2>> ${LOG_OUTPUT} || true
 # DESTDIR="${DESTBASE}-${TIMESTAMP}"
 
 note "Preparing kernel configuration"
-GIT_SSL_NO_VERIFY=true /Software/Git/exports/git reset --hard
-rm -fv /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${version} /var/${version}-src/sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+GIT_SSL_NO_VERIFY=true /Software/Git/exports/git reset --hard >> ${LOG_OUTPUT}
+rm -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
-note "Patching sources (exporting libucl, libxo, adding svdsysup to init apps)"
-sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
-sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile || true # not available in 10.2
+note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
 sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
+sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+set +e
+echo ${OS_VER} | grep "11" > /dev/null 2>&1
+test "$?" = "0" && sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile # not available in 10.2
+set -e
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
@@ -102,16 +119,21 @@ make buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} >> ${LOG_OUTPUT} 2>&1
 note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
 zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin
 
-# note "Cloning ${ZROOT}${DESTBASE}@${TIMESTAMP} to ${ZROOT}${DESTBASE}"
-# zfs clone ${ZROOT}${DESTBASE}@${TIMESTAMP} ${ZROOT}${DESTBASE}
-# zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin
-
 note "Installing kernel"
 make installkernel DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Installing world"
     make installworld DEBUG= DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
+
+    note "Merging build host configuration"
+    mergemaster -a -P >> ${LOG_OUTPUT}  2>&1
+
+    note "Merging ${DESTBASE} configuration"
+    mergemaster -a -P -D${DESTBASE} >> ${LOG_OUTPUT}  2>&1
+
+    note "Deleting old dirs, files and libs"
+    YES | make delete-old delete-old-libs DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1 || true
 fi
 
 if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
@@ -131,22 +153,10 @@ note "Storing fs diff"
 mkdir -p ${DIFFS_DIR} > /dev/null 2>&1
 zfs send -i ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin ${ZROOT}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
 
-# note "Stopping any running jails"
-# for node in $(gvr list | awk '{print $1;}'); do
-#     gvr stop ${node}
-# done
-
-# note "Installing base update in: ${ZROOT}${DESTBASE}-new"
-# zfs receive ${ZROOT}${DESTBASE}-new < /tmp/build-${TIMESTAMP}.zfs
-
-# note "Switching to new kernel and software base"
-# zfs rename ${ZROOT}${DESTBASE} ${ZROOT}${DESTBASE}-old
-# zfs rename ${ZROOT}${DESTBASE}-new ${ZROOT}${DESTBASE}
-
-# note "Destroying additional datasets"
-# zfs destroy -R ${ZROOT}${DESTBASE}@${TIMESTAMP}
-# zfs destroy -R ${ZROOT}${DESTBASE}-old
-# zfs destroy -R ${ZROOT}${DESTBASE}
+note "Stopping any running jails"
+for node in $(gvr list | awk '{print $1;}'); do
+    gvr stop ${node}
+done
 
 echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
 note "Process finished: $(date +%F@%H-%M)"
