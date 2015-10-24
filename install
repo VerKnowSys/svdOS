@@ -335,5 +335,14 @@ fi
 note "Updating system version property"
 ${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
 ${TOUCH_BIN} /.svdsysup
+disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
+for disk in $disks; do
+    note "Updating ZFS bootcode for disk: ${disk}"
+    gpart bootcode -b ${DEFAULT_JAILS_ROOT_DIR}/boot/pmbr -p ${DEFAULT_JAILS_ROOT_DIR}/boot/gptzfsboot -i 1 ${disk}
+    if [ "$?" != "0" ]; then
+        warn "Bootcode update finished with an error for disk: ${disk}!"
+        sleep 2
+    fi
+done
 
 exit 0
