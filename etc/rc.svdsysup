@@ -82,7 +82,7 @@ zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/FreeBSD-10.2-amd64 || true
 rm -f /svdsysupdate-sync-${TIMESTAMP}.log || true
 touch /svdsysupdate-sync-${TIMESTAMP}.log || true
 for folder in bin lib libexec sbin usr; do
-    /Software/Rsync/exports/rsync --links --verbose --compress --perms --executability --acls --xattrs --owner --group --times --recursive --delete /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
+    /Software/Rsync/exports/rsync --links --verbose --compress --perms --executability --acls --xattrs --owner --group --times --recursive /Jails/Shared/FreeBSD-10.2-amd64/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
 done
 
 note "Installing core software (gvr, svdinit, secadm)"
