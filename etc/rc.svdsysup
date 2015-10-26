@@ -78,7 +78,7 @@ zfs set readonly=off ${DEFAULT_ZPOOL}/ROOT/default || true
 zfs set readonly=off ${DEFAULT_ZPOOL}/usr || true
 
 # lower your voices
-chflags noschg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/ypchfn /usr/bin/chfn /usr/bin/chsh /usr/bin/ypchpass /usr/bin/ypchsh /usr/bin/rsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/yppasswd /usr/bin/rlogin /usr/bin/login /bin/rcp
+chflags noschg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login
 
 zfs mount ${DEFAULT_ZPOOL}/Software/root || true
 zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH} || true
@@ -95,7 +95,7 @@ clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSE
 # cp ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
 
 # return my powers
-chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/ypchfn /usr/bin/chfn /usr/bin/chsh /usr/bin/ypchpass /usr/bin/ypchsh /usr/bin/rsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/yppasswd /usr/bin/rlogin /usr/bin/login /bin/rcp
+chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login
 
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_after
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
