@@ -91,8 +91,8 @@ done
 note "Installing core software (gvr, svdinit, secadm)"
 /usr/bin/install ${SERVED_REPO}/gvr /usr/bin
 clang -static -o /sbin/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP
-cp ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
-cp ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
+# cp ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
+# cp ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
 
 # return my powers
 chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /libexec/ld-elf32.so.1 /usr/lib32/librt.so.1 /usr/lib32/libc.so.7 /usr/lib32/libcrypt.so.5 /usr/lib32/libthr.so.3 /usr/lib/librt.so.1 /usr/bin/ypchfn /usr/bin/chfn /usr/bin/chsh /usr/bin/ypchpass /usr/bin/ypchsh /usr/bin/rsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/yppasswd /usr/bin/rlogin /usr/bin/login /bin/rcp
