@@ -45,15 +45,11 @@ else
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/ServeD-OS.git
 fi
 
-note "Setting up src.conf and make.conf"
-${RM_BIN} -f /etc/make.conf /etc/src.conf
-${CP_BIN} -v /var/ServeD-OS/etc/src.conf /etc/
-${CP_BIN} -v /var/ServeD-OS/etc/make.conf /etc/
-
 # main()
 echo "Process started for version: ${OS_VER}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
 note "Process started for version: ${OS_VER}: $(date +%F@%H-%M)"
 note "Processing version: ${OS_VER}"
+
 rm -rf /usr/obj /usr/src
 cd /var
 if [ ! -d "${OS_VER}-src" ]; then
@@ -62,6 +58,11 @@ if [ ! -d "${OS_VER}-src" ]; then
     cd ${OS_VER}-src
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true
 fi
+
+note "Setting up src.conf and make.conf"
+${RM_BIN} -fv /etc/make.conf /etc/src.conf >> ${LOG_OUTPUT}
+${CP_BIN} -v /var/ServeD-OS/etc/src.conf /etc/ >> ${LOG_OUTPUT}
+${CP_BIN} -v /var/ServeD-OS/etc/make.conf /etc/ >> ${LOG_OUTPUT}
 
 mkdir -p /var/ccache /usr/ramdisk-src /usr/ramdisk-obj > /dev/null 2>&1 || true
 set +e
@@ -80,16 +81,23 @@ mount /usr/ramdisk-src > /dev/null 2>&1 || true
 mount /usr/ramdisk-obj > /dev/null 2>&1 || true
 
 note "Syncing sources to ramdisk-src"
-time cp -R /var/${OS_VER}-src/ /usr/ramdisk-src/
+time /Software/Rsync/exports/rsync -a -r /var/${OS_VER}-src/ /usr/ramdisk-src/
+
 note "Linking src and obj"
 ln -s /usr/ramdisk-src /usr/src
 ln -s /usr/ramdisk-obj /usr/obj
 
+note "Setting up build host specific settings"
+zfs set primarycache=metadata ${ZROOT}
+zfs set secondarycache=metadata ${ZROOT}
+zfs set dedup=off ${ZROOT}
+zfs set compression=lz4 ${ZROOT}
+sysctl vfs.zfs.prefetch_disable=1
+
 cd /usr/src
 GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout ${CURRENT_BRANCH} > /dev/null 2>&1
+GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull origin ${CURRENT_BRANCH}
 note "Working on branch: $(/Software/Git/exports/git branch)"
-
-note "Preparing new Jail builds for timestamp: ${TIMESTAMP}"
 TIMESTAMP="$(date +%F-%s)"
 DESTBASE="${SHARED_DIR}/FreeBSD-${OS_VER}-${ARCH}"
 zfs create ${ZROOT}${DESTBASE} 2>> ${LOG_OUTPUT} || true
@@ -101,11 +109,24 @@ rm -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 
 note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
+# spawn svdinit first:
 sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
-sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+# export libucl:
+# sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+# export libxo:
 set +e
 echo ${OS_VER} | grep "11" > /dev/null 2>&1
-test "$?" = "0" && sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile # not available in 10.2
+if [ "$?" = "0" ]; then
+    # https://github.com/freebsd/freebsd/commit/6471c2fc7c1fced2b5d2073b1629aa76588c61e2:
+    sed -i '' -e 's#32#48#' sys/boot/efi/loader/copy.c
+else
+    # https://github.com/freebsd/freebsd/commit/6471c2fc7c1fced2b5d2073b1629aa76588c61e2:
+    sed -i '' -e 's#32#48#' sys/boot/amd64/efi/copy.c
+    # sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile
+fi
+
+# echo ${OS_VER} | grep "11" > /dev/null 2>&1
+# test "$?" = "0" && sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile # not available in 10.2
 set -e
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
@@ -115,6 +136,9 @@ fi
 
 note "Building kernel"
 make buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} >> ${LOG_OUTPUT} 2>&1
+
+note "Wiping out previous world"
+rm -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>&1
 
 note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
 zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin
@@ -141,6 +165,12 @@ if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
     cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
     cp /usr/src/contrib/libucl/include/ucl.h ${DESTBASE}/usr/include/ucl.h || true
 fi
+
+# if [ -e /usr/src/contrib/libxo/include/ucl.h ]; then
+#     note "Installing private headers (ucl)"
+#     cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
+#     cp /usr/src/contrib/libucl/include/ucl.h ${DESTBASE}/usr/include/ucl.h || true
+# fi
 
 note "Cleaning up"
 make clean >> ${LOG_OUTPUT} 2>&1
