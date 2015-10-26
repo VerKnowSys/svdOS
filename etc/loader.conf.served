@@ -1,7 +1,6 @@
 # 2014-09-02 09:24:48 - dmilith:
 kernel="verknowsys"
 kernels="verknowsys kernel"
-opensolaris_load="YES"
 zfs_load="YES"
 autoboot_delay="2"
 mac_portacl_load="YES"
