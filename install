@@ -3,7 +3,8 @@
 set -e
 
 # OS version same as destination system version 1:1
-SYSTEM_VERSION="10.2"
+VKS_KERNEL="/boot/verknowsys"
+SYSTEM_VERSION="11.0"
 ORIGIN="origin"
 CACHE_DIR="/var/.cache"
 DEFAULT_JAIL_PRISON_LOCATION='/Jails/Prison'
@@ -15,6 +16,7 @@ UNBOUND_CONF="/etc/unbound/unbound.conf"
 BASE="ServeD-OS-Base"
 LOG="/var/log/svd-install.log"
 SERVED_REPO="/var/ServeD-OS"
+SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
 SOFIN_REPO="/var/sofin"
 BASE_SOURCE="http://served.verknowsys.com/"
 SYS_ARCH="$(uname -m)"
@@ -102,8 +104,8 @@ done
 zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root || true
 zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root || true
 
-printf "Flushing secadm rules before installation\n"
-test -x /usr/sbin/secadm && secadm flush || true
+# printf "Flushing secadm rules before installation\n"
+# test -x /usr/sbin/secadm && secadm flush || true
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Binary snapshot is corrupted or something just went wrong with archive\n"
@@ -134,15 +136,6 @@ JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${
 printf "Installing Sofin environment with jail source: ${JAIL_SOURCE}\n"
 PREFIX="${JAIL_SOURCE}" bin/install
 
-note "Installing custom kernel"
-if [ ! -d "/boot/verknowsys" ]; then
-    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
-else
-    ${RM_BIN} -rf /boot/verknowsys.old >> ${LOG} 2>&1
-    ${MV_BIN} /boot/verknowsys /boot/verknowsys.old >> ${LOG} 2>&1
-    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel /boot/verknowsys >> ${LOG} 2>&1
-fi
-
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
     note "Setting up ZSH shell"
     ${PRINTF_BIN} "/Software/Zsh/exports/zsh\n" >> /etc/shells
@@ -158,7 +151,22 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get Rsync Syslog-ng Thess Mosh Pstree Vim Tmux Atop Vifm Mc
+sofin get Rsync Syslog-ng Thess Mosh Pstree Vim Tmux Atop Vifm Mc >> ${LOG}  2>&1
+
+note "Updating /boot"
+rm -rf /tmp/tmp-loader.conf || true
+cp -v /boot/loader.conf /tmp/tmp-loader.conf >> ${LOG}  2>&1
+/Software/Rsync/exports/rsync --exclude 'kernel' --links --delete --compress --perms --executability --acls --xattrs --owner --group --times --recursive ${JAIL_SOURCE}/boot/ /boot >> ${LOG}  2>&1
+cp -v /tmp/tmp-loader.conf /boot/loader.conf >> ${LOG}  2>&1
+
+note "Installing custom kernel"
+if [ ! -d "${VKS_KERNEL}" ]; then
+    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL} >> ${LOG} 2>&1
+else
+    ${RM_BIN} -rf ${VKS_KERNEL}.old >> ${LOG} 2>&1 || true
+    ${MV_BIN} ${VKS_KERNEL} ${VKS_KERNEL}.old >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL} >> ${LOG} 2>&1
+fi
 
 note "Updating sudo for ${SYSTEM_VERSION} jail base"
 ${CP_BIN} /Software/Sudo-static/bin/sudo ${JAIL_SOURCE}/usr/bin/
@@ -167,11 +175,11 @@ ${CHMOD_BIN} 4755 ${JAIL_SOURCE}/usr/bin/sudo
 if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
     ${GIT_BIN} reset --hard
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/ServeD-OS.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
     ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
 else
     cd /var
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone https://github.com/VerKnowSys/ServeD-OS.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
 fi
 
 note "Installing svdsysup"
@@ -223,20 +231,20 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG
 note "Setting up rc configuration"
 ${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.conf.served >> ${RC_FILE}.conf
 
-note "Installing secadm"
-${MKDIR_BIN} -p /etc/rules
-${CP_BIN} -v ${SERVED_REPO}/kernel/modules/${SYSTEM_VERSION}/secadm.ko /boot/modules/
-${CP_BIN} -v ${SERVED_REPO}/etc/rc.d/secadm /etc/rc.d/
-${CP_BIN} -v ${SERVED_REPO}/etc/secadm.rules /etc/
-${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
-${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm ${JAIL_SOURCE}/usr/sbin/
-${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
-${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* ${JAIL_SOURCE}/usr/lib/
+# note "Installing secadm"
+# ${MKDIR_BIN} -p /etc/rules
+# ${CP_BIN} -v ${SERVED_REPO}/kernel/modules/${SYSTEM_VERSION}/secadm.ko /boot/modules/
+# ${CP_BIN} -v ${SERVED_REPO}/etc/rc.d/secadm /etc/rc.d/
+# ${CP_BIN} -v ${SERVED_REPO}/etc/secadm.rules /etc/
+# ${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
+# ${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm ${JAIL_SOURCE}/usr/sbin/
+# ${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
+# ${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* ${JAIL_SOURCE}/usr/lib/
 
-note "Updating secadm.rules file in each governed cells"
-for cell in $(ls ${DEFAULT_JAIL_PRISON_LOCATION}/Cells); do
-    cp ${SERVED_REPO}/etc/secadm.rules ${DEFAULT_JAIL_PRISON_LOCATION}/Cells/${cell}/etc/
-done
+# note "Updating secadm.rules file in each governed cells"
+# for cell in $(ls ${DEFAULT_JAIL_PRISON_LOCATION}/Cells); do
+#     cp ${SERVED_REPO}/etc/secadm.rules ${DEFAULT_JAIL_PRISON_LOCATION}/Cells/${cell}/etc/
+# done
 
 note "Setting up network"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
@@ -338,11 +346,12 @@ ${TOUCH_BIN} /.svdsysup
 disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
 for disk in $disks; do
     note "Updating ZFS bootcode for disk: ${disk}"
-    gpart bootcode -b ${DEFAULT_JAILS_ROOT_DIR}/boot/pmbr -p ${DEFAULT_JAILS_ROOT_DIR}/boot/gptzfsboot -i 1 ${disk}
+    gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
     if [ "$?" != "0" ]; then
         warn "Bootcode update finished with an error for disk: ${disk}!"
         sleep 2
     fi
+    kldxref ${VKS_KERNEL}
 done
 
 exit 0
