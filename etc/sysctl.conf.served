@@ -62,8 +62,8 @@ net.inet.ip.portrange.last=65535
 # stops route cache degregation during a high-bandwidth flood
 # http://www.freebsd.org/doc/en/books/handbook/securing-freebsd.html
 #net.inet.ip.rtexpire=2
-net.inet.ip.rtminexpire=2
-net.inet.ip.rtmaxcache=1024
+#net.inet.ip.rtminexpire=2
+#net.inet.ip.rtmaxcache=1024
 
 # Security
 net.inet.ip.redirect=0
