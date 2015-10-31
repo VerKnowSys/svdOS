@@ -19,7 +19,7 @@ SERVED_REPO="/var/ServeD-OS"
 SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
 SOFIN_REPO="/var/sofin"
 BASE_SOURCE="http://served.verknowsys.com/"
-SYS_ARCH="$(uname -m)"
+ARCH="$(uname -m)"
 INTERNAL_NETWORK="10.2.1.0"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
@@ -67,9 +67,9 @@ if [ ! -f "${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz" ]; then
     fi
 fi
 
-if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz" ]; then
+if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}-${ARCH}.tar.xz" ]; then
     printf "Jails archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz
+    fetch ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-${VERSION}-${ARCH}.tar.xz -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}-${ARCH}.tar.xz
     if [ "$?" != "0" ]; then
         printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
         exit 1
@@ -113,7 +113,7 @@ if [ "$?" != "0" ]; then
 fi
 
 printf "Installing Base ${SYSTEM_VERSION}-${VERSION}\n"
-tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}.tar.xz --directory /
+tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}-${ARCH}.tar.xz --directory /
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
@@ -151,7 +151,11 @@ if [ -d "/SystemUsers" ]; then
 fi
 
 note "Installing additional Software"
-sofin get Rsync Syslog-ng Thess Mosh Pstree Vim Tmux Atop Vifm Mc >> ${LOG}  2>&1
+if [ "${ARCH}" = "arm" ]; then
+    sofin get Rsync Mosh Pstree Vim Tmux Atop Vifm >> ${LOG}  2>&1 # Thess
+else
+    sofin get Rsync Syslog-ng Mosh Pstree Vim Tmux Atop Vifm Mc >> ${LOG}  2>&1 # Thess
+fi
 
 note "Updating /boot"
 rm -rf /tmp/tmp-loader.conf || true
