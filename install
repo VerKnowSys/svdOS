@@ -58,9 +58,9 @@ done
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/$(uname -s)-${SYSTEM_VERSION}-$(uname -m)"
 
 mkdir -p ${CACHE_DIR} >> ${LOG} 2>&1
-if [ ! -f "${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz" ]; then
+if [ ! -f "${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz" ]; then
     printf "Base snapshot archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz -o ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz
+    fetch ${BASE_SOURCE}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz -o ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz
     if [ "$?" != "0" ]; then
         printf "Software snapshot isn't available, or something just went wrong while fetching archive\n"
         exit 1
@@ -78,7 +78,7 @@ fi
 
 # create Software ${ORIGIN}:
 printf "Initializing origin of /Software\n"
-xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}.zfs.xz | zfs receive ${DEFAULT_ZPOOL}/Software >> ${LOG} 2>&1 || true
+xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive ${DEFAULT_ZPOOL}/Software >> ${LOG} 2>&1 || true
 zfs set mountpoint=none ${DEFAULT_ZPOOL}/Software >> ${LOG} 2>&1 || true
 zfs set compression=lz4 ${DEFAULT_ZPOOL}/Software
 zfs set dedup=on ${DEFAULT_ZPOOL}/Software
