@@ -106,7 +106,11 @@ zfs create ${ZROOT}${DESTBASE} 2>> ${LOG_OUTPUT} || true
 note "Preparing kernel configuration"
 GIT_SSL_NO_VERIFY=true /Software/Git/exports/git reset --hard >> ${LOG_OUTPUT}
 rm -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+if [ "${ARCH}" = "arm" ]; then
+    cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${OS_VER}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+else
+    cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+fi
 
 note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
 # spawn svdinit first:
