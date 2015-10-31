@@ -15,7 +15,6 @@ else
     exit 1
 fi
 
-SYS_ARCH="$(${UNAME_BIN} -m)"
 
 readonly NAME="$1"
 if [ "${NAME}" = "" ]; then
@@ -37,11 +36,15 @@ if [ "${DESTINATION}" = "" ]; then
     error "No destination path specified!"
 fi
 
+readonly ARCH="$5"
+if [ "${ARCH}" = "" ]; then
+    error "No architecture specified!"
+fi
 
 compile_jails () {
-    BASE_SNAPSHOT="${NAME}-${OS_VER}-${VERSION}"
+    BASE_SNAPSHOT="${NAME}-${OS_VER}-${VERSION}-${ARCH}"
     note "Compiling snapshot: ${BASE_SNAPSHOT}"
-    REALPATH="/Jails/Shared/FreeBSD-${OS_VER}-${SYS_ARCH}"
+    REALPATH="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
     tar cfJ ../${BASE_SNAPSHOT}.tar.xz "${REALPATH}" >> /var/log/messages 2>&1
     if [ "$?" = "0" ]; then
         note "Compiled successfully."

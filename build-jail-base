@@ -22,9 +22,18 @@ if [ "${CURRENT_BRANCH}" = "" ]; then
     error "No current branch specified!"
 fi
 
+readonly ARCH="$4"
+if [ "${ARCH}" = "" ]; then
+    error "No architecture specified!"
+fi
+if [ "${ARCH}" = "arm" ]; then
+    readonly ARCH_SUBTYPE="armv6hf"
+else
+    readonly ARCH_SUBTYPE="${ARCH}"
+fi
+
 readonly ZROOT="zroot"
 readonly PARALLEL_JOBS="10"
-readonly ARCH="$(uname -m)"
 readonly SHARED_DIR="/Jails/Shared"
 readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
 readonly CONF_FILE="/etc/sofin.conf.sh"
@@ -48,7 +57,7 @@ fi
 # main()
 echo "Process started for version: ${OS_VER}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
 note "Process started for version: ${OS_VER}: $(date +%F@%H-%M)"
-note "Processing version: ${OS_VER}"
+note "Processing version: ${OS_VER} with architecture: ${ARCH}"
 
 rm -rf /usr/obj /usr/src
 cd /var
@@ -81,7 +90,7 @@ mount /usr/ramdisk-src > /dev/null 2>&1 || true
 mount /usr/ramdisk-obj > /dev/null 2>&1 || true
 
 note "Syncing sources to ramdisk-src"
-time /Software/Rsync/exports/rsync -a -r /var/${OS_VER}-src/ /usr/ramdisk-src/
+time /Software/Rsync/exports/rsync -a -r /var/${OS_VER}-src/ /usr/ramdisk-src
 
 note "Linking src and obj"
 ln -s /usr/ramdisk-src /usr/src
@@ -135,11 +144,11 @@ set -e
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
-    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
+    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE}  >> ${LOG_OUTPUT}  2>&1
 fi
 
 note "Building kernel"
-make buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} >> ${LOG_OUTPUT} 2>&1
+make buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
 
 note "Wiping out previous world"
 rm -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>&1
@@ -148,11 +157,11 @@ note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
 zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin
 
 note "Installing kernel"
-make installkernel DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
+make installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Installing world"
-    make installworld DEBUG= DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1
+    make installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
     note "Merging build host configuration"
     mergemaster -a -P >> ${LOG_OUTPUT}  2>&1
@@ -161,7 +170,7 @@ if [ -z "${DONT_BUILD_WORLD}" ]; then
     mergemaster -a -P -D${DESTBASE} >> ${LOG_OUTPUT}  2>&1
 
     note "Deleting old dirs, files and libs"
-    yes y | make delete-old delete-old-libs DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>&1 || true
+    yes y | make delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
 fi
 
 if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
