@@ -68,10 +68,9 @@ if [ ! -d "${OS_VER}-src" ]; then
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true
 fi
 
-note "Setting up src.conf and make.conf"
-${RM_BIN} -fv /etc/make.conf /etc/src.conf >> ${LOG_OUTPUT}
+note "Setting up src.conf"
+${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
 ${CP_BIN} -v /var/ServeD-OS/etc/src.conf /etc/ >> ${LOG_OUTPUT}
-${CP_BIN} -v /var/ServeD-OS/etc/make.conf /etc/ >> ${LOG_OUTPUT}
 
 mkdir -p /var/ccache /usr/ramdisk-src /usr/ramdisk-obj > /dev/null 2>&1 || true
 set +e
@@ -160,17 +159,17 @@ note "Installing kernel"
 make installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
+    note "Merging Pre-buildworld configuration"
+    mergemaster -p >> ${LOG_OUTPUT} 2>&1
+
     note "Installing world"
     make installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
-    note "Merging build host configuration"
-    mergemaster -a -P >> ${LOG_OUTPUT}  2>&1
-
-    note "Merging ${DESTBASE} configuration"
-    mergemaster -a -P -D${DESTBASE} >> ${LOG_OUTPUT}  2>&1
+    note "Merging configuration: ${DESTBASE}"
+    mergemaster -F -U -i -D${DESTBASE} >> ${LOG_OUTPUT}  2>&1
 
     note "Deleting old dirs, files and libs"
-    yes y | make delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
+    yes | make delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
 fi
 
 if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then

@@ -22,13 +22,18 @@ readonly MAIN_REPOSITORY="https://github.com/hardenedbsd/hardenedbsd-stable/"
 readonly CURRENT_BRANCH="hardened/current/master" # 10-stable
 readonly DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
 readonly BASE_NAME="ServeD-OS-Base"
-readonly ARCH="arm"
+if [ -z "${ARCH}" ]; then
+    readonly ARCH="$(uname -m)"
+fi
 
+cp -v etc/make.conf /etc/
+
+git reset --hard
 case ${ARCH} in
     arm)
+        sed -i '' -e 's/^COPTFLAGS.*$/COPTFLAGS=-O2 -pipe -ffast-math -fno-strict-aliasing -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
         sed -i '' -e 's/^CPUTYPE.*$/CPUTYPE?=armv6/' etc/make.conf
         sed -i '' -e 's/^CFLAGS.*$/CFLAGS=-O2 -pipe -fno-omit-frame-pointer -fno-strict-aliasing -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
-        sed -i '' -e 's/^COPTFLAGS.*$/-O2 -pipe -ffast-math -fno-strict-aliasing -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
         ;;
 
     amd64)
