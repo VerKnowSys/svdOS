@@ -59,7 +59,6 @@ echo "Process started for version: ${OS_VER}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
 note "Process started for version: ${OS_VER}: $(date +%F@%H-%M)"
 note "Processing version: ${OS_VER} with architecture: ${ARCH}"
 
-rm -rf /usr/obj /usr/src
 cd /var
 if [ ! -d "${OS_VER}-src" ]; then
     # svn co http://svn0.eu.FreeBSD.org/base/releng/${OS_VER} ${OS_VER}-src
@@ -72,28 +71,27 @@ note "Setting up src.conf"
 ${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
 ${CP_BIN} -v /var/ServeD-OS/etc/src.conf /etc/ >> ${LOG_OUTPUT}
 
-mkdir -p /var/ccache /usr/ramdisk-src /usr/ramdisk-obj > /dev/null 2>&1 || true
+mkdir -p /var/ccache /usr/src /usr/obj > /dev/null 2>&1 || true
 set +e
-grep '/usr/ramdisk-' /etc/fstab > /dev/null 2>&1
+grep '/usr/src' /etc/fstab > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    printf "md     /usr/ramdisk-src    mfs   rw,-s3G 0 0\n" >> /etc/fstab
-    printf "md     /usr/ramdisk-obj    mfs   rw,-s4G 0 0\n" >> /etc/fstab
+    printf "md     /usr/src    mfs   rw,-s4G 0 0\n" >> /etc/fstab
+fi
+grep '/usr/obj' /etc/fstab > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    printf "md     /usr/obj    mfs   rw,-s4G 0 0\n" >> /etc/fstab
 fi
 set -e
 cd /
 
 note "ReMounting ramdisks"
-umount -f /usr/ramdisk-src > /dev/null 2>&1 || true
-umount -f /usr/ramdisk-obj > /dev/null 2>&1 || true
-mount /usr/ramdisk-src > /dev/null 2>&1 || true
-mount /usr/ramdisk-obj > /dev/null 2>&1 || true
+umount -f /usr/src || true
+umount -f /usr/obj || true
+mount /usr/src
+mount /usr/obj
 
-note "Syncing sources to ramdisk-src"
-time /Software/Rsync/exports/rsync -a -r /var/${OS_VER}-src/ /usr/ramdisk-src
-
-note "Linking src and obj"
-ln -s /usr/ramdisk-src /usr/src
-ln -s /usr/ramdisk-obj /usr/obj
+note "Syncing sources to src"
+time /Software/Rsync/exports/rsync -v -a -r /var/${OS_VER}-src/ /usr/src/
 
 note "Setting up build host specific settings"
 zfs set primarycache=metadata ${ZROOT}
