@@ -56,7 +56,8 @@ compile_jails () {
     note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
     scp ../${BASE_SNAPSHOT}.tar.xz ${DESTINATION}
     if [ "$?" = "0" ]; then
-        note "Finished successfully."
+        note "Finished successfully. Updating latest version on remote destination"
+        ssh dmilith@served.verknowsys.com "sed -i '' -e \"s/v.*/${VERSION}/\" /Users/dmilith/ServeD/Web/version-latest"
     else
         error "Something went wrong while uploading Jails base."
         exit 1
