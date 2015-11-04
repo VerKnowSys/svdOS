@@ -159,7 +159,7 @@ make installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     rm -rf /var/tmp/temproot
     note "Merging Pre-buildworld configuration"
-    mergemaster -p -F -a
+    mergemaster -p -a
 
     note "Installing world"
     make installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
