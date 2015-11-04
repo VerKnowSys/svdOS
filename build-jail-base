@@ -157,14 +157,15 @@ note "Installing kernel"
 make installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
+    rm -rf /var/tmp/temproot
     note "Merging Pre-buildworld configuration"
-    mergemaster -p >> ${LOG_OUTPUT} 2>&1
+    mergemaster -p -F -a
 
     note "Installing world"
     make installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
     note "Merging configuration: ${DESTBASE}"
-    mergemaster -F -U -i -D${DESTBASE} >> ${LOG_OUTPUT}  2>&1
+    mergemaster -P -a -D${DESTBASE}
 
     note "Deleting old dirs, files and libs"
     yes | make delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
