@@ -193,10 +193,10 @@ clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DS
 chflags schg ${SVDINIT_BIN} || true
 
 note "Setting up shell environment"
-${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
+${TEST_BIN} -f /etc/zshenv || ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
 
 note "Setting up default boot loader configuration"
-${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
+${TEST_BIN} -f /boot/loader.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
 
 note "Setting up make.conf and src.conf"
 ${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/make.conf >> ${LOG} 2>&1
@@ -227,10 +227,10 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
 ${CAP_MKDB_BIN} /etc/login.conf >> ${LOG} 2>&1
 
 note "Setting up sysctl"
-${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
+${TEST_BIN} -f /etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
 
 note "Setting up periodic"
-${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
+${TEST_BIN} -f /etc/periodic.conf ||${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
 
 note "Setting up rc configuration"
 ${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.conf.served >> ${RC_FILE}.conf
@@ -280,7 +280,7 @@ note "Setting up rc"
 ${GREP_BIN} 'ServeD' ${RC_FILE} > /dev/null || (${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${SED_BIN} -i '' -e '$d' ${RC_FILE} && ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.served >> ${RC_FILE})
 
 note "Setting up core services"
-${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
+${TEST_BIN} -f /etc/ttys || ${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys >> ${LOG} 2>&1
 
 note "Setting up Unbound DNS resolver for domains bound to Jails"
 test ! -f ${UNBOUND_CONF_DIR}/jailed.conf && ${PRINTF_BIN} "include: ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry/*/jail-domains/*.conf\n" > ${UNBOUND_CONF_DIR}/jailed.conf
@@ -319,7 +319,7 @@ done
 ${PRINTF_BIN} "\nServeD OS ${VERSION}\n\n" > /etc/motd
 
 note "Destroying unnecessary datasets.."
-${TEST_BIN} -d /usr/src && ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
+${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
 ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/var/mail >> ${LOG} 2>&1 || true
 ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software@--head-- >> ${LOG} 2>&1 || true
 
