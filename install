@@ -152,9 +152,9 @@ fi
 
 note "Installing additional Software"
 if [ "${ARCH}" = "arm" ]; then
-    sofin get Rsync Mosh Pstree Vim Tmux Atop Vifm >> ${LOG}  2>&1 # Thess
+    sofin get Rsync Mosh Pstree Vim Tmux Atop Vifm
 else
-    sofin get Rsync Syslog-ng Mosh Pstree Vim Tmux Atop Vifm Mc >> ${LOG}  2>&1 # Thess
+    sofin get Rsync Syslog-ng Mosh Pstree Vim Tmux Atop Vifm Mc
 fi
 
 note "Updating /boot"
