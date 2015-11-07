@@ -10,15 +10,6 @@ stty status '^T' 2> /dev/null
 trap : 2
 trap "echo 'Update interrupted'; exit 1" 3
 
-HOME=/
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
-UPDATE_PENDING_INDICATOR="/.svdsysup"
-SERVED_REPO="/var/ServeD-OS"
-DEFAULT_ZPOOL="zroot"
-OS_NAME="FreeBSD"
-OS_VERSION="11.0"
-OS_ARCH="amd64"
-
 # ANSI color definitions
 readonly red='\033[31;40m'
 readonly green='\033[32;40m'
@@ -31,6 +22,18 @@ readonly white='\033[38;40m'
 readonly reset='\033[0m'
 export HOME PATH
 
+HOME=/
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+UPDATE_PENDING_INDICATOR="/.svdsysup"
+SERVED_REPO="/var/ServeD-OS"
+DEFAULT_ZPOOL="zroot"
+OS_NAME="FreeBSD"
+OS_ARCH="amd64"
+OS_VERSION="11.0" # the default
+stored_version="$(zfs get -H -o value com.svd:os_version)"
+if [ "${stored_version}" != "-" ]; then
+    OS_VERSION="${stored_version}"
+fi
 
 # svd part:
 
