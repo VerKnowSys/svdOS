@@ -67,9 +67,9 @@ if [ ! -f "${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz" ]; 
     fi
 fi
 
-if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}-${ARCH}.tar.xz" ]; then
+if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz" ]; then
     printf "Jails archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-${VERSION}-${ARCH}.tar.xz -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}-${ARCH}.tar.xz
+    fetch ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz
     if [ "$?" != "0" ]; then
         printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
         exit 1
@@ -112,8 +112,8 @@ if [ "$?" != "0" ]; then
     exit 1
 fi
 
-printf "Installing Base ${SYSTEM_VERSION}-${VERSION}\n"
-tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-${VERSION}-${ARCH}.tar.xz --directory /
+printf "Installing Base ${SYSTEM_VERSION}-v${VERSION}\n"
+tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz --directory /
 
 if [ "$?" != "0" ]; then
     printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
@@ -311,12 +311,12 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
 
 TIMESTAMP="$(date +%F-%s)"
 for snap_ in /Software; do
-    snap="${DEFAULT_ZPOOL}${snap_}/root@${SYSTEM_VERSION}-${VERSION}-${TIMESTAMP}"
+    snap="${DEFAULT_ZPOOL}${snap_}/root@${SYSTEM_VERSION}-v${VERSION}-${TIMESTAMP}"
     note "Creating Software/root snapshot: ${snap}"
     ${ZFS_BIN} snapshot "${snap}"
 done
 
-${PRINTF_BIN} "\nServeD OS ${VERSION}\n\n" > /etc/motd
+${PRINTF_BIN} "\nServeD OS v${VERSION}\n\n" > /etc/motd
 
 note "Destroying unnecessary datasets.."
 ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
@@ -334,16 +334,6 @@ service syslog-ng restart
 note "Installing Governor to host system"
 ${INSTALL_BIN} ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
 
-${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
-if [ "$?" = "0" ]; then
-    note
-    note "ServeD system update complete!"
-else
-    note
-    note "ServeD system installation complete!"
-    note "You must reboot to apply new kernel and system configuration."
-fi
-
 note "Updating system version property"
 ${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
 ${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${DEFAULT_ZPOOL}/ROOT
@@ -358,5 +348,15 @@ for disk in $disks; do
     fi
     kldxref ${VKS_KERNEL}
 done
+
+${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
+if [ "$?" = "0" ]; then
+    note
+    note "ServeD system update complete!"
+else
+    note
+    note "ServeD system installation complete!"
+    note "You must reboot to apply new kernel and system configuration."
+fi
 
 exit 0
