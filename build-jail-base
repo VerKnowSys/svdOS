@@ -65,6 +65,11 @@ if [ ! -d "${OS_VER}-src" ]; then
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${OS_VER}-src
     cd ${OS_VER}-src
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true
+else
+    cd ${OS_VER}-src
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout ${CURRENT_BRANCH} > /dev/null 2>&1
+    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull origin ${CURRENT_BRANCH}
+    note "Working on branch: $(/Software/Git/exports/git branch)"
 fi
 
 note "Setting up src.conf"
@@ -91,7 +96,7 @@ mount /usr/src
 mount /usr/obj
 
 note "Syncing sources to src"
-time /Software/Rsync/exports/rsync -v -a -r /var/${OS_VER}-src/ /usr/src/
+time /Software/Rsync/exports/rsync -a -r /var/${OS_VER}-src/ /usr/src/
 
 note "Setting up build host specific settings"
 zfs set primarycache=metadata ${ZROOT}
@@ -101,9 +106,6 @@ zfs set compression=lz4 ${ZROOT}
 sysctl vfs.zfs.prefetch_disable=1
 
 cd /usr/src
-GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout ${CURRENT_BRANCH} > /dev/null 2>&1
-GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull origin ${CURRENT_BRANCH}
-note "Working on branch: $(/Software/Git/exports/git branch)"
 TIMESTAMP="$(date +%F-%s)"
 DESTBASE="${SHARED_DIR}/FreeBSD-${OS_VER}-${ARCH}"
 zfs create ${ZROOT}${DESTBASE} 2>> ${LOG_OUTPUT} || true
