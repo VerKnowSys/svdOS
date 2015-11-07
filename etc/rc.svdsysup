@@ -91,7 +91,7 @@ zfs mount ${DEFAULT_ZPOOL}/Software/root || true
 zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH} || true
 for folder in bin lib libexec sbin usr; do
     note "Synchronizing /Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH}/${folder}/ with /${folder}"
-    /Software/Rsync-static/exports/rsync -v -l -p -E -A -X -o -g -t -r --delete /Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH}/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2> /svdsysupdate-sync-${TIMESTAMP}.log.err
+    /Software/Rsync-static/exports/rsync -v -l -p -E -A -X -o -g -t -r --delete --exclude=/usr/home --exclude=/usr/ports /Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH}/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2> /svdsysupdate-sync-${TIMESTAMP}.log.err
 done
 
 note "Installing core software (gvr, svdinit)"
