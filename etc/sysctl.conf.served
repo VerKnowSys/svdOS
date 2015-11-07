@@ -137,7 +137,6 @@ net.inet.ip.intr_queue_maxlen=4096
 
 # This is for routers only
 net.inet.ip.forwarding=1
-net.inet.ip.fastforwarding=1
 
 # Should be increased when you have A LOT of files on server
 # (Increase until vfs.ufs.dirhash_mem becomes lower)
@@ -196,3 +195,6 @@ security.mac.portacl.rules=uid:501:tcp:80,uid:501:tcp:443,uid:501:tcp:12
 # This is required for several intepreters like Node or Elixir to not crash with SIGABRT/SIGSEGV:
 hardening.pax.mprotect.status=1
 hardening.pax.pageexec.status=1
+
+# for Erlang/Elixir:
+hardening.pax.disallow_map32bit.status=1
