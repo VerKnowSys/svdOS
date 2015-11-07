@@ -30,10 +30,6 @@ DEFAULT_ZPOOL="zroot"
 OS_NAME="FreeBSD"
 OS_ARCH="amd64"
 OS_VERSION="11.0" # the default
-stored_version="$(zfs get -H -o value com.svd:os_version)"
-if [ "${stored_version}" != "-" ]; then
-    OS_VERSION="${stored_version}"
-fi
 
 # svd part:
 
@@ -80,18 +76,25 @@ zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_before
 zfs set readonly=off ${DEFAULT_ZPOOL}/ROOT/default || true
 zfs set readonly=off ${DEFAULT_ZPOOL}/usr || true
 
-# lower your voices
-chflags noschg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login
-
-zfs mount ${DEFAULT_ZPOOL}/Software/root || true
-zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH} || true
 rm -f /svdsysupdate-sync-${TIMESTAMP}.log || true
 touch /svdsysupdate-sync-${TIMESTAMP}.log || true
+
+# lower your voices
+chflags noschg /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> /svdsysupdate-sync-${TIMESTAMP}.log 2> /svdsysupdate-sync-${TIMESTAMP}.log.err
+
+# Update system version from system property
+stored_version="$(zfs get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
+if [ "${stored_version}" != "-" ]; then
+    export OS_VERSION="${stored_version}"
+fi
+zfs mount ${DEFAULT_ZPOOL}/Software/root || true
+zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH} || true
 for folder in bin lib libexec sbin usr; do
-    /Software/Rsync/exports/rsync --links --delete --perms --executability --acls --xattrs --owner --group --times --recursive /Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH}/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>>&1
+    note "Synchronizing /Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH}/${folder}/ with /${folder}"
+    /Software/Rsync-static/exports/rsync -v -l -p -E -A -X -o -g -t -r --delete /Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH}/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2> /svdsysupdate-sync-${TIMESTAMP}.log.err
 done
 
-note "Installing core software (gvr, svdinit, secadm)"
+note "Installing core software (gvr, svdinit)"
 /usr/bin/install ${SERVED_REPO}/gvr /usr/bin
 clang -static -o ${SERVED_REPO}/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP
 /usr/bin/install ${SERVED_REPO}/svdinit /sbin/
@@ -99,23 +102,23 @@ clang -static -o ${SERVED_REPO}/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lc
 # cp ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
 
 # return my powers
-chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login
-
-zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_after
-zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
+chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> /svdsysupdate-sync-${TIMESTAMP}.log 2> /svdsysupdate-sync-${TIMESTAMP}.log.err
 
 rm -f ${UPDATE_PENDING_INDICATOR}
 note "Upgrading zpool if necessary"
-zpool upgrade ${DEFAULT_ZPOOL} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>>&1
+zpool upgrade ${DEFAULT_ZPOOL} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
 disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
 for disk in $disks; do
     note "Updating ZFS bootcode for disk: ${disk}"
-    gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>>&1
+    gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
     if [ "$?" != "0" ]; then
         warn "Bootcode update finished with an error for disk: ${disk}!"
         sleep 2
     fi
 done
+
+zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_after
+zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
 
 sleep 2
 

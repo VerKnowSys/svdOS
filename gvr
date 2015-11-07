@@ -28,7 +28,7 @@ SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
 IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="11.0"
-stored_version="$(zfs get -H -o value com.svd:os_version)"
+stored_version="$(zfs get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${stored_version}" != "-" ]; then
     DEFAULT_VERSION="${stored_version}"
 fi
