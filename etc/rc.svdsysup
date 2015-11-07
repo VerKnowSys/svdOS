@@ -54,7 +54,7 @@ debug () {
     if [ "${DEBUG}" = "true" ]; then
         cecho "# $1" ${magenta} # NOTE: this "#" is required for debug mode to work properly with generation of ~/.profile and /etc/profile_sofin files!
     else
-        cecho "# $1" ${magenta} >> ${LOG} 2>/dev/null
+        cecho "# $1" ${magenta} >> ${LOG} 2>>/dev/null
         # cecho " ~ $1" ${magenta} >> ${LOG}
     fi
 }
@@ -88,7 +88,7 @@ zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH} || t
 rm -f /svdsysupdate-sync-${TIMESTAMP}.log || true
 touch /svdsysupdate-sync-${TIMESTAMP}.log || true
 for folder in bin lib libexec sbin usr; do
-    /Software/Rsync/exports/rsync --links --delete --compress --perms --executability --acls --xattrs --owner --group --times --recursive /Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH}/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>&1
+    /Software/Rsync/exports/rsync --links --delete --perms --executability --acls --xattrs --owner --group --times --recursive /Jails/Shared/${OS_NAME}-${OS_VERSION}-${OS_ARCH}/${folder}/ /${folder} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>>&1
 done
 
 note "Installing core software (gvr, svdinit, secadm)"
@@ -104,13 +104,13 @@ chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcr
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_after
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
 
-zpool upgrade ${DEFAULT_ZPOOL} >> /svdsysupdate-sync-${TIMESTAMP}.log
 rm -f ${UPDATE_PENDING_INDICATOR}
 note "Upgrading zpool if necessary"
+zpool upgrade ${DEFAULT_ZPOOL} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>>&1
 disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
 for disk in $disks; do
     note "Updating ZFS bootcode for disk: ${disk}"
-    gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
+    gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk} >> /svdsysupdate-sync-${TIMESTAMP}.log 2>>&1
     if [ "$?" != "0" ]; then
         warn "Bootcode update finished with an error for disk: ${disk}!"
         sleep 2
