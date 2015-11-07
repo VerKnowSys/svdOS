@@ -18,8 +18,9 @@ if [ "${VERSION}" = "" ]; then
     exit 1
 fi
 readonly OS_VER="11.0" # 10.2
-readonly MAIN_REPOSITORY="https://github.com/hardenedbsd/hardenedbsd-stable/"
+readonly MAIN_REPOSITORY="https://github.com/HardenedBSD/hardenedBSD.git"
 readonly CURRENT_BRANCH="hardened/current/master"
+# readonly MAIN_REPOSITORY="https://github.com/hardenedbsd/hardenedbsd-stable/"
 readonly DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
 readonly BASE_NAME="ServeD-OS-Base"
 if [ -z "${ARCH}" ]; then
