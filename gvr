@@ -28,6 +28,10 @@ SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
 IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="11.0"
+stored_version="$(zfs get -H -o value com.svd:os_version)"
+if [ "${stored_version}" != "-" ]; then
+    DEFAULT_VERSION="${stored_version}"
+fi
 DEFAULT_JAIL_USER="worker"
 DEFAULT_WORKER_UID="501"
 DEFAULT_QUOTA_LIMIT="3G"
