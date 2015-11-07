@@ -96,7 +96,7 @@ mount /usr/src
 mount /usr/obj
 
 note "Syncing sources to src"
-time /Software/Rsync/exports/rsync -a -r /var/${OS_VER}-src/ /usr/src/
+time /Software/Rsync-static/exports/rsync -a -r /var/${OS_VER}-src/ /usr/src/
 
 note "Setting up build host specific settings"
 zfs set primarycache=metadata ${ZROOT}
