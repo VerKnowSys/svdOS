@@ -14,7 +14,7 @@ unset CFLAGS
 # HardenedBSD base branch:
 readonly VERSION="$1"
 if [ "${VERSION}" = "" ]; then
-    echo "No version specified! Specify f.e.: v0.99.10"
+    echo "No version specified! Specify f.e.: 0.99.10"
     exit 1
 fi
 readonly OS_VER="11.0" # 10.2

@@ -42,7 +42,7 @@ if [ "${ARCH}" = "" ]; then
 fi
 
 compile_jails () {
-    BASE_SNAPSHOT="${NAME}-${OS_VER}-${VERSION}-${ARCH}"
+    BASE_SNAPSHOT="${NAME}-${OS_VER}-v${VERSION}-${ARCH}"
     note "Compiling snapshot: ${BASE_SNAPSHOT}"
     REALPATH="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
     tar cfJ ../${BASE_SNAPSHOT}.tar.xz "${REALPATH}" >> /var/log/messages 2>&1

@@ -4,6 +4,7 @@
 #
 
 sshd_enable="YES"
+casperd_enable="YES"
 accounting_enable="YES"
 icmp_drop_redirect="YES"
 icmp_log_redirect="YES"
