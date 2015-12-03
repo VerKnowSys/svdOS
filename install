@@ -307,6 +307,9 @@ ${TOUCH_BIN} /var/unbound/lan-zones.conf
 
 note "Setting up default ssl root certificates"
 ${MKDIR_BIN} -p /etc/ssl >> ${LOG} 2>&1
+if [ -f /etc/ssl/cert.pem ]; then
+    ${RM_BIN} -f /etc/ssl/cert.pem >> ${LOG} 2>&1
+fi
 ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
 
 TIMESTAMP="$(date +%F-%s)"
