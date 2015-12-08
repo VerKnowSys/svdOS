@@ -9,6 +9,7 @@ options TEKEN_UTF8
 options HZ=250
 options TCP_SIGNATURE
 options DUMMYNET
+options KTR
 
 device pf
 device pflog
