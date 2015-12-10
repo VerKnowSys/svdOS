@@ -96,7 +96,8 @@ done
 
 note "Installing core software (gvr, svdinit)"
 /usr/bin/install ${SERVED_REPO}/gvr /usr/bin
-clang -static -o ${SERVED_REPO}/svdinit ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP
+clang -c ${SERVED_REPO}/src/getmntopts.c -o ${SERVED_REPO}/src/getmntopts.o
+clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP ${SERVED_REPO}/src/getmntopts.o
 /usr/bin/install ${SERVED_REPO}/svdinit /sbin/
 # cp ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
 # cp ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
