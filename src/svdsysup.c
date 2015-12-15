@@ -86,6 +86,10 @@ static const char rcsid[] =
 #include "mntopts.h"
 #include "pathnames.h"
 
+#ifndef RB_REROOT
+    #define RB_REROOT       0x200000
+#endif
+
 #define SECONDS_INTERVAL 30 /* time interval in seconds */
 #define _PATH_SYSUP_PENDING "/.svdsysup"
 #define _PATH_RUNSVDSYSUP "/etc/rc.svdsysup"
