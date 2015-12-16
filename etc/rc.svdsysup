@@ -81,6 +81,7 @@ touch /svdsysupdate-sync-${TIMESTAMP}.log || true
 
 # lower your voices
 chflags noschg /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> /svdsysupdate-sync-${TIMESTAMP}.log 2> /svdsysupdate-sync-${TIMESTAMP}.log.err
+cp /sbin/svdinit /var/svdinit
 
 # Update system version from system property
 stored_version="$(zfs get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
@@ -95,10 +96,8 @@ for folder in bin lib libexec sbin usr; do
 done
 
 note "Installing core software (gvr, svdinit)"
-/usr/bin/install ${SERVED_REPO}/gvr /usr/bin
-clang -c ${SERVED_REPO}/src/getmntopts.c -o ${SERVED_REPO}/src/getmntopts.o
-clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP ${SERVED_REPO}/src/getmntopts.o
-/usr/bin/install ${SERVED_REPO}/svdinit /sbin/
+install /var/svdinit /sbin
+install ${SERVED_REPO}/gvr /usr/bin
 # cp ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
 # cp ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
 
