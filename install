@@ -186,6 +186,10 @@ else
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
 fi
 
+note "Updating resolv confs"
+${CP_BIN} -v ${SERVED_REPO}/etc/resolvconf.conf /etc/
+${CP_BIN} -v ${SERVED_REPO}/etc/resolv.conf /etc/
+
 note "Installing svdsysup"
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
 chflags noschg ${SVDINIT_BIN} || true
