@@ -154,7 +154,7 @@ note "Installing additional Software"
 if [ "${ARCH}" = "arm" ]; then
     sofin get Rsync-static Mosh Pstree Vim Tmux Atop Vifm
 else
-    sofin get Rsync-static Syslog-ng Mosh Pstree Vim Tmux Atop Vifm Mc
+    sofin get Rsync-static Syslog-ng Mosh Pstree Vim Tmux Atop Vifm Mc Glusterfs
 fi
 
 note "Updating /boot"
