@@ -489,23 +489,21 @@ log {
     note "Reloading syslog"
     service syslog-ng reload || service syslog-ng restart
 
-    note "Setting up home domains"
-    PTR_BLOCK=""
-    for ip in ${JAIL_IPS}; do
-        PTR_BLOCK="
-${PTR_BLOCK}
-local-data: \"${JAIL_NAME}.home. 10800 IN A ${ip}\"
-local-data-ptr: \"${ip} ${JAIL_NAME}.home\"
-"
-    done
+    note "Setting up home domains from main IPs: ${JAIL_ADDRESSES}"
+    MAIN_JAIL_ADDRESS="$(echo "${JAIL_ADDRESSES}" | ${SED_BIN} -e 's#/.*# #g')"
+
     ${PRINTF_BIN} "
 # Default home zone template:
 local-zone: \"${JAIL_NAME}.home.\" redirect
+
 local-data: \"${JAIL_NAME}.home. 10800 IN NS ns1.${JAIL_NAME}.home.\"
 local-data: \"${JAIL_NAME}.home. 10800 IN NS ns2.${JAIL_NAME}.home.\"
 local-data: \"${JAIL_NAME}.home. 1800  IN SRV 10 10 22 ${JAIL_NAME}.home.\"
 local-data: \"${JAIL_NAME}.home. 10800 IN SOA ns1.${JAIL_NAME}.home. ns2.${JAIL_NAME}.home. $(${DATE_BIN} +%s) 3600 600 86400 3600\"
-$PTR_BLOCK
+local-data: \"${JAIL_NAME}.home. 10800 IN A ${MAIN_JAIL_ADDRESS}\"
+
+local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.home\"
+
 " >> ${JAIL_LOCAL_DOMAIN_CONF}
 
     # note "Reloading Unbound"
