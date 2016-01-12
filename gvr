@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.16.0"
+VERSION="0.16.1"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
 BRIDGE_DEVICE="bridge0"
@@ -62,6 +62,7 @@ DEFAULT_HOST_ADDRESS="/etc/host.default"
 DEFAULT_JAILS_FIB="1"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
+GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} | ${GREP_BIN} -v grep | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
 if [ "${DEFAULT_INTERFACE}" = "" ]; then
     error "Something is wrong with network routing. Governor can't continue"
 fi
@@ -458,6 +459,7 @@ ${JAIL_NAME} {
     note "Building initial jail environment"
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}.home:" ${CELL}/etc/rc.conf
+    ${SED_BIN} -i '' -e "s:__HOST_IP:${GVR_HOST_IP_ADDR}:" ${CELL}/etc/resolv.conf
 
     ${CP_BIN} /etc/zshenv ${CELL}/etc
     # ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/tmp ${CELL}/var/tmp
