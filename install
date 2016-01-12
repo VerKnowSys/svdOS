@@ -319,9 +319,10 @@ server:
     hide-identity: yes
     hide-version: yes
 
+    include: /var/unbound/conf.d/*.conf
+
 include: /var/unbound/forward.conf
 include: /var/unbound/lan-zones.conf
-include: /var/unbound/conf.d/*.conf
 " > ${UNBOUND_CONF}
 ${CHOWN_BIN} -R unbound ${UNBOUND_CONF}
 # XXX: these should be generated more precisely:
