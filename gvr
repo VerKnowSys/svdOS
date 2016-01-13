@@ -513,18 +513,13 @@ local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.home\"
 
 " >> ${JAIL_LOCAL_DOMAIN_CONF}
 
-    # note "Reloading Unbound"
-    # service local_unbound configtest && service local_unbound restart
-    # if [ "$?" = "0" ]; then
-    #     note "Setting default DNS resolver for jail."
-    #     if [ -f ${DEFAULT_HOST_ADDRESS} ]; then
-    #         HOST_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS})"
-    #         ${PRINTF_BIN} "nameserver ${HOST_ADDRESS}\n" > ${CELL}/etc/resolv.conf
-    #     fi
-    # fi
-
-    note "Launching jail: ${JAIL_NAME}"
-    jail_start "${JAIL_NAME}"
+    note "Initializing '${JAIL_NAME}.home' zone."
+    service local_unbound configtest && service local_unbound restart
+    if [ "$?" = "0" ]; then
+        jail_start "${JAIL_NAME}"
+    else
+        error "Failed to successfully reload Unbound resolver!"
+    fi
 }
 
 
