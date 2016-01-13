@@ -183,14 +183,14 @@ else
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}
 fi
 
-bin/install
+bin/install >> ${LOG} 2>&1
 . /etc/sofin.conf.sh
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
     note "Setting up ZSH shell"
     ${PRINTF_BIN} "/Software/Zsh/exports/zsh\n" >> /etc/shells
-    ${CHSH_BIN} -s /Software/Zsh/exports/zsh >> ${LOG} 2>&1
+    ${CHSH_BIN} -s /Software/Zsh/exports/zsh
 fi
 
 if [ -d "/SystemUsers" ]; then
@@ -198,7 +198,7 @@ if [ -d "/SystemUsers" ]; then
     if [ -d "/root" ]; then
         ${CP_BIN} -R /root/ /SystemUsers
     fi
-    ${PW_BIN} user mod root -d /SystemUsers >> ${LOG} 2>&1
+    ${PW_BIN} user mod root -d /SystemUsers
 fi
 
 note "Installing additional Software"
