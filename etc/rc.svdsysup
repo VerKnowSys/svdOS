@@ -117,8 +117,15 @@ for disk in $disks; do
     fi
 done
 
+note "Creating after update snapshots.."
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}_after
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}_after
+
+note "Destroying oldest snapshots of '${DEFAULT_ZPOOL}/ROOT/default'."
+zfs destroy "$(zfs list -H -t snap -o name | grep "${DEFAULT_ZPOOL}/ROOT/default@" | sed 's/.*@//;s/ .*//' | tail -n 1)"
+
+note "Destroying oldest snapshots of '${DEFAULT_ZPOOL}/usr'."
+zfs destroy "$(zfs list -H -t snap -o name | grep "${DEFAULT_ZPOOL}/usr@" | sed 's/.*@//;s/ .*//' | tail -n 1)"
 
 sleep 2
 
