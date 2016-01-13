@@ -77,10 +77,11 @@ if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz" ];
     fi
 fi
 
-# create Software ${ORIGIN}:
-printf "Initializing origin of /Software\n"
+set +e
 zfs list 2>/dev/null | grep 'Software/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
+    set -e
+    printf "Initializing origin of /Software\n"
     zfs create ${DEFAULT_ZPOOL}/Software
     zfs set mountpoint=none ${DEFAULT_ZPOOL}/Software
     xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive ${DEFAULT_ZPOOL}/Software/root
@@ -92,6 +93,7 @@ if [ "$?" != "0" ]; then
     # zfs clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/root >> ${LOG} 2>&1
     # zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN} >> ${LOG} 2>&1
 fi
+set -e
 
 # create zvols for special snappable dirs
 for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /User /User/root /SystemUsers /Services /Services/root /Shared /Shared/root; do
