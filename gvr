@@ -410,7 +410,7 @@ ${JAIL_NAME} {
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
     ${CP_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/ >> ${LOG_FILE} 2>&1
     ${CP_BIN} -v /usr/bin/sofin ${CELL}/usr/bin/sofin >> ${LOG_FILE} 2>&1
-    test -f ${CELL}/etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf >> ${LOG_FILE} 2>&1
+    test -f ${CELL}/etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf
 
     note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software"
     ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software@" > /dev/null 2>&1
@@ -424,8 +424,8 @@ ${JAIL_NAME} {
 
     note "Creating jail filesystems"
     for dset in Software Services User; do
-        ${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset} >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
+        ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}
         ${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
         ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
         ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
@@ -804,11 +804,11 @@ jail_destroy () {
     if [ "${ans}" = "YES" ]; then
         jail_stop $*
         note "Destroying datasets."
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${SENTRY}" >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${CELL}" >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" >> ${LOG_FILE} 2>&1
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/User/${JAIL_NAME}" >> ${LOG_FILE} 2>&1
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${SENTRY}"
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${CELL}"
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
+        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
         ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
         ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
         # service local_unbound configtest && service local_unbound restart
