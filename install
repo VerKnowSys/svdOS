@@ -123,11 +123,18 @@ for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR}
     fi
 done
 
-zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root || true
-zfs set mountpoint=/Shared ${DEFAULT_ZPOOL}/Shared/root || true
-
 set +e
-printf "Snapshotting root origins..\n"
+sroot="$(zfs get -H -o value mountpoint ${DEFAULT_ZPOOL}/Services/root)"
+if [ "${sroot}" != "/Services" ]; then
+    zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root
+fi
+
+sroot="$(zfs get -H -o value mountpoint ${DEFAULT_ZPOOL}/Shared/root)"
+if [ "${sroot}" != "/Shared" ]; then
+    zfs set mountpoint=/Shared ${DEFAULT_ZPOOL}/Shared/root
+fi
+
+printf "Snapshotting available root origins..\n"
 zfs list -t snap 2>/dev/null | grep 'Services/root@' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     printf " * ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}\n"
