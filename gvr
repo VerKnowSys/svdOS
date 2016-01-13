@@ -407,9 +407,6 @@ ${JAIL_NAME} {
     fi
     note "Cloning last jail base"
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
-    ${CP_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/
-    ${CP_BIN} -v /usr/bin/s ${CELL}/usr/bin/s
-    test -f ${CELL}/etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf
 
     note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software/root"
     ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}" > /dev/null 2>&1
@@ -462,6 +459,13 @@ ${JAIL_NAME} {
     ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
     ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}.home:" ${CELL}/etc/rc.conf
     ${SED_BIN} -i '' -e "s:__HOST_IP:${GVR_HOST_IP_ADDR}:" ${CELL}/etc/resolv.conf
+
+    note "Installing Sofin to '${CELL}'."
+    ${CP_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/
+    ${CP_BIN} -v /usr/bin/s ${CELL}/usr/bin/s
+
+    note "Updating sysctl.conf"
+    test -f ${CELL}/etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf
 
     ${CP_BIN} /etc/zshenv ${CELL}/etc
     # ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/tmp ${CELL}/var/tmp
