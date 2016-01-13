@@ -388,12 +388,12 @@ for snap_ in /Software; do
     ${ZFS_BIN} snapshot "${snap}"
 done
 
-${PRINTF_BIN} "\nServeD OS v${VERSION}\n\n" > /etc/motd
+${PRINTF_BIN} "\nServeD-OS v${VERSION}\n\n" > /etc/motd
 
 note "Destroying unnecessary datasets.."
 ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
 ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/var/mail >> ${LOG} 2>&1 || true
-${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software@--head-- >> ${LOG} 2>&1 || true
+${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software/root@--head-- >> ${LOG} 2>&1 || true
 
 note "Cleaning unnecessary directories"
 ${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
