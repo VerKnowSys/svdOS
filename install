@@ -243,8 +243,8 @@ clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DS
 strip ${SVDINIT_BIN}
 chflags schg ${SVDINIT_BIN} || true
 
-note "Setting up shell environment"
-${TEST_BIN} -f /etc/zshenv || ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
+note "Setting up default shell environment"
+${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
 
 note "Setting up default boot loader configuration"
 ${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
