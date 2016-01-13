@@ -133,7 +133,7 @@ fi
 
 zfs list -t snap 2>/dev/null | grep 'ROOT/default@' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    printf "  * ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}\n"
+    printf " * ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}\n"
     zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}
 fi
 set -e
