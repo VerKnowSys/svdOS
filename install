@@ -211,7 +211,7 @@ if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
     ${GIT_BIN} reset --hard
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
-    ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
+    # ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
 else
     cd /var
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
