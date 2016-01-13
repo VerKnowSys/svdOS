@@ -202,19 +202,19 @@ else
     s get Rsync-static Syslog-ng Mosh Pstree Vim Tmux Atop Vifm Mc Glusterfs
 fi
 
-note "Updating /boot"
-rm -rf /tmp/tmp-loader.conf || true
-cp -v /boot/loader.conf /tmp/tmp-loader.conf >> ${LOG}  2>&1
+note "Synchronizing /boot and boot loader configuration."
+${RM_BIN} -f /tmp/tmp-loader.conf
+${CP_BIN} -v /boot/loader.conf /tmp/tmp-loader.conf
 /Software/Rsync-static/exports/rsync --exclude 'kernel' --links --delete --compress --perms --executability --acls --xattrs --owner --group --times --recursive ${JAIL_SOURCE}/boot/ /boot >> ${LOG}  2>&1
-cp -v /tmp/tmp-loader.conf /boot/loader.conf >> ${LOG}  2>&1
+${CP_BIN} -v /tmp/tmp-loader.conf /boot/loader.conf
 
 note "Installing custom kernel"
 if [ ! -d "${VKS_KERNEL}" ]; then
-    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL} >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}
 else
-    ${RM_BIN} -rf ${VKS_KERNEL}.old >> ${LOG} 2>&1 || true
-    ${MV_BIN} ${VKS_KERNEL} ${VKS_KERNEL}.old >> ${LOG} 2>&1
-    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL} >> ${LOG} 2>&1
+    ${RM_BIN} -rf ${VKS_KERNEL}.old
+    ${MV_BIN} ${VKS_KERNEL} ${VKS_KERNEL}.old
+    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}
 fi
 
 note "Updating sudo for ${SYSTEM_VERSION} jail base"
@@ -244,23 +244,23 @@ strip ${SVDINIT_BIN}
 chflags schg ${SVDINIT_BIN} || true
 
 note "Setting up default shell environment"
-${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv
 
 note "Setting up default boot loader configuration"
-${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf
 
 note "Setting up make.conf and src.conf"
-${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/make.conf >> ${LOG} 2>&1
-${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/src.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/make.conf
+${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/src.conf
 
 note "Setting up mime types"
-${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types
 
 # replace default syslogd with preconfigured syslog-ng
 note "Setting up system logger"
 ${MKDIR_BIN} -p /etc/syslog-ng
-${CP_BIN} ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf /etc/syslog-ng/
-${CP_BIN} ${SERVED_REPO}/etc/syslog-ng/scl.conf /etc/syslog-ng/
+${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf /etc/syslog-ng/
+${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf /etc/syslog-ng/
 
 SYSLOGNG_PREFIX="/Software/Syslog-ng"
 ${RM_BIN} -rf ${SYSLOGNG_PREFIX}/etc
@@ -274,17 +274,14 @@ ${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
 # ${SED_BIN} -i '' -e 's#command=.*$#command="/Software/Unbound/exports/unbound"#' /etc/rc.d/local_unbound
 
 note "Setting up login"
-${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf >> ${LOG} 2>&1
-${CAP_MKDB_BIN} /etc/login.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf
+${CAP_MKDB_BIN} /etc/login.conf
 
 note "Setting up sysctl"
-${TEST_BIN} -f /etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf >> ${LOG} 2>&1
+${TEST_BIN} -f /etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf
 
 note "Setting up periodic"
-${TEST_BIN} -f /etc/periodic.conf ||${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf >> ${LOG} 2>&1
-
-note "Setting up rc configuration"
-${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.conf.served >> ${RC_FILE}.conf
+${TEST_BIN} -f /etc/periodic.conf ||${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf
 
 
 note "Setting up network"
@@ -306,7 +303,7 @@ fi
 
 note "Setting up firewall"
 DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS})"
-${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE} >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE}
 ${SED_BIN} -i '' -e "s/__INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE}
 ${SED_BIN} -i '' -e "s/__EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FILE}
 ${SED_BIN} -i '' -e "s/__EXTERNAL_ADDRESS/${DEFAULT_INTERFACE_ADDRESS}/g" ${PF_CONF_FILE}
@@ -360,19 +357,20 @@ server:
 include: /var/unbound/forward.conf
 include: /var/unbound/lan-zones.conf
 " > ${UNBOUND_CONF}
+
 ${CHOWN_BIN} -R unbound ${UNBOUND_CONF}
 # XXX: these should be generated more precisely:
 ${TOUCH_BIN} /var/unbound/forward.conf
 ${TOUCH_BIN} /var/unbound/lan-zones.conf
 
+readonly TIMESTAMP="$(date +%F-%s)"
 note "Setting up default ssl root certificates"
-${MKDIR_BIN} -p /etc/ssl >> ${LOG} 2>&1
+${MKDIR_BIN} -p /etc/ssl
 if [ -f /etc/ssl/cert.pem ]; then
-    ${RM_BIN} -f /etc/ssl/cert.pem >> ${LOG} 2>&1
+    ${MV_BIN} -v /etc/ssl/cert.pem /etc/ssl/cert.pem.old-${TIMESTAMP}
 fi
-${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem
 
-TIMESTAMP="$(date +%F-%s)"
 for snap_ in /Software; do
     snap="${DEFAULT_ZPOOL}${snap_}/root@${SYSTEM_VERSION}-v${VERSION}-${TIMESTAMP}"
     note "Creating Software/root snapshot: ${snap}"
@@ -381,6 +379,7 @@ done
 
 ${PRINTF_BIN} "\nServeD-OS v${VERSION}\n\n" > /etc/motd
 
+set +e
 note "Destroying unnecessary datasets.."
 ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
 ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/var/mail >> ${LOG} 2>&1 || true
@@ -389,13 +388,12 @@ ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software/root@--head-- >> ${LOG} 2>&1 || tru
 note "Cleaning unnecessary directories"
 ${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
 
-set +e
 note "Replacing syslogd with syslog-ng"
 service syslogd stop >/dev/null 2>&1
 service syslog-ng restart
 
 note "Installing Governor to host system"
-${INSTALL_BIN} ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
+${INSTALL_BIN} -v ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
 
 note "Updating system version property"
 ${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
