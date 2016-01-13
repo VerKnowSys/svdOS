@@ -79,20 +79,26 @@ fi
 
 # create Software ${ORIGIN}:
 printf "Initializing origin of /Software\n"
-xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive ${DEFAULT_ZPOOL}/Software >> ${LOG} 2>&1 || true
-zfs set mountpoint=none ${DEFAULT_ZPOOL}/Software >> ${LOG} 2>&1 || true
-zfs set compression=lz4 ${DEFAULT_ZPOOL}/Software
-zfs set dedup=on ${DEFAULT_ZPOOL}/Software
-zfs snapshot ${DEFAULT_ZPOOL}/Software@${ORIGIN} >> ${LOG} 2>&1 || true
-zfs clone ${DEFAULT_ZPOOL}/Software@${ORIGIN} ${DEFAULT_ZPOOL}/Software/root >> ${LOG} 2>&1 || true
-zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN} >> ${LOG} 2>&1 || true
+zfs list 2>/dev/null | grep 'Software/root' > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    zfs create ${DEFAULT_ZPOOL}/Software
+    zfs set mountpoint=none ${DEFAULT_ZPOOL}/Software
+    xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive ${DEFAULT_ZPOOL}/Software/root
+    zfs set compression=lz4 ${DEFAULT_ZPOOL}/Software
+    zfs set dedup=on ${DEFAULT_ZPOOL}/Software
+
+    zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root
+    # zfs snapshot ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} >> ${LOG} 2>&1
+    # zfs clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/root >> ${LOG} 2>&1
+    # zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN} >> ${LOG} 2>&1
+fi
 
 # create zvols for special snappable dirs
 for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /User /User/root /SystemUsers /Services /Services/root /Shared /Shared/root; do
     if [ ! -d "${mntpoint}" ]; then
         printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
         case ${mntpoint} in
-            /Software|/User|/Services|/Shared)
+            /User|/Services|/Shared)
                 zfs create -o compression=lz4 -o dedup=on -o mountpoint=none -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}" || true
                     ;;
             *)
@@ -102,7 +108,6 @@ for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR}
     fi
 done
 
-zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root || true
 zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root || true
 zfs set mountpoint=/Shared ${DEFAULT_ZPOOL}/Shared/root || true
 
