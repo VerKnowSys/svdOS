@@ -150,8 +150,6 @@ fi
 bin/install
 . /etc/sofin.conf.sh
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
-printf "Installing Sofin environment with jail source: ${JAIL_SOURCE}\n"
-PREFIX="${JAIL_SOURCE}" bin/install
 
 if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
     note "Setting up ZSH shell"
