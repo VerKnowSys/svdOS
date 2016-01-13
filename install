@@ -222,7 +222,7 @@ grep -R 'ServeD-Install-Script' /etc/rc.conf >/dev/null 2>&1
 if [ "$?" != "0" ]; then
     note "ServeD special not found in /etc/rc.conf. Appending default RC configuration."
     set -e
-    ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf >> /etc/rc.conf
+    ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
 fi
 set -e
 
