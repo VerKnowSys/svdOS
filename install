@@ -209,7 +209,7 @@ note "Setting up shell environment"
 ${TEST_BIN} -f /etc/zshenv || ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv >> ${LOG} 2>&1
 
 note "Setting up default boot loader configuration"
-${TEST_BIN} -f /boot/loader.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
+${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf >> ${LOG} 2>&1
 
 note "Setting up make.conf and src.conf"
 ${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/make.conf >> ${LOG} 2>&1
