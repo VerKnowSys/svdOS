@@ -138,15 +138,7 @@ if [ "$?" != "0" ]; then
 fi
 set -e
 
-# printf "Flushing secadm rules before installation\n"
-# test -x /usr/sbin/secadm && secadm flush || true
-
-# if [ "$?" != "0" ]; then
-#     printf "ERROR: Binary snapshot is corrupted or something just went wrong with archive\n"
-#     exit 1
-# fi
-
-printf "Installing Base ${SYSTEM_VERSION}-v${VERSION}\n"
+printf "Installing ServeD-Base ${SYSTEM_VERSION}-v${VERSION}\n"
 tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz --directory /
 if [ "$?" != "0" ]; then
     printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
@@ -217,15 +209,6 @@ else
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
 fi
 
-set +e
-grep -R 'ServeD-Install-Script' /etc/rc.conf >/dev/null 2>&1
-if [ "$?" != "0" ]; then
-    note "ServeD special not found in /etc/rc.conf. Appending default RC configuration."
-    set -e
-    ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
-fi
-set -e
-
 note "Updating resolv confs"
 ${CP_BIN} -v ${SERVED_REPO}/etc/resolvconf.conf /etc/
 ${CP_BIN} -v ${SERVED_REPO}/etc/resolv.conf /etc/
@@ -281,20 +264,6 @@ ${TEST_BIN} -f /etc/periodic.conf ||${CP_BIN} -v ${SERVED_REPO}/etc/periodic.con
 note "Setting up rc configuration"
 ${GREP_BIN} 'ServeD' ${RC_FILE}.conf > /dev/null || ${CAT_BIN} ${SERVED_REPO}${RC_FILE}.conf.served >> ${RC_FILE}.conf
 
-# note "Installing secadm"
-# ${MKDIR_BIN} -p /etc/rules
-# ${CP_BIN} -v ${SERVED_REPO}/kernel/modules/${SYSTEM_VERSION}/secadm.ko /boot/modules/
-# ${CP_BIN} -v ${SERVED_REPO}/etc/rc.d/secadm /etc/rc.d/
-# ${CP_BIN} -v ${SERVED_REPO}/etc/secadm.rules /etc/
-# ${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm /usr/sbin/
-# ${CP_BIN} -v ${SERVED_REPO}/usr/sbin/secadm ${JAIL_SOURCE}/usr/sbin/
-# ${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* /usr/lib/
-# ${CP_BIN} -v ${SERVED_REPO}/usr/lib/libsecadm.so* ${JAIL_SOURCE}/usr/lib/
-
-# note "Updating secadm.rules file in each governed cells"
-# for cell in $(ls ${DEFAULT_JAIL_PRISON_LOCATION}/Cells); do
-#     cp ${SERVED_REPO}/etc/secadm.rules ${DEFAULT_JAIL_PRISON_LOCATION}/Cells/${cell}/etc/
-# done
 
 note "Setting up network"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
