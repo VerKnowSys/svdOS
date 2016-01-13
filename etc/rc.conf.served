@@ -1,6 +1,6 @@
 
 #
-# Start of options added by ServeD install script:
+# Start of options added by 'ServeD-Install-Script'
 #
 
 sshd_enable="YES"
