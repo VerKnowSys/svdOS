@@ -135,6 +135,12 @@ if [ "${sroot}" != "/Shared" ]; then
 fi
 
 printf "Snapshotting available root origins..\n"
+zfs list -t snap 2>/dev/null | grep 'Software/root@' > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    printf " * ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}
+fi
+
 zfs list -t snap 2>/dev/null | grep 'Services/root@' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     printf " * ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}\n"
