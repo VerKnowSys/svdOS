@@ -193,6 +193,15 @@ else
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
 fi
 
+set +e
+grep -R 'ServeD-Install-Script' /etc/rc.conf >/dev/null 2>&1
+if [ "$?" != "0" ]; then
+    note "ServeD special not found in /etc/rc.conf. Appending default RC configuration."
+    set -e
+    ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf >> /etc/rc.conf
+fi
+set -e
+
 note "Updating resolv confs"
 ${CP_BIN} -v ${SERVED_REPO}/etc/resolvconf.conf /etc/
 ${CP_BIN} -v ${SERVED_REPO}/etc/resolv.conf /etc/
