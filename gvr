@@ -408,8 +408,8 @@ ${JAIL_NAME} {
     note "Cloning last jail base"
     TIMESTAMP="$(date +%F-%s)"
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
-    ${CP_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/ >> ${LOG_FILE} 2>&1
-    ${CP_BIN} -v /usr/bin/sofin ${CELL}/usr/bin/sofin >> ${LOG_FILE} 2>&1
+    ${CP_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/
+    ${CP_BIN} -v /usr/bin/s ${CELL}/usr/bin/s
     test -f ${CELL}/etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf
 
     note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software"
