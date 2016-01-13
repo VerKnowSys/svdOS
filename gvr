@@ -392,20 +392,21 @@ ${JAIL_NAME} {
 " >> ${JAIL_CONF_FILE}
     fi
 
-    DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
-
-    note "Looking for snapshots of ${DEFAULT_JAILS_ROOT_DIR}"
     LAST=""
+    DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
+    note "Looking for snapshots of ${DEFAULT_JAILS_ROOT_DIR}"
     ${ZFS_BIN} list -t snap | ${GREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        LAST="$(${ZFS_BIN} list -t snap | ${GREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" | ${SED_BIN} 's/.*@//;s/ .*//' | tail -n 1)"
+        LAST="$(${ZFS_BIN} list -t snap 2> /dev/null | ${GREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" | ${SED_BIN} 's/.*@//;s/ .*//' | tail -n 1)"
+        note "Last snapshot of '${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}' is '${LAST}'."
     fi
     if [ "${LAST}" = "" ]; then
-        warn "No snapshots found of ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}. Creating first one"
         LAST="$(date +%F-%s)"
+        warn "No snapshots found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Creating first one: '${LAST}'."
         ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}
     fi
-    note "Cloning last jail base"
+
+    note "Cloning last jail system base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}' to ${CELL}"
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
 
     note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software/root"
