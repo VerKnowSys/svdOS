@@ -406,7 +406,6 @@ ${JAIL_NAME} {
         ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}
     fi
     note "Cloning last jail base"
-    TIMESTAMP="$(date +%F-%s)"
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
     ${CP_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/
     ${CP_BIN} -v /usr/bin/s ${CELL}/usr/bin/s
@@ -418,7 +417,6 @@ ${JAIL_NAME} {
         error "Something went wrong. Missing origin snapshot: '${DEFAULT_ZPOOL}/Software/root@${ORIGIN}'. Aborting."
     fi
     note "Cloning from origin: ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}"
-    TIMESTAMP="$(date +%F-%s)"
     debug "Cloning /Software/root: '${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}'"
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
 
