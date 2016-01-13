@@ -84,14 +84,22 @@ if [ "$?" != "0" ]; then
     printf "Initializing origin of /Software\n"
     zfs create ${DEFAULT_ZPOOL}/Software
     zfs set mountpoint=none ${DEFAULT_ZPOOL}/Software
+
+    printf "Installing /Software/root from snapshot\n"
     xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive ${DEFAULT_ZPOOL}/Software/root
+    zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root
     zfs set compression=lz4 ${DEFAULT_ZPOOL}/Software
     zfs set dedup=on ${DEFAULT_ZPOOL}/Software
 
-    zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root
-    # zfs snapshot ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} >> ${LOG} 2>&1
-    # zfs clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/root >> ${LOG} 2>&1
-    # zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN} >> ${LOG} 2>&1
+    printf "Snapshotting root origins:\n"
+    printf "  * ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}
+    printf "  * ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}
+    printf "  * ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}
+    printf "  * ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}
 fi
 set -e
 
