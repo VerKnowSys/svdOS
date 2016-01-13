@@ -93,16 +93,31 @@ if [ "$?" != "0" ]; then
 fi
 set -e
 
+
+create_dset_if_doesnt_exist () {
+    set +e
+    mntpt="${1}"
+    mount_opt="${2}"
+    zfs list | grep "${DEFAULT_ZPOOL}${mntpt}" > /dev/null 2>&1
+    if [ "$?" != "0" ]; then
+        set -e
+        zfs create -o mountpoint=${mount_opt} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpt}"
+    fi
+    set -e
+}
+
+
 # create zvols for special snappable dirs
 for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /User /User/root /SystemUsers /Services /Services/root /Shared /Shared/root; do
     if [ ! -d "${mntpoint}" ]; then
         printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
         case ${mntpoint} in
             /User|/Services|/Shared)
-                zfs create -o compression=lz4 -o dedup=on -o mountpoint=none -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}" || true
-                    ;;
+                create_dset_if_doesnt_exist "${mntpoint}" "none" # mountpoint=none for all "root" datasets
+                ;;
+
             *)
-                zfs create -o compression=lz4 -o dedup=on -o mountpoint=${mntpoint} -o casesensitivity=sensitive "${DEFAULT_ZPOOL}${mntpoint}" || true
+                create_dset_if_doesnt_exist "${mntpoint}" "${mntpoint}"
                 ;;
         esac
     fi
