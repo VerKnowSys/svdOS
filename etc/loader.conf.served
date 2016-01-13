@@ -3,6 +3,7 @@ kernel="verknowsys"
 kernels="verknowsys kernel"
 random_load="YES"
 zfs_load="YES"
+fuse_load="YES"
 mac_bsdextended_load="NO"
 mac_seeotheruids_load="NO"
 mac_portacl_load="NO" # KP under 11.
