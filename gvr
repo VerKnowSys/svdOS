@@ -412,15 +412,15 @@ ${JAIL_NAME} {
     ${CP_BIN} -v /usr/bin/s ${CELL}/usr/bin/s
     test -f ${CELL}/etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf
 
-    note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software"
-    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software@" > /dev/null 2>&1
+    note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software/root"
+    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}" > /dev/null 2>&1
     if [ "$?" != "0" ]; then
-        error "Something went wrong. No /Software origin snapshot found. You require ServeD >= v0.9.4"
+        error "Something went wrong. Missing origin snapshot: '${DEFAULT_ZPOOL}/Software/root@${ORIGIN}'. Aborting."
     fi
-    note "Cloning from origin: ${DEFAULT_ZPOOL}/Software@${ORIGIN}"
+    note "Cloning from origin: ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}"
     TIMESTAMP="$(date +%F-%s)"
-    debug "Cloning /Software : ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
-    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+    debug "Cloning /Software/root: '${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}'"
+    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
 
     note "Creating jail filesystems"
     for dset in Software Services User; do
