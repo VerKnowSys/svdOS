@@ -423,7 +423,7 @@ ${JAIL_NAME} {
     ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
 
     note "Creating jail filesystems"
-    for dset in Software Services User; do
+    for dset in Software Services User Shared; do
         ${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
         ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}
         ${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
@@ -436,7 +436,9 @@ ${JAIL_NAME} {
     note "Setting up ZFS deduplication on Jails and Software"
     ${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Software
     ${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Jails
+    ${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Shared
     ${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Software
+    ${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Shared
 
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
@@ -450,6 +452,7 @@ ${JAIL_NAME} {
                     "${CELL}/var/tmp" \
                     "${CELL}/Software" \
                     "${CELL}/Services" \
+                    "${CELL}/Shared" \
                     "${CELL}/User"
 
     note "Copying volatile part of jail"
@@ -645,10 +648,11 @@ jail_start () {
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
         ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+        ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}
 
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s /sbin/zfs /sbin/sysctl # Make sure that these have setuid set!
         ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software /Shared
         ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 4755 /Software/Sudo-static/exports/sudo
         ${JEXEC_BIN} -U root ${JAIL_NAME} sysctl kern.securelevel=${KERN_SECURELEVEL} > /dev/null 2>&1
 
