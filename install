@@ -381,9 +381,18 @@ ${PRINTF_BIN} "\nServeD-OS v${VERSION}\n\n" > /etc/motd
 
 set +e
 note "Destroying unnecessary datasets.."
-${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
-${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/var/mail >> ${LOG} 2>&1 || true
-${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software/root@--head-- >> ${LOG} 2>&1 || true
+zfs list | grep "${DEFAULT_ZPOOL}/usr/src" > /dev/null 2>&1
+if [ "$?" = "0" ]; then
+    ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
+fi
+zfs list | grep "${DEFAULT_ZPOOL}/var/mail" > /dev/null 2>&1
+if [ "$?" = "0" ]; then
+    ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/var/mail || true
+fi
+zfs list | grep "${DEFAULT_ZPOOL}/Software/root@--head--" > /dev/null 2>&1
+if [ "$?" = "0" ]; then
+    ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software/root@--head--
+fi
 
 note "Cleaning unnecessary directories"
 ${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
