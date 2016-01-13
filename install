@@ -8,7 +8,7 @@ VKS_KERNEL="/boot/verknowsys"
 SYSTEM_VERSION="11.0" # the default
 ORIGIN="origin"
 CACHE_DIR="/var/.cache"
-DEFAULT_JAIL_PRISON_LOCATION='/Jails/Prison'
+DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_SYSTEM_PREFIX="/usr/bin"
@@ -90,16 +90,6 @@ if [ "$?" != "0" ]; then
     zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root
     zfs set compression=lz4 ${DEFAULT_ZPOOL}/Software
     zfs set dedup=on ${DEFAULT_ZPOOL}/Software
-
-    printf "Snapshotting root origins:\n"
-    printf "  * ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}
-    printf "  * ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}
-    printf "  * ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}
-    printf "  * ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}
 fi
 set -e
 
@@ -121,17 +111,43 @@ done
 zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root || true
 zfs set mountpoint=/Shared ${DEFAULT_ZPOOL}/Shared/root || true
 
+set +e
+printf "Snapshotting root origins..\n"
+zfs list -t snap 2>/dev/null | grep 'Services/root@' > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    printf " * ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}
+fi
+
+zfs list -t snap 2>/dev/null | grep 'Software/root@' > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    printf " * ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}
+fi
+
+zfs list -t snap 2>/dev/null | grep 'ROOT@' > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    printf " * ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}
+fi
+
+zfs list -t snap 2>/dev/null | grep 'ROOT/default@' > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    printf "  * ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}\n"
+    zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}
+fi
+set -e
+
 # printf "Flushing secadm rules before installation\n"
 # test -x /usr/sbin/secadm && secadm flush || true
 
-if [ "$?" != "0" ]; then
-    printf "ERROR: Binary snapshot is corrupted or something just went wrong with archive\n"
-    exit 1
-fi
+# if [ "$?" != "0" ]; then
+#     printf "ERROR: Binary snapshot is corrupted or something just went wrong with archive\n"
+#     exit 1
+# fi
 
 printf "Installing Base ${SYSTEM_VERSION}-v${VERSION}\n"
 tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz --directory /
-
 if [ "$?" != "0" ]; then
     printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
     exit 1
