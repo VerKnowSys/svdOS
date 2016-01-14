@@ -9,8 +9,7 @@ VKS_KERNEL="/boot/verknowsys"
 SYSTEM_VERSION="11.0" # the default
 ORIGIN="origin"
 CACHE_DIR="/var/.cache"
-DEFAULT_ZFS_CREATE_OPTS="-o dedup=on -o compression=lz4 -o mountpoint=none -o casesensitivity=sensitive
--o dedup=on -o compression=lz4 -o mountpoint=none -o casesensitivity=sensitive"
+DEFAULT_ZFS_CREATE_OPTS="-o dedup=on -o compression=lz4 -o mountpoint=none -o casesensitivity=sensitive"
 DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_ZPOOL="zroot"
