@@ -4,6 +4,7 @@ set -e
 
 # OS version same as destination system version 1:1
 DEFAULT_SOFIN_REPOSITORY="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
+DEFAULT_SHELL="/Software/Zsh/exports/zsh"
 VKS_KERNEL="/boot/verknowsys"
 SYSTEM_VERSION="11.0" # the default
 ORIGIN="origin"
@@ -25,6 +26,7 @@ INTERNAL_NETWORK="10.2.1.0"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
 GIT_BIN="/Software/Git/exports/git"
+ZFS_BIN="/sbin/zfs"
 SVDINIT_BIN="/sbin/svdinit"
 LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
 VERSION="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
@@ -51,7 +53,7 @@ fi
 
 # set lz4 compression and checksum mechanism for all pools:
 for pool in $(zpool list -H | awk '{print $1;}'); do
-    printf "Setting compression: lz4, checksum: fletcher4 on zpool: ${pool}\n" >> ${LOG} 2>&1
+    printf "Setting compression: lz4, checksum: fletcher4 on zpool: ${pool}\n"
     zfs set compression=lz4 ${pool}
     zfs set checksum=fletcher4 ${pool}
 done
@@ -124,14 +126,18 @@ for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR}
 done
 
 set +e
-sroot="$(zfs get -H -o value mountpoint ${DEFAULT_ZPOOL}/Services/root)"
+printf "Setting up default mountpoint values..\n"
+
+elem="${DEFAULT_ZPOOL}/Services/root"
+sroot="$(zfs get -H -o value mountpoint ${elem})"
 if [ "${sroot}" != "/Services" ]; then
-    zfs set mountpoint=/Services ${DEFAULT_ZPOOL}/Services/root
+    zfs set mountpoint=/Services ${elem}
 fi
 
-sroot="$(zfs get -H -o value mountpoint ${DEFAULT_ZPOOL}/Shared/root)"
+elem="${DEFAULT_ZPOOL}/Shared/root"
+sroot="$(zfs get -H -o value mountpoint ${elem})"
 if [ "${sroot}" != "/Shared" ]; then
-    zfs set mountpoint=/Shared ${DEFAULT_ZPOOL}/Shared/root
+    zfs set mountpoint=/Shared ${elem}
 fi
 
 printf "Snapshotting available root origins..\n"
@@ -179,18 +185,39 @@ if [ ! -d "${SOFIN_REPO}" ]; then
     cd ${SOFIN_REPO}
 else
     cd ${SOFIN_REPO}
-    ${GIT_BIN} stash save "install-update-$(date +%F)"
+    ${GIT_BIN} stash save "install-update-${TIMESTAMP}"
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}
 fi
+printf "Installing Sofin\n"
+bin/install
+readonly CONF_NAME="sofin.conf.sh"
+readonly CONF_FILE="/etc/${CONF_NAME}"
+if [ -e "${CONF_FILE}" ]; then
+    . "${CONF_FILE}"
+    s reload
+else
+    echo "FATAL: No configuration file found: ${CONF_FILE}. Sofin wasn't installed properly?"
+    exit 1
+fi
+note "Sofin installed."
 
-bin/install >> ${LOG} 2>&1
-. /etc/sofin.conf.sh
+################################################################################
+#
+#                   Sofin environment initialized from now on.
+#
+################################################################################
+
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
 
-if [ "${SHELL}" != "/Software/Zsh/exports/zsh" ]; then
-    note "Setting up ZSH shell"
-    ${PRINTF_BIN} "/Software/Zsh/exports/zsh\n" >> /etc/shells
-    ${CHSH_BIN} -s /Software/Zsh/exports/zsh
+if [ "${SHELL}" != "${DEFAULT_SHELL}" ]; then
+    set +e
+    ${GREP_BIN} -R 'Zsh/exports/zsh' /etc/shells > /dev/null 2>&1
+    if [ "$?" != "0" ]; then
+        note "Appending /etc/shells with: '${DEFAULT_SHELL}'."
+        ${PRINTF_BIN} "${DEFAULT_SHELL}\n" >> /etc/shells
+    fi
+    note "Setting '${DEFAULT_SHELL}' as default shell."
+    ${CHSH_BIN} -s ${DEFAULT_SHELL}
 fi
 
 if [ -d "/SystemUsers" ]; then
@@ -201,12 +228,17 @@ if [ -d "/SystemUsers" ]; then
     ${PW_BIN} user mod root -d /SystemUsers
 fi
 
-note "Installing additional Software"
-if [ "${ARCH}" = "arm" ]; then
-    s get Rsync-static Mosh Pstree Vim Tmux Atop Vifm
-else
-    s get Rsync-static Syslog-ng Mosh Pstree Vim Tmux Atop Vifm Mc Glusterfs
-fi
+list="Rsync-static Mosh Pstree Vim Tmux Vifm Atop Syslog-ng Mc"
+case ${ARCH} in
+    arm|arm32|arm64)
+        ;;
+
+    *)
+        list="${list} Glusterfs"
+        ;;
+esac
+note "Installing additional software bundles: ${list}"
+s get ${list}
 
 note "Synchronizing /boot and boot loader configuration."
 ${RM_BIN} -f /tmp/tmp-loader.conf
@@ -216,11 +248,11 @@ ${CP_BIN} -v /tmp/tmp-loader.conf /boot/loader.conf
 
 note "Installing custom kernel"
 if [ ! -d "${VKS_KERNEL}" ]; then
-    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}
+    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL} >> ${LOG} 2>&1
 else
     ${RM_BIN} -rf ${VKS_KERNEL}.old
-    ${MV_BIN} ${VKS_KERNEL} ${VKS_KERNEL}.old
-    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}
+    ${MV_BIN} ${VKS_KERNEL} ${VKS_KERNEL}.old >> ${LOG} 2>&1
+    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL} >> ${LOG} 2>&1
 fi
 
 note "Updating sudo for ${SYSTEM_VERSION} jail base"
@@ -318,11 +350,13 @@ ${SED_BIN} -i '' -e "s/__EXTERNAL_ADDRESS/${DEFAULT_INTERFACE_ADDRESS}/g" ${PF_C
 ${TOUCH_BIN} ${PF_CONF_FILE}.local
 
 set +e
-service pf restart > /dev/null 2>&1
+grep -R 'pf_enable' /etc/rc.conf 2>/dev/null | grep '"YES"' > /dev/null 2>&1
 if [ "$?" = "0" ]; then
+    note "PF firewall is restarting.."
+    service pf restart
     note "Applied firewall rules:\n$(${PFCTL_BIN} -sn)"
 else
-    warn "Firewall seems to be disabled. Skipping"
+    warn "PF firewall is disabled in '/etc/rc.conf'. Skipping"
 fi
 
 grep -R 'ServeD-Install-Script' /etc/rc.conf >/dev/null 2>&1
@@ -388,30 +422,34 @@ fi
 ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem
 
 for snap_ in /Software; do
-    snap="${DEFAULT_ZPOOL}${snap_}/root@${SYSTEM_VERSION}-v${VERSION}-${TIMESTAMP}"
-    note "Creating Software/root snapshot: ${snap}"
-    ${ZFS_BIN} snapshot "${snap}"
+    snap="${DEFAULT_ZPOOL}${snap_}/root"
+    note "Creating snapshots: ${snap}@${ORIGIN}, ${snap}@${TIMESTAMP}"
+    ${ZFS_BIN} snapshot "${snap}@${ORIGIN}"
+    ${ZFS_BIN} snapshot "${snap}@${TIMESTAMP}"
 done
 
-${PRINTF_BIN} "\nServeD-OS v${VERSION}\n\n" > /etc/motd
+${PRINTF_BIN} "\n   You deserve to be ServeD!   (v${VERSION})\n\n" > /etc/motd
 
-set +e
 note "Destroying unnecessary datasets.."
-zfs list | grep "${DEFAULT_ZPOOL}/usr/src" > /dev/null 2>&1
-if [ "$?" = "0" ]; then
-    ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src || true
-fi
-zfs list | grep "${DEFAULT_ZPOOL}/var/mail" > /dev/null 2>&1
-if [ "$?" = "0" ]; then
-    ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/var/mail || true
-fi
-zfs list | grep "${DEFAULT_ZPOOL}/Software/root@--head--" > /dev/null 2>&1
-if [ "$?" = "0" ]; then
-    ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/Software/root@--head--
-fi
+for snap in $(${ZFS_BIN} list -H -t snap -o name | grep '\-\-head\-\-'); do
+    note "Destroying head snapshot: ${snap}"
+    ${ZFS_BIN} destroy ${snap}
+done
 
-note "Cleaning unnecessary directories"
-${RM_BIN} -rfv /root /mnt /media /proc /COPYRIGHT /sys >> ${LOG} 2>&1
+for un in ${DEFAULT_ZPOOL}/usr/src ${DEFAULT_ZPOOL}/var/mail ${DEFAULT_ZPOOL}/usr/home ${DEFAULT_ZPOOL}/usr/src ${DEFAULT_ZPOOL}/var/mail ${DEFAULT_ZPOOL}/var/tmp ; do
+    set +e
+    ${ZFS_BIN} list | grep "${un}" > /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        set -e
+        note "Destroying ${un}"
+        ${ZFS_BIN} destroy ${un}
+    fi
+    set -e
+done
+
+NOT_NECESSARY="/root /mnt /media /proc /COPYRIGHT /sys /usr/src /var/mail /usr/home /var/mail /var/tmp"
+note "Cleaning unnecessary directories: '${NOT_NECESSARY}'."
+${RM_BIN} -rf "${NOT_NECESSARY}"
 
 note "Replacing syslogd with syslog-ng"
 service syslogd stop >/dev/null 2>&1
@@ -426,12 +464,13 @@ ${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${DEFAULT_ZPOOL}/ROOT
 ${TOUCH_BIN} /.svdsysup
 disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
 for disk in $disks; do
-    note "Updating ZFS bootcode for disk: ${disk}"
+    note "Updating ZFS bootcode for disk: '${disk}'."
     gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
     if [ "$?" != "0" ]; then
         warn "Bootcode update finished with an error for disk: ${disk}!"
         sleep 2
     fi
+    note "Generating new hints for '${VKS_KERNEL}' kernel."
     kldxref ${VKS_KERNEL}
 done
 
