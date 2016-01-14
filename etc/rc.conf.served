@@ -5,7 +5,7 @@
 
 sshd_enable="YES"
 casperd_enable="YES"
-accounting_enable="YES"
+accounting_enable="NO"
 icmp_drop_redirect="YES"
 icmp_log_redirect="YES"
 log_in_vain="YES"
