@@ -52,11 +52,11 @@ if [ "$(uname)" != "FreeBSD" ]; then
 fi
 
 # set lz4 compression and checksum mechanism for all pools:
-for pool in $(zpool list -H | awk '{print $1;}'); do
-    printf "Setting compression: lz4, checksum: fletcher4 on zpool: ${pool}\n"
-    zfs set compression=lz4 ${pool}
-    zfs set checksum=fletcher4 ${pool}
-done
+# for pool in $(zpool list -H | awk '{print $1;}'); do
+#     printf "Setting compression: lz4, checksum: fletcher4 on zpool: ${pool}\n"
+#     zfs set compression=lz4 ${pool}
+#     zfs set checksum=fletcher4 ${pool}
+# done
 
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/$(uname -s)-${SYSTEM_VERSION}-$(uname -m)"
 
