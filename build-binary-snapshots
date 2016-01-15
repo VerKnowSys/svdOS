@@ -53,6 +53,9 @@ compile_jails () {
         exit 1
     fi
 
+    note "Setting snapshot as readable by everyone"
+    chmod a+r ../${BASE_SNAPSHOT}.tar.xz
+
     note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
     scp ../${BASE_SNAPSHOT}.tar.xz ${DESTINATION}
     if [ "$?" = "0" ]; then
