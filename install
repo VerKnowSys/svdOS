@@ -12,7 +12,7 @@ VKS_KERNEL="/boot/verknowsys"
 SYSTEM_VERSION="11.0" # the default
 ORIGIN="origin"
 CACHE_DIR="/var/.cache"
-DEFAULT_ZFS_CREATE_OPTS="-o dedup=on -o compression=lz4 -o mountpoint=none -o casesensitivity=sensitive"
+ZFS_CREATE_OPTS_FOR_ROOT_ELEMS="-o dedup=on -o compression=lz4 -o mountpoint=none -o casesensitivity=sensitive"
 DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_ZPOOL="zroot"
@@ -87,21 +87,19 @@ set +e
 zfs list 2>/dev/null | grep 'Software/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     set -e
-    printf "Initializing origin of /Software\n"
-    zfs create ${DEFAULT_ZFS_CREATE_OPTS} ${DEFAULT_ZPOOL}/Software
+    printf "Initializing origin of: '${DEFAULT_ZPOOL}/Software'\n"
+    zfs create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software
 
-    printf "Installing /Software/root from snapshot\n"
+    printf "Retrieving '${DEFAULT_ZPOOL}/Software/root' from a file snapshot\n"
     xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive ${DEFAULT_ZPOOL}/Software/root
     zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root
 fi
-set -e
-
 set +e
 zfs list 2>/dev/null | grep 'User/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     set -e
     printf "Initializing origin of ${DEFAULT_ZPOOL}/User\n"
-    zfs create ${DEFAULT_ZFS_CREATE_OPTS} ${DEFAULT_ZPOOL}/User
+    zfs create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/User
 
     printf "Creating ${DEFAULT_ZPOOL}/User/root\n"
     zfs create -o mountpoint=/User ${DEFAULT_ZPOOL}/User/root
@@ -113,7 +111,7 @@ create_dset_if_doesnt_exist () {
     set +e
     mntpt="${1}"
     mount_opt="${2}"
-    zfs list | grep "${DEFAULT_ZPOOL}${mntpt}" > /dev/null 2>&1
+    zfs list | grep "${DEFAULT_ZPOOL}${mntpt} " > /dev/null 2>&1
     if [ "$?" != "0" ]; then
         set -e
         zfs create -o mountpoint=${mount_opt} "${DEFAULT_ZPOOL}${mntpt}"
@@ -178,12 +176,6 @@ if [ "$?" != "0" ]; then
     zfs snapshot ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}
 fi
 
-zfs list -t snap 2>/dev/null | grep 'Software/root@' > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    printf " * ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}
-fi
-
 zfs list -t snap 2>/dev/null | grep 'ROOT@' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     printf " * ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}\n"
@@ -197,7 +189,7 @@ if [ "$?" != "0" ]; then
 fi
 set -e
 
-printf "Installing ServeD-Base ${SYSTEM_VERSION}-v${VERSION}\n"
+printf "Installing ServeD base: ${SYSTEM_VERSION}-v${VERSION}\n"
 tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz --directory /
 if [ "$?" != "0" ]; then
     printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
@@ -326,11 +318,28 @@ note "Creating rc script for syslog-ng"
 test ! -x /etc/rc.d/syslog-ng && ${CP_BIN} /etc/rc.d/syslogd /etc/rc.d/syslog-ng
 ${SED_BIN} -i '' -e 's#pidfile=.*$#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
 ${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
-# ${SED_BIN} -i '' -e 's#command=.*$#command="/Software/Unbound/exports/unbound"#' /etc/rc.d/local_unbound
 
-note "Setting up login"
-${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf
-${CAP_MKDB_BIN} /etc/login.conf
+set +e
+${GREP_BIN} -R 'syslogd_enable' /etc/rc.conf 2>/dev/null | ${GREP_BIN} '"YES"' > /dev/null 2>&1
+if [ "$?" = "0" ]; then
+    note "Disabling syslogd, replacing it with: syslog-ng"
+    service syslogd stop >/dev/null 2>&1
+    killall -9 syslogd >/dev/null 2>&1
+    set -e
+    ${SED_BIN} -i '' -e 's#^.*syslogd_enable.*=.*$##g' /etc/rc.conf
+else
+    ps axv 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} 'syslog-ng' >/dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        set -e
+        note "Reloading Syslog-ng"
+        service syslog-ng reload 2>/dev/null
+    else
+        set -e
+        note "Starting Syslog-ng"
+        service syslog-ng start 2>/dev/null
+    fi
+fi
+set -e
 
 note "Setting up sysctl"
 ${TEST_BIN} -f /etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf
@@ -338,27 +347,31 @@ ${TEST_BIN} -f /etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.s
 note "Setting up periodic"
 ${TEST_BIN} -f /etc/periodic.conf ||${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf
 
-note "Setting up default ttys"
+note "Setting up defaults for: motd, ttys, login.conf"
+${PRINTF_BIN} "\n   You deserve to be ServeD!   (v${VERSION})\n\n" > /etc/motd
 ${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys
+${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf
+${CAP_MKDB_BIN} /etc/login.conf
 
 note "Setting up network"
-DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
-GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} | ${GREP_BIN} -v grep | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
-DEFAULT_HOST_ADDRESS="/etc/host.default"
-NETS_LIST="$(${IFCONFIG_BIN} ${DEFAULT_INTERFACE} | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
-AMOUNT=$(${PRINTF_BIN} "${NETS_LIST}\n" | ${WC_BIN} -l)
+readonly DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
+readonly GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} | ${GREP_BIN} -v grep | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
+readonly DEFAULT_HOST_ADDRESS="/etc/host.default"
+readonly NETS_LIST="$(${IFCONFIG_BIN} ${DEFAULT_INTERFACE} | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
+readonly AMOUNT=$(${PRINTF_BIN} "${NETS_LIST}\n" | ${WC_BIN} -l)
 NETS=""
 if [ ${AMOUNT} -eq 1 ]; then
     ${PRINTF_BIN} "${NETS_LIST}\n" > ${DEFAULT_HOST_ADDRESS}
 else
-    note "Detected several IP addresses"
+    note "Detected several IP addresses!"
+    sleep 2
     for net in ${NETS_LIST}; do
         NETS="$NETS $net - "
     done
     ${DIALOG_BIN} --menu "Pick main IP address:" 0 0 0 ${NETS} 2> ${DEFAULT_HOST_ADDRESS}
 fi
 
-note "Setting up firewall"
+note "Setting up PF firewall.."
 DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS})"
 ${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE}
 ${SED_BIN} -i '' -e "s/__INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE}
@@ -369,6 +382,7 @@ ${TOUCH_BIN} ${PF_CONF_FILE}.local
 set +e
 grep -R 'pf_enable' /etc/rc.conf 2>/dev/null | grep '"YES"' > /dev/null 2>&1
 if [ "$?" = "0" ]; then
+    set -e
     note "PF firewall is restarting.."
     service pf restart
     note "Applied firewall rules:\n$(${PFCTL_BIN} -sn)"
@@ -376,17 +390,18 @@ else
     warn "PF firewall is disabled in '/etc/rc.conf'. Skipping"
 fi
 
+set +e
 grep -R 'ServeD-Install-Script' /etc/rc.conf >/dev/null 2>&1
 if [ "$?" != "0" ]; then
-    note "ServeD special not found in /etc/rc.conf. Appending default RC configuration."
     set -e
+    note "ServeD special not found in /etc/rc.conf. Appending default RC configuration."
     ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
 fi
 set -e
 
 note "Setting up local Unbound name resolver"
 test ! -f ${UNBOUND_CONF_DIR}/jailed.conf && ${PRINTF_BIN} "include: ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry/*/jail-domains/*.conf\n" > ${UNBOUND_CONF_DIR}/jailed.conf
-test -f ${UNBOUND_CONF} && ${MV_BIN} ${UNBOUND_CONF} ${UNBOUND_CONF}.old
+test -f ${UNBOUND_CONF} && ${MV_BIN} -v ${UNBOUND_CONF} ${UNBOUND_CONF}.old
 ${PRINTF_BIN} "# Generated by ServeD installer:
 server:
     interface: 127.0.0.1
@@ -430,65 +445,40 @@ ${CHOWN_BIN} -R unbound ${UNBOUND_CONF}
 ${TOUCH_BIN} /var/unbound/forward.conf
 ${TOUCH_BIN} /var/unbound/lan-zones.conf
 
-readonly TIMESTAMP="$(date +%F-%s)"
-note "Setting up default ssl root certificates"
+TIMESTAMP="$(${DATE_BIN} +%s)"
+note "Installing root TLS/SSL certificates"
 ${MKDIR_BIN} -p /etc/ssl
 if [ -f /etc/ssl/cert.pem ]; then
-    ${MV_BIN} -v /etc/ssl/cert.pem /etc/ssl/cert.pem.old-${TIMESTAMP}
+    ${MV_BIN} -v /etc/ssl/cert.pem /etc/ssl/cert.pem-${TIMESTAMP}
 fi
 ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem
 
-for snap_ in /Software; do
-    snap="${DEFAULT_ZPOOL}${snap_}/root"
-    note "Creating snapshots: ${snap}@${TIMESTAMP}"
-    ${ZFS_BIN} snapshot "${snap}@${TIMESTAMP}"
-done
-
-${PRINTF_BIN} "\n   You deserve to be ServeD!   (v${VERSION})\n\n" > /etc/motd
-
-for snap in $(${ZFS_BIN} list -H -t snap -o name | grep '\-\-head\-\-'); do
-    note "Destroying unnecessary head snapshot: ${snap}"
-    ${ZFS_BIN} destroy ${snap}
-done
-
-for un in ${DEFAULT_ZPOOL}/usr/src ${DEFAULT_ZPOOL}/var/mail ${DEFAULT_ZPOOL}/usr/home ${DEFAULT_ZPOOL}/usr/src ${DEFAULT_ZPOOL}/var/mail ${DEFAULT_ZPOOL}/var/tmp ; do
+UNWANTED_DIRS=(/mnt /media /proc /COPYRIGHT /sys /usr/src /var/mail /usr/home /var/mail /var/tmp)
+note "Forcing destroy of unnecessary datasets: ${DEFAULT_ZPOOL}[${UNWANTED_DIRS}]"
+for unnec in ${UNWANTED_DIRS}; do
     set +e
-    ${ZFS_BIN} list | grep "${un}" > /dev/null 2>&1
+    ${ZFS_BIN} list | ${GREP_BIN} "${unnec} " >/dev/null 2>&1
     if [ "$?" = "0" ]; then
         set -e
-        note "Destroying ${un}"
-        ${ZFS_BIN} destroy ${un}
+        ${ZFS_BIN} destroy -f ${DEFAULT_ZPOOL}${unnec}
     fi
     set -e
-done
-
-NOT_NECESSARY=(/mnt /media /proc /COPYRIGHT /sys /usr/src /var/mail /usr/home /var/mail /var/tmp)
-note "Cleaning unnecessary host directories: '${NOT_NECESSARY}'."
-for unnec in ${NOT_NECESSARY}; do
-    ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}${unnec} 2>/dev/null || true
     ${RM_BIN} -rf "${unnec}"
 done
-
 set +e
-grep -R 'syslogd_enable' /etc/rc.conf 2>/dev/null | grep '"YES"' > /dev/null 2>&1
-if [ "$?" = "0" ]; then
-    note "Replacing syslogd with syslog-ng"
-    service syslogd stop >/dev/null 2>&1
-    ${SED_BIN} -i '' -e 's#^.*syslogd_enable.*=.*$##g' /etc/rc.conf
-fi
+for snap in $(${ZFS_BIN} list -H -t snap -o name | ${GREP_BIN} '\-\-head\-\-'); do
+    note "Destroying unwanted head snapshot: ${snap}"
+    ${ZFS_BIN} destroy -f ${DEFAULT_ZPOOL}${snap} 2>/dev/null
+done
 set -e
 
 note "Installing host Governor"
 ${INSTALL_BIN} -v ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
 
-note "Setting system version properties"
-${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
-${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${DEFAULT_ZPOOL}/ROOT
-
 note "Checking for a ZFS-feature-updates of zpool: ${DEFAULT_ZPOOL}"
 ${ZPOOL_BIN} upgrade ${DEFAULT_ZPOOL} | ${HEAD_BIN} -n1
 
-disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
+disks=$(geom disk list | ${GREP_BIN} 'Name:\ d.*' | ${SED_BIN} 's/^.*\ //')
 if [ -z "${disks}" ]; then
     error "System GEOM detected NO hard disks available on this machine. How can I do my thing? -_-"
 fi
@@ -502,6 +492,10 @@ for disk in $disks; do
 done
 note "Generating new hints for '${VKS_KERNEL}' kernel."
 kldxref ${VKS_KERNEL}
+
+note "Updating system properties.."
+${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
+${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${DEFAULT_ZPOOL}/ROOT
 
 set +e
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
