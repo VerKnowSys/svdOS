@@ -73,7 +73,7 @@ gdm_enable="NO"
 moused_enable="NO"
 oss_enable="NO"
 afsserver_enable="NO"
-jail_enable="YES"
+jail_enable="NO"
 
 # System log
 syslogd_enable="NO"
