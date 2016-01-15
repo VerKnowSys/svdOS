@@ -459,9 +459,12 @@ for un in ${DEFAULT_ZPOOL}/usr/src ${DEFAULT_ZPOOL}/var/mail ${DEFAULT_ZPOOL}/us
     set -e
 done
 
-NOT_NECESSARY="/mnt /media /proc /COPYRIGHT /sys /usr/src /var/mail /usr/home /var/mail /var/tmp"
-note "Cleaning unnecessary directories: '${NOT_NECESSARY}'."
-${RM_BIN} -rf "${NOT_NECESSARY}"
+NOT_NECESSARY=(/mnt /media /proc /COPYRIGHT /sys /usr/src /var/mail /usr/home /var/mail /var/tmp)
+note "Cleaning unnecessary host directories: '${NOT_NECESSARY}'."
+for unnec in ${NOT_NECESSARY}; do
+    ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}${unnec} 2>/dev/null || true
+    ${RM_BIN} -rf "${unnec}"
+done
 
 note "Replacing syslogd with syslog-ng"
 service syslogd stop >/dev/null 2>&1
