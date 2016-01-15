@@ -90,8 +90,9 @@ if [ "$?" != "0" ]; then
     printf "Initializing origin of: '${DEFAULT_ZPOOL}/Software'\n"
     zfs create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software
 
-    printf "Retrieving '${DEFAULT_ZPOOL}/Software/root' from a file snapshot\n"
-    xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive ${DEFAULT_ZPOOL}/Software/root
+    printf "Receiving dataset: '${DEFAULT_ZPOOL}/Software/root' from a snapshot file\n"
+    xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive -v ${DEFAULT_ZPOOL}/Software/root
+    zfs rename ${DEFAULT_ZPOOL}/Software/root@--head-- @${ORIGIN}
     zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root
 fi
 set +e
@@ -465,12 +466,6 @@ for unnec in ${UNWANTED_DIRS}; do
     set -e
     ${RM_BIN} -rf "${unnec}"
 done
-set +e
-for snap in $(${ZFS_BIN} list -H -t snap -o name | ${GREP_BIN} '\-\-head\-\-'); do
-    note "Destroying unwanted head snapshot: ${snap}"
-    ${ZFS_BIN} destroy -f ${DEFAULT_ZPOOL}${snap} 2>/dev/null
-done
-set -e
 
 note "Installing host Governor"
 ${INSTALL_BIN} -v ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
