@@ -26,6 +26,7 @@ HOME=/
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 UPDATE_PENDING_INDICATOR="/.svdsysup"
 SERVED_REPO="/var/ServeD-OS"
+SOFIN_REPO="/var/sofin"
 DEFAULT_ZPOOL="zroot"
 OS_NAME="FreeBSD"
 OS_ARCH="amd64"
@@ -81,7 +82,7 @@ zfs set readonly=off ${DEFAULT_ZPOOL}/usr
 zfs set readonly=off ${DEFAULT_ZPOOL}/User/root
 touch ${SVD_LOG}
 
-# lower your voices
+# Set snochg flags.
 chflags noschg /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1 || true
 cp -v /sbin/svdinit /var/svdinit
 
@@ -101,12 +102,18 @@ for folder in bin lib libexec sbin usr; do
     /Software/Rsync-static/exports/rsync -v -l -p -E -A -X -o -g -t -r --delete --exclude=/usr/home --exclude=/usr/ports /Jails/Shared/${TRIPPLE}/${folder}/ /${folder} >> ${SVD_LOG} 2>&1
 done
 
-note "Installing core software (gvr, svdinit)"
+note "Installing core software.."
 install -v ${SERVED_REPO}/gvr /usr/bin
 install -v /var/svdinit /sbin
-rm -fv /var/svdinit
 
-# return my powers
+# install Sofin
+cur_dir="$(pwd)"
+cd ${SOFIN_REPO}
+bin/install
+rm -f /var/svdinit
+cd "${cur_dir}"
+
+# Bring back schg flags
 chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1
 
 TIMESTAMP="$(date +%s)"
