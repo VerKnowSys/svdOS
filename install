@@ -479,6 +479,9 @@ note "Checking for an features update of zpool: ${DEFAULT_ZPOOL}"
 zpool upgrade ${DEFAULT_ZPOOL}
 
 disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
+if [ -z "${disks}" ]; then
+    error "System GEOM detected NO hard disks available on this machine. How can I do my thing? -_-"
+fi
 for disk in $disks; do
     note "Updating ZFS bootcode for disk: '${disk}'."
     gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
