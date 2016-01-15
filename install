@@ -2,9 +2,6 @@
 
 set -e
 
-printf "Trapping shell signals..\n"
-trap '' EXIT INT TERM QUIT TTIN TTOU
-
 # OS version same as destination system version 1:1
 DEFAULT_SOFIN_REPOSITORY="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
 DEFAULT_SHELL="/Software/Zsh/exports/zsh"
@@ -54,6 +51,11 @@ if [ "$(uname)" != "FreeBSD" ]; then
     printf "Only 64bit HardenedBSD hosts are supported by installer\n"
     exit 1
 fi
+
+set +e
+printf "Trapping shell signals..\n"
+trap '' EXIT INT TERM QUIT TTIN TTOU
+set -e
 
 # set lz4 compression and checksum mechanism for all pools:
 # for pool in $(zpool list -H | awk '{print $1;}'); do
