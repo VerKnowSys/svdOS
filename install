@@ -3,7 +3,7 @@
 set -e
 
 printf "Trapping shell signals..\n"
-trap 'printf "\n\rInstallation is not interruptable!\n"' EXIT INT TERM
+trap '' EXIT INT TERM QUIT TTIN TTOU
 
 # OS version same as destination system version 1:1
 DEFAULT_SOFIN_REPOSITORY="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
@@ -158,7 +158,7 @@ if [ "${sroot}" != "/User" ]; then
     zfs set mountpoint=/User ${elem}
 fi
 
-printf "Snapshotting available root origins..\n"
+printf "Creating origin snapshots..\n"
 zfs list -t snap 2>/dev/null | grep 'User/root@' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     printf " * ${DEFAULT_ZPOOL}/User/root@${ORIGIN}\n"
@@ -444,7 +444,7 @@ if [ -f /etc/ssl/cert.pem ]; then
 fi
 ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem
 
-UNWANTED_DIRS=(/mnt /media /proc /COPYRIGHT /sys /usr/src /var/mail /usr/home /var/mail /var/tmp)
+UNWANTED_DIRS="/mnt /media /proc /COPYRIGHT /sys /usr/src /var/mail /usr/home /var/mail /var/tmp"
 note "Forcing destroy of unnecessary datasets: ${DEFAULT_ZPOOL}[${UNWANTED_DIRS}]"
 for unnec in ${UNWANTED_DIRS}; do
     set +e
@@ -496,7 +496,7 @@ else
 fi
 
 set -e
-note "Commiting.."
 ${TOUCH_BIN} /.svdsysup
+note "Finished successfully."
 
 exit 0
