@@ -2,7 +2,7 @@
 
 set -e
 
-pritnf "Trapping shell signals..\n"
+printf "Trapping shell signals..\n"
 trap 'printf "\n\rInstallation is not interruptable!\n"' EXIT INT TERM
 
 # OS version same as destination system version 1:1
