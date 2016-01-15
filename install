@@ -466,9 +466,14 @@ for unnec in ${NOT_NECESSARY}; do
     ${RM_BIN} -rf "${unnec}"
 done
 
-note "Replacing syslogd with syslog-ng"
-service syslogd stop >/dev/null 2>&1
-service syslog-ng restart
+set +e
+grep -R 'syslogd_enable' /etc/rc.conf 2>/dev/null | grep '"YES"' > /dev/null 2>&1
+if [ "$?" = "0" ]; then
+    note "Replacing syslogd with syslog-ng"
+    service syslogd stop >/dev/null 2>&1
+    ${SED_BIN} -i '' -e 's#^.*syslogd_enable.*=.*$##g' /etc/rc.conf
+fi
+set -e
 
 note "Installing Governor to host system"
 ${INSTALL_BIN} -v ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
