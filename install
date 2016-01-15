@@ -446,7 +446,7 @@ if [ -f /etc/ssl/cert.pem ]; then
 fi
 ${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem
 
-UNWANTED_DIRS="/mnt /media /proc /COPYRIGHT /sys /usr/src /var/mail /usr/home /var/mail /var/tmp"
+UNWANTED_DIRS="/mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp"
 note "Forcing destroy of unnecessary datasets: ${DEFAULT_ZPOOL}[${UNWANTED_DIRS}]"
 for unnec in ${UNWANTED_DIRS}; do
     set +e
