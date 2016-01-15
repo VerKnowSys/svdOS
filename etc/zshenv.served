@@ -100,13 +100,6 @@ TERM="xterm-color"
 PAGER="less"
 unset TMUX
 
-alias top='top -a -i -u -S -ores'
-alias ls='ls -G'
-alias grep='grep --color=auto'
-alias w="w -din"
-alias pstree='pstree -g 3'
-alias wget='fetch'
-alias bconsole='/Software/Bacula/exports/bconsole -c /etc/bacula/bconsole.conf'
 
 bindkey "^b" backward-word
 bindkey "^n" forward-word
