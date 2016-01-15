@@ -443,9 +443,8 @@ done
 
 ${PRINTF_BIN} "\n   You deserve to be ServeD!   (v${VERSION})\n\n" > /etc/motd
 
-note "Destroying unnecessary datasets.."
 for snap in $(${ZFS_BIN} list -H -t snap -o name | grep '\-\-head\-\-'); do
-    note "Destroying head snapshot: ${snap}"
+    note "Destroying unnecessary head snapshot: ${snap}"
     ${ZFS_BIN} destroy ${snap}
 done
 
@@ -475,6 +474,10 @@ note "Updating system version property"
 ${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
 ${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${DEFAULT_ZPOOL}/ROOT
 ${TOUCH_BIN} /.svdsysup
+
+note "Checking for an features update of zpool: ${DEFAULT_ZPOOL}"
+zpool upgrade ${DEFAULT_ZPOOL}
+
 disks=$(geom disk list | grep 'Name:\ d.*' | sed 's/^.*\ //')
 for disk in $disks; do
     note "Updating ZFS bootcode for disk: '${disk}'."
@@ -483,10 +486,11 @@ for disk in $disks; do
         warn "Bootcode update finished with an error for disk: ${disk}!"
         sleep 2
     fi
-    note "Generating new hints for '${VKS_KERNEL}' kernel."
-    kldxref ${VKS_KERNEL}
 done
+note "Generating new hints for '${VKS_KERNEL}' kernel."
+kldxref ${VKS_KERNEL}
 
+set +e
 ${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
     note
@@ -494,7 +498,9 @@ if [ "$?" = "0" ]; then
 else
     note
     note "ServeD system installation complete!"
-    note "You must reboot to apply new kernel and system configuration."
+    note
+    note "You must reboot to commit changes that were made."
+    note "Update process will be started after reboot."
 fi
 
 exit 0
