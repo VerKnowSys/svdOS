@@ -10,14 +10,16 @@ icmp_drop_redirect="YES"
 icmp_log_redirect="YES"
 log_in_vain="YES"
 clear_tmp_enable="YES"
+gateway_enable="YES"
+local_unbound_enable="YES"
+
+# PF
 pf_enable="NO" # KP under 11
 pf_rules="/etc/pf.conf"
 pf_flags=""
 pflog_enable="NO" # KP under 11
 pflog_logfile="/var/log/pflog"
 pflog_flags=""
-gateway_enable="YES"
-local_unbound_enable="YES"
 
 dumpdev="NO"
 sendmail_enable="NONE"
