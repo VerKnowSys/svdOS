@@ -333,11 +333,7 @@ else
     if [ "$?" = "0" ]; then
         set -e
         note "Reloading Syslog-ng"
-        service syslog-ng reload 2>/dev/null
-    else
-        set -e
-        note "Starting Syslog-ng"
-        service syslog-ng start 2>/dev/null
+        service syslog-ng reload 2>> ${LOG}
     fi
 fi
 set -e
