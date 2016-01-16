@@ -208,11 +208,11 @@ remote-control:
 
 # Generate Unbound configuration with a little help from local-unbound-setup:
 generate_conf_for_unbound_resolver
+rm -f ${UPDATE_PENDING_INDICATOR}
 
 
 sleep 2
 note
 note "Update complete."
-rm -f ${UPDATE_PENDING_INDICATOR}
 note
 exit 0
