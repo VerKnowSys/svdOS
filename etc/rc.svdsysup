@@ -20,21 +20,26 @@ readonly cyan='\033[36;40m'
 readonly gray='\033[37;40m'
 readonly white='\033[38;40m'
 readonly reset='\033[0m'
-export HOME PATH
+readonly DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
+readonly UPDATE_PENDING_INDICATOR="/.svdsysup"
+readonly SERVED_REPO="/var/ServeD-OS"
+readonly SOFIN_REPO="/var/sofin"
+readonly DEFAULT_ZPOOL="zroot"
+readonly OS_NAME="FreeBSD"
+readonly OS_ARCH="amd64"
+readonly SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
+readonly UNBOUND_CONF_DIR="/var/unbound/conf.d"
+readonly UNBOUND_CONF="/var/unbound/unbound.conf"
+readonly UNBOUND_CONTROL_CONF="/var/unbound/control.conf"
+readonly DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
+readonly DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 
 HOME=/
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-UPDATE_PENDING_INDICATOR="/.svdsysup"
-SERVED_REPO="/var/ServeD-OS"
-SOFIN_REPO="/var/sofin"
-DEFAULT_ZPOOL="zroot"
-OS_NAME="FreeBSD"
-OS_ARCH="amd64"
-OS_VERSION="11.0" # the default
-TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
-TIMESTAMP="$(date +%s)"
-SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
-# svd part:
+export HOME PATH
+export OS_VERSION="11.0" # the default
+export TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
+
 
 TTY="false"
 if [ -t 1 ]; then
@@ -72,6 +77,7 @@ error () {
 }
 
 
+TIMESTAMP="$(date +%s)"
 note "Performing before-update-snapshot: ${TIMESTAMP}"
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
@@ -84,12 +90,12 @@ touch ${SVD_LOG}
 
 # Set snochg flags.
 chflags noschg /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1 || true
-cp -v /sbin/svdinit /var/svdinit
 
 # Update system version from system property
 stored_version="$(zfs get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${stored_version}" != "-" ]; then
     export OS_VERSION="${stored_version}"
+    export TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
 fi
 
 note "Mounting core datasets"
@@ -107,11 +113,9 @@ install -v ${SERVED_REPO}/gvr /usr/bin
 install -v /var/svdinit /sbin
 
 # install Sofin
-cur_dir="$(pwd)"
 cd ${SOFIN_REPO}
 bin/install
-rm -f /var/svdinit
-cd "${cur_dir}"
+cd /
 
 # Bring back schg flags
 chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1
