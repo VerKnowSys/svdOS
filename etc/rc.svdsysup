@@ -129,7 +129,7 @@ for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOO
     value="$(zfs list -H -t snap -o name | grep "${dataset}@" 2>/dev/null | wc -l 2>/dev/null | sed 's/ //g' 2>/dev/null)"
     if [ ${value} -gt 5 ]; then
         LAST="$(zfs list -H -t snap -o name | grep "${dataset}@" 2>/dev/null | sed 's/.*@//;s/ .*//' 2>/dev/null | tail -n 1 2>/dev/null)"
-        note "Removing oldest snapshot of: '${dataset}@${LAST}' (snapshots: ${value})"
+        note "Removing oldest snapshot of: '${dataset}@${LAST}' (${value} snapshots)"
         zfs destroy "${dataset}@${LAST}"
     fi
 done
