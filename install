@@ -279,13 +279,20 @@ note "Updating resolv confs"
 ${CP_BIN} -v ${SERVED_REPO}/etc/resolvconf.conf /etc/
 ${CP_BIN} -v ${SERVED_REPO}/etc/resolv.conf /etc/
 
-note "Installing svdsysup"
-${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
-chflags noschg ${SVDINIT_BIN} || true
+note "Setting up svdinit"
+if [ -f "${SVDINIT_BIN}" ]; then
+    chflags -v noschg ${SVDINIT_BIN}
+    ${RM_BIN} -f ${SVDINIT_BIN}
+fi
 clang -c ${SERVED_REPO}/src/getmntopts.c -o ${SERVED_REPO}/src/getmntopts.o
 clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP ${SERVED_REPO}/src/getmntopts.o
 strip ${SVDINIT_BIN}
-chflags schg ${SVDINIT_BIN} || true
+chflags -v schg ${SVDINIT_BIN}
+${RM_BIN} -f /var/svdinit
+${CP_BIN} -v ${SVDINIT_BIN} /var/
+
+note "Setting up rc.svdsysup"
+${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
 
 note "Setting up default shell environment"
 ${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv
