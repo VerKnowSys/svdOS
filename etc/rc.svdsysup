@@ -27,13 +27,12 @@ readonly SOFIN_REPO="/var/sofin"
 readonly DEFAULT_ZPOOL="zroot"
 readonly OS_NAME="FreeBSD"
 readonly OS_ARCH="amd64"
-readonly SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
+
 readonly UNBOUND_CONF_DIR="/var/unbound/conf.d"
 readonly UNBOUND_CONF="/var/unbound/unbound.conf"
 readonly UNBOUND_CONTROL_CONF="/var/unbound/control.conf"
 readonly DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 readonly DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
-
 HOME=/
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 export HOME PATH
@@ -78,15 +77,17 @@ error () {
 
 
 TIMESTAMP="$(date +%s)"
-note "Performing before-update-snapshot: ${TIMESTAMP}"
+SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
+
+note "Performing pre-update snapshots: @${TIMESTAMP}"
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
-
+zfs snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
+zfs set readonly=off ${DEFAULT_ZPOOL}/var
 zfs set readonly=off ${DEFAULT_ZPOOL}/var/log
 zfs set readonly=off ${DEFAULT_ZPOOL}/ROOT/default
 zfs set readonly=off ${DEFAULT_ZPOOL}/usr
 zfs set readonly=off ${DEFAULT_ZPOOL}/User/root
-touch ${SVD_LOG}
 
 # Set snochg flags.
 chflags noschg /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1 || true
@@ -98,11 +99,9 @@ if [ "${stored_version}" != "-" ]; then
     export TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
 fi
 
-note "Mounting core datasets"
-zfs mount ${DEFAULT_ZPOOL}/var/log || true
-zfs mount ${DEFAULT_ZPOOL}/User/root || true
-zfs mount ${DEFAULT_ZPOOL}/Software/root || true
-zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${TRIPPLE} || true
+note "Mounting core datasets in read-write mode"
+zfs mount ${DEFAULT_ZPOOL}/Software/root
+zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${TRIPPLE}
 for folder in bin lib libexec sbin usr; do
     note "Synchronizing /Jails/Shared/${TRIPPLE}/${folder}/ with /${folder}"
     /Software/Rsync-static/exports/rsync -v -l -p -E -A -X -o -g -t -r --delete --exclude=/usr/home --exclude=/usr/ports /Jails/Shared/${TRIPPLE}/${folder}/ /${folder} >> ${SVD_LOG} 2>&1
@@ -121,11 +120,12 @@ cd /
 chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1
 
 TIMESTAMP="$(date +%s)"
-note "Creating after update snapshot: ${TIMESTAMP}"
+note "Performing post-update snapshots: @${TIMESTAMP}"
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
+zfs snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
 
-for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr; do
+for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOOL}/var; do
     value="$(zfs list -H -t snap -o name | grep "${dataset}@" 2>/dev/null | wc -l 2>/dev/null | sed 's/ //g' 2>/dev/null)"
     if [ ${value} -gt 5 ]; then
         LAST="$(zfs list -H -t snap -o name | grep "${dataset}@" 2>/dev/null | sed 's/.*@//;s/ .*//' 2>/dev/null | tail -n 1 2>/dev/null)"
@@ -203,7 +203,7 @@ remote-control:
     control-enable: yes
     control-interface: /var/run/local_unbound.ctl
     control-use-cert: no
-" > ${CONTROL_CONF}
+" > ${UNBOUND_CONTROL_CONF}
     chown -R unbound /var/unbound
 }
 
