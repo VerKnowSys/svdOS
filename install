@@ -450,13 +450,11 @@ if [ "$?" = "0" ]; then
 else
     note
     note "ServeD system installation complete!"
-    note
-    note "Update process will continue installation right after reboot."
-    note "You must reboot to commit changes that were made by installer."
 fi
+note
+note "Update process will continue after reboot.."
 
 set -e
 ${TOUCH_BIN} /.svdsysup
-note "Finished successfully."
 
 exit 0
