@@ -308,19 +308,17 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/src.conf
 note "Setting up mime types"
 ${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types
 
-# replace default syslogd with preconfigured syslog-ng
-note "Setting up system logger"
-${MKDIR_BIN} -p /etc/syslog-ng
-${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf /etc/syslog-ng/
-${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf /etc/syslog-ng/
+# configure currently installed default system logger - syslog-ng..
+# or replace default syslogd with preconfigured syslog-ng
+SYSLOGNG_PREFIX="/Services/Syslog-ng"
 
-SYSLOGNG_PREFIX="/Software/Syslog-ng"
-${RM_BIN} -rf ${SYSLOGNG_PREFIX}/etc
-${LN_BIN} -s /etc/syslog-ng ${SYSLOGNG_PREFIX}/etc
-test -d ${SYSLOGNG_PREFIX}/var && ${RM_BIN} -rf ${SYSLOGNG_PREFIX}/var && ${LN_BIN} -s /var/run ${SYSLOGNG_PREFIX}/var
+note "Setting up system logger"
+${MKDIR_BIN} -p ${SYSLOGNG_PREFIX}/etc ${SYSLOGNG_PREFIX}/var
+${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSLOGNG_PREFIX}/etc/syslog-ng/
+${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSLOGNG_PREFIX}/etc/syslog-ng/
 
 note "Creating rc script for syslog-ng"
-test ! -x /etc/rc.d/syslog-ng && ${CP_BIN} /etc/rc.d/syslogd /etc/rc.d/syslog-ng
+test ! -x /etc/rc.d/syslog-ng && ${CP_BIN} -v /etc/rc.d/syslogd /etc/rc.d/syslog-ng
 ${SED_BIN} -i '' -e 's#pidfile=.*$#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
 ${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
 
