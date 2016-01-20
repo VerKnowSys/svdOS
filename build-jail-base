@@ -81,7 +81,7 @@ note "Syncing sources to src"
 time /Software/Rsync-static/exports/rsync -a -r /var/${OS_VER}-src/ /usr/src/
 
 note "Setting up build host specific settings"
-. ./setup-buildhost
+. ${SERVED_REPO}/setup-buildhost
 setup_buildhost
 
 cd /usr/src
