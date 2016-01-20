@@ -101,6 +101,7 @@ if [ "${stored_version}" != "-" ]; then
 fi
 
 note "Mounting core datasets in read-write mode"
+zfs mount ${DEFAULT_ZPOOL}/User/root
 zfs mount ${DEFAULT_ZPOOL}/Software/root
 zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${TRIPPLE}
 for folder in bin lib libexec sbin usr; do
