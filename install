@@ -27,6 +27,7 @@ RC_FILE="/etc/rc"
 GIT_BIN="/Software/Git/exports/git"
 ZFS_BIN="/sbin/zfs"
 SVDINIT_BIN="/sbin/svdinit"
+SVDINIT_BACKUP_BIN="/var/.svdinit"
 LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
 VERSION="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${VERSION}" = "-" ]; then
@@ -276,17 +277,24 @@ fi
 # ${CP_BIN} -v ${SERVED_REPO}/etc/resolvconf.conf /etc/
 # ${CP_BIN} -v ${SERVED_REPO}/etc/resolv.conf /etc/
 
-note "Setting up svdinit"
+note "Deploying: ${SVDINIT_BIN}"
 if [ -f "${SVDINIT_BIN}" ]; then
-    chflags -v noschg ${SVDINIT_BIN}
+    chflags -v noschg ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}
     ${RM_BIN} -f ${SVDINIT_BIN}
 fi
 clang -c ${SERVED_REPO}/src/getmntopts.c -o ${SERVED_REPO}/src/getmntopts.o
-clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DLOGIN_CAP ${SERVED_REPO}/src/getmntopts.o
-strip ${SVDINIT_BIN}
-chflags -v schg ${SVDINIT_BIN}
-${RM_BIN} -f /var/svdinit
-${CP_BIN} -v ${SVDINIT_BIN} /var/
+clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c \
+    -lutil -lcrypt -DSECURE -DLOGIN_CAP ${SERVED_REPO}/src/getmntopts.o
+if [ "$?" = "0" ]; then
+    note "Preparing backup from current version of ${SVDINIT_BIN}"
+    strip ${SVDINIT_BIN}
+    ${RM_BIN} -f ${SVDINIT_BACKUP_BIN}
+    ${CP_BIN} -v ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}
+else
+    warn "ServeD init replacement failed to build, cause of some strange reason! Restoring backup version of: ${SVDINIT_BIN}"
+    ${CP_BIN} -v ${SVDINIT_BACKUP_BIN} ${SVDINIT_BIN}
+fi
+chflags -v schg ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}
 
 note "Setting up rc.svdsysup"
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
