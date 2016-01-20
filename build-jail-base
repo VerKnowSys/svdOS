@@ -33,6 +33,7 @@ else
 fi
 
 readonly ZROOT="zroot"
+readonly SERVED_REPO="/var/ServeD-OS"
 readonly PARALLEL_JOBS="10"
 readonly SHARED_DIR="/Jails/Shared"
 readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
@@ -46,11 +47,11 @@ else
     exit 1
 fi
 
-if [ ! -d "/var/ServeD-OS" ]; then
+if [ ! -d "${SERVED_REPO}" ]; then
     cd /var
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone https://github.com/VerKnowSys/ServeD-OS.git
 else
-    cd /var/ServeD-OS
+    cd ${SERVED_REPO}
     GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/ServeD-OS.git
 fi
 
@@ -74,36 +75,14 @@ fi
 
 note "Setting up src.conf"
 ${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
-${CP_BIN} -v /var/ServeD-OS/etc/src.conf /etc/ >> ${LOG_OUTPUT}
-
-mkdir -p /var/ccache /usr/src /usr/obj > /dev/null 2>&1 || true
-set +e
-grep '/usr/src' /etc/fstab > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    printf "md     /usr/src    mfs   rw,-s4G 0 0\n" >> /etc/fstab
-fi
-grep '/usr/obj' /etc/fstab > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    printf "md     /usr/obj    mfs   rw,-s4G 0 0\n" >> /etc/fstab
-fi
-set -e
-cd /
-
-note "ReMounting ramdisks"
-umount -f /usr/src || true
-umount -f /usr/obj || true
-mount /usr/src
-mount /usr/obj
+${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/ >> ${LOG_OUTPUT}
 
 note "Syncing sources to src"
 time /Software/Rsync-static/exports/rsync -a -r /var/${OS_VER}-src/ /usr/src/
 
 note "Setting up build host specific settings"
-zfs set primarycache=metadata ${ZROOT}
-zfs set secondarycache=metadata ${ZROOT}
-zfs set dedup=off ${ZROOT}
-zfs set compression=lz4 ${ZROOT}
-sysctl vfs.zfs.prefetch_disable=1
+. ./setup-buildhost
+setup_buildhost
 
 cd /usr/src
 TIMESTAMP="$(date +%F-%s)"
@@ -115,9 +94,9 @@ note "Preparing kernel configuration"
 GIT_SSL_NO_VERIFY=true /Software/Git/exports/git reset --hard >> ${LOG_OUTPUT}
 rm -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 if [ "${ARCH}" = "arm" ]; then
-    cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${OS_VER}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    cp -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 else
-    cp -v /var/ServeD-OS/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    cp -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 fi
 
 note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
