@@ -13,6 +13,7 @@ setup_buildhost () {
             sysctl hardening.pax.pageexec.status=1
             sysctl hardening.pax.mprotect.status=1
 
+            set +e
             note "Loading Dtrace"
             kldload dtraceall
 
@@ -49,6 +50,7 @@ setup_buildhost () {
                 grep '/usr/obj' /etc/fstab 2>/dev/null || printf "md     /usr/obj    mfs   rw,-s4G 0 0\n" >> /etc/fstab
                 mount /usr/obj
             fi
+            set -e
         fi
     else
         error "System not supported."
