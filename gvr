@@ -401,9 +401,9 @@ ${JAIL_NAME} {
         note "Last snapshot of '${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}' is '${LAST}'."
     fi
     if [ "${LAST}" = "" ]; then
-        LAST="$(date +%F-%s)"
-        warn "No snapshots found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Creating first one: '${LAST}'."
-        ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}
+        LAST="origin"
+        warn "No snapshots found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Creating origin snapshot."
+        ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${ORIGIN}
     fi
 
     note "Cloning last jail system base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}' to ${CELL}"
