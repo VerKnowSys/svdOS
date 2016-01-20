@@ -27,6 +27,7 @@ readonly SOFIN_REPO="/var/sofin"
 readonly DEFAULT_ZPOOL="zroot"
 readonly OS_NAME="FreeBSD"
 readonly OS_ARCH="amd64"
+readonly BACKUP_SVDINIT="/var/.svdinit"
 
 readonly UNBOUND_CONF_DIR="/var/unbound/conf.d"
 readonly UNBOUND_CONF="/var/unbound/unbound.conf"
@@ -109,7 +110,7 @@ done
 
 note "Installing core software.."
 install -v ${SERVED_REPO}/gvr /usr/bin
-install -v /var/svdinit /sbin
+install -v ${BACKUP_SVDINIT} /sbin
 
 # install Sofin
 cd ${SOFIN_REPO}
