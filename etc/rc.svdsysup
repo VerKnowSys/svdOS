@@ -25,18 +25,20 @@ readonly UPDATE_PENDING_INDICATOR="/.svdsysup"
 readonly SERVED_REPO="/var/ServeD-OS"
 readonly SOFIN_REPO="/var/sofin"
 readonly DEFAULT_ZPOOL="zroot"
-readonly OS_NAME="FreeBSD"
-readonly OS_ARCH="amd64"
 readonly BACKUP_SVDINIT="/var/.svdinit"
-
 readonly UNBOUND_CONF_DIR="/var/unbound/conf.d"
 readonly UNBOUND_CONF="/var/unbound/unbound.conf"
 readonly UNBOUND_CONTROL_CONF="/var/unbound/control.conf"
 readonly DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 readonly DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
-HOME=/
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
-export HOME PATH
+readonly RSYNC_DEFAULT_OPTIONS="-l -p -E -A -X -o -g -t -r --delete"
+readonly PATH=/sbin:/bin:/usr/sbin:/usr/bin
+readonly OS_NAME="$(uname -s)"
+readonly OS_ARCH="$(uname -m)"
+
+export HOME=/
+export RSYNC_BIN="/Software/Rsync-static/exports/rsync"
+
 export OS_VERSION="11.0" # the default
 export TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
 
@@ -106,7 +108,9 @@ zfs mount ${DEFAULT_ZPOOL}/Software/root
 zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${TRIPPLE}
 for folder in bin lib libexec sbin usr; do
     note "Synchronizing /Jails/Shared/${TRIPPLE}/${folder}/ with /${folder}"
-    /Software/Rsync-static/exports/rsync -v -l -p -E -A -X -o -g -t -r --delete --exclude=/usr/home --exclude=/usr/ports /Jails/Shared/${TRIPPLE}/${folder}/ /${folder} >> ${SVD_LOG} 2>&1
+    ${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} \
+        --exclude=/usr/home --exclude=/usr/ports \
+        /Jails/Shared/${TRIPPLE}/${folder}/ /${folder} >> ${SVD_LOG} 2>&1
 done
 
 note "Installing core software.."
@@ -138,9 +142,7 @@ done
 
 if [ -d "/root" ]; then
     note "Syncing root home dir to dataset: ${DEFAULT_ZPOOL}/User/root"
-    /Software/Rsync-static/exports/rsync \
-        -l -p -E -A -X -o -g -t -r --delete \
-        /root /User 2>/dev/null && \
+    ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} /root /User 2>/dev/null && \
     pw user mod root -d /User && \
     rm -rf /root
 fi
