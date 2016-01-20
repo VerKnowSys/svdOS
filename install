@@ -317,10 +317,12 @@ ${MKDIR_BIN} -p ${SYSLOGNG_PREFIX}/etc ${SYSLOGNG_PREFIX}/var
 ${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSLOGNG_PREFIX}/etc/syslog-ng/
 ${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSLOGNG_PREFIX}/etc/syslog-ng/
 
-note "Creating rc script for syslog-ng"
-test ! -x /etc/rc.d/syslog-ng && ${CP_BIN} -v /etc/rc.d/syslogd /etc/rc.d/syslog-ng
-${SED_BIN} -i '' -e 's#pidfile=.*$#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
-${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
+if [ ! -x "/etc/rc.d/syslog-ng" ]; then
+    note "Creating rc script for syslog-ng"
+    ${CP_BIN} -v /etc/rc.d/syslogd /etc/rc.d/syslog-ng
+    ${SED_BIN} -i '' -e 's#pidfile=.*$#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
+    ${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
+fi
 
 set +e
 ${GREP_BIN} -R 'syslogd_enable' /etc/rc.conf 2>/dev/null | ${GREP_BIN} '"YES"' > /dev/null 2>&1
