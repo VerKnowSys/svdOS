@@ -1,37 +1,47 @@
 #!/bin/sh
+#
+# @author Daniel (dmilith) Dettaff
+#
 
 set -e
 
-# OS version same as destination system version 1:1
+# tunables:
+INSTALL_SCRIPT_VERSION="0.4.0"
+SYSTEM_VERSION="11.0" # the default
+DEFAULT_ZPOOL="zroot"
+INTERNAL_NETWORK="10.2.1.0"
+ORIGIN="origin"
+
+# const definitions:
+SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
+PATH="/bin:/usr/bin:/sbin:/usr/sbin"
+BASE="ServeD-OS-Base"
+BASE_SOURCE="http://served.verknowsys.com/"
+TIMESTAMP="$(date +%s)"
+VKS_KERNEL="/boot/verknowsys"
+SOFIN_REPO="/var/sofin"
+SERVED_REPO="/var/ServeD-OS"
+LOG="/var/log/svd-install-${TIMESTAMP}.log"
+CACHE_DIR="/var/.cache"
 DEFAULT_SOFIN_REPOSITORY="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
 DEFAULT_SHELL="/Software/Zsh/exports/zsh"
-VKS_KERNEL="/boot/verknowsys"
-SYSTEM_VERSION="11.0" # the default
-ORIGIN="origin"
-CACHE_DIR="/var/.cache"
-ZFS_CREATE_OPTS_FOR_ROOT_ELEMS="-o dedup=on -o compression=lz4 -o mountpoint=none -o casesensitivity=sensitive"
+ZFS_CREATE_OPTS_FOR_ROOT_ELEMS=" -o dedup=on -o compression=lz4 -o mountpoint=none -o casesensitivity=sensitive"
 DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
-DEFAULT_ZPOOL="zroot"
 DEFAULT_SYSTEM_PREFIX="/usr/bin"
-BASE="ServeD-OS-Base"
-LOG="/var/log/svd-install-${TIMESTAMP}.log"
-SERVED_REPO="/var/ServeD-OS"
-SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
-SOFIN_REPO="/var/sofin"
-BASE_SOURCE="http://served.verknowsys.com/"
 ARCH="$(uname -m)"
-INTERNAL_NETWORK="10.2.1.0"
+UNAME_OS="$(uname -s)"
+OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
 GIT_BIN="/Software/Git/exports/git"
 ZFS_BIN="/sbin/zfs"
 SVDINIT_BIN="/sbin/svdinit"
 SVDINIT_BACKUP_BIN="/var/.svdinit"
+DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}"
 LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
 VERSION="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${VERSION}" = "-" ]; then
-    # zfs set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
     printf "No version specified. Picking last version: ${LATEST_VERSION}\n"
 else
     if [ "${VERSION}" = "${LATEST_VERSION}" ]; then
@@ -55,15 +65,6 @@ set +e
 printf "Trapping shell signals..\n"
 trap '' EXIT INT TERM QUIT TTIN TTOU
 set -e
-
-# set lz4 compression and checksum mechanism for all pools:
-# for pool in $(zpool list -H | awk '{print $1;}'); do
-#     printf "Setting compression: lz4, checksum: fletcher4 on zpool: ${pool}\n"
-#     zfs set compression=lz4 ${pool}
-#     zfs set checksum=fletcher4 ${pool}
-# done
-
-DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/$(uname -s)-${SYSTEM_VERSION}-$(uname -m)"
 
 mkdir -p ${CACHE_DIR} >> ${LOG} 2>&1
 if [ ! -f "${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz" ]; then
@@ -314,8 +315,8 @@ SYSLOGNG_PREFIX="/Services/Syslog-ng"
 
 note "Setting up system logger"
 ${MKDIR_BIN} -p ${SYSLOGNG_PREFIX}/etc ${SYSLOGNG_PREFIX}/var
-${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSLOGNG_PREFIX}/etc/syslog-ng/
-${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSLOGNG_PREFIX}/etc/syslog-ng/
+${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSLOGNG_PREFIX}/etc/
+${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSLOGNG_PREFIX}/etc/
 
 if [ ! -x "/etc/rc.d/syslog-ng" ]; then
     note "Creating rc script for syslog-ng"
