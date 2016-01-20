@@ -51,6 +51,8 @@ setup_buildhost () {
                 mount /usr/obj
             fi
             set -e
+
+            echo "ServeD-BH" > /.build-host
         fi
     else
         error "System not supported."
