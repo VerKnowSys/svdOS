@@ -137,9 +137,11 @@ for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOO
 done
 
 if [ -d "/root" ]; then
-    note "Switching home dir for root to: ${DEFAULT_ZPOOL}/User/root"
-    cp -R /root/ /User
-    pw user mod root -d /User
+    note "Syncing root home dir to dataset: ${DEFAULT_ZPOOL}/User/root"
+    /Software/Rsync-static/exports/rsync \
+        -l -p -E -A -X -o -g -t -r --delete \
+        /root /User 2>/dev/null && \
+    pw user mod root -d /User && \
     rm -rf /root
 fi
 
