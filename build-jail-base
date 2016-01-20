@@ -73,16 +73,16 @@ else
     note "Working on branch: $(/Software/Git/exports/git branch)"
 fi
 
+note "Setting up build host specific settings"
+. ${SERVED_REPO}/setup-buildhost
+setup_buildhost
+
 note "Setting up src.conf"
 ${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
 ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/ >> ${LOG_OUTPUT}
 
 note "Syncing sources to src"
 time /Software/Rsync-static/exports/rsync -a -r /var/${OS_VER}-src/ /usr/src/
-
-note "Setting up build host specific settings"
-. ${SERVED_REPO}/setup-buildhost
-setup_buildhost
 
 cd /usr/src
 TIMESTAMP="$(date +%F-%s)"
