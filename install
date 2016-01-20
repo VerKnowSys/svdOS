@@ -93,7 +93,7 @@ if [ "$?" != "0" ]; then
     zfs create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software
 
     printf "Receiving dataset: '${DEFAULT_ZPOOL}/Software/root' from a snapshot file\n"
-    xzcat ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz | zfs receive -v ${DEFAULT_ZPOOL}/Software/root
+    xzcat ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | zfs receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | tail -n1
     zfs rename ${DEFAULT_ZPOOL}/Software/root@--head-- @${ORIGIN}
     zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root
 fi
