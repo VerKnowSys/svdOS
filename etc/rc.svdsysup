@@ -142,7 +142,7 @@ done
 
 if [ -d "/root" ]; then
     note "Syncing root home dir to dataset: ${DEFAULT_ZPOOL}/User/root"
-    ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} /root /User 2>/dev/null && \
+    ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} /root/ /User 2>/dev/null && \
     pw user mod root -d /User && \
     rm -rf /root && \
     note "Sync complete"
