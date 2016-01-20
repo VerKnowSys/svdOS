@@ -67,9 +67,9 @@ trap '' EXIT INT TERM QUIT TTIN TTOU
 set -e
 
 mkdir -p ${CACHE_DIR} >> ${LOG} 2>&1
-if [ ! -f "${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz" ]; then
+if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" ]; then
     printf "Base snapshot archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz -o ${CACHE_DIR}/Software-${SYSTEM_VERSION}-${ORIGIN}-${ARCH}.zfs.xz
+    fetch ${BASE_SOURCE}/Software-${OS_TRIPPLE}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz
     if [ "$?" != "0" ]; then
         printf "Software snapshot isn't available, or something just went wrong while fetching archive\n"
         exit 1
