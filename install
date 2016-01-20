@@ -268,14 +268,10 @@ if [ -d "${SERVED_REPO}" ]; then
     cd ${SERVED_REPO}
     ${GIT_BIN} reset --hard
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
-    # ${CP_BIN} -Rv usr/ /usr/ >> ${LOG} 2>&1
 else
     cd /var
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
 fi
-
-# ${CP_BIN} -v ${SERVED_REPO}/etc/resolvconf.conf /etc/
-# ${CP_BIN} -v ${SERVED_REPO}/etc/resolv.conf /etc/
 
 note "Deploying: ${SVDINIT_BIN}"
 if [ -f "${SVDINIT_BIN}" ]; then
