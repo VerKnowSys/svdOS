@@ -234,7 +234,7 @@ if [ "${SHELL}" != "${DEFAULT_SHELL}" ]; then
     ${CHSH_BIN} -s ${DEFAULT_SHELL}
 fi
 
-list="Rsync-static Mosh Pstree Vim Tmux Vifm Atop Syslog-ng Mc"
+list="Rsync-static Mosh Tmux Syslog-ng"
 case ${ARCH} in
     arm|arm32|arm64)
         ;;
