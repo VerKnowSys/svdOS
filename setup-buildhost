@@ -25,30 +25,22 @@ setup_buildhost () {
             sed -i '' -e 's#syslog_ng_enable="YES"#syslog_ng_enable="NO"#' /etc/rc.conf 2>/dev/null
             killall -9 syslog-ng >/dev/null 2>&1
 
-
-            note "Setting up and mounting ramdisks"
-            mkdir -p /usr/src /usr/obj ~/.cache/cache
-            umount -f /usr/src 2>/dev/null
-            umount -f /usr/obj 2>/dev/null
             zfs destroy ${DEFAULT_ZPOOL}/usr/src 2>/dev/null
             zfs destroy ${DEFAULT_ZPOOL}/usr/obj 2>/dev/null
 
+            note "Setting up and mounting ramdisks"
+            mkdir -p /usr/src /usr/obj ~/.cache/cache
             mount | grep '.cache/cache' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
-                grep '.cache/cache' /etc/fstab 2>/dev/null || printf "md     /User/.cache/cache    mfs   rw,-s4G 0 0\n" >> /etc/fstab
-                mount /User/.cache/cache
+                mdmfs -s4G md ~/.cache/cache
             fi
-
             mount | grep '/usr/src' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
-                grep '/usr/src' /etc/fstab 2>/dev/null || printf "md     /usr/src    mfs   rw,-s5G 0 0\n" >> /etc/fstab
-                mount /usr/src
+                mdmfs -s5G md /usr/src
             fi
-
             mount | grep '/usr/obj' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
-                grep '/usr/obj' /etc/fstab 2>/dev/null || printf "md     /usr/obj    mfs   rw,-s4G 0 0\n" >> /etc/fstab
-                mount /usr/obj
+                mdmfs -s4G md /usr/obj
             fi
             set -e
 
