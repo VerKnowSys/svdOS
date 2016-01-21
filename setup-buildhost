@@ -5,9 +5,11 @@ setup_buildhost () {
         ${UNAME_BIN} -a | ${GREP_BIN} "HBSD" >/dev/null 2>&1
         if [ "$?" = "0" ]; then
             note "Setting some zfs options"
-            zfs set dedup=off ${DEFAULT_ZPOOL}
-            zfs set compression=lz4 ${DEFAULT_ZPOOL}
+            zfs set primarycache=metadata ${DEFAULT_ZPOOL}
+            zfs set secondarycache=metadata ${DEFAULT_ZPOOL}
             sysctl vfs.zfs.prefetch_disable=1
+            sysctl debug.witness.trace=0
+            sysctl debug.witness.watch=0
 
             note "Setting pageexec and mprotect to 1 for build purposes"
             sysctl hardening.pax.pageexec.status=1
