@@ -103,7 +103,7 @@ note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps
 # spawn svdinit first:
 sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
 # export libucl:
-# sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
 # export libxo:
 set +e
 echo ${OS_VER} | grep "11" > /dev/null 2>&1
