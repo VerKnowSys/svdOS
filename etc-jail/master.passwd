@@ -1,6 +1,6 @@
 # $FreeBSD: releng/10.1/etc/master.passwd 256366 2013-10-12 06:08:18Z rpaulo $
 #
-root:$6$NjFDhgGFLbDQe6/a$qHaCEcWX73gMFIuDgXSVTvCE35jtLiNJUO4fJFj4ZzI.By.c5X6J6Juc3cRQAIe6gxlyf2KySSKCUlhGHEzWR0:0:0::0:0:Charlie &:/SystemUsers:/Software/Zsh/exports/zsh
+root:$6$NjFDhgGFLbDQe6/a$qHaCEcWX73gMFIuDgXSVTvCE35jtLiNJUO4fJFj4ZzI.By.c5X6J6Juc3cRQAIe6gxlyf2KySSKCUlhGHEzWR0:0:0::0:0:Charlie &:/:/Software/Zsh/exports/zsh
 toor:*:0:0::0:0:Bourne-again Superuser:/root:
 daemon:*:1:1::0:0:Owner of many system processes:/root:/usr/sbin/nologin
 operator:*:2:5::0:0:System &:/:/usr/sbin/nologin
