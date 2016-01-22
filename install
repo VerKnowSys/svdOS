@@ -249,7 +249,7 @@ s get ${list}
 note "Synchronizing /boot and boot loader configuration."
 ${RM_BIN} -f /tmp/tmp-loader.conf
 ${CP_BIN} -v /boot/loader.conf /tmp/tmp-loader.conf
-/Software/Rsync-static/exports/rsync --exclude 'kernel' --links --delete --compress --perms --executability --acls --xattrs --owner --group --times --recursive ${JAIL_SOURCE}/boot/ /boot >> ${LOG}  2>&1
+${RSYNC_BIN} --exclude 'kernel' --links --delete --compress --perms --executability --acls --xattrs --owner --group --times --recursive ${JAIL_SOURCE}/boot/ /boot >> ${LOG}  2>&1
 ${CP_BIN} -v /tmp/tmp-loader.conf /boot/loader.conf
 
 note "Installing custom kernel"
