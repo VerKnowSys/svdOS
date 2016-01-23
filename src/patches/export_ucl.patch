@@ -1,0 +1,18 @@
+--- share/mk/src.libnames.mk.orig	2016-01-23 22:33:12.065204000 +0100
++++ share/mk/src.libnames.mk	2016-01-23 22:34:51.350908000 +0100
+@@ -22,7 +22,6 @@
+ 		ldns \
+ 		sqlite3 \
+ 		ssh \
+-		ucl \
+ 		unbound
+ 
+ _INTERNALLIBS=	\
+@@ -107,6 +106,7 @@
+ 		kiconv \
+ 		krb5 \
+ 		kvm \
++		ucl \
+ 		l \
+ 		lzma \
+ 		m \
