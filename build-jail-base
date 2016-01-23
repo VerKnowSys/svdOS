@@ -106,7 +106,7 @@ sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdi
 # export libucl:
 note "Exporting UCL as regular OS library"
 sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
-patch -p0 -f < ${SERVED_REPO}/src/patches/*.patch
+patch -p0 -f < ${SERVED_REPO}/src/patches/export_ucl.patch >> ${LOG_OUTPUT}
 
 set +e
 echo ${OS_VER} | grep "11" > /dev/null 2>&1
