@@ -82,7 +82,7 @@ ${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
 ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/ >> ${LOG_OUTPUT}
 
 note "Syncing sources to src"
-time /Software/Rsync-static/exports/rsync -a -r /var/${OS_VER}-src/ /usr/src/
+time /Software/Rsync-static/exports/rsync -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
 
 cd /usr/src
 TIMESTAMP="$(date +%F-%s)"
