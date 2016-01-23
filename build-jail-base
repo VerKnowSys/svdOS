@@ -34,7 +34,7 @@ fi
 
 readonly ZROOT="zroot"
 readonly SERVED_REPO="/var/ServeD-OS"
-readonly PARALLEL_JOBS="10"
+readonly PARALLEL_JOBS="8"
 readonly SHARED_DIR="/Jails/Shared"
 readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
 readonly CONF_FILE="/etc/sofin.conf.sh"
@@ -102,22 +102,21 @@ fi
 note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
 # spawn svdinit first:
 sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
+
 # export libucl:
+note "Exporting UCL as regular OS library"
 sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
-# export libxo:
+patch -p0 -f < ${SERVED_REPO}/src/patches/*.patch
+
 set +e
 echo ${OS_VER} | grep "11" > /dev/null 2>&1
 if [ "$?" = "0" ]; then
     # https://github.com/freebsd/freebsd/commit/6471c2fc7c1fced2b5d2073b1629aa76588c61e2:
     sed -i '' -e 's#32#48#' sys/boot/efi/loader/copy.c
 else
-    # https://github.com/freebsd/freebsd/commit/6471c2fc7c1fced2b5d2073b1629aa76588c61e2:
     sed -i '' -e 's#32#48#' sys/boot/amd64/efi/copy.c
-    # sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile
 fi
 
-# echo ${OS_VER} | grep "11" > /dev/null 2>&1
-# test "$?" = "0" && sed -i '' -e 's/PRIVATELIB=.*$//' contrib/libxo/Makefile # not available in 10.2
 set -e
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
