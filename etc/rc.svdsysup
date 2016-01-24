@@ -94,7 +94,9 @@ zfs set readonly=off ${DEFAULT_ZPOOL}/usr
 zfs set readonly=off ${DEFAULT_ZPOOL}/User/root
 
 # Set snochg flags.
-chflags noschg /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1 || true
+for f in /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login; do
+    test -f $f && chflags -v noschg $f
+done
 
 # Update system version from system property
 served_version="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
@@ -139,7 +141,9 @@ fi
 cd /
 
 # Bring back schg flags
-chflags schg /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1
+for f in /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login; do
+    test -f $f && chflags -v schg $f
+done
 
 TIMESTAMP="$(date +%s)"
 note "Performing post-update snapshots: @${TIMESTAMP}"

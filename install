@@ -274,7 +274,9 @@ else
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
 fi
 
-chflags -v noschg ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}
+for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
+    test -f $f && chflags -v noschg $f
+done
 note "Deploying: ${SVDINIT_BIN}"
 if [ -f "${SVDINIT_BIN}" ]; then
     ${RM_BIN} -f ${SVDINIT_BIN}
@@ -291,7 +293,10 @@ else
     warn "ServeD init replacement failed to build, cause of some strange reason! Restoring backup version of: ${SVDINIT_BIN}"
     ${CP_BIN} -v ${SVDINIT_BACKUP_BIN} ${SVDINIT_BIN}
 fi
-chflags -v schg ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}
+for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
+    test -f $f && chflags -v schg $f
+done
+
 
 note "Setting up rc.svdsysup"
 ${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
