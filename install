@@ -349,8 +349,7 @@ ${TEST_BIN} -f /etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.s
 note "Setting up periodic"
 ${TEST_BIN} -f /etc/periodic.conf ||${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf
 
-note "Setting up defaults for: motd, ttys, login.conf"
-${PRINTF_BIN} "\n   You deserve to be ServeD!   (v${VERSION})\n\n" > /etc/motd
+note "Setting up defaults for: ttys, login.conf"
 ${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys
 ${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf
 ${CAP_MKDB_BIN} /etc/login.conf

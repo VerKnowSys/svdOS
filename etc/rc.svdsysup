@@ -38,6 +38,7 @@ readonly OS_ARCH="$(uname -m)"
 
 export HOME=/
 export RSYNC_BIN="/Software/Rsync-static/exports/rsync"
+export GIT_BIN="/Software/Git/exports/git"
 
 export OS_VERSION="11.0" # the default
 export TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
@@ -96,6 +97,7 @@ zfs set readonly=off ${DEFAULT_ZPOOL}/User/root
 chflags noschg /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login >> ${SVD_LOG} 2>&1 || true
 
 # Update system version from system property
+served_version="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
 stored_version="$(zfs get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${stored_version}" != "-" ]; then
     export OS_VERSION="${stored_version}"
@@ -120,6 +122,20 @@ install -v ${BACKUP_SVDINIT} /sbin
 # install Sofin
 cd ${SOFIN_REPO}
 bin/install
+
+# motd setup
+MOTD_TEMPLATE="\n\tYou deserve to be ServeD!\t(ServeD-base v${served_version} on top of hBSD"
+if [ -x "${GIT_BIN}" ]; then
+    if [ -d /var/${OS_VERSION}-src/ ]; then
+        head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | ${CUT_BIN} -c -16 2>/dev/null)"
+        ${PRINTF_BIN} "${MOTD_TEMPLATE} v${OS_VERSION} #${head16_hbsd_sha}…)\n\n" > /etc/motd
+    else
+        ${PRINTF_BIN} "${MOTD_TEMPLATE} v${OS_VERSION})\n\n" > /etc/motd
+    fi
+else # no git motd fallback:
+    ${PRINTF_BIN} "${MOTD_TEMPLATE} v${OS_VERSION})\n\n" > /etc/motd
+fi
+
 cd /
 
 # Bring back schg flags
