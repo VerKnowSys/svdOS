@@ -15,7 +15,7 @@ else
 fi
 
 
-VERSION="0.16.2"
+GVR_VERSION="0.16.2"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
 BRIDGE_DEVICE="bridge0"
@@ -309,7 +309,7 @@ attributes_show () {
 name_and_version () {
     SYSTEM_VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
     note "ServeD-OS: ${cyan}${SYSTEM_VERSION}${reset}"
-    note "ServeD GoVeRnor: ${cyan}v${VERSION}${reset}"
+    note "ServeD GoVeRnor: ${cyan}v${GVR_VERSION}${reset}"
 }
 
 
