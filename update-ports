@@ -1,0 +1,38 @@
+#!/bin/sh
+
+update_ports () {
+    set -e
+    readonly CONF_FILE="/etc/sofin.conf.sh"
+    if [ -e "${CONF_FILE}" ]; then
+        . "${CONF_FILE}"
+        validate_env
+    else
+        echo "FATAL: No configuration file found: ${CONF_FILE}. Sofin isn't installed properly."
+        exit 1
+    fi
+
+    export PORTS_DEST="/usr/ports"
+    export PORTS_HBSD="ports-hbsd"
+    export PORTS_REPO="/var/${PORTS_HBSD}"
+    export HBSD_PORTS_REPO="https://github.com/HardenedBSD/hardenedbsd-ports.git"
+
+    # main ():
+    if [ ! -f "${PORTS_REPO}/UPDATING" ]; then
+        cd /var
+        note "Cloning ports repository: ${HBSD_PORTS_REPO} to: ${PORTS_HBSD}"
+        ${GIT_BIN} clone ${HBSD_PORTS_REPO} ${PORTS_HBSD}
+        note "Performing initial ports sync to: ${PORTS_DEST} (be patient)"
+    else
+        cd ${PORTS_REPO}
+        note "Pulling from ports repository: ${HBSD_PORTS_REPO} to: ${PORTS_HBSD}"
+        ${GIT_BIN} pull ${HBSD_PORTS_REPO}
+        note "Performing ports sync to: ${PORTS_DEST} (be patient)"
+    fi
+
+    time ${RSYNC_BIN} -a -r "${PORTS_REPO}/" "${PORTS_DEST}" && \
+    note "Changing dir to: ${PORTS_DEST}"
+    cd ${PORTS_DEST}
+
+    note "Synchronized successfully. Creating an index.."
+    make index
+}
