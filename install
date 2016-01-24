@@ -274,9 +274,9 @@ else
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
 fi
 
+chflags -v noschg ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}
 note "Deploying: ${SVDINIT_BIN}"
 if [ -f "${SVDINIT_BIN}" ]; then
-    chflags -v noschg ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}
     ${RM_BIN} -f ${SVDINIT_BIN}
 fi
 clang -c ${SERVED_REPO}/src/getmntopts.c -o ${SERVED_REPO}/src/getmntopts.o
