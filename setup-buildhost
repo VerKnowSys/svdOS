@@ -46,7 +46,7 @@ setup_buildhost () {
             fi
             mount | grep '/usr/obj' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
-                mdmfs -s4G md /usr/obj
+                mdmfs -s5G md /usr/obj
             fi
             set -e
 
