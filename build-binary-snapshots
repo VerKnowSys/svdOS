@@ -21,8 +21,8 @@ if [ "${NAME}" = "" ]; then
     error "No name specified!"
 fi
 
-readonly VERSION="$2"
-if [ "${VERSION}" = "" ]; then
+readonly A_VERSION="$2"
+if [ "${A_VERSION}" = "" ]; then
     error "No version specified!"
 fi
 
@@ -42,7 +42,7 @@ if [ "${ARCH}" = "" ]; then
 fi
 
 compile_jails () {
-    BASE_SNAPSHOT="${NAME}-${OS_VER}-v${VERSION}-${ARCH}"
+    BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
     note "Compiling snapshot: ${BASE_SNAPSHOT}"
     REALPATH="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
     tar cfJ ../${BASE_SNAPSHOT}.tar.xz "${REALPATH}" >> /var/log/messages 2>&1
@@ -60,7 +60,7 @@ compile_jails () {
     scp ../${BASE_SNAPSHOT}.tar.xz ${DESTINATION}
     if [ "$?" = "0" ]; then
         note "Finished successfully. Updating latest version on remote destination"
-        ssh dmilith@served.verknowsys.com "echo '${VERSION}' > /Users/dmilith/ServeD/Web/version-latest"
+        ssh dmilith@served.verknowsys.com "echo '${A_VERSION}' > /Users/dmilith/ServeD/Web/version-latest"
     else
         error "Something went wrong while uploading Jails base."
         exit 1
