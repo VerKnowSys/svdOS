@@ -130,6 +130,7 @@ cd ${SOFIN_REPO}
 bin/install
 
 # motd setup
+test -f /etc/motd && chflags noschg /etc/motd
 MOTD_TEMPLATE="\n\tYou deserve to be ServeD!\t(ServeD-base v${served_version} on top of hBSD"
 if [ -x "${GIT_BIN}" ]; then
     if [ -d /var/${OS_VERSION}-src/ ]; then
@@ -141,7 +142,7 @@ if [ -x "${GIT_BIN}" ]; then
 else # no git motd fallback:
     printf "${MOTD_TEMPLATE} v${OS_VERSION})\n\n" > /etc/motd
 fi
-
+test -f /etc/motd && chflags schg /etc/motd
 cd /
 
 # Bring back schg flags
