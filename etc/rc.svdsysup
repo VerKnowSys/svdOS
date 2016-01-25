@@ -133,11 +133,11 @@ bin/install
 
 # motd setup
 test -f /etc/motd && chflags noschg /etc/motd
-MOTD_TEMPLATE="\n\tYou deserve to be ServeD!\n\tv${served_version} based on hBSD"
+MOTD_TEMPLATE="\n\tYou deserve to be ServeD!\n\n\tv${served_version} based on hBSD"
 if [ -x "${GIT_BIN}" ]; then
     if [ -d /var/${OS_VERSION}-src/ ]; then
         head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | cut -c -16 2>/dev/null)"
-        printf "${MOTD_TEMPLATE} v${OS_VERSION} #${head16_hbsd_sha}…)\n\n" > /etc/motd
+        printf "${MOTD_TEMPLATE} v${OS_VERSION} #${head16_hbsd_sha}…\n\n" > /etc/motd
     else
         printf "${MOTD_TEMPLATE} v${OS_VERSION})\n\n" > /etc/motd
     fi
