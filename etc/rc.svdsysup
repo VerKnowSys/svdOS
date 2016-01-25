@@ -123,7 +123,9 @@ done
 
 note "Installing core software.."
 install -v ${SERVED_REPO}/gvr /usr/bin
-install -v ${BACKUP_SVDINIT} /sbin
+cp ${BACKUP_SVDINIT} /var/svdinit
+install -v /var/svdinit /sbin
+rm -f /var/svdinit
 
 # install Sofin
 cd ${SOFIN_REPO}
