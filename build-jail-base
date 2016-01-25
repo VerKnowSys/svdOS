@@ -32,13 +32,8 @@ else
     readonly ARCH_SUBTYPE="${ARCH}"
 fi
 
-readonly ZROOT="zroot"
-readonly SERVED_REPO="/var/ServeD-OS"
-readonly PARALLEL_JOBS="8"
-readonly SHARED_DIR="/Jails/Shared"
-readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
+# read sofin definitions
 readonly CONF_FILE="/etc/sofin.conf.sh"
-readonly LOG_OUTPUT="/var/log/build-$(date +%F).log"
 if [ -e "${CONF_FILE}" ]; then
     . "${CONF_FILE}"
     validate_env
@@ -47,30 +42,37 @@ else
     exit 1
 fi
 
+readonly SERVED_REPO="/var/ServeD-OS"
+readonly PARALLEL_JOBS="${NCPUS}"
+readonly SHARED_DIR="/Jails/Shared"
+readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
+readonly LOG_OUTPUT="/var/log/build-$(date +%F).log"
+
 if [ ! -d "${SERVED_REPO}" ]; then
     cd /var
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone https://github.com/VerKnowSys/ServeD-OS.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone https://github.com/VerKnowSys/ServeD-OS.git
 else
     cd ${SERVED_REPO}
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull https://github.com/VerKnowSys/ServeD-OS.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/ServeD-OS.git
 fi
 
 # main()
-echo "Process started for version: ${OS_VER}: $(date +%F@%H-%M)" > ${LOG_OUTPUT}
-note "Process started for version: ${OS_VER}: $(date +%F@%H-%M)"
-note "Processing version: ${OS_VER} with architecture: ${ARCH}"
+${RM_BIN} -f ${LOG_OUTPUT}
+${TOUCH_BIN} ${LOG_OUTPUT}
+echo "Process started for OS version: ${OS_VER}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}" >> ${LOG_OUTPUT}
+note "Process started for OS version: ${OS_VER}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
 
 cd /var
 if [ ! -d "${OS_VER}-src" ]; then
     # svn co http://svn0.eu.FreeBSD.org/base/releng/${OS_VER} ${OS_VER}-src
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${OS_VER}-src
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${OS_VER}-src
     cd ${OS_VER}-src
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true
 else
     cd ${OS_VER}-src
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git checkout ${CURRENT_BRANCH} > /dev/null 2>&1
-    GIT_SSL_NO_VERIFY=true /Software/Git/exports/git pull origin ${CURRENT_BRANCH}
-    note "Working on branch: $(/Software/Git/exports/git branch)"
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} checkout ${CURRENT_BRANCH} > /dev/null 2>&1
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull origin ${CURRENT_BRANCH}
+    note "Working on branch: $(${GIT_BIN} branch)"
 fi
 
 note "Setting up build host specific settings"
@@ -82,16 +84,16 @@ ${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
 ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/ >> ${LOG_OUTPUT}
 
 note "Syncing sources to src"
-time /Software/Rsync-static/exports/rsync -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
+time ${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
 
 cd /usr/src
-TIMESTAMP="$(date +%F-%s)"
-DESTBASE="${SHARED_DIR}/FreeBSD-${OS_VER}-${ARCH}"
-zfs create ${ZROOT}${DESTBASE} 2>> ${LOG_OUTPUT} || true
+TIMESTAMP="$(${DATE_BIN} +%F-%s)"
+DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
+${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
 # DESTDIR="${DESTBASE}-${TIMESTAMP}"
 
 note "Preparing kernel configuration"
-GIT_SSL_NO_VERIFY=true /Software/Git/exports/git reset --hard >> ${LOG_OUTPUT}
+GIT_SSL_NO_VERIFY=true ${GIT_BIN} reset --hard >> ${LOG_OUTPUT}
 rm -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 if [ "${ARCH}" = "arm" ]; then
     cp -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
@@ -131,53 +133,41 @@ note "Wiping out previous world"
 rm -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>&1
 
 note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
-zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin
+${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin
 
 note "Installing kernel"
-make installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
+make installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     rm -rf /var/tmp/temproot
+
     note "Merging Pre-buildworld configuration"
-    mergemaster -p -a
+    mergemaster -p -a >> ${LOG_OUTPUT} 2>&1
 
     note "Installing world"
     make installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
-    note "Merging configuration: ${DESTBASE}"
-    mergemaster -P -a -D${DESTBASE}
+    note "Merging configuration in: ${DESTBASE}"
+    mergemaster -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>&1
 
     note "Deleting old dirs, files and libs"
     yes | make delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
 fi
 
-if [ -e /usr/src/contrib/libucl/include/ucl.h ]; then
-    note "Installing private headers (ucl)"
-    cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
-    cp /usr/src/contrib/libucl/include/ucl.h ${DESTBASE}/usr/include/ucl.h || true
-fi
-
-# if [ -e /usr/src/contrib/libxo/include/ucl.h ]; then
-#     note "Installing private headers (ucl)"
-#     cp /usr/src/contrib/libucl/include/ucl.h /usr/include/ucl.h
-#     cp /usr/src/contrib/libucl/include/ucl.h ${DESTBASE}/usr/include/ucl.h || true
-# fi
-
 note "Cleaning up"
 make clean >> ${LOG_OUTPUT} 2>&1
-rm -vrf ${DESTBASE}/{media,mnt,proc,root,sys,etc,dev,rescue,tmp} >> ${LOG_OUTPUT}
 
 note "Snapshotting after installation"
-zfs snapshot ${ZROOT}${DESTBASE}@${TIMESTAMP}_end
+${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
 
 note "Storing fs diff"
 mkdir -p ${DIFFS_DIR} > /dev/null 2>&1
-zfs send -i ${ZROOT}${DESTBASE}@${TIMESTAMP}_begin ${ZROOT}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
+${ZFS_BIN} send -i ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
 
 note "Stopping any running jails"
 for node in $(gvr list | awk '{print $1;}'); do
-    gvr stop ${node}
+    gvr stop ${node} || true
 done
 
-echo "Process finished: $(date +%F@%H-%M)" >> ${LOG_OUTPUT}
-note "Process finished: $(date +%F@%H-%M)"
+echo "Process finished @${TIMESTAMP}" >> ${LOG_OUTPUT}
+note "Process finished @${TIMESTAMP}"
