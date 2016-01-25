@@ -12,6 +12,7 @@ log_in_vain="YES"
 clear_tmp_enable="YES"
 gateway_enable="YES"
 local_unbound_enable="YES"
+update_motd="NO"
 
 # PF
 pf_enable="NO" # KP under 11
