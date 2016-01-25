@@ -2,15 +2,6 @@
 
 update_ports () {
     set -e
-    readonly CONF_FILE="/etc/sofin.conf.sh"
-    if [ -e "${CONF_FILE}" ]; then
-        . "${CONF_FILE}"
-        validate_env
-    else
-        echo "FATAL: No configuration file found: ${CONF_FILE}. Sofin isn't installed properly."
-        exit 1
-    fi
-
     export PORTS_DEST="/usr/ports"
     export PORTS_HBSD="ports-hbsd"
     export PORTS_REPO="/var/${PORTS_HBSD}"
