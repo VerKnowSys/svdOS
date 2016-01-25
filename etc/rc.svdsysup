@@ -133,7 +133,7 @@ bin/install
 
 # motd setup
 test -f /etc/motd && chflags noschg /etc/motd
-MOTD_TEMPLATE="\n\tYou deserve to be ServeD!\t(ServeD-base v${served_version} on top of hBSD"
+MOTD_TEMPLATE="\n\tYou deserve to be ServeD!\n\tv${served_version} based on hBSD"
 if [ -x "${GIT_BIN}" ]; then
     if [ -d /var/${OS_VERSION}-src/ ]; then
         head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | cut -c -16 2>/dev/null)"
@@ -145,6 +145,7 @@ else # no git motd fallback:
     printf "${MOTD_TEMPLATE} v${OS_VERSION})\n\n" > /etc/motd
 fi
 test -f /etc/motd && chflags schg /etc/motd
+test -f /etc/fstab || touch /etc/fstab
 cd /
 
 # Bring back schg flags
