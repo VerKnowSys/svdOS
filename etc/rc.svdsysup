@@ -126,6 +126,7 @@ install -v ${SERVED_REPO}/gvr /usr/bin
 cp ${BACKUP_SVDINIT} /var/svdinit
 install -v /var/svdinit /sbin
 rm -f /var/svdinit
+test ! -f /etc/fstab && touch /etc/fstab
 
 # install Sofin
 cd ${SOFIN_REPO}
