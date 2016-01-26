@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+. /etc/sofin.conf.sh
+. ./setup-buildhost
+. ./update-ports
+
+setup_buildhost
+update_ports
+
+set +e
