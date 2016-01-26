@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+
+# PROVIDE: buildhost
+# REQUIRE: NETWORKING syslog-ng
+# BEFORE:  DAEMON
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="buildhost"
+rcvar="buildhost_enable"
+command="setup_buildhost_if_file_trigger_exists"
+
+setup_buildhost_if_file_trigger_exists () {
+    if [ -f "/.build-host" ]; then
+        . /etc/sofin.conf.sh
+        . /var/ServeD-OS/setup-buildhost
+        setup_buildhost
+    fi
+}
+
+load_rc_config $name
+run_rc_command "$1"

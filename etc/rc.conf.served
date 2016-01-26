@@ -4,6 +4,7 @@
 #
 
 sshd_enable="YES"
+buildhost_enable="YES"
 casperd_enable="YES"
 accounting_enable="NO"
 icmp_drop_redirect="YES"

@@ -323,6 +323,12 @@ ${MKDIR_BIN} -p ${SYSLOGNG_PREFIX}/etc ${SYSLOGNG_PREFIX}/var
 ${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSLOGNG_PREFIX}/etc/
 ${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSLOGNG_PREFIX}/etc/
 
+note "Updating rc.d scripts"
+if [ ! -x "/etc/rc.d/buildhost" ]; then
+    note "Creating rc script for buildhost"
+    ${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.d/buildhost /etc/rc.d
+fi
+
 if [ ! -x "/etc/rc.d/syslog-ng" ]; then
     note "Creating rc script for syslog-ng"
     ${CP_BIN} -v /etc/rc.d/syslogd /etc/rc.d/syslog-ng
