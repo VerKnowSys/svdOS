@@ -1,22 +1,32 @@
 #!/bin/sh
 #
-
+# blame: dmilith
+# © 2011-2016 verknowsys.com
+#
 # PROVIDE: buildhost
-# REQUIRE: NETWORKING syslog-ng
-# BEFORE:  DAEMON
+# REQUIRE: NETWORK syslog-ng FILESYSTEMS mountcritremote
 # KEYWORD: shutdown
 
 . /etc/rc.subr
 
+
+command="/usr/bin/true" # irrelevant
+
 name="buildhost"
 rcvar="buildhost_enable"
-command="setup_buildhost_if_file_trigger_exists"
+start_precmd="buildhost_prestart"
+separator="---------------------------------------------------------------------------"
 
-setup_buildhost_if_file_trigger_exists () {
+export SERVED_REPO="/var/ServeD-OS"
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+buildhost_prestart () {
     if [ -f "/.build-host" ]; then
+        echo "${separator}"
         . /etc/sofin.conf.sh
-        . /var/ServeD-OS/setup-buildhost
+        . ${SERVED_REPO}/setup-buildhost
         setup_buildhost
+        echo "${separator}"
     fi
 }
 
