@@ -23,9 +23,9 @@ setup_buildhost () {
             note "Loading Dtrace"
             kldload dtraceall
 
-            note "Creating ~/.ssh/config"
-            echo "Host verknowsys.com *.verknowsys.com" > ~/.ssh/config
-            echo "Port 60022" >> ~/.ssh/config
+            note "Creating /User/.ssh/config"
+            echo "Host verknowsys.com *.verknowsys.com" > /User/.ssh/config
+            echo "Port 60022" >> /User/.ssh/config
 
             note "Turning off Syslog-ng (is part of /Software so cannot be run on build host)"
             sed -i '' -e 's#syslog_ng_enable="YES"#syslog_ng_enable="NO"#' /etc/rc.conf 2>/dev/null
@@ -35,10 +35,10 @@ setup_buildhost () {
             zfs destroy ${DEFAULT_ZPOOL}/usr/obj 2>/dev/null
 
             note "Setting up and mounting ramdisks"
-            mkdir -p /usr/src /usr/obj ~/.cache/cache
+            mkdir -p /usr/src /usr/obj /User/.cache/cache
             mount | grep '.cache/cache' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
-                mdmfs -s4G md ~/.cache/cache
+                mdmfs -s4G md /User/.cache/cache
             fi
             mount | grep '/usr/src' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
