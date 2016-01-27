@@ -126,6 +126,14 @@ cp ${BACKUP_SVDINIT} /var/svdinit
 install -v /var/svdinit /sbin
 rm -f /var/svdinit
 test ! -f /etc/fstab && touch /etc/fstab
+if [ -d "/root" ]; then
+    note "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root"
+    ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} /root/ /User && \
+    pw user mod root -d /User && \
+    rm -rf /root && \
+    note "Home directory synchonized successfully"
+fi
+sync
 
 # install Sofin
 cd ${SOFIN_REPO}
@@ -167,14 +175,6 @@ for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOO
         zfs destroy "${dataset}@${LAST}"
     fi
 done
-
-if [ -d "/root" ]; then
-    note "Syncing root home dir to dataset: ${DEFAULT_ZPOOL}/User/root"
-    ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} /root/ /User 2>/dev/null && \
-    pw user mod root -d /User && \
-    rm -rf /root && \
-    note "Sync complete"
-fi
 
 
 generate_conf_for_unbound_resolver () {
