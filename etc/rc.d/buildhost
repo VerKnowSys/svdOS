@@ -30,7 +30,7 @@ buildhost_prestart () {
     else
         printf "\nNot a build-host\n"
     fi
-    printf "\n\n\nServeD system is ready to serve\n"
+    printf "\nServeD system is ready to serve\n"
     echo "${separator}"
 }
 
