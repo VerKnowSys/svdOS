@@ -131,6 +131,7 @@ test ! -f /etc/fstab && touch /etc/fstab
 # install Sofin
 cd ${SOFIN_REPO}
 bin/install
+s reload
 
 # motd setup
 vblock="v${served_version}+v${OS_VERSION}"

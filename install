@@ -202,13 +202,16 @@ else
     ${GIT_BIN} stash save "install-update-${TIMESTAMP}"
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}
 fi
+
+export HOME="/User"
 printf "Installing Sofin\n"
 bin/install
 readonly CONF_NAME="sofin.conf.sh"
 readonly CONF_FILE="/etc/${CONF_NAME}"
 if [ -e "${CONF_FILE}" ]; then
     . "${CONF_FILE}"
-    s reload
+    s purge
+    s update
 else
     echo "FATAL: No configuration file found: ${CONF_FILE}. Sofin wasn't installed properly?"
     exit 1
@@ -244,7 +247,7 @@ case ${ARCH} in
         ;;
 esac
 note "Installing additional software bundles: ${list}"
-s get ${list}
+s install ${list}
 
 note "Synchronizing /boot and boot loader configuration."
 ${RM_BIN} -f /tmp/tmp-loader.conf
