@@ -43,7 +43,7 @@ else
 fi
 
 readonly SERVED_REPO="/var/ServeD-OS"
-readonly PARALLEL_JOBS="${NCPUS}"
+readonly PARALLEL_JOBS="${CPUS}"
 readonly SHARED_DIR="/Jails/Shared"
 readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
 readonly LOG_OUTPUT="/var/log/build-$(date +%F).log"
