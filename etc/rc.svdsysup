@@ -42,6 +42,8 @@ export GIT_BIN="/Software/Git/exports/git"
 
 export OS_VERSION="11.0" # the default
 export TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
+export TIMESTAMP="$(date +%s)"
+export SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
 
 
 TTY="false"
@@ -61,7 +63,7 @@ debug () {
     if [ "${DEBUG}" = "true" ]; then
         cecho "# $1" ${magenta} # NOTE: this "#" is required for debug mode to work properly with generation of ~/.profile and /etc/profile_sofin files!
     else
-        cecho "# $1" ${magenta} >> ${LOG} 2>&1
+        cecho "# $1" ${magenta} >> ${SVD_LOG} 2>&1
     fi
 }
 
@@ -78,16 +80,11 @@ error () {
     exit 1
 }
 
-
-TIMESTAMP="$(date +%s)"
-SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
-
 note "Performing pre-update snapshots: @${TIMESTAMP}"
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
 zfs snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
 zfs set readonly=off ${DEFAULT_ZPOOL}/var
-zfs set readonly=off ${DEFAULT_ZPOOL}/var/log
 zfs set readonly=off ${DEFAULT_ZPOOL}/ROOT/default
 zfs set readonly=off ${DEFAULT_ZPOOL}/usr
 zfs set readonly=off ${DEFAULT_ZPOOL}/User/root
@@ -107,12 +104,13 @@ if [ "${stored_version}" != "-" ]; then
 fi
 
 note "Mounting core datasets in read-write mode"
+zfs mount ${DEFAULT_ZPOOL}/var/log
 zfs mount ${DEFAULT_ZPOOL}/User/root
 zfs mount ${DEFAULT_ZPOOL}/Software/root
 zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${TRIPPLE}
 note "Wiping out unwanted dirs in: /Jails/Shared/${TRIPPLE}"
 for folder in etc media mnt proc root tmp; do
-    ${RM_BIN} -vf /Jails/Shared/${TRIPPLE}/${folder} >> ${SVD_LOG} 2>&1
+    rm -vf /Jails/Shared/${TRIPPLE}/${folder} >> ${SVD_LOG} 2>&1
 done
 sync
 for folder in bin lib libexec sbin usr; do
@@ -132,7 +130,7 @@ test ! -f /etc/fstab && touch /etc/fstab
 sync
 if [ -d "/root" ]; then
     note "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root"
-    ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} /root/ /User && \
+    ${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ /User >> ${SVD_LOG} 2>&1 && \
     pw user mod root -d /User && \
     rm -rf /root && \
     note "Home directory synchonized successfully"
@@ -153,7 +151,7 @@ if [ -x "${GIT_BIN}" ]; then
         head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | cut -c -16 2>/dev/null)"
         header_extension="${header_extension}#${head16_hbsd_sha}…"
     else
-        header_extension="\t${header_extension} (binary)"
+        header_extension="\t${header_extension}  (binary)"
     fi
 fi
 # build motd:
