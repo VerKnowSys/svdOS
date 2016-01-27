@@ -36,7 +36,7 @@ readonly PATH=/sbin:/bin:/usr/sbin:/usr/bin
 readonly OS_NAME="$(uname -s)"
 readonly OS_ARCH="$(uname -m)"
 
-export HOME=/
+export HOME="/User"
 export RSYNC_BIN="/Software/Rsync-static/exports/rsync"
 export GIT_BIN="/Software/Git/exports/git"
 
