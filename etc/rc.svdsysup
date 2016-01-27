@@ -227,10 +227,12 @@ server:
     # This option requires DNSSEC setup:
     # auto-trust-anchor-file: /var/unbound/root.key
 
+    # Load user Cells configurations
+    include: /var/unbound/conf.d/*.conf
+
 include: /var/unbound/forward.conf
 include: /var/unbound/lan-zones.conf
 include: /var/unbound/control.conf
-include: /var/unbound/conf.d/*.conf
 " > ${UNBOUND_CONF}
 
     # XXX: TODO: not really secure, consider using SSL certs per server and local user domains
