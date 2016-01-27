@@ -91,6 +91,7 @@ zfs set readonly=off ${DEFAULT_ZPOOL}/var/log
 zfs set readonly=off ${DEFAULT_ZPOOL}/ROOT/default
 zfs set readonly=off ${DEFAULT_ZPOOL}/usr
 zfs set readonly=off ${DEFAULT_ZPOOL}/User/root
+sync
 
 # Set snochg flags.
 for f in /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login; do
@@ -113,12 +114,14 @@ note "Wiping out unwanted dirs in: /Jails/Shared/${TRIPPLE}"
 for folder in etc media mnt proc root tmp; do
     ${RM_BIN} -vf /Jails/Shared/${TRIPPLE}/${folder} >> ${SVD_LOG} 2>&1
 done
+sync
 for folder in bin lib libexec sbin usr; do
     note "Synchronizing /Jails/Shared/${TRIPPLE}/${folder}/ with /${folder}"
     ${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} \
         --exclude=/usr/home --exclude=/usr/ports \
         /Jails/Shared/${TRIPPLE}/${folder}/ /${folder} >> ${SVD_LOG} 2>&1
 done
+sync
 
 note "Installing core software.."
 install -v ${SERVED_REPO}/gvr /usr/bin
@@ -126,6 +129,7 @@ cp ${BACKUP_SVDINIT} /var/svdinit
 install -v /var/svdinit /sbin
 rm -f /var/svdinit
 test ! -f /etc/fstab && touch /etc/fstab
+sync
 if [ -d "/root" ]; then
     note "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root"
     ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} /root/ /User && \
@@ -148,6 +152,8 @@ if [ -x "${GIT_BIN}" ]; then
         cd /var/${OS_VERSION}-src/
         head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | cut -c -16 2>/dev/null)"
         header_extension="${header_extension}#${head16_hbsd_sha}…"
+    else
+        header_extension="\t${header_extension} (binary)"
     fi
 fi
 # build motd:
@@ -166,7 +172,7 @@ note "Performing post-update snapshots: @${TIMESTAMP}"
 zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
 zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
 zfs snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
-
+sync
 for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOOL}/var; do
     value="$(zfs list -H -t snap -o name | grep "${dataset}@" 2>/dev/null | wc -l 2>/dev/null | sed 's/ //g' 2>/dev/null)"
     if [ ${value} -gt 5 ]; then
