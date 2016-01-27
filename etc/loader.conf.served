@@ -43,3 +43,4 @@ if_vlan_load="YES"
 net.fibs=16
 kern.racct.enable=1
 boot_verbose="YES"
+verbose_loading="YES"
