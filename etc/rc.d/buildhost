@@ -23,11 +23,15 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 buildhost_prestart () {
     if [ -f "/.build-host" ]; then
         echo "${separator}"
+        printf "\nBuild-host: $(hostname -f)\n"
         . /etc/sofin.conf.sh
         . ${SERVED_REPO}/setup-buildhost
         setup_buildhost
-        echo "${separator}"
+    else
+        printf "\nNot a build-host\n"
     fi
+    printf "\n\n\nServeD system is ready to serve\n"
+    echo "${separator}"
 }
 
 load_rc_config $name
