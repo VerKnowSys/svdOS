@@ -61,8 +61,7 @@ debug () {
     if [ "${DEBUG}" = "true" ]; then
         cecho "# $1" ${magenta} # NOTE: this "#" is required for debug mode to work properly with generation of ~/.profile and /etc/profile_sofin files!
     else
-        cecho "# $1" ${magenta} >> ${LOG} 2>>/dev/null
-        # cecho " ~ $1" ${magenta} >> ${LOG}
+        cecho "# $1" ${magenta} >> ${LOG} 2>&1
     fi
 }
 
