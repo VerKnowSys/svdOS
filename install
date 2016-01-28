@@ -192,6 +192,17 @@ if [ "$?" != "0" ]; then
     printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
     exit 1
 fi
+if [ -f "${HOME}/.gitconfig" ]; then
+    grep -R 'ServeD' "${HOME}/.gitconfig" >/dev/null 2>&1
+    if [ "$?" != "0" ]; then
+        printf "Detected no local Git configuration\n"
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} config --global user.name "ServeD node" 2>/dev/null
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} config --global user.email "admin@verknowsys.com" 2>/dev/null
+    else
+        printf "Local Git configuration looks fine\n"
+    fi
+fi
+set -e
 
 if [ ! -d "${SOFIN_REPO}" ]; then
     cd /var
