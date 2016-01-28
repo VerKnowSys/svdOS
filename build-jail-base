@@ -3,6 +3,7 @@
 unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
 
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export OS_NAME="FreeBSD"
 
 set -e
 
@@ -58,6 +59,7 @@ else
 fi
 
 # main()
+TIMESTAMP="$(${DATE_BIN} +%F-%s)"
 ${RM_BIN} -f ${LOG_OUTPUT}
 ${TOUCH_BIN} ${LOG_OUTPUT}
 echo "Process started for OS version: ${OS_VER}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}" >> ${LOG_OUTPUT}
@@ -84,7 +86,6 @@ note "Syncing sources to src"
 time ${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
 
 cd /usr/src
-TIMESTAMP="$(${DATE_BIN} +%F-%s)"
 DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
 ${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
 # DESTDIR="${DESTBASE}-${TIMESTAMP}"
