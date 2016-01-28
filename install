@@ -214,17 +214,14 @@ else
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}
 fi
 
-export HOME="/User"
-printf "Installing Sofin\n"
 bin/install
 readonly CONF_NAME="sofin.conf.sh"
-readonly CONF_FILE="/etc/${CONF_NAME}"
-if [ -e "${CONF_FILE}" ]; then
-    . "${CONF_FILE}"
-    s purge
-    s update
+readonly LOCAL_CONF_FILE="${SOFIN_REPO}/src/${CONF_NAME}"
+if [ -e "${LOCAL_CONF_FILE}" ]; then
+    . "${LOCAL_CONF_FILE}"
+    ${SOFIN_BIN} reset
 else
-    echo "FATAL: No configuration file found: ${CONF_FILE}. Sofin wasn't installed properly?"
+    echo "FATAL: No configuration file found: ${LOCAL_CONF_FILE}. Sofin wasn't installed properly?"
     exit 1
 fi
 note "Sofin installed."
@@ -258,7 +255,7 @@ case ${ARCH} in
         ;;
 esac
 note "Installing additional software bundles: ${list}"
-s install ${list}
+${SOFIN_BIN} install ${list}
 
 note "Synchronizing /boot and boot loader configuration."
 ${RM_BIN} -f /tmp/tmp-loader.conf
