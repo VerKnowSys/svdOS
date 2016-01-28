@@ -1,0 +1,228 @@
+#!/usr/bin/zsh
+
+function precmd {
+    . /etc/zsh/func/zgitinit
+
+    if zgit_isgit; then
+        GITBRANCH="${PR_BRIGHT_BLUE}$(zgit_branch)${PR_RESET}"
+        if zgit_isworktreeclean; then
+          GITSTATE="${PR_BRIGHT_GREEN}✓${PR_RESET}"
+          GITINFO="${PR_BRIGHT_GREY}[${GITBRANCH}${PR_BRIGHT_GREY}] ${GITSTATE}"
+        else
+          GITSTATE="${PR_BRIGHT_RED}✘${PR_RESET}"
+          GITINFO="${PR_BRIGHT_GREY}[${GITBRANCH}${PR_BRIGHT_GREY}] ${GITSTATE}"
+        fi
+    else
+      GITSTATE=""
+      GITINFO=""
+    fi
+
+    local TERMWIDTH
+    (( TERMWIDTH = ${COLUMNS} - 1 ))
+
+    local PROMPTSIZE=${#${(%):--- %D{%R.%S %a %b %d %Y}\! ---}}
+    local PWDSIZE=${#${(%):-%~}}
+
+    if [[ "$PROMPTSIZE + $PWDSIZE" -gt $TERMWIDTH ]]; then
+     (( PR_PWDLEN = $TERMWIDTH - $PROMPTSIZE ))
+    fi
+}
+
+setprompt () {
+    # Need this, so the prompt will work
+    setopt prompt_subst
+
+    # let's load colors into our environment, then set them
+    autoload colors zsh/terminfo
+
+    if [[ "$terminfo[colors]" -gt 8 ]]; then
+        colors
+    fi
+
+    for COLOR in RED GREEN YELLOW WHITE BLACK GREY CYAN BLUE MAGENTA; do
+        eval PR_$COLOR='%{$fg[${(L)COLOR}]%}'
+        eval PR_BRIGHT_$COLOR='%{$fg_bold[${(L)COLOR}]%}'
+    done
+
+    PR_RESET="%{$reset_color%}"
+
+    # Finally, let's set the prompt
+    PROMPT='${PR_BRIGHT_GREY}[%D{%s}] ${PR_GREEN}%m${PR_RESET}:${PR_RESET}%$PR_PWDLEN<...<%~% ${PR_RESET} ${GITINFO}${PR_RESET}
+${PR_RESET}${PR_BRIGHT_GREY}⇢ '
+}
+
+setprompt
+
+export LSCOLORS=cxfxcxdxbxegedabagacad
+
+command_oriented_history=1
+HISTCONTROL=ignoreboth
+umask 022
+mesg n
+
+### Export everything so far
+export PS1 NLSPATH PAGER MAIL LS_COLORS LS_OPTIONS LIBRARY_PATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH EDITOR TERM XFILESEARCHPATH
+
+### History configuration
+export HISTFILE=$HOME/.zsh_history
+export HISTSIZE=8192
+export SAVEHIST=8192
+
+### CD shortcuts
+export CDPATH=.:~:/Software
+
+### List of file extensions you wish to ignore on a ls
+export FIGNORE=”~:.o”
+
+### These are very interesting. I will explain some of them at the end
+setopt share_history
+setopt appendhistory
+setopt autocd
+setopt automenu
+setopt autopushd
+setopt autoresume
+setopt complete_in_word
+setopt extended_glob
+setopt hist_ignoredups
+setopt hist_ignorespace
+setopt list_types
+setopt mailwarning
+setopt no_flowcontrol
+setopt no_hup
+setopt no_notify
+setopt printexitvalue
+setopt pushd_ignoredups
+setopt pushd_silent
+#setopt -e
+
+## Making sure your keyboard will work on any terminal
+bindkey "^b" backward-word
+bindkey "^n" forward-word
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+bindkey '^R' history-incremental-search-backward
+
+### Push History from previous sessions
+fc -R $HISTFILE
+
+### Forcing the rehash
+_force_rehash() {
+  (( CURRENT == 1 )) && rehash
+    return 1
+}
+
+### Loading the completion style
+zstyle ':completion:*' completer _oldlist _expand _force_rehash _complete
+
+setopt histappend
+setopt promptsubst
+
+export EDITOR='vim'
+export HISTCONTROL=erasedups
+export HISTSIZE=10000
+export LESSEDIT='less -l %lm %f'
+
+# ulimits
+ulimit -s 65535
+ulimit -n 4000
+ulimit -c 0
+
+# Load the prompt theme system
+autoload -U promptinit
+promptinit
+
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' list-colors 'reply=( "=(#b)(*$VAR)(?)*=00=$color[green]=$color[bg-green]" )'
+zstyle ':completion:*:*:*:*:hosts' list-colors '=*=30;41'
+zstyle ':completion:*:*:*:*:users' list-colors '=*=$color[green]=$color[red]'
+
+setopt extendedglob
+zmodload -a colors
+zmodload -a autocomplete
+zmodload -a complist
+
+unset JAVA_OPTS
+
+zstyle ':completion:*' menu select
+
+# source $HOME/.profile
+source /etc/zsh/zsh-syntax-highlighting.zsh
+source /etc/zsh/zsh-history-substring-search.zsh
+
+
+function greps () {
+
+  ARGS="$*"
+  if [ "${ARGS}" != "" ]; then
+    processes="$(ps -ef | grep -v grep | grep ${ARGS})"
+  else
+    processes="$(ps -ef | grep -v grep)"
+  fi
+
+  printf "${processes}\n"
+  return
+}
+
+
+LANG="en_US.UTF8"
+LC_COLLATE="en_US.UTF8"
+LC_CTYPE="en_US.UTF8"
+LC_MESSAGES="en_US.UTF8"
+LC_MONETARY="en_US.UTF8"
+LC_NUMERIC="en_US.UTF8"
+LC_TIME="en_US.UTF8"
+LC_ALL=
+
+alias sshn="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+
+# addon by zerg2000:
+
+typeset -A key
+
+key[Home]=${terminfo[khome]}
+key[End]=${terminfo[kend]}
+key[Insert]=${terminfo[kich1]}
+key[Delete]=${terminfo[kdch1]}
+key[Up]=${terminfo[kcuu1]}
+key[Down]=${terminfo[kcud1]}
+key[Left]=${terminfo[kcub1]}
+key[Right]=${terminfo[kcuf1]}
+key[PageUp]=${terminfo[kpp]}
+key[PageDown]=${terminfo[knp]}
+
+# setup key accordingly
+[[ -n "${key[Home]}"    ]]  && bindkey  "${key[Home]}"    beginning-of-line
+[[ -n "${key[End]}"     ]]  && bindkey  "${key[End]}"     end-of-line
+[[ -n "${key[Insert]}"  ]]  && bindkey  "${key[Insert]}"  overwrite-mode
+[[ -n "${key[Delete]}"  ]]  && bindkey  "${key[Delete]}"  delete-char
+[[ -n "${key[Up]}"      ]]  && bindkey  "${key[Up]}"      up-line-or-history
+[[ -n "${key[Down]}"    ]]  && bindkey  "${key[Down]}"    down-line-or-history
+[[ -n "${key[Left]}"    ]]  && bindkey  "${key[Left]}"    backward-char
+[[ -n "${key[Right]}"   ]]  && bindkey  "${key[Right]}"   forward-char
+
+# Finally, make sure the terminal is in application mode, when zle is
+# active. Only then are the values from $terminfo valid.
+function zle-line-init () {
+    echoti smkx
+}
+function zle-line-finish () {
+    echoti rmkx
+}
+if [[ -n ${terminfo[smkx]} ]] && [[ -n ${terminfo[rmkx]} ]]
+then
+  zle -N zle-line-init
+  zle -N zle-line-finish
+fi
+
+autoload -U compinit && compinit
+autoload -U colors && colors
+
+setopt APPEND_HISTORY
+setopt HIST_IGNORE_DUPS
+
+if [ "$(uname)" = "Linux" ]; then
+  alias ls='ls --color=auto'
+  alias pscg='ps -A --forest -o user,pid,%cpu,%mem,vsz,rss,stat,start,time,command,cgroup'
+else
+  alias ls='ls -GF'
+fi
