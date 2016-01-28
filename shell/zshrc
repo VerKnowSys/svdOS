@@ -48,7 +48,7 @@ setprompt () {
 
     # Finally, let's set the prompt
     PROMPT='${PR_BRIGHT_GREY}[%D{%s}] ${PR_GREEN}%m${PR_RESET}:${PR_RESET}%$PR_PWDLEN<...<%~% ${PR_RESET} ${GITINFO}${PR_RESET}
-${PR_RESET}${PR_BRIGHT_GREY}⇢ '
+${PR_RESET}${PR_BRIGHT_GREY}⇢ ${PR_RESET}'
 }
 
 setprompt
