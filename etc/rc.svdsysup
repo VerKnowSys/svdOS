@@ -1,198 +1,185 @@
 #!/bin/sh
 #
-# system script to perform lockless filesystem binary updates
+# ServeD system script to perform lockless filesystem binary updates
 
 stty status '^T' 2> /dev/null
 
 # Set shell to ignore SIGINT (2), but not children;
 # shell catches SIGQUIT (3) and returns to single user.
-#
 trap : 2
 trap "echo 'Update interrupted'; exit 1" 3
 
-# ANSI color definitions
-readonly red='\033[31;40m'
-readonly green='\033[32;40m'
-readonly yellow='\033[33;40m'
-readonly blue='\033[34;40m'
-readonly magenta='\033[35;40m'
-readonly cyan='\033[36;40m'
-readonly gray='\033[37;40m'
-readonly white='\033[38;40m'
-readonly reset='\033[0m'
+export HOME="/User"
+export CONF_NAME="sofin.conf.sh"
+export CONF_FILE="/etc/${CONF_NAME}"
+if [ -e "${CONF_FILE}" ]; then
+    . "${CONF_FILE}"
+else
+    echo "FATAL: Sofin configuration unavailable. No file found: ${CONF_FILE}"
+    exit 1
+fi
+
 readonly DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
+readonly DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} "${DEFAULT_HOST_ADDRESS_FILE}" 2>/dev/null)"
 readonly UPDATE_PENDING_INDICATOR="/.svdsysup"
 readonly SERVED_REPO="/var/ServeD-OS"
 readonly SOFIN_REPO="/var/sofin"
-readonly DEFAULT_ZPOOL="zroot"
 readonly BACKUP_SVDINIT="/var/.svdinit"
 readonly UNBOUND_CONF_DIR="/var/unbound/conf.d"
 readonly UNBOUND_CONF="/var/unbound/unbound.conf"
 readonly UNBOUND_CONTROL_CONF="/var/unbound/control.conf"
 readonly DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 readonly DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
+readonly JAIL_DOMAINS_COMMON_LOADER="include: ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry/*/jail-domains/*.conf"
 readonly RSYNC_DEFAULT_OPTIONS="-l -p -E -A -X -o -g -t -r --delete"
-readonly PATH=/sbin:/bin:/usr/sbin:/usr/bin
-readonly OS_NAME="$(uname -s)"
-readonly OS_ARCH="$(uname -m)"
 
-export HOME="/User"
-export RSYNC_BIN="/Software/Rsync-static/exports/rsync"
-export GIT_BIN="/Software/Git/exports/git"
+readonly SETUID_UNUSED_BINS="/bin/rsh /bin/rlogin"
+readonly SETUID_BINS="/sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login"
 
-export OS_VERSION="11.0" # the default
-export TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
-export TIMESTAMP="$(date +%s)"
+export PICKED_OS_VERSION="11.0" # the default
+export TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 export SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
+export PATH="${DEFAULT_PATH}"
 
-
-TTY="false"
-if [ -t 1 ]; then
-    TTY="true"
-fi
-
-cecho () {
-    if [ "${TTY}" = "true" ]; then # if it's terminal then use colors
-        printf "${2}${1}${reset}\n"
-    else
-        printf "${1}\n"
-    fi
-}
 
 debug () {
-    if [ "${DEBUG}" = "true" ]; then
-        cecho "# $1" ${magenta} # NOTE: this "#" is required for debug mode to work properly with generation of ~/.profile and /etc/profile_sofin files!
-    else
-        cecho "# $1" ${magenta} >> ${SVD_LOG} 2>&1
+    if [ -f "/.build-host" ]; then
+        cecho "# $1" ${magenta}
     fi
 }
 
-warn () {
-    cecho "$1" ${yellow}
+
+dnote () {
+    note "$@" && \
+    note "$@" >> ${SVD_LOG} 2>&1
 }
 
-note () {
-    cecho "$1" ${green}
+wrun () {
+    commands="$@ && sync"
+    debug "Evaluating: '${commands}'" && \
+    debug "Evaluating: '${commands}'" >> ${SVD_LOG} 2>&1 && \
+    eval "${commands}" >> ${SVD_LOG} 2>&1
+    if [ "$?" != "0" ]; then
+        cecho "Failed to evaluate: '${commands}'" ${red} && \
+        cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVD_LOG} 2>&1
+    fi
 }
 
-error () {
-    cecho "${ERROR_CHAR} $1" ${red}
-    exit 1
-}
+# these must be mounted to +w SVD_LOG:
+note "Mounting core datasets.."
+${ZFS_BIN} mount -v -a && \
+note "Setting datasets writable.."
+${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL} && \
+${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/ROOT/default && \
+${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/var && \
+${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/var/log && \
+${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/usr && \
+sync && \
+dnote "Core datasets were successfully set writable and mounted"
 
-note "Performing pre-update snapshots: @${TIMESTAMP}"
-zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
-zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
-zfs snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
-zfs set readonly=off ${DEFAULT_ZPOOL}/var
-zfs set readonly=off ${DEFAULT_ZPOOL}/ROOT/default
-zfs set readonly=off ${DEFAULT_ZPOOL}/usr
-zfs set readonly=off ${DEFAULT_ZPOOL}/User/root
-sync
+
+# From now on, we want to log each svdsysup command to the log file..
+
+dnote "Performing pre-update snapshots: @${TIMESTAMP}"
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
 
 # Set snochg flags.
-for f in /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login; do
-    test -f $f && chflags noschg $f
+for f in ${SETUID_BINS} ${SETUID_UNUSED_BINS}; do
+    wrun chflags noschg $f
 done
 
 # Update system version from system property
-served_version="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
-stored_version="$(zfs get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
+served_version="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
+stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
+debug "got stored_version: ${stored_version}"
+debug "got served_version: ${served_version}"
 if [ "${stored_version}" != "-" ]; then
-    export OS_VERSION="${stored_version}"
-    export TRIPPLE="${OS_NAME}-${OS_VERSION}-${OS_ARCH}"
+    export PICKED_OS_VERSION="${stored_version}"
 fi
 
-note "Mounting core datasets in read-write mode"
-zfs mount ${DEFAULT_ZPOOL}/var/log
-zfs mount ${DEFAULT_ZPOOL}/User/root
-zfs mount ${DEFAULT_ZPOOL}/Software/root
-zfs mount ${DEFAULT_ZPOOL}/Jails/Shared/${TRIPPLE}
-note "Wiping out unwanted dirs in: /Jails/Shared/${TRIPPLE}"
-for folder in etc media mnt proc root tmp; do
-    rm -vf /Jails/Shared/${TRIPPLE}/${folder} >> ${SVD_LOG} 2>&1
-done
-sync
-for folder in bin lib libexec sbin usr; do
-    note "Synchronizing /Jails/Shared/${TRIPPLE}/${folder}/ with /${folder}"
-    ${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} \
-        --exclude=/usr/home --exclude=/usr/ports \
-        /Jails/Shared/${TRIPPLE}/${folder}/ /${folder} >> ${SVD_LOG} 2>&1
-done
-sync
+wrun ${INSTALL_BIN} -v ${SERVED_REPO}/gvr /usr/bin && \
+wrun ${CP_BIN} ${BACKUP_SVDINIT} /var/svdinit && \
+wrun ${INSTALL_BIN} -v /var/svdinit /sbin && \
+wrun ${RM_BIN} -f /var/svdinit && \
+dnote "Installed core software"
 
-note "Installing core software.."
-install -v ${SERVED_REPO}/gvr /usr/bin
-cp ${BACKUP_SVDINIT} /var/svdinit
-install -v /var/svdinit /sbin
-rm -f /var/svdinit
-test ! -f /etc/fstab && touch /etc/fstab
-sync
+${TEST_BIN} ! -f /etc/fstab && wrun ${TOUCH_BIN} /etc/fstab
 if [ -d "/root" ]; then
-    note "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root"
-    ${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ /User >> ${SVD_LOG} 2>&1 && \
-    pw user mod root -d /User && \
-    rm -rf /root && \
-    note "Home directory synchonized successfully"
+    dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root"
+    wrun ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} /root/ /User && \
+    wrun ${PW_BIN} user mod root -d /User && \
+    wrun ${RM_BIN} -rf /root && \
+    dnote "Home directory synchonized successfully"
 fi
-sync
 
 # install Sofin
 cd ${SOFIN_REPO}
 bin/install
-s reload
+
+export TRIPPLE="${SYSTEM_NAME}-${PICKED_OS_VERSION}-${SYSTEM_ARCH}"
+# wrun ${ZFS_BIN} mount -v ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}
+dnote "Clearing out unwanted dirs from: ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}"
+for folder in etc media mnt proc root tmp; do
+    wrun ${RM_BIN} -vrf "${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}"
+done
+for folder in bin lib libexec sbin usr; do
+    wrun ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} \
+        --exclude=home --exclude=ports \
+        "${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/" "/${folder}" && \
+    dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ with: /${folder}"
+done
 
 # motd setup
-vblock="v${served_version}+v${OS_VERSION}"
+vblock="v${served_version}+v${PICKED_OS_VERSION}"
 header_extension="${vblock} "
 if [ -x "${GIT_BIN}" ]; then
-    if [ -d "/var/${OS_VERSION}-src" ]; then
-        cd /var/${OS_VERSION}-src/
-        head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | cut -c -16 2>/dev/null)"
+    if [ -f "/var/${PICKED_OS_VERSION}-src/Makefile" ]; then
+        cd /var/${PICKED_OS_VERSION}-src/
+        head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | ${CUT_BIN} -c -16 2>/dev/null)"
+        debug "HBSD repository HEAD: ${head16_hbsd_sha}" >> ${SVD_LOG} 2>&1
         header_extension="${header_extension}#${head16_hbsd_sha}…"
     else
-        header_extension="\t${header_extension}  (binary)"
+        header_extension="\t ${header_extension} (binary)"
     fi
 fi
 # build motd:
-rm -f /etc/motd
-cat ${SERVED_REPO}/etc/motd.served > /etc/motd
-printf "\t${header_extension}\n-----------------------------------------\n\n" >> /etc/motd
+wrun ${RM_BIN} -f /etc/motd
+${CAT_BIN} ${SERVED_REPO}/etc/motd.served > /etc/motd
+${PRINTF_BIN} "\t${header_extension}\n-----------------------------------------\n\n" >> /etc/motd
 cd /
 
 # Bring back schg flags
-for f in /bin/rsh /bin/rlogin /sbin/svdinit /sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login; do
-    test -f $f && chflags schg $f
+for f in ${SETUID_BINS}; do
+    wrun chflags schg $f
 done
 
-TIMESTAMP="$(date +%s)"
-note "Performing post-update snapshots: @${TIMESTAMP}"
-zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
-zfs snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
-zfs snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
-sync
+TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
+dnote "Performing post-update snapshots: @${TIMESTAMP}"
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
 for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOOL}/var; do
-    value="$(zfs list -H -t snap -o name | grep "${dataset}@" 2>/dev/null | wc -l 2>/dev/null | sed 's/ //g' 2>/dev/null)"
+    value="$(${ZFS_BIN} list -H -t snap -o name | ${GREP_BIN} "${dataset}@" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
     if [ ${value} -gt 5 ]; then
-        LAST="$(zfs list -H -t snap -o name | grep "${dataset}@" 2>/dev/null | sed 's/.*@//;s/ .*//' 2>/dev/null | tail -n 1 2>/dev/null)"
-        note "Removing oldest snapshot of: '${dataset}@${LAST}' (${value} snapshots)"
-        zfs destroy "${dataset}@${LAST}"
+        LAST="$(${ZFS_BIN} list -H -t snap -o name | ${GREP_BIN} "${dataset}@" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' 2>/dev/null | ${TAIL_BIN} -n 1 2>/dev/null)"
+        dnote "Removing oldest snapshot of: '${dataset}@${LAST}' (${value} snapshots)"
+        wrun ${ZFS_BIN} destroy "${dataset}@${LAST}"
     fi
 done
 
 
 generate_conf_for_unbound_resolver () {
-    DEFAULT_INTERFACE_ADDRESS="$(cat ${DEFAULT_HOST_ADDRESS_FILE} 2>/dev/null)"
-
-    note "Generating base configuration for Unbound"
-    /usr/sbin/local-unbound-setup -n
+    dnote "Generating base configuration for Unbound"
+    wrun /usr/sbin/local-unbound-setup -n
 
     if [ ! -f "${UNBOUND_CONF_DIR}/jailed.conf" ]; then
-        note "Setting up autoloading Sentry domains configuration file"
-        printf "include: ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry/*/jail-domains/*.conf\n" > ${UNBOUND_CONF_DIR}/jailed.conf
+        dnote "Creating jailed.conf loader, with contents: '${JAIL_DOMAINS_COMMON_LOADER}'"
+        ${PRINTF_BIN} "${JAIL_DOMAINS_COMMON_LOADER}\n" > "${UNBOUND_CONF_DIR}/jailed.conf"
     fi
 
-    printf "# Generated by ServeD updater #
+    ${PRINTF_BIN} "# Generated by ServeD updater #
 server:
     username: unbound
     directory: /var/unbound
@@ -206,7 +193,7 @@ server:
     outgoing-num-tcp: 1 # this limits TCP service, uses less buffers.
     incoming-num-tcp: 1
     outgoing-range: 60  # uses less memory, but less performance.
-    msg-buffer-size: 8192   # note this limits service, 'no huge stuff'.
+    msg-buffer-size: 8192   # dnote this limits service, 'no huge stuff'.
     msg-cache-size: 100k
     msg-cache-slabs: 1
     rrset-cache-size: 100k
@@ -239,22 +226,20 @@ include: /var/unbound/control.conf
 " > ${UNBOUND_CONF}
 
     # XXX: TODO: not really secure, consider using SSL certs per server and local user domains
-    printf "# Generated by ServeD updater #
+    ${PRINTF_BIN} "# Generated by ServeD updater #
 remote-control:
     control-enable: yes
     control-interface: /var/run/local_unbound.ctl
     control-use-cert: no
 " > ${UNBOUND_CONTROL_CONF}
-    chown -R unbound /var/unbound
+    wrun ${CHOWN_BIN} -R unbound /var/unbound
 }
 
 # Generate Unbound configuration with a little help from local-unbound-setup:
 generate_conf_for_unbound_resolver
-rm -f ${UPDATE_PENDING_INDICATOR}
+wrun ${RM_BIN} -f ${UPDATE_PENDING_INDICATOR}
 
-
-sleep 2
-note
-note "Update complete."
-note
+dnote
+dnote "Update complete."
+dnote
 exit 0
