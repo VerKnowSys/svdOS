@@ -58,7 +58,8 @@ wrun () {
     commands="$@ && sync"
     debug "Evaluating: '${commands}'" && \
     debug "Evaluating: '${commands}'" >> ${SVD_LOG} 2>&1 && \
-    eval "${commands}" >> ${SVD_LOG} 2>&1
+    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
+    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> ${SVD_LOG} 2>&1
     if [ "$?" != "0" ]; then
         cecho "Failed to evaluate: '${commands}'" ${red} && \
         cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVD_LOG} 2>&1
@@ -105,12 +106,6 @@ if [ "${stored_version}" != "-" ]; then
     export PICKED_OS_VERSION="${stored_version}"
 fi
 
-wrun ${INSTALL_BIN} -v ${SERVED_REPO}/gvr /usr/bin && \
-wrun ${CP_BIN} ${BACKUP_SVDINIT} /var/svdinit && \
-wrun ${INSTALL_BIN} -v /var/svdinit /sbin && \
-wrun ${RM_BIN} -f /var/svdinit && \
-dnote "Installed core software"
-
 ${TEST_BIN} ! -f /etc/fstab && wrun ${TOUCH_BIN} /etc/fstab
 if [ -d "/root" ]; then
     dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root"
@@ -119,10 +114,6 @@ if [ -d "/root" ]; then
     wrun ${RM_BIN} -rf /root && \
     dnote "Home directory synchonized successfully"
 fi
-
-# install Sofin
-cd ${SOFIN_REPO}
-bin/install
 
 export TRIPPLE="${SYSTEM_NAME}-${PICKED_OS_VERSION}-${SYSTEM_ARCH}"
 # wrun ${ZFS_BIN} mount -v ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}
@@ -136,6 +127,16 @@ for folder in bin lib libexec sbin usr; do
         "${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/" "/${folder}" && \
     dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ with: /${folder}"
 done
+
+#-------------------------------------------------------------------------------
+# NOTE: always do custom software installation after rsync synchro!
+
+wrun "cd ${SOFIN_REPO} && bin/install" && \
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/gvr /usr/bin" && \
+wrun "${CP_BIN} ${BACKUP_SVDINIT} /var/svdinit" && \
+wrun "${INSTALL_BIN} -v /var/svdinit /sbin" && \
+wrun "${RM_BIN} -f /var/svdinit" && \
+dnote "Installed core software"
 
 # motd setup
 vblock="v${served_version}+v${PICKED_OS_VERSION}"
