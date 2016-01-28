@@ -86,8 +86,14 @@ wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
 wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
 
 # Set snochg flags.
-for f in ${SETUID_BINS} ${SETUID_UNUSED_BINS}; do
+for f in ${SETUID_BINS}; do
     wrun chflags noschg $f
+done
+for f in ${SETUID_UNUSED_BINS}; do
+    if [ -e "$f" ]; then
+        wrun chflags noschg "$f" && \
+        wrun ${RM_BIN} -f "$f"
+    fi
 done
 
 # Update system version from system property
