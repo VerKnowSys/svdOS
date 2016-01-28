@@ -115,14 +115,12 @@ if [ -d "/root" ]; then
     dnote "Home directory synchonized successfully"
 fi
 
-if [ ! -d "/etc/zsh/func" ]; then
-    ${RM_BIN} -f /etc/zshenv /etc/zshrc
-    ${MKDIR_BIN} -p /etc/zsh
-    wrun ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh && \
-    wrun ${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv && \
-    wrun ${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc && \
-    dnote "Zsh shell configured successfully"
-fi
+${RM_BIN} -f /etc/zshenv /etc/zshrc
+${MKDIR_BIN} -p /etc/zsh
+wrun ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh && \
+wrun ${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv && \
+wrun ${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc && \
+dnote "System shell configured successfully"
 
 export TRIPPLE="${SYSTEM_NAME}-${PICKED_OS_VERSION}-${SYSTEM_ARCH}"
 # wrun ${ZFS_BIN} mount -v ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}
