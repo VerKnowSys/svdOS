@@ -6,7 +6,8 @@
 set -e
 
 # tunables:
-INSTALL_SCRIPT_VERSION="0.4.0"
+export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
+INSTALL_SCRIPT_VERSION="0.6.0"
 SYSTEM_VERSION="11.0" # the default
 DEFAULT_ZPOOL="zroot"
 INTERNAL_NETWORK="10.2.1.0"
@@ -14,10 +15,9 @@ ORIGIN="origin"
 
 # const definitions:
 SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
-PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 BASE="ServeD-OS-Base"
 BASE_SOURCE="http://served.verknowsys.com/"
-TIMESTAMP="$(date +%s)"
+TIMESTAMP="$(date +%s 2>/dev/null)"
 VKS_KERNEL="/boot/verknowsys"
 SOFIN_REPO="/var/sofin"
 SERVED_REPO="/var/ServeD-OS"
@@ -29,8 +29,8 @@ ZFS_CREATE_OPTS_FOR_ROOT_ELEMS=" -o dedup=on -o compression=lz4 -o mountpoint=no
 DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 DEFAULT_SYSTEM_PREFIX="/usr/bin"
-ARCH="$(uname -m)"
-UNAME_OS="$(uname -s)"
+ARCH="$(uname -m 2>/dev/null)"
+UNAME_OS="$(uname -s 2>/dev/null)"
 OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
@@ -39,8 +39,8 @@ ZFS_BIN="/sbin/zfs"
 SVDINIT_BIN="/sbin/svdinit"
 SVDINIT_BACKUP_BIN="/var/.svdinit"
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}"
-LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest)"
-VERSION="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
+LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest 2>/dev/null)"
+VERSION="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
 if [ "${VERSION}" = "-" ]; then
     printf "No version specified. Picking last version: ${LATEST_VERSION}\n"
 else
@@ -56,7 +56,7 @@ fi
 VERSION="${LATEST_VERSION}"
 
 # sanity checks
-if [ "$(uname)" != "FreeBSD" ]; then
+if [ "$(uname 2>/dev/null)" != "FreeBSD" ]; then
     printf "Only 64bit HardenedBSD hosts are supported by installer\n"
     exit 1
 fi
@@ -143,19 +143,19 @@ set +e
 printf "Setting up default mountpoint values..\n"
 
 elem="${DEFAULT_ZPOOL}/Services/root"
-sroot="$(zfs get -H -o value mountpoint ${elem})"
+sroot="$(zfs get -H -o value mountpoint ${elem} 2>/dev/null)"
 if [ "${sroot}" != "/Services" ]; then
     zfs set mountpoint=/Services ${elem}
 fi
 
 elem="${DEFAULT_ZPOOL}/Shared/root"
-sroot="$(zfs get -H -o value mountpoint ${elem})"
+sroot="$(zfs get -H -o value mountpoint ${elem} 2>/dev/null)"
 if [ "${sroot}" != "/Shared" ]; then
     zfs set mountpoint=/Shared ${elem}
 fi
 
 elem="${DEFAULT_ZPOOL}/User/root"
-sroot="$(zfs get -H -o value mountpoint ${elem})"
+sroot="$(zfs get -H -o value mountpoint ${elem} 2>/dev/null)"
 if [ "${sroot}" != "/User" ]; then
     zfs set mountpoint=/User ${elem}
 fi
@@ -356,7 +356,7 @@ if [ "$?" = "0" ]; then
     set -e
     ${SED_BIN} -i '' -e 's#^.*syslogd_enable.*=.*$##g' /etc/rc.conf
 else
-    ps axv 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} 'syslog-ng' >/dev/null 2>&1
+    ${PS_BIN} axv 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} 'syslog-ng' >/dev/null 2>&1
     if [ "$?" = "0" ]; then
         set -e
         note "Reloading Syslog-ng"
@@ -377,11 +377,11 @@ ${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf
 ${CAP_MKDB_BIN} /etc/login.conf
 
 note "Setting up network"
-readonly DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
-readonly GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} | ${GREP_BIN} -v grep | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
+readonly DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 2>/dev/null | ${TAIL_BIN} -n 4 2>/dev/null | ${HEAD_BIN} -n 1 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
+readonly GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
 readonly DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
-readonly NETS_LIST="$(${IFCONFIG_BIN} ${DEFAULT_INTERFACE} | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
-readonly AMOUNT=$(${PRINTF_BIN} "${NETS_LIST}\n" | ${WC_BIN} -l)
+readonly NETS_LIST="$(${IFCONFIG_BIN} ${DEFAULT_INTERFACE} 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
+readonly AMOUNT=$(${PRINTF_BIN} "${NETS_LIST}\n" | ${WC_BIN} -l 2>/dev/null)
 NETS=""
 if [ ${AMOUNT} -eq 1 ]; then
     ${PRINTF_BIN} "${NETS_LIST}\n" > ${DEFAULT_HOST_ADDRESS_FILE}
@@ -395,7 +395,7 @@ else
 fi
 
 note "Setting up PF firewall.."
-DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS_FILE})"
+DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS_FILE} 2>/dev/null)"
 ${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE}
 ${SED_BIN} -i '' -e "s/__INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE}
 ${SED_BIN} -i '' -e "s/__EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FILE}
@@ -408,7 +408,7 @@ if [ "$?" = "0" ]; then
     set -e
     note "PF firewall is restarting.."
     service pf restart
-    note "Applied firewall rules:\n$(${PFCTL_BIN} -sn)"
+    note "Applied firewall rules:\n$(${PFCTL_BIN} -sn 2>/dev/null)"
 else
     warn "PF firewall is disabled in '/etc/rc.conf'. Skipping"
 fi
@@ -422,7 +422,7 @@ if [ "$?" != "0" ]; then
 fi
 set -e
 
-TIMESTAMP="$(${DATE_BIN} +%s)"
+TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 note "Installing root TLS/SSL certificates"
 ${MKDIR_BIN} -p /etc/ssl
 if [ -f /etc/ssl/cert.pem ]; then
@@ -449,7 +449,7 @@ ${INSTALL_BIN} -v ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
 note "Checking for a ZFS-feature-updates of zpool: ${DEFAULT_ZPOOL}"
 ${ZPOOL_BIN} upgrade ${DEFAULT_ZPOOL} | ${HEAD_BIN} -n1
 
-disks=$(geom disk list | ${GREP_BIN} 'Name:\ d.*' | ${SED_BIN} 's/^.*\ //')
+disks=$(geom disk list 2>/dev/null | ${GREP_BIN} 'Name:\ d.*' 2>/dev/null | ${SED_BIN} 's/^.*\ //' 2>/dev/null)
 if [ -z "${disks}" ]; then
     error "System GEOM detected NO hard disks available on this machine. How can I do my thing? -_-"
 fi
