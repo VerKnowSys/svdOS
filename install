@@ -192,6 +192,10 @@ if [ "$?" != "0" ]; then
     printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
     exit 1
 fi
+set +e
+
+export HOME="/User"
+export PWD="/User"
 if [ -f "${HOME}/.gitconfig" ]; then
     grep -R 'ServeD' "${HOME}/.gitconfig" >/dev/null 2>&1
     if [ "$?" != "0" ]; then
