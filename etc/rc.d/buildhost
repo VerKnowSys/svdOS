@@ -27,10 +27,8 @@ buildhost_prestart () {
         . /etc/sofin.conf.sh
         . ${SERVED_REPO}/setup-buildhost
         setup_buildhost
-    else
-        printf "\nNot a build-host\n"
     fi
-    printf "\nServeD system is ready to serve\n"
+    printf "\nSystem is ready to serve!\n"
     echo "${separator}"
 }
 
