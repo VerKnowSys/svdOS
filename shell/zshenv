@@ -1,3 +1,17 @@
 
-fpath=($fpath $HOME/.zsh/func)
+fpath=($fpath /etc/zsh/func)
 typeset -U fpath
+
+if [ "$(id -u)" = "0" ]; then
+    if [ -e "/etc/profile_sofin" ]; then
+        . /etc/profile_sofin
+    fi
+    trap "source /etc/profile_sofin" USR2
+else
+    if [ -e ${HOME}/.profile ]; then
+        . ${HOME}/.profile
+    fi
+    trap "source ${HOME}/.profile" USR2
+fi
+export SHELL_PID="$$"
+
