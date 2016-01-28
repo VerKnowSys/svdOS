@@ -47,8 +47,8 @@ setprompt () {
     PR_RESET="%{$reset_color%}"
 
     # Finally, let's set the prompt
-    PROMPT='${PR_BRIGHT_GREY}[%D{%s}] ${PR_GREEN}%m${PR_RESET}:${PR_RESET}%$PR_PWDLEN<...<%~% ${PR_RESET} ${GITINFO}${PR_RESET}
-${PR_RESET}${PR_BRIGHT_GREY}⇢ ${PR_RESET}'
+    PROMPT="${PR_BRIGHT_GREY}[%D{%s}] ${PR_GREEN}%m${PR_RESET}:${PR_RESET}%$PR_PWDLEN<...<%~% ${PR_RESET} ${GITINFO}${PR_RESET}
+${PR_BRIGHT_GREY}>${PR_RESET} "
 }
 
 setprompt
@@ -69,7 +69,7 @@ export HISTSIZE=8192
 export SAVEHIST=8192
 
 ### CD shortcuts
-export CDPATH=.:~:/Software
+export CDPATH=.:~:/Software:/Services:/User:/Jails/Prison:/Jails/Shared
 
 ### List of file extensions you wish to ignore on a ls
 export FIGNORE=”~:.o”
