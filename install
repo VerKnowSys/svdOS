@@ -286,7 +286,7 @@ if [ -d "${SERVED_REPO}" ]; then
     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
 else
     cd /var
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS
 fi
 
 for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
