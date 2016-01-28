@@ -42,18 +42,19 @@ else
     exit 1
 fi
 
+readonly SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
 readonly SERVED_REPO="/var/ServeD-OS"
 readonly PARALLEL_JOBS="${CPUS}"
 readonly SHARED_DIR="/Jails/Shared"
 readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
-readonly LOG_OUTPUT="/var/log/build-$(date +%F).log"
+readonly LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
 
 if [ ! -d "${SERVED_REPO}" ]; then
     cd /var
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone https://github.com/VerKnowSys/ServeD-OS.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
 else
     cd ${SERVED_REPO}
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull https://github.com/VerKnowSys/ServeD-OS.git
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
 fi
 
 # main()
