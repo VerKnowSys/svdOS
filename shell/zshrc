@@ -45,10 +45,22 @@ setprompt () {
     done
 
     PR_RESET="%{$reset_color%}"
+    case "${USER}" in
+        root)
+            export user_color="${PR_RED}"
+            ;;
+
+        worker)
+            export user_color="${PR_GREEN}"
+            ;;
+
+        *)
+            export user_color="${PR_BLUE}"
+            ;;
+    esac
 
     # Finally, let's set the prompt
-    PROMPT="${PR_BRIGHT_GREY}[%D{%s}] ${PR_GREEN}%m${PR_RESET}:${PR_RESET}%$PR_PWDLEN<...<%~% ${PR_RESET} ${GITINFO}${PR_RESET}
-${PR_BRIGHT_GREY}>${PR_RESET} "
+    PROMPT="${PR_RESET}${PR_BRIGHT_GREY}[%D{%s}] ${PR_RESET}${PR_GREEN}%m${PR_BRIGHT_GREY}:%$PR_PWDLEN<...<%~% ${GITINFO}${PR_RESET}${user_color} λ${PR_RESET} "
 }
 
 setprompt
