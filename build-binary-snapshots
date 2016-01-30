@@ -41,11 +41,22 @@ if [ "${ARCH}" = "" ]; then
     error "No architecture specified!"
 fi
 
+
+clean_before () {
+    unwanted_dirs="/mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp"
+    cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}" && \
+    for unnec in ${unwanted_dirs}; do
+        ${RM_BIN} -rf ".${unnec}" && \
+        note "Removed dir: .${unnec}"
+    done
+}
+
+
 compile_jails () {
     BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
     note "Compiling snapshot: ${BASE_SNAPSHOT}"
-    REALPATH="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
-    tar cfJ ../${BASE_SNAPSHOT}.tar.xz "${REALPATH}" >> /var/log/messages 2>&1
+    realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
+    ${TAR_BIN} cfJ ../${BASE_SNAPSHOT}.tar.xz "${realpath}" >> /var/log/messages 2>&1
     if [ "$?" = "0" ]; then
         note "Compiled successfully."
     else
@@ -68,4 +79,5 @@ compile_jails () {
 }
 
 
+clean_before
 compile_jails
