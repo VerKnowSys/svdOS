@@ -12,53 +12,80 @@ SYSTEM_VERSION="11.0" # the default
 DEFAULT_ZPOOL="zroot"
 INTERNAL_NETWORK="10.2.1.0"
 ORIGIN="origin"
-
-# const definitions:
-SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
-DEFAULT_SOFIN_REPOSITORY="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
-BASE="ServeD-OS-Base"
-BASE_SOURCE="http://served.verknowsys.com/"
-TIMESTAMP="$(date +%s 2>/dev/null)"
-VKS_KERNEL="/boot/verknowsys"
+SYSSVD_LOGNG_PREFIX="/Services/Syslog-ng"
+SOFIN_CONF_NAME="sofin.conf.sh"
 SOFIN_REPO="/var/sofin"
 SERVED_REPO="/var/ServeD-OS"
-LOG="/var/log/svd-install-${TIMESTAMP}.log"
+CACERT_SOURCE="http://curl.haxx.se/ca/cacert.pem"
+CACERT_SOURCE_ALT="http://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt"
+LOCAL_CONF_FILE="${SOFIN_REPO}/src/${SOFIN_CONF_NAME}"
+
+# const definitions:
+reset='\033[0m'
+green='\033[32;40m'
+magenta='\033[35;40m'
+red='\033[31;40m'
+yellow='\033[33;40m'
+error_char="✘"
+SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
+DEFAULT_SOFIN_REPOSITORY="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
+RSYNC_DEFAULT_OPTIONS="-h -l -p -E -A -X -o -g -t -r --delete"
+BASE="ServeD-OS-Base"
+BASE_SOURCE="http://served.verknowsys.com/"
+VKS_KERNEL="/boot/verknowsys"
 CACHE_DIR="/var/.cache"
-DEFAULT_SHELL="/Software/Zsh/exports/zsh"
 ZFS_CREATE_OPTS_FOR_ROOT_ELEMS=" -o dedup=on -o compression=lz4 -o mountpoint=none -o casesensitivity=sensitive"
 DEFAULT_JAIL_PRISON_LOCATION="/Jails/Prison"
 DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
-DEFAULT_SYSTEM_PREFIX="/usr/bin"
-ARCH="$(uname -m 2>/dev/null)"
-UNAME_OS="$(uname -s 2>/dev/null)"
-OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
 PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
+
+DEFAULT_SHELL="/Software/Zsh/exports/zsh"
+CHFLAGS_BIN="/bin/chflags"
 GIT_BIN="/Software/Git/exports/git"
+ZPOOL_BIN="/sbin/zpool"
 ZFS_BIN="/sbin/zfs"
 SVDINIT_BIN="/sbin/svdinit"
 SVDINIT_BACKUP_BIN="/var/.svdinit"
+TAR_BIN="/usr/bin/tar"
+FETCH_BIN="/usr/bin/fetch"
+BASENAME_BIN="/usr/bin/basename"
+GRPART_BIN="/sbin/gpart"
+GEOM_BIN="/sbin/geom"
+KLDXREF_BIN="/usr/sbin/kldxref"
+PRINTF_BIN="/usr/bin/printf"
+MKDIR_BIN="/bin/mkdir"
+UNAME_BIN="/usr/bin/uname"
+DATE_BIN="/bin/date"
+CLANG_BIN="/usr/bin/clang"
+
+
+TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
+ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
+UNAME_OS="$(${UNAME_BIN} -s 2>/dev/null)"
+OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
+SVD_LOG="/var/log/svd-install-${TIMESTAMP}.log"
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}"
-LATEST_VERSION="$(fetch -q -o - ${BASE_SOURCE}/version-latest 2>/dev/null)"
-VERSION="$(zfs get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
+LATEST_VERSION="$(${FETCH_BIN} -q -o - ${BASE_SOURCE}/version-latest 2>/dev/null)"
+VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
 if [ "${VERSION}" = "-" ]; then
-    printf "No version specified. Picking last version: ${LATEST_VERSION}\n"
+    ${PRINTF_BIN} "No version specified. Picking last version: ${LATEST_VERSION}\n"
 else
     if [ "${VERSION}" = "${LATEST_VERSION}" ]; then
         if [ "$1" = "-f" ]; then
-            printf "Forcing installation of ServeD base system in version: ${VERSION}\n"
+            ${PRINTF_BIN} "Forcing installation of ServeD base system in version: ${VERSION}\n"
         else
-            printf "You are already using latest version: ${VERSION} of ServeD base system\n"
+            ${PRINTF_BIN} "You are already using latest version: ${VERSION} of ServeD base system\n"
             exit 0
         fi
     fi
 fi
 VERSION="${LATEST_VERSION}"
 
-# sanity checks
-if [ "$(uname 2>/dev/null)" != "FreeBSD" ]; then
-    printf "Only 64bit HardenedBSD hosts are supported by installer\n"
-    exit 1
+
+# sanity check
+if [ "${UNAME_OS}" != "FreeBSD" ]; then
+    error "Only 64bit FreeBSD/HardenedBSD hosts are supported by installer"
 fi
 
 set +e
