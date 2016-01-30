@@ -57,20 +57,20 @@ dnote () {
 wrun () {
     commands="$@ && sync"
     debug "Evaluating: '${commands}'" && \
-    debug "Evaluating: '${commands}'" >> ${SVD_LOG} 2>&1 && \
+    debug "Evaluating: '${commands}'" >> ${SVD_LOG} 2>> ${SVD_LOG} && \
     gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
-    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> ${SVD_LOG} 2>&1
+    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> ${SVD_LOG} 2>> ${SVD_LOG}
     if [ "$?" != "0" ]; then
         cecho "Failed to evaluate: '${commands}'" ${red} && \
-        cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVD_LOG} 2>&1
+        cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVD_LOG} 2>> ${SVD_LOG}
     fi
     unset commands gitroot
 }
 
 # these must be mounted to +w SVD_LOG:
 note "Mounting core datasets.."
-${ZFS_BIN} mount -v -a && \
-note "Setting datasets writable.."
+${ZFS_BIN} mount -v -a
+
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL} && \
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/ROOT/default && \
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/var && \
@@ -79,21 +79,21 @@ ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/usr && \
 sync && \
 dnote "Core datasets were successfully set writable and mounted"
 
-
+# ______________________________________________________________________________
 # From now on, we want to log each svdsysup command to the log file..
 
-dnote "Performing pre-update snapshots: @${TIMESTAMP}"
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}" && \
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}" && \
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}" && \
+dnote "Done pre-update snapshots with timestamp: ${TIMESTAMP}"
 
 # Set snochg flags.
 for f in ${SETUID_BINS}; do
-    wrun chflags noschg $f
+    wrun ${CHFLAGS_BIN} noschg $f
 done
 for f in ${SETUID_UNUSED_BINS}; do
     if [ -e "$f" ]; then
-        wrun chflags noschg "$f" && \
+        wrun ${CHFLAGS_BIN} noschg "$f" && \
         wrun ${RM_BIN} -f "$f"
     fi
 done
@@ -127,13 +127,14 @@ export TRIPPLE="${SYSTEM_NAME}-${PICKED_OS_VERSION}-${SYSTEM_ARCH}"
 # wrun ${ZFS_BIN} mount -v ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}
 dnote "Clearing out unwanted dirs from: ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}"
 for folder in etc media mnt proc root tmp; do
-    wrun ${RM_BIN} -vrf "${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}"
+    wrun "${RM_BIN} -rf ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}" && \
+    dnote " * ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}"
 done
 for folder in bin lib libexec sbin usr; do
-    wrun ${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} \
+    wrun "${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} \
         --exclude=home --exclude=ports \
-        "${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/" "/${folder}" && \
-    dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ with: /${folder}"
+        ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/" "/${folder}" && \
+    dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ to: /${folder}"
 done
 
 #-------------------------------------------------------------------------------
@@ -160,21 +161,23 @@ if [ -x "${GIT_BIN}" ]; then
     fi
 fi
 # build motd:
-wrun ${RM_BIN} -f /etc/motd
-${CAT_BIN} ${SERVED_REPO}/etc/motd.served > /etc/motd
-${PRINTF_BIN} "\t${header_extension}\n-----------------------------------------\n\n" >> /etc/motd
+wrun "${RM_BIN} -f /etc/motd" && \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/motd.served /etc/motd" && \
+${PRINTF_BIN} "\t${header_extension}\n-----------------------------------------\n\n" >> /etc/motd && \
+dnote "MOTD updated successfully"
 cd /
 
 # Bring back schg flags
 for f in ${SETUID_BINS}; do
-    wrun chflags schg $f
+    wrun ${CHFLAGS_BIN} schg ${f}
 done
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
-dnote "Performing post-update snapshots: @${TIMESTAMP}"
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP} && \
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP} && \
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP} && \
+dnote "Done post-update snapshots with timestamp: ${TIMESTAMP}"
+
 for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOOL}/var; do
     value="$(${ZFS_BIN} list -H -t snap -o name | ${GREP_BIN} "${dataset}@" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
     if [ ${value} -gt 5 ]; then
