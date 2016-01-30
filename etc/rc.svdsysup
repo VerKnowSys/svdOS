@@ -64,6 +64,7 @@ wrun () {
         cecho "Failed to evaluate: '${commands}'" ${red} && \
         cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVD_LOG} 2>&1
     fi
+    unset commands gitroot
 }
 
 # these must be mounted to +w SVD_LOG:
