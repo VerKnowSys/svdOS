@@ -34,7 +34,7 @@ readonly JAIL_DOMAINS_COMMON_LOADER="include: ${DEFAULT_JAIL_PRISON_LOCATION}/Se
 readonly RSYNC_DEFAULT_OPTIONS="-l -p -E -A -X -o -g -t -r --delete"
 
 readonly SETUID_UNUSED_BINS="/bin/rsh /bin/rlogin"
-readonly SETUID_BINS="/sbin/init /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login"
+readonly SETUID_BINS="/sbin/init /sbin/svdinit /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login"
 
 export PICKED_OS_VERSION="11.0" # the default
 export TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
