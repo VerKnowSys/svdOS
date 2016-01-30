@@ -1,13 +1,18 @@
-# 2014-09-02 09:24:48 - dmilith:
+#
+# Start of options added by 'ServeD-Install-Script'
+#
+zfs_load="YES"
 kernel="verknowsys"
 kernels="verknowsys kernel"
-zfs_load="YES"
 fuse_load="YES"
+aio_load="YES"
+if_vlan_load="YES"
+boot_verbose="YES"
+verbose_loading="YES"
 mac_bsdextended_load="NO"
 mac_seeotheruids_load="NO"
 mac_portacl_load="NO" # KP under 11.
 autoboot_delay="2"
-aio_load="YES"
 cc_htcp_load="NO"
 nullfs_load="NO"
 accf_http_load="NO"
@@ -39,8 +44,5 @@ nvme_load="NO"
 nvd_load="NO"
 secadm_load="NO"
 boot_mute="NO"
-if_vlan_load="YES"
 net.fibs=16
 kern.racct.enable=1
-boot_verbose="YES"
-verbose_loading="YES"
