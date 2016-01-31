@@ -178,13 +178,37 @@ wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP} && \
 wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP} && \
 dnote "Done post-update snapshots with timestamp: ${TIMESTAMP}"
 
+destroy_oldest_snapshot () {
+    dataset_name="${1}"
+    dataset_last="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset_name}${SNAPSHOT_REGEXP}" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' 2>/dev/null | ${TAIL_BIN} -n1 2>/dev/null)"
+    wrun "${ZFS_BIN} destroy ${dataset_name}@${dataset_last}" && \
+    dnote "Dataset destroyed: ${dataset_name}@${dataset_last}"
+    unset dataset_name dataset_last
+}
+
 for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOOL}/var; do
-    value="$(${ZFS_BIN} list -H -t snap -o name | ${GREP_BIN} "${dataset}@" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
-    if [ ${value} -gt 5 ]; then
-        LAST="$(${ZFS_BIN} list -H -t snap -o name | ${GREP_BIN} "${dataset}@" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' 2>/dev/null | ${TAIL_BIN} -n 1 2>/dev/null)"
-        dnote "Removing oldest snapshot of: '${dataset}@${LAST}' (${value} snapshots)"
-        wrun ${ZFS_BIN} destroy "${dataset}@${LAST}"
-    fi
+    value="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset}${SNAPSHOT_REGEXP}" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
+    wiped="0"
+    if [ ${value} -gt 20 ]; then
+        for s in $(${SEQ_BIN} 1 5); do
+            destroy_oldest_snapshot "${dataset}" && \
+            wiped="${wiped} +1"
+        done
+    elif [ ${value} -gt 10 ]; then
+        for s in $(${SEQ_BIN} 1 3); do
+            destroy_oldest_snapshot "${dataset}" && \
+            wiped="${wiped} +1"
+        done
+    elif [ ${value} -gt 5 ]; then
+        for s in $(${SEQ_BIN} 1 2); do
+            destroy_oldest_snapshot "${dataset}" && \
+            wiped="${wiped} +1"
+        done
+    fi && \
+    wiped="$(echo "${wiped}" 2>/dev/null | ${BC_BIN} 2>/dev/null)"
+    value="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset}${SNAPSHOT_REGEXP}" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
+    dnote "Done snapshot cleanup of: ${dataset} (${value} available, ${wiped} wiped out)"
+    unset value wiped
 done
 
 
