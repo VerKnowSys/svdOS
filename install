@@ -3,7 +3,6 @@
 # @author Daniel (dmilith) Dettaff
 #
 
-set -e
 
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
@@ -88,77 +87,130 @@ if [ "${UNAME_OS}" != "FreeBSD" ]; then
     error "Only 64bit FreeBSD/HardenedBSD hosts are supported by installer"
 fi
 
-set +e
-printf "Trapping shell signals..\n"
-trap '' EXIT INT TERM QUIT TTIN TTOU
-set -e
 
-mkdir -p ${CACHE_DIR} >> ${LOG} 2>&1
-if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" ]; then
-    printf "Base snapshot archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/Software-${OS_TRIPPLE}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz
-    if [ "$?" != "0" ]; then
-        printf "Software snapshot isn't available, or something just went wrong while fetching archive\n"
-        exit 1
+cecho () {
+    ${PRINTF_BIN} "${2}${1}${reset}\n"
+}
+
+retry () {
+    retries="***"
+    while [ ! -z "${retries}" ]; do
+        if [ ! -z "$1" ]; then
+            gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
+            eval PATH="/bin:/usr/bin:${gitroot}/bin:${gitroot}/libexec/git-core" "$@" >> "${SVD_LOG}" 2>&1 && \
+            return 0
+        else
+            error "An empty command to retry?"
+        fi
+        retries="$(echo "${retries}" | ${SED_BIN} 's/\*//' 2>/dev/null)"
+    done
+    ${PRINTF_BIN} "All retries exhausted for launch command: '$@'\n" && \
+    return 2
+}
+
+error () {
+    cecho "${error_char} $1" ${red}
+    exit 1
+}
+
+debug () {
+    if [ -f "/.build-host" ]; then
+        cecho "# $1" "${magenta}"
     fi
+}
+
+warn () {
+    cecho "$1" ${yellow}
+}
+
+note () {
+    cecho "$1" "${green}"
+}
+
+dwarn () {
+    cecho "$@" "${yellow}" && \
+    cecho "$@" "${yellow}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+}
+
+derror () {
+    cecho "$@" "${red}" && \
+    cecho "$@" "${red}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+}
+
+dnote () {
+    note "$@" && \
+    note "$@" >> "${SVD_LOG}" 2>> ${SVD_LOG}
+}
+
+wrun () {
+    commands="$@ && sync"
+    debug "Evaluating: '${commands}'" && \
+    debug "Evaluating: '${commands}'" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
+
+    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN} 2>/dev/null) 2>/dev/null)"
+    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
+    if [ "$?" != "0" ]; then
+        cecho "Failed to evaluate: '${commands}'" "${red}" && \
+        cecho "Failed to evaluate: '${commands}'" "${red}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
+        return 1
+    fi
+    unset commands gitroot
+}
+
+dnote "Installer is setting no-op traps for some shell signals.."
+trap '' EXIT INT TERM QUIT TTIN TTOU
+
+
+${MKDIR_BIN} -p ${CACHE_DIR}
+if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" ]; then
+    retry "${FETCH_BIN} ${BASE_SOURCE}/Software-${OS_TRIPPLE}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" && \
+    dnote "ServeD base archive fetched successfully" && \
+    INSTALLED_SERVED_BASE="1"
 fi
 
 if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz" ]; then
-    printf "Jails archive wasn't downloaded yet\n"
-    fetch ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz
-    if [ "$?" != "0" ]; then
-        printf "Jails binary snapshot isn't available, or something just went wrong while fetching archive\n"
-        exit 1
-    fi
+    retry "${FETCH_BIN} ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz" && \
+    dnote "Jails archive fetched successfully" && \
+    INSTALLED_JAILS_ARCHIVE="1"
 fi
 
-set +e
-zfs list 2>/dev/null | grep 'Software/root' > /dev/null 2>&1
+${ZFS_BIN} list 2>/dev/null | grep 'Software/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    set -e
-    printf "Initializing origin of: '${DEFAULT_ZPOOL}/Software'\n"
-    zfs create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software
-
-    printf "Receiving dataset: '${DEFAULT_ZPOOL}/Software/root' from a snapshot file\n"
-    xzcat ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | zfs receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | tail -n1
-    zfs rename ${DEFAULT_ZPOOL}/Software/root@--head-- @${ORIGIN}
-    zfs set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root
+    wrun ${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software && \
+    dnote "Initialized origin of: ${DEFAULT_ZPOOL}/Software"
+    xzcat ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | tail -n1 && \
+    wrun ${ZFS_BIN} rename ${DEFAULT_ZPOOL}/Software/root@--head-- @${ORIGIN} && \
+    wrun ${ZFS_BIN} set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root && \
+    dnote "Dataset: '${DEFAULT_ZPOOL}/Software/root' received successfully" && \
+    INSTALLED_SOFTWARE_ROOT="1"
 fi
-set +e
-zfs list 2>/dev/null | grep 'User/root' > /dev/null 2>&1
+
+${ZFS_BIN} list 2>/dev/null | grep 'User/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    set -e
-    printf "Initializing origin of ${DEFAULT_ZPOOL}/User\n"
-    zfs create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/User
-
-    printf "Creating ${DEFAULT_ZPOOL}/User/root\n"
-    zfs create -o mountpoint=/User ${DEFAULT_ZPOOL}/User/root
+    wrun "${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/User" && \
+    dnote "Initialized origin of: '${DEFAULT_ZPOOL}/User\n"
+    wrun "${ZFS_BIN} create -o mountpoint=/User ${DEFAULT_ZPOOL}/User/root" && \
+    dnote "Dataset: ${DEFAULT_ZPOOL}/User/root created successfully" && \
+    INSTALLED_USER_ROOT="1"
 fi
-set -e
-
 
 create_dset_if_doesnt_exist () {
-    set +e
     mntpt="${1}"
     mount_opt="${2}"
-    zfs list | grep "${DEFAULT_ZPOOL}${mntpt} " > /dev/null 2>&1
+    ${ZFS_BIN} list 2>/dev/null | ${GREP_BIN} "${DEFAULT_ZPOOL}${mntpt} " > /dev/null 2>&1
     if [ "$?" != "0" ]; then
-        set -e
-        zfs create -o mountpoint=${mount_opt} "${DEFAULT_ZPOOL}${mntpt}"
+        wrun "${ZFS_BIN} create -o mountpoint=${mount_opt} ${DEFAULT_ZPOOL}${mntpt}" && \
+        dnote "Dataset: ${DEFAULT_ZPOOL}${mntpt} created successfully"
     fi
-    set -e
 }
-
 
 # create zvols for special snappable dirs
 for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR} ${DEFAULT_JAIL_PRISON_LOCATION} ${DEFAULT_JAIL_PRISON_LOCATION}/Cells ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry /Services /Services/root /Shared /Shared/root; do
     if [ ! -d "${mntpoint}" ]; then
-        printf "Creating zvol: ${mntpoint}\n" >> ${LOG} 2>&1
         case ${mntpoint} in
             /Services|/Shared)
                 create_dset_if_doesnt_exist "${mntpoint}" "none" # mountpoint=none for all "root" datasets
                 ;;
-
             *)
                 create_dset_if_doesnt_exist "${mntpoint}" "${mntpoint}"
                 ;;
@@ -166,96 +218,65 @@ for mntpoint in /Jails ${DEFAULT_JAIL_SHARED_LOCATION} ${DEFAULT_JAILS_ROOT_DIR}
     fi
 done
 
-set +e
-printf "Setting up default mountpoint values..\n"
+locations="User Services Shared"
+for loc in ${locations}; do
+    elem="${DEFAULT_ZPOOL}/${loc}/root"
+    sroot="$(${ZFS_BIN} get -H -o value mountpoint ${elem} 2>/dev/null)"
+    if [ "${sroot}" != "/${loc}" ]; then
+        wrun "${ZFS_BIN} set mountpoint=/${loc} ${elem}" && \
+        dnote "Mount point of dataset: ${elem} was reset to: /${loc}"
+    fi
+done
 
-elem="${DEFAULT_ZPOOL}/Services/root"
-sroot="$(zfs get -H -o value mountpoint ${elem} 2>/dev/null)"
-if [ "${sroot}" != "/Services" ]; then
-    zfs set mountpoint=/Services ${elem}
-fi
-
-elem="${DEFAULT_ZPOOL}/Shared/root"
-sroot="$(zfs get -H -o value mountpoint ${elem} 2>/dev/null)"
-if [ "${sroot}" != "/Shared" ]; then
-    zfs set mountpoint=/Shared ${elem}
-fi
-
-elem="${DEFAULT_ZPOOL}/User/root"
-sroot="$(zfs get -H -o value mountpoint ${elem} 2>/dev/null)"
-if [ "${sroot}" != "/User" ]; then
-    zfs set mountpoint=/User ${elem}
-fi
-
-printf "Creating origin snapshots..\n"
-zfs list -t snap 2>/dev/null | grep 'User/root@' > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    printf " * ${DEFAULT_ZPOOL}/User/root@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/User/root@${ORIGIN}
-fi
-
-zfs list -t snap 2>/dev/null | grep 'Services/root@' > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    printf " * ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/Services/root@${ORIGIN}
-fi
-
-zfs list -t snap 2>/dev/null | grep 'ROOT@' > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    printf " * ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/ROOT@${ORIGIN}
-fi
-
-zfs list -t snap 2>/dev/null | grep 'ROOT/default@' > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    printf " * ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}\n"
-    zfs snapshot ${DEFAULT_ZPOOL}/ROOT/default@${ORIGIN}
-fi
-set -e
-
-printf "Installing ServeD base: ${SYSTEM_VERSION}-v${VERSION}\n"
-tar xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz --directory /
-if [ "$?" != "0" ]; then
-    printf "ERROR: Base snapshot is corrupted or something just went wrong with archive\n"
-    exit 1
-fi
-set +e
+dnote "Creating ${ORIGIN} snapshots.."
+for snap in "ROOT" "ROOT/default" "User/root" "Services/root"; do
+    ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${snap}@[a-z0-9].* " > /dev/null 2>&1
+    if [ "$?" != "0" ]; then
+        wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/${snap}@${ORIGIN}" && \
+        dnote " * ${DEFAULT_ZPOOL}/${snap}@${ORIGIN}"
+    fi
+done
+wrun "${TAR_BIN} xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz --directory /" && \
+dnote "Installed ServeD software base: ${SYSTEM_VERSION}-v${VERSION}" && \
+INSTALLED_BASE_SOFTWARE="1"
 
 export HOME="/User"
 export PWD="/User"
 if [ -f "${HOME}/.gitconfig" ]; then
-    grep -R 'ServeD' "${HOME}/.gitconfig" >/dev/null 2>&1
+    ${GREP_BIN} -R 'ServeD' "${HOME}/.gitconfig" >/dev/null 2>&1
     if [ "$?" != "0" ]; then
-        printf "Detected no local Git configuration\n"
-        GIT_SSL_NO_VERIFY=true ${GIT_BIN} config --global user.name "ServeD node" 2>/dev/null
-        GIT_SSL_NO_VERIFY=true ${GIT_BIN} config --global user.email "admin@verknowsys.com" 2>/dev/null
+        dnote "Detected no local Git configuration" && \
+        wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} config --global user.name 'ServeD node'" && \
+        wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} config --global user.email 'admin@verknowsys.com'" && \
+        dnote "Git configuration set in HOME: ${HOME}"
     else
-        printf "Local Git configuration looks fine\n"
+        dnote "Local Git configuration looks fine"
     fi
 fi
-set -e
 
 if [ ! -d "${SOFIN_REPO}" ]; then
-    cd /var
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${DEFAULT_SOFIN_REPOSITORY}
-    cd ${SOFIN_REPO}
+    wrun "cd /var" && \
+    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${DEFAULT_SOFIN_REPOSITORY}" && \
+    wrun "cd ${SOFIN_REPO}" && \
+    method="cloned"
 else
-    cd ${SOFIN_REPO}
-    ${GIT_BIN} stash save "install-update-${TIMESTAMP}"
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}
-fi
+    wrun "cd ${SOFIN_REPO}" && \
+    wrun "${GIT_BIN} stash save \"install-update-${TIMESTAMP}\"" && \
+    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}" && \
+    method="pulled"
+fi && \
+dnote "Sofin repository ${method} successfully" && \
+wrun "bin/install" && \
+INSTALLED_SOFIN="1" && \
+unset method
 
-bin/install
-readonly CONF_NAME="sofin.conf.sh"
-readonly LOCAL_CONF_FILE="${SOFIN_REPO}/src/${CONF_NAME}"
 if [ -e "${LOCAL_CONF_FILE}" ]; then
     . "${LOCAL_CONF_FILE}"
-    ${SOFIN_BIN} reset
+    wrun "${SOFIN_BIN} reset"
 else
-    echo "FATAL: No configuration file found: ${LOCAL_CONF_FILE}. Sofin wasn't installed properly?"
-    exit 1
+    error "FATAL: No configuration file found: ${LOCAL_CONF_FILE}. Sofin wasn't installed properly?"
 fi
-note "Sofin installed."
+
 
 ################################################################################
 #
@@ -265,253 +286,226 @@ note "Sofin installed."
 
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
 
+wrun "${TEST_BIN} -d ${JAIL_SOURCE}" # ASSERT:
+
 if [ "${SHELL}" != "${DEFAULT_SHELL}" ]; then
-    set +e
     ${GREP_BIN} -R 'Zsh/exports/zsh' /etc/shells > /dev/null 2>&1
     if [ "$?" != "0" ]; then
-        note "Appending /etc/shells with: '${DEFAULT_SHELL}'."
-        ${PRINTF_BIN} "${DEFAULT_SHELL}\n" >> /etc/shells
+        ${PRINTF_BIN} "${DEFAULT_SHELL}\n" >> /etc/shells && \
+        debug "Appending: ${DEFAULT_SHELL} to: /etc/shells"
     fi
-    note "Setting '${DEFAULT_SHELL}' as default shell."
-    ${CHSH_BIN} -s ${DEFAULT_SHELL}
+    wrun "${CHSH_BIN} -s ${DEFAULT_SHELL}" && \
+    dnote "Default shell set to: ${DEFAULT_SHELL}" && \
+    INSTALLED_SYSTEM_SHELL="1"
 fi
 
-list="Rsync-static Mosh Tmux Syslog-ng"
+list="Rsync-static Most Tmux Syslog-ng"
 case ${ARCH} in
     arm|arm32|arm64)
         ;;
-
     *)
         list="${list} Glusterfs"
         ;;
 esac
-note "Installing additional software bundles: ${list}"
-${SOFIN_BIN} install ${list}
 
-note "Synchronizing /boot and boot loader configuration."
-${RM_BIN} -f /tmp/tmp-loader.conf
-${CP_BIN} -v /boot/loader.conf /tmp/tmp-loader.conf
-${RSYNC_BIN} --exclude 'kernel' --links --delete --compress --perms --executability --acls --xattrs --owner --group --times --recursive ${JAIL_SOURCE}/boot/ /boot >> ${LOG}  2>&1
-${CP_BIN} -v /tmp/tmp-loader.conf /boot/loader.conf
+wrun "${SOFIN_BIN} install ${list}" && \
+dnote "Additional software bundles: ${list} installed successfully"
 
-note "Installing custom kernel"
 if [ ! -d "${VKS_KERNEL}" ]; then
-    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL} >> ${LOG} 2>&1
+    wrun "${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} ${JAIL_SOURCE}/boot/kernel/ ${VKS_KERNEL}" && \
+    dnote "Kernel: ${VKS_KERNEL} installed successfully" && \
+    INSTALLED_KERNEL="1"
 else
     ${RM_BIN} -rf ${VKS_KERNEL}.old
-    ${MV_BIN} ${VKS_KERNEL} ${VKS_KERNEL}.old >> ${LOG} 2>&1
-    ${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL} >> ${LOG} 2>&1
+    debug "Kernel update from: ${JAIL_SOURCE}"
+    wrun "${MV_BIN} ${VKS_KERNEL} ${VKS_KERNEL}.old" && \
+    wrun "${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}" && \
+    dnote "Kernel updated successfully" && \
+    INSTALLED_KERNEL="1"
 fi
 
-note "Updating sudo for ${SYSTEM_VERSION} jail base"
-${CP_BIN} /Software/Sudo-static/bin/sudo ${JAIL_SOURCE}/usr/bin/
-${CHMOD_BIN} 4755 ${JAIL_SOURCE}/usr/bin/sudo
+# ${CP_BIN} /Software/Sudo-static/bin/sudo ${JAIL_SOURCE}/usr/bin/
+# ${CHMOD_BIN} 4755 ${JAIL_SOURCE}/usr/bin/sudo
+# note "Updating sudo for ${SYSTEM_VERSION} jail base"
 
 if [ -d "${SERVED_REPO}" ]; then
-    cd ${SERVED_REPO}
-    ${GIT_BIN} reset --hard
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
+    method="fetched"
+    cd ${SERVED_REPO} && \
+    wrun "${GIT_BIN} reset --hard" && \
+    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}"
 else
-    cd /var
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS
-fi
+    method="cloned"
+    cd /var && \
+    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS"
+fi && \
+dnote "ServeD-OS repository ${method} successfully" && \
+INSTALLED_SERVED_OS="1" && \
+unset method
 
 for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
-    test -f $f && chflags -v noschg $f
+    ${TEST_BIN} -f ${f} && wrun "${CHFLAGS_BIN} -v noschg ${f}"
 done
-note "Deploying: ${SVDINIT_BIN}"
 if [ -f "${SVDINIT_BIN}" ]; then
-    ${RM_BIN} -f ${SVDINIT_BIN}
+    wrun "${RM_BIN} -fv ${SVDINIT_BIN}" && \
+    debug "Removed old: ${SVDINIT_BIN}"
 fi
-clang -c ${SERVED_REPO}/src/getmntopts.c -o ${SERVED_REPO}/src/getmntopts.o
-clang -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c \
-    -lutil -lcrypt -DSECURE -DLOGIN_CAP ${SERVED_REPO}/src/getmntopts.o
-if [ "$?" = "0" ]; then
-    note "Preparing backup from current version of ${SVDINIT_BIN}"
-    strip ${SVDINIT_BIN}
-    ${RM_BIN} -f ${SVDINIT_BACKUP_BIN}
-    ${CP_BIN} -v ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}
-else
-    warn "ServeD init replacement failed to build, cause of some strange reason! Restoring backup version of: ${SVDINIT_BIN}"
-    ${CP_BIN} -v ${SVDINIT_BACKUP_BIN} ${SVDINIT_BIN}
-fi
+wrun "${CLANG_BIN} -c ${SERVED_REPO}/src/getmntopts.c -o ${SERVED_REPO}/src/getmntopts.o" && \
+wrun "${CLANG_BIN} -static -o ${SVDINIT_BIN} ${SERVED_REPO}/src/svdsysup.c -lutil -lcrypt -DSECURE -DSVD_LOGIN_CAP ${SERVED_REPO}/src/getmntopts.o" && \
+wrun "${STRIP_BIN} ${SVDINIT_BIN}" && \
+wrun "${RM_BIN} -f ${SVDINIT_BACKUP_BIN}" && \
+wrun "${INSTALL_BIN} -v ${SVDINIT_BIN} ${DEFAULT_JAILS_ROOT_DIR}/sbin" && \
+wrun "${CP_BIN} -v ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}" && \
+dnote "Installed: ${SVDINIT_BIN}" && \
+INSTALLED_SVDINIT="1"
+
 for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
-    test -f $f && chflags -v schg $f
+    ${TEST_BIN} -f ${f} && wrun "${CHFLAGS_BIN} -v schg ${f}"
 done
 
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc" && \
+dnote "Installed: system binary updater" && \
+INSTALLED_SVDSYSUP="1"
 
-note "Setting up rc.svdsysup"
-${CP_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc/
+${GREP_BIN} -v -R 'ServeD' /boot/loader.conf >/dev/null 2>&1 && \
+echo >> /boot/loader.conf && \
+${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served >> /boot/loader.conf && \
+dnote "Installed: boot loader configuration" && \
+INSTALLED_BOOT_CONF="1"
 
-note "Setting up default shell environment"
-${CP_BIN} -v ${SERVED_REPO}/etc/zshenv.served /etc/zshenv
+${MKDIR_BIN} -p ${SYSSVD_LOGNG_PREFIX}/etc ${SYSSVD_LOGNG_PREFIX}/var
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSSVD_LOGNG_PREFIX}/etc/" && \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSSVD_LOGNG_PREFIX}/etc/" && \
+dnote "Installed: system logger" && \
+INSTALLED_SYSLOGNG="1"
 
-note "Setting up default boot loader configuration"
-${CP_BIN} -v ${SERVED_REPO}/etc/loader.conf.served /boot/loader.conf
-
-note "Setting up make.conf and src.conf"
-${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/make.conf
-${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/src.conf
-
-note "Setting up mime types"
-${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types
-
-# configure currently installed default system logger - syslog-ng..
-# or replace default syslogd with preconfigured syslog-ng
-SYSLOGNG_PREFIX="/Services/Syslog-ng"
-
-note "Setting up system logger"
-${MKDIR_BIN} -p ${SYSLOGNG_PREFIX}/etc ${SYSLOGNG_PREFIX}/var
-${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSLOGNG_PREFIX}/etc/
-${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSLOGNG_PREFIX}/etc/
-
-note "Updating rc.d scripts"
 if [ ! -x "/etc/rc.d/buildhost" ]; then
-    note "Creating rc script for buildhost"
-    ${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.d/buildhost /etc/rc.d
+    wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.d/buildhost /etc/rc.d" && \
+    dnote "Created rc script for buildhost" && \
+    INSTALLED_BUILDHOST_RC="1"
 fi
-
 if [ ! -x "/etc/rc.d/syslog-ng" ]; then
-    note "Creating rc script for syslog-ng"
-    ${CP_BIN} -v /etc/rc.d/syslogd /etc/rc.d/syslog-ng
-    ${SED_BIN} -i '' -e 's#pidfile=.*$#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng
-    ${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng
+    wrun "${CP_BIN} -v /etc/rc.d/syslogd /etc/rc.d/syslog-ng" && \
+    ${SED_BIN} -i '' -e 's#pidfile=.*$#pidfile="/var/run/syslog-ng.pid"#' /etc/rc.d/syslog-ng && \
+    ${SED_BIN} -i '' -e 's#syslogd#syslog_ng#g' /etc/rc.d/syslog-ng && \
+    dnote "Created rc script for: Syslog-ng" && \
+    INSTALLED_SYSLOGNG_RC="1"
 fi
 
-set +e
 ${GREP_BIN} -R 'syslogd_enable' /etc/rc.conf 2>/dev/null | ${GREP_BIN} '"YES"' > /dev/null 2>&1
 if [ "$?" = "0" ]; then
-    note "Disabling syslogd, replacing it with: syslog-ng"
     service syslogd stop >/dev/null 2>&1
     killall -9 syslogd >/dev/null 2>&1
-    set -e
-    ${SED_BIN} -i '' -e 's#^.*syslogd_enable.*=.*$##g' /etc/rc.conf
+    ${SED_BIN} -i '' -e 's#^.*syslogd_enable.*=.*$##g' /etc/rc.conf && \
+    dnote "Disabled syslogd, enabled: syslog-ng" && \
+    INSTALLED_DISABLE_FOR_SYSLOGD="1"
 else
     ${PS_BIN} axv 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} 'syslog-ng' >/dev/null 2>&1
     if [ "$?" = "0" ]; then
-        set -e
-        note "Reloading Syslog-ng"
-        service syslog-ng reload 2>> ${LOG}
+        wrun "service syslog-ng reload" && \
+        dnote "Reloaded: Syslog-ng"
     fi
 fi
-set -e
 
-note "Setting up sysctl"
-${TEST_BIN} -f /etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf" && \
+dnote "Installed: sysctl configuration" && \
+INSTALLED_SYSCTL_CONF="1"
 
-note "Setting up periodic"
-${TEST_BIN} -f /etc/periodic.conf ||${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf
+dnote "Installed: periodic configuration" && \
 
-note "Setting up defaults for: ttys, login.conf"
-${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys
-${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf
-${CAP_MKDB_BIN} /etc/login.conf
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/" && \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/" && \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types" && \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys" && \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf" && \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf" && \
+wrun "${CAP_MKDB_BIN} /etc/login.conf" && \
+dnote "Installed to /etc: make.conf, src.conf, mime.types, ttys, login.conf, periodic.conf" && \
+INSTALLED_LOGIN_CONF="1"
 
-note "Setting up network"
-readonly DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 2>/dev/null | ${TAIL_BIN} -n 4 2>/dev/null | ${HEAD_BIN} -n 1 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
-readonly GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
-readonly DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
-readonly NETS_LIST="$(${IFCONFIG_BIN} ${DEFAULT_INTERFACE} 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
-readonly AMOUNT=$(${PRINTF_BIN} "${NETS_LIST}\n" | ${WC_BIN} -l 2>/dev/null)
+dnote "Setting up network"
+DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 2>/dev/null | ${TAIL_BIN} -n 4 2>/dev/null | ${HEAD_BIN} -n 1 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
+GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
+DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
+NETS_LIST="$(${IFCONFIG_BIN} ${DEFAULT_INTERFACE} 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
+AMOUNT=$(${PRINTF_BIN} "${NETS_LIST}\n" | ${WC_BIN} -l 2>/dev/null)
 NETS=""
 if [ ${AMOUNT} -eq 1 ]; then
     ${PRINTF_BIN} "${NETS_LIST}\n" > ${DEFAULT_HOST_ADDRESS_FILE}
 else
-    note "Detected several IP addresses!"
+    dnote "Detected several IP addresses!"
     sleep 2
     for net in ${NETS_LIST}; do
         NETS="$NETS $net - "
     done
-    ${DIALOG_BIN} --menu "Pick main IP address:" 0 0 0 ${NETS} 2> ${DEFAULT_HOST_ADDRESS_FILE}
+    ${DIASVD_LOG_BIN} --menu "Pick main IP address:" 0 0 0 ${NETS} 2> ${DEFAULT_HOST_ADDRESS_FILE}
 fi
 
-note "Setting up PF firewall.."
 DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS_FILE} 2>/dev/null)"
-${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE}
-${SED_BIN} -i '' -e "s/__INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE}
-${SED_BIN} -i '' -e "s/__EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FILE}
-${SED_BIN} -i '' -e "s/__EXTERNAL_ADDRESS/${DEFAULT_INTERFACE_ADDRESS}/g" ${PF_CONF_FILE}
-${TOUCH_BIN} ${PF_CONF_FILE}.local
+wrun "${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE}" && \
+${SED_BIN} -i '' -e "s/__INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE} && \
+${SED_BIN} -i '' -e "s/__EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FILE} && \
+${SED_BIN} -i '' -e "s/__EXTERNAL_ADDRESS/${DEFAULT_INTERFACE_ADDRESS}/g" ${PF_CONF_FILE} && \
+wrun "${TOUCH_BIN} ${PF_CONF_FILE}.local" && \
+dnote "Installed Packet Filter configuration" && \
+INSTALLED_SYSLOGNG_CONF="1"
 
-set +e
-grep -R 'pf_enable' /etc/rc.conf 2>/dev/null | grep '"YES"' > /dev/null 2>&1
+${GREP_BIN} -R 'pf_enable' /etc/rc.conf 2>/dev/null | ${GREP_BIN} '"YES"' > /dev/null 2>&1
 if [ "$?" = "0" ]; then
-    set -e
-    note "PF firewall is restarting.."
-    service pf restart
-    note "Applied firewall rules:\n$(${PFCTL_BIN} -sn 2>/dev/null)"
+    wrun "service pf restart" && \
+    dnote "Applied firewall rules:\n$(${PFCTL_BIN} -sn 2>/dev/null)"
 else
-    warn "PF firewall is disabled in '/etc/rc.conf'. Skipping"
+    dwarn "Packet Filter is disabled in: '/etc/rc.conf'"
 fi
 
-set +e
-grep -R 'ServeD-Install-Script' /etc/rc.conf >/dev/null 2>&1
+${GREP_BIN} -R 'ServeD-Install-Script' /etc/rc.conf >/dev/null 2>&1
 if [ "$?" != "0" ]; then
-    set -e
-    note "ServeD special not found in /etc/rc.conf. Appending default RC configuration."
-    ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf
+    ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf && \
+    dnote "Installed: ServeD specific rc configuration"
 fi
-set -e
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
-note "Installing root TLS/SSL certificates"
 ${MKDIR_BIN} -p /etc/ssl
-if [ -f /etc/ssl/cert.pem ]; then
-    ${MV_BIN} -v /etc/ssl/cert.pem /etc/ssl/cert.pem-${TIMESTAMP}
+${FETCH_BIN} "${CACERT_SOURCE}" -o /etc/ssl/cert.pem || \
+${FETCH_BIN} "${CACERT_SOURCE_ALT}" -o /etc/ssl/cert.pem || \
+warn "CA CERTS: Both sources are unavailable!"
+
+cert_size="$(${STAT_BIN} -f'%z' /etc/ssl/cert.pem 2>/dev/null)"
+if [ -z "${cert_size}" ]; then
+    cert_size="0"
+elif [ "${cert_size}" = "0" ]; then
+    wrun "${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem" && \
+    dnote "CA CERTS: Used bundled version of cert.pem from ServeD-OS repository" && \
+    INSTALLED_ROOT_SSL_CERTS="2"
+elif [ ${cert_size} -gt 220000 ]; then
+    dnote "System ROOT-TLS/SSL certificates installed successfully" && \
+    INSTALLED_ROOT_SSL_CERTS="1"
 fi
-${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem
 
-UNWANTED_DIRS="/mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp"
-note "Forcing destroy of unnecessary datasets: ${DEFAULT_ZPOOL}[${UNWANTED_DIRS}]"
-for unnec in ${UNWANTED_DIRS}; do
-    set +e
-    ${ZFS_BIN} list | ${GREP_BIN} "${unnec} " >/dev/null 2>&1
-    if [ "$?" = "0" ]; then
-        set -e
-        ${ZFS_BIN} destroy -f ${DEFAULT_ZPOOL}${unnec}
-    fi
-    set -e
-    ${RM_BIN} -rf "${unnec}"
-done
+# note "Checking for a ZFS-feature-updates of zpool: ${DEFAULT_ZPOOL}"
+# ${ZPOOL_BIN} upgrade ${DEFAULT_ZPOOL} | ${HEAD_BIN} -n1
 
-note "Installing host Governor"
-${INSTALL_BIN} -v ${SERVED_REPO}/gvr ${DEFAULT_SYSTEM_PREFIX}
-
-note "Checking for a ZFS-feature-updates of zpool: ${DEFAULT_ZPOOL}"
-${ZPOOL_BIN} upgrade ${DEFAULT_ZPOOL} | ${HEAD_BIN} -n1
-
-disks=$(geom disk list 2>/dev/null | ${GREP_BIN} 'Name:\ d.*' 2>/dev/null | ${SED_BIN} 's/^.*\ //' 2>/dev/null)
+disks=$(${GEOM_BIN} disk list 2>/dev/null | ${EGREP_BIN} 'Name: [a-z]?da.*$' 2>/dev/null | ${SED_BIN} 's/^.*\ //' 2>/dev/null)
 if [ -z "${disks}" ]; then
-    error "System GEOM detected NO hard disks available on this machine. How can I do my thing? -_-"
+    error "System GEOM detected NO hard disks available on this machine. Installer can't do his thing -_-"
 fi
-for disk in $disks; do
-    note "Updating ZFS bootcode for disk: '${disk}'."
-    gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}
-    if [ "$?" != "0" ]; then
-        warn "Bootcode update finished with an error for disk: ${disk}!"
-        sleep 2
-    fi
+for disk in ${disks}; do
+    wrun "${GRPART_BIN} bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}" && \
+    dnote "Updated ZFS bootcode for disk: ${disk}" && \
+    INSTALLED_BOOT_ZFS="1"
 done
-note "Generating new hints for '${VKS_KERNEL}' kernel."
-kldxref ${VKS_KERNEL}
+wrun "${KLDXREF_BIN} ${VKS_KERNEL}" && \
+dnote "Generated kernel hints for kernel: ${VKS_KERNEL}"
 
-note "Updating system properties.."
-${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT
-${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${DEFAULT_ZPOOL}/ROOT
+wrun "${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT" && \
+wrun "${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${DEFAULT_ZPOOL}/ROOT" && \
+wrun "${TOUCH_BIN} /.svdsysup" && \
+dnote "ServeD system properties set successfully"
 
-set +e
-${UNAME_BIN} -a | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
+${UNAME_BIN} -a 2>/dev/null | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
-    note
-    note "ServeD system update complete!"
+    dnote "ServeD update complete!\n"
 else
-    note
-    note "ServeD system installation complete!"
+    dnote "ServeD installation complete!\n" # with status: "jedenelement: 0 drugi: 0 jakis: 1 trzeci: 0 itd.."
 fi
-note
-note "Update process will continue after reboot.."
-
-set -e
-${TOUCH_BIN} /.svdsysup
 
 exit 0
