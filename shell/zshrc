@@ -51,16 +51,16 @@ setprompt () {
             ;;
 
         worker)
-            export user_color="${PR_GREEN}"
+            export user_color="${PR_BRIGHT_BLUE}"
             ;;
 
         *)
-            export user_color="${PR_BLUE}"
+            export user_color="${PR_BRIGHT_GREY}"
             ;;
     esac
 
     # Finally, let's set the prompt
-    PROMPT="${PR_RESET}${PR_BRIGHT_GREY}[%D{%s}] ${PR_RESET}${PR_GREEN}%m${PR_BRIGHT_GREY}:%$PR_PWDLEN<...<%~% ${GITINFO}${PR_RESET}${user_color} λ${PR_RESET} "
+    PROMPT="${PR_RESET}${PR_BRIGHT_GREY}[%D{%s}] ${PR_RESET}${PR_BLUE}%m${PR_YELLOW}:%$PR_PWDLEN<...<%~% ${GITINFO}${PR_RESET}${user_color} λ${PR_RESET} "
 }
 
 setprompt
