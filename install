@@ -57,7 +57,7 @@ MKDIR_BIN="/bin/mkdir"
 UNAME_BIN="/usr/bin/uname"
 DATE_BIN="/bin/date"
 CLANG_BIN="/usr/bin/clang"
-
+EGREP_BIN="/usr/bin/egrep"
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
@@ -197,7 +197,8 @@ fi
 create_dset_if_doesnt_exist () {
     mntpt="${1}"
     mount_opt="${2}"
-    ${ZFS_BIN} list 2>/dev/null | ${GREP_BIN} "${DEFAULT_ZPOOL}${mntpt} " > /dev/null 2>&1
+    debug "Checking existence of dataset: ${DEFAULT_ZPOOL}${mntpt}"
+    ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}${mntpt} " > /dev/null 2>&1
     if [ "$?" != "0" ]; then
         wrun "${ZFS_BIN} create -o mountpoint=${mount_opt} ${DEFAULT_ZPOOL}${mntpt}" && \
         dnote "Dataset: ${DEFAULT_ZPOOL}${mntpt} created successfully"
@@ -228,10 +229,13 @@ for loc in ${locations}; do
     fi
 done
 
-dnote "Creating ${ORIGIN} snapshots.."
+dnote "Checking ${ORIGIN} snapshots.."
+origin_snap_regexp="@[a-z]{6}[$ ]{1}" # origin
 for snap in "ROOT" "ROOT/default" "User/root" "Services/root"; do
-    ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${snap}@[a-z0-9].* " > /dev/null 2>&1
-    if [ "$?" != "0" ]; then
+    ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${snap}${origin_snap_regexp}" > /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        dnote " * ${DEFAULT_ZPOOL}/${snap}@${ORIGIN} (untouched)"
+    else
         wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/${snap}@${ORIGIN}" && \
         dnote " * ${DEFAULT_ZPOOL}/${snap}@${ORIGIN}"
     fi
