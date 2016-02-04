@@ -18,6 +18,7 @@ SERVED_REPO="/var/ServeD-OS"
 CACERT_SOURCE="http://curl.haxx.se/ca/cacert.pem"
 CACERT_SOURCE_ALT="http://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt"
 LOCAL_CONF_FILE="${SOFIN_REPO}/src/${SOFIN_CONF_NAME}"
+DEFAULT_ARCHIVE_EXT=".txz"
 
 # const definitions:
 reset='\033[0m'
@@ -58,6 +59,7 @@ UNAME_BIN="/usr/bin/uname"
 DATE_BIN="/bin/date"
 CLANG_BIN="/usr/bin/clang"
 EGREP_BIN="/usr/bin/egrep"
+XZ_BIN="/usr/bin/xz"
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
@@ -168,8 +170,8 @@ if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" ]; then
     INSTALLED_SERVED_BASE="1"
 fi
 
-if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz" ]; then
-    retry "${FETCH_BIN} ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz" && \
+if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT}" ]; then
+    retry "${FETCH_BIN} ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT} -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT}" && \
     dnote "Jails archive fetched successfully" && \
     INSTALLED_JAILS_ARCHIVE="1"
 fi
@@ -240,7 +242,7 @@ for snap in "ROOT" "ROOT/default" "User/root" "Services/root"; do
         dnote " * ${DEFAULT_ZPOOL}/${snap}@${ORIGIN}"
     fi
 done
-wrun "${TAR_BIN} xf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}.tar.xz --directory /" && \
+wrun "${TAR_BIN} -xJ --use-compress-program=\"${XZ_BIN} --threads=0\" -f ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT} --directory /" && \
 dnote "Installed ServeD software base: ${SYSTEM_VERSION}-v${VERSION}" && \
 INSTALLED_BASE_SOFTWARE="1"
 
