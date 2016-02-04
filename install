@@ -469,8 +469,9 @@ fi
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 ${MKDIR_BIN} -p /etc/ssl
-${FETCH_BIN} "${CACERT_SOURCE}" -o /etc/ssl/cert.pem >/dev/null 2>&1 || \
-${FETCH_BIN} "${CACERT_SOURCE_ALT}" -o /etc/ssl/cert.pem >/dev/null 2>&1 || \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem"
+${FETCH_BIN} "${CACERT_SOURCE}" -o /etc/ssl/cert.pem >> ${SVD_LOG} 2>&1 || \
+${FETCH_BIN} "${CACERT_SOURCE_ALT}" -o /etc/ssl/cert.pem >> ${SVD_LOG} 2>&1 || \
 warn "CA CERTS: Both sources are unavailable!"
 
 cert_size="$(${STAT_BIN} -f'%z' /etc/ssl/cert.pem 2>/dev/null)"
