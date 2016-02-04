@@ -856,10 +856,12 @@ jail_destroy () {
         wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}" && \
         wrun "${RM_BIN} -rf ${CELL}" && \
         wrun "${RM_BIN} -rf ${SENTRY}" && \
-        dnote "Destroyed datasets of jail: ${JAIL_NAME}"
-        service local_unbound configtest && service local_unbound restart >> ${LOG_FILE} 2>&1
+        dnote "Destroyed datasets of jail: ${JAIL_NAME}" && \
+        service local_unbound configtest >> ${LOG_FILE} 2>&1 && \
+        service local_unbound restart >> ${LOG_FILE} 2>&1 && \
+        dnote "Unbound resolver restarted"
     else
-        dnote "Jail: $(${BASENAME_BIN} ${GIVEN_NAME} 2>/dev/null) left intact"
+        dnote "Jail: ${cyan}$(${BASENAME_BIN} ${GIVEN_NAME} 2>/dev/null) left intact"
     fi
 }
 
