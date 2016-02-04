@@ -41,10 +41,12 @@ if [ "${ARCH}" = "" ]; then
     error "No architecture specified!"
 fi
 
+readonly BBS_LOG="/var/log/messages"
+
 
 clean_before () {
-    unwanted_dirs="/mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp"
-    cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}" && \
+    unwanted_dirs=(/etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root)
+    cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
     for unnec in ${unwanted_dirs}; do
         ${RM_BIN} -rf ".${unnec}" && \
         note "Removed dir: .${unnec}"
@@ -56,7 +58,8 @@ compile_jails () {
     BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
     note "Compiling snapshot: ${BASE_SNAPSHOT}"
     realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
-    ${TAR_BIN} cfJ ../${BASE_SNAPSHOT}.tar.xz "${realpath}" >> /var/log/messages 2>&1
+    debug "RR: ${TAR_BIN} -vcJ --use-compress-program=\"${XZ_BIN} --threads=${CPUS}\" -f ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \"${realpath}\""
+    time ${TAR_BIN} -cJ --use-compress-program="${XZ_BIN} --threads=${CPUS}" -f ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} ${realpath} 2>> ${BBS_LOG}
     if [ "$?" = "0" ]; then
         note "Compiled successfully."
     else
@@ -64,14 +67,27 @@ compile_jails () {
         exit 1
     fi
 
-    note "Setting snapshot as readable by everyone"
-    chmod a+r ../${BASE_SNAPSHOT}.tar.xz
+    ${CHMOD_BIN} a+r ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} || \
+    error "Snapshot should be readable by everyone. But chmod failed."
 
     note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
-    scp ../${BASE_SNAPSHOT}.tar.xz ${DESTINATION}
+    ${SCP_BIN} \
+        -o UserKnownHostsFile=/dev/null \
+        -o StrictHostKeyChecking=no \
+        ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \
+        ${DESTINATION} 2>> ${BBS_LOG} && \
+        note "Uploaded successfully."
+
     if [ "$?" = "0" ]; then
-        note "Finished successfully. Updating latest version on remote destination"
-        ssh dmilith@served.verknowsys.com "echo '${A_VERSION}' > /Users/dmilith/ServeD/Web/version-latest"
+        note "Finished successfully. Checking latest version on remote destination.."
+        ${SSH_BIN} \
+            -o UserKnownHostsFile=/dev/null \
+            -o StrictHostKeyChecking=no \
+            dmilith@served.verknowsys.com \
+            "grep -R '${A_VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
+             echo '${A_VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${BBS_LOG} && \
+            note "Remote version updated."
+
     else
         error "Something went wrong while uploading Jails base."
         exit 1
