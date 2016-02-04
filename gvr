@@ -14,8 +14,10 @@ else
     exit 1
 fi
 
+DEBUG=yes
 
-GVR_VERSION="0.16.2"
+GVR_VERSION="0.18.0"
+GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
 BRIDGE_DEVICE="bridge0"
@@ -61,8 +63,8 @@ JAIL_RUNNING_INDICATOR="jail.running"
 DEFAULT_HOST_ADDRESS="/etc/host.default"
 DEFAULT_JAILS_FIB="1"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
-DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 | ${TAIL_BIN} -n 4 | ${HEAD_BIN} -n 1 | ${AWK_BIN} '{print $2;}')"
-GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} | ${GREP_BIN} -v grep | ${GREP_BIN} inet | ${AWK_BIN} '{print $2;}')"
+DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 2>/dev/null | ${TAIL_BIN} -n 4 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
+GVR_HOST_IP_ADDR="$(ifconfig ${DEFAULT_INTERFACE} 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
 if [ "${DEFAULT_INTERFACE}" = "" ]; then
     error "Something is wrong with network routing. Governor can't continue"
 fi
@@ -72,22 +74,54 @@ if [ ! -d "${DEFAULT_JAIL_ETC_SOURCE}" ]; then
 fi
 
 
+debug () {
+    if [ -f "/.build-host" ]; then
+        cecho "# $1" ${cyan}
+        if [ -e "${GVR_LOG}" ]; then
+            cecho "# $1" ${cyan} >> ${GVR_LOG} 2>&1
+        fi
+    fi
+}
+
+
+dnote () {
+    note "$@" && \
+    note "$@" >> ${GVR_LOG} 2>&1
+}
+
+wrun () {
+    commands="$@ && sync"
+    debug "Evaluating: '${commands}'" && \
+    debug "Evaluating: '${commands}'" >> ${GVR_LOG} 2>> ${GVR_LOG} && \
+    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
+    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> ${GVR_LOG} 2>> ${GVR_LOG}
+    if [ "$?" != "0" ]; then
+        cecho "Failed to evaluate: '${commands}'" ${red} && \
+        cecho "Failed to evaluate: '${commands}'" ${red} >> ${GVR_LOG} 2>> ${GVR_LOG}
+    fi
+    unset commands gitroot
+}
+
+
 # This is where all jail settings are put into global scope of script:
 set_values () {
     ENTERED_NAME="${1}"
+    if [ -z "${ENTERED_NAME}" ]; then
+        error "Empty cell name!"
+    fi
     CELL="${DEFAULT_CELLS_LOCATION}/${ENTERED_NAME}"
     SENTRY="${DEFAULT_SENTRY_LOCATION}/${ENTERED_NAME}"
     debug "Processing CELL: ${CELL}, Sentry: ${SENTRY}"
     JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
     JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
     JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
-    JAIL_NAME="$(${PRINTF_BIN} "${ENTERED_NAME}\n" | ${SED_BIN} 's/\./-/g')"
+    JAIL_NAME="$(${PRINTF_BIN} "${ENTERED_NAME}\n" | ${SED_BIN} 's/\./-/g' 2>/dev/null)"
     JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
     JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
     JAIL_EXEC_LOG="${SENTRY}/${JAIL_TRUSS_EXEC_NAME}"
     DEBUG_COMMAND=""
     DEBUG_EXEC_COMMAND=""
-    if [ "${DEBUG}" = "true" ]; then
+    if [ "${DEBUG}" = "truss" ]; then
         DEBUG_COMMAND="${TRUSS_BIN} -o ${JAIL_TRACE_LOG}"
         DEBUG_EXEC_COMMAND="${TRUSS_BIN} -o ${JAIL_EXEC_LOG}"
     fi
@@ -99,31 +133,31 @@ set_values () {
     JAIL_STATUS_FILE="${SENTRY}/${JAIL_STATUS_NAME}"
     JAIL_STATUS_DETAIL=""
     if [ -f "${JAIL_STATUS_FILE}" ]; then
-        JAIL_STATUS_DETAIL="$(${CAT_BIN} ${JAIL_STATUS_FILE})"
+        JAIL_STATUS_DETAIL="$(${CAT_BIN} ${JAIL_STATUS_FILE} 2>/dev/null)"
     fi
-    JAIL_STATUS="${red}*off*${gray} ${JAIL_STATUS_DETAIL}${reset} -JAILNAME: ${JAIL_NAME}"
-    ${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*ACTIVE" >> ${LOG_FILE} 2>&1
+    JAIL_STATUS="${red}*off*${gray} ${JAIL_STATUS_DETAIL}${reset}"
+    ${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME} .*ACTIVE" >/dev/null 2>&1
     if [ "$?" = "0" ]; then
         JAIL_STATUS="${green}*on*${gray} ${JAIL_STATUS_DETAIL}${reset}"
     fi
-    debug "Got jail status: ${JAIL_SOURCE}"
+    debug "Got jail status: ${JAIL_STATUS}"
     JAIL_VERSION="${DEFAULT_VERSION}"
     if [ -f "${JAIL_VERSION_FILE}" ]; then
-        JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE})"
+        JAIL_VERSION="$(${CAT_BIN} ${JAIL_VERSION_FILE} 2>/dev/null)"
     fi
     if [ -f "${JAIL_VLAN_NUMBER_FILE}" ]; then
-        VLAN_NUMBER="$(${CAT_BIN} ${JAIL_VLAN_NUMBER_FILE})"
+        VLAN_NUMBER="$(${CAT_BIN} ${JAIL_VLAN_NUMBER_FILE} 2>/dev/null)"
     fi
     debug "Got jail os version: ${JAIL_VERSION}"
     JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
     debug "Got jail source: ${JAIL_SOURCE}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
-        JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}")"
+        JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" 2>/dev/null)"
     fi
     debug "Got jail IP(s): ${JAIL_IPS}"
     HOSTNAMES=""
     for hostnfile in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
-        hostn="$(${CAT_BIN} ${hostnfile} | ${GREP_BIN} "local-zone:" | ${SED_BIN} 's/^.* "//;s/.".*//')"
+        hostn="$(${CAT_BIN} ${hostnfile} 2>/dev/null | ${GREP_BIN} "local-zone:" 2>/dev/null | ${SED_BIN} 's/^.* "//;s/.".*//' 2>/dev/null)"
         debug "hostn: ${hostn}"
         HOSTNAMES="*.${hostn} ${HOSTNAMES}"
     done
@@ -132,9 +166,14 @@ set_values () {
 }
 
 
+show_version () {
+    note "GoVeRnor: ${cyan}v${GVR_VERSION}${reset}"
+}
+
+
 check_cell_name () {
     GIVEN_NAME="${1}"
-    NAME="$(${BASENAME_BIN} ${GIVEN_NAME})"
+    NAME="$(${BASENAME_BIN} ${GIVEN_NAME} 2>/dev/null)"
     if [ ! -d "${GIVEN_NAME}" ]; then
         error "Bad jail name: ${NAME}"
     fi
@@ -142,25 +181,24 @@ check_cell_name () {
 
 
 apply_attributes () {
-    debug "Applying default attributes for jail: ${JAIL_NAME}"
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:memoryuse:deny=${DEFAULT_LIMIT_MAX_MEMORY}
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:vmemoryuse:deny=${DEFAULT_LIMIT_MAX_VMEMORY}
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:maxproc:deny=${DEFAULT_LIMIT_MAXPROC}
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:openfiles:deny=${DEFAULT_LIMIT_OPENFILES}
-    ${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=${DEFAULT_LIMIT_MAXPTS}
+    wrun "${RCTL_BIN} -a jail:${JAIL_NAME}:memoryuse:deny=${DEFAULT_LIMIT_MAX_MEMORY}" && \
+    wrun "${RCTL_BIN} -a jail:${JAIL_NAME}:vmemoryuse:deny=${DEFAULT_LIMIT_MAX_VMEMORY}" && \
+    wrun "${RCTL_BIN} -a jail:${JAIL_NAME}:maxproc:deny=${DEFAULT_LIMIT_MAXPROC}" && \
+    wrun "${RCTL_BIN} -a jail:${JAIL_NAME}:openfiles:deny=${DEFAULT_LIMIT_OPENFILES}" && \
+    wrun "${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=${DEFAULT_LIMIT_MAXPTS}" && \
+    dnote "Applied default attributes for jail: ${JAIL_NAME}"
 
     debug "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
     ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}" "${JAIL_LOGS_CONF_DIR}"
     cd ${JAIL_ATTRIBUTES_DIR}
-    for attribute in $(${LS_BIN}); do
-        debug "List: $(${LS_BIN})"
-        value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute})"
+    for attribute in $(${LS_BIN} 2>/dev/null); do
+        value="$(${CAT_BIN} ${JAIL_ATTRIBUTES_DIR}/${attribute} 2>/dev/null)"
+        debug "Attribute: ${attribute}, value: ${value}"
         case "${attribute}" in
             key)
-                ${MKDIR_BIN} -p ${CELL}/User/.ssh
                 a_key="ssh-ed25519 ${value} ${JAIL_NAME}\n"
-                ${PRINTF_BIN} "${a_key}" >> ${CELL}/User/.ssh/authorized_keys
-                ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID}:${DEFAULT_WORKER_UID} ${CELL}/User/.ssh
+                ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} "${MKDIR_BIN} -p /User/.ssh; ${PRINTF_BIN} '${a_key}' >> /User/.ssh/authorized_keys"
+                ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} "${CHOWN_BIN} -R ${DEFAULT_WORKER_UID}:${DEFAULT_WORKER_UID} /User/.ssh"
                 ;;
 
             ip)
@@ -172,41 +210,41 @@ apply_attributes () {
                 ;;
 
             +ip)
-                file_size="$(stat -f%z ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE})"
+                file_size="$(${STAT_BIN} -f%z ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE} 2>/dev/null)"
                 if [ "${file_size}" -gt "0" ]; then
                     ${PRINTF_BIN} ",${value}" >> ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}
-                    current_value="$(${CAT_BIN} ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE} | ${TR_BIN} '\n' ',' | ${SED_BIN} -E 's/[,]{2,}/,/g;s/,$//;s/^[,]{1,}//g')"
+                    current_value="$(${CAT_BIN} ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE} 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -E 's/[,]{2,}/,/g;s/,$//;s/^[,]{1,}//g' 2>/dev/null)"
                     debug "Current value: ${current_value}"
                     ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${current_value};#" ${JAIL_CONF_FILE}
                 fi
-                ${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${attribute}
+                ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${attribute}"
                 ;;
 
             quota-root)
                 note "Setting root dir quota of: ${value} to ${DEFAULT_ZPOOL}${CELL}"
-                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}${CELL}
+                wrun "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}${CELL}"
                 ;;
 
             quota)
                 note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/*/${JAIL_NAME}"
                 for dest in Software Services User; do
-                    ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/${dest}/${JAIL_NAME}
+                    wrun "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/${dest}/${JAIL_NAME}"
                 done
                 ;;
 
             quota-software)
                 note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
-                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+                wrun "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
                 ;;
 
             quota-services)
                 note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
-                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
+                wrun "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
                 ;;
 
             quota-user)
                 note "Setting quota of: ${value} to ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
-                ${ZFS_BIN} set quota="${value}" ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
+                wrun "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
                 ;;
 
             *)
@@ -244,11 +282,11 @@ apply_attributes () {
 
 check_jail_address () {
     JAIL_ADDRESS_CHECK="${1}"
-    for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION}); do
+    for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION} 2>/dev/null); do
         IP_FILE="${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
         if [ -f "${IP_FILE}" ]; then
-            for ip in $(${CAT_BIN} ${IP_FILE} | ${TR_BIN} ',' '\n'); do
-                JAIL_ADDRESS_CHECK=$(${PRINTF_BIN} "${JAIL_ADDRESS_CHECK}" | ${TR_BIN} ',' '\n')
+            for ip in $(${CAT_BIN} ${IP_FILE} 2>/dev/null | ${TR_BIN} ',' '\n' 2>/dev/null); do
+                JAIL_ADDRESS_CHECK=$(${PRINTF_BIN} "${JAIL_ADDRESS_CHECK}" | ${TR_BIN} ',' '\n' 2>/dev/null)
                 for addrchk in ${JAIL_ADDRESS_CHECK}; do
                     echo "${ip}" | ${GREP_BIN} "${addrchk}" > /dev/null 2>&1
                     if [ "$?" = "0" ]; then
@@ -263,7 +301,7 @@ check_jail_address () {
 
 check_jail_name () {
     GIVEN_NAME="${1}"
-    for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION}); do
+    for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION} 2>/dev/null); do
         if [ "${jail}" = "${GIVEN_NAME}" ]; then
             error "Name: ${GIVEN_NAME} is already used"
         fi
@@ -306,15 +344,8 @@ attributes_show () {
 }
 
 
-name_and_version () {
-    SYSTEM_VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)"
-    note "ServeD-OS: ${cyan}${SYSTEM_VERSION}${reset}"
-    note "ServeD GoVeRnor: ${cyan}v${GVR_VERSION}${reset}"
-}
-
-
 mark_running () {
-    ${PRINTF_BIN} "$(${DATE_BIN} +%F-%H%M%S)\n" > ${SENTRY}/${JAIL_RUNNING_INDICATOR}
+    ${PRINTF_BIN} "$(${DATE_BIN} +%F-%H%M%S 2>/dev/null)\n" > "${SENTRY}/${JAIL_RUNNING_INDICATOR}"
 }
 
 
@@ -324,7 +355,7 @@ jail_create () {
         note
     }
     GIVEN_NAME="${1}"
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail name given"
     fi
@@ -341,32 +372,36 @@ jail_create () {
         JAIL_VERSION="${DEFAULT_VERSION}"
     fi
 
-    VLAN_NUMBER="$(jot -r 1 10 4090)" # pick Random vlan Number between 10 and 4090
+    VLAN_NUMBER="$(jot -r 1 10 4090 2>/dev/null)" # pick Random vlan Number between 10 and 4090
     ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} > /dev/null 2>&1
     while [ "$?" = "0" ]; do
-        VLAN_NUMBER="$(jot -r 1 10 4090)"
-        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} > /dev/null 2>&1
+        VLAN_NUMBER="$(jot -r 1 10 4090 2>/dev/null)"
+        wrun "ifconfig ${VLAN_DEVICE}${VLAN_NUMBER}" && \
+        dnote "Picked network vlan: ${VLAN_DEVICE}${VLAN_NUMBER}"
     done
 
     set_values "${GIVEN_NAME}"
 
-    ${ZFS_BIN} create -o mountpoint=${SENTRY} ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
-    ${ZFS_BIN} set quota=${DEFAULT_SENTRY_LIMIT} ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
+    wrun "${ZFS_BIN} create -o mountpoint=${SENTRY} ${DEFAULT_ZPOOL}${SENTRY}" && \
+    wrun "${ZFS_BIN} set quota=${DEFAULT_SENTRY_LIMIT} ${DEFAULT_ZPOOL}${SENTRY}" && \
+    dnote "Mounted and set sentry"
 
     if [ -f "${JAIL_CONF_FILE}" ]; then
         warn "Jail already configured"
     else
-        ADDRESSES_LIST="$(echo ${JAIL_ADDRESSES} | ${TR_BIN} ',' '\n')"
-        note "Configuring jail for addresses: ${JAIL_ADDRESSES}"
-        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} create > /dev/null 2>&1
-        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        ADDRESSES_LIST="$(echo ${JAIL_ADDRESSES} | ${TR_BIN} ',' '\n' 2>/dev/null)"
+        if [ -z "${ADDRESSES_LIST}" ]; then
+            error "Addresses list can't be empty!"
+        fi
+        note "Configuring jail for addresses: ${JAIL_ADDRESSES}" && \
+        wrun "ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} create" && \
+        wrun "ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE}" && \
         for ip in ${ADDRESSES_LIST}; do
-            ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias
+            wrun "ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias"
         done
-        ifconfig ${BRIDGE_DEVICE} create > /dev/null 2>&1
-        ifconfig ${BRIDGE_DEVICE}  > /dev/null 2>&1
-        ifconfig ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
-        ifconfig ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private vlan${VLAN_NUMBER}
+        wrun "ifconfig ${BRIDGE_DEVICE} || ifconfig ${BRIDGE_DEVICE} create" && \
+        wrun "ifconfig ${BRIDGE_DEVICE} | ${GREP_BIN} '${DEFAULT_INTERFACE}' 2>/dev/null || ifconfig ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE}" && \
+        wrun "ifconfig ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER}" && \
         ${PRINTF_BIN} "
 ${JAIL_NAME} {
     # name = \"${JAIL_NAME}\";
@@ -395,46 +430,49 @@ ${JAIL_NAME} {
     LAST=""
     DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
     note "Looking for snapshots of ${DEFAULT_JAILS_ROOT_DIR}"
-    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" > /dev/null 2>&1
+    ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        LAST="$(${ZFS_BIN} list -t snap 2> /dev/null | ${GREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@" | ${SED_BIN} 's/.*@//;s/ .*//' | tail -n 1)"
-        note "Last snapshot of '${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}' is '${LAST}'."
+        LAST="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${TAIL_BIN} -n 1 2>/dev/null)"
+        dnote "Last snapshot of: ${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH} is: ${LAST}"
     fi
-    if [ "${LAST}" = "" ]; then
+    if [ -z "${LAST}" ]; then
         LAST="origin"
-        warn "No snapshots found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Creating origin snapshot."
-        ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${ORIGIN}
+        wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${ORIGIN}" && \
+        warn "No snapshots found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Created origin snapshot"
     fi
 
-    note "Cloning last jail system base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}' to ${CELL}"
-    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}
+    wrun "${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}" && \
+    dnote "Cloned last jail system base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}' to ${CELL}"
 
     note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software/root"
     ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}" > /dev/null 2>&1
     if [ "$?" != "0" ]; then
-        error "Something went wrong. Missing origin snapshot: '${DEFAULT_ZPOOL}/Software/root@${ORIGIN}'. Aborting."
+        error "Something went wrong. Missing origin snapshot: '${DEFAULT_ZPOOL}/Software/root@${ORIGIN}'. Aborting"
     fi
     note "Cloning from origin: ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}"
     debug "Cloning /Software/root: '${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}'"
-    ${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
+    wrun "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
 
-    note "Creating jail filesystems"
+    note "Creating jail filesystems.."
     for dset in Software Services User Shared; do
-        ${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
-        ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}
-        ${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
-        ${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
-        ${ZFS_BIN} allow everyone xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
-        ${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}
+        ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" || \
+        wrun "${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
+
+        wrun "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}" && \
+        wrun "${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} allow worker xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+        dnote "Filesystem set: ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
     done
-    ${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}
+    wrun "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
 
     note "Setting up ZFS deduplication on Jails and Software"
-    ${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Software
-    ${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Jails
-    ${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Shared
-    ${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Software
-    ${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Shared
+    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Software"
+    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Jails"
+    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Shared"
+    wrun "${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Software"
+    wrun "${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Shared"
 
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
@@ -451,34 +489,41 @@ ${JAIL_NAME} {
                     "${CELL}/Shared" \
                     "${CELL}/User"
 
-    note "Copying volatile part of jail"
-    ${PRINTF_BIN} "${VLAN_NUMBER}\n" > ${JAIL_VLAN_NUMBER_FILE}
-    ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
-    ${PRINTF_BIN} "${JAIL_ADDRESSES}\n" >> ${JAIL_ADDRESSES_FILE}
+    ${PRINTF_BIN} "${VLAN_NUMBER}\n" > ${JAIL_VLAN_NUMBER_FILE} && \
+    ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE} && \
+    ${PRINTF_BIN} "${JAIL_ADDRESSES}\n" >> ${JAIL_ADDRESSES_FILE} && \
+    dnote "Copied volatile part of jail"
 
-    note "Building initial jail environment"
-    ${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc
-    ${SED_BIN} -i '' -e "s:__JAIL_NAME:${JAIL_NAME}.home:" ${CELL}/etc/rc.conf
-    ${SED_BIN} -i '' -e "s:__HOST_IP:${GVR_HOST_IP_ADDR}:" ${CELL}/etc/resolv.conf
+    wrun "${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc" && \
+    wrun "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.home:\" ${CELL}/etc/rc.conf" && \
+    wrun "${SED_BIN} -i '' -e \"s:__HOST_IP:${GVR_HOST_IP_ADDR}:\" ${CELL}/etc/resolv.conf" && \
+    dnote "Built initial jail environment"
 
-    note "Installing Sofin to '${CELL}'."
-    ${CP_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/
-    ${CP_BIN} -v /usr/bin/s ${CELL}/usr/bin/s
+    wrun "${INSTALL_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/" && \
+    wrun "${INSTALL_BIN} -v ${SOFIN_BIN} ${CELL}/usr/bin" && \
+    wrun "${INSTALL_BIN} -v /usr/bin/sofin-version-utility ${CELL}/usr/bin" && \
+    wrun "${INSTALL_BIN} -v /usr/bin/sofin-microseconds ${CELL}/usr/bin" && \
+    dnote "Instaled local Sofin to: ${CELL}"
 
-    note "Updating sysctl.conf"
-    test -f ${CELL}/etc/sysctl.conf || ${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf
+    if [ ! -f ${CELL}/etc/sysctl.conf ]; then
+        wrun "${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf" && \
+        dnote "Created sysctl.conf from ServeD-OS repository"
+    fi
 
-    ${CP_BIN} /etc/zshenv ${CELL}/etc
-    # ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} ${CELL}/tmp ${CELL}/var/tmp
+    wrun "${RM_BIN} -f ${CELL}/etc/zshenv ${CELL}/etc/zshrc" && \
+    wrun "${MKDIR_BIN} -p ${CELL}/etc/zsh" && \
+    wrun "${CP_BIN} -R ${SERVED_REPO}/shell/ ${CELL}/etc/zsh" && \
+    wrun "${MV_BIN} -v ${CELL}/etc/zsh/zshrc ${CELL}/etc/zshrc" && \
+    wrun "${MV_BIN} -v ${CELL}/etc/zsh/zshenv ${CELL}/etc/zshenv" && \
+    dnote "Jail system shell configured"
 
-    note "Updating client system version property from base system"
-    VER=$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT)
-    ${ZFS_BIN} set com.svd:version="${VER}" ${DEFAULT_ZPOOL}${CELL}
+    svd_version="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
+    wrun "${ZFS_BIN} set com.svd:version=${svd_version} ${DEFAULT_ZPOOL}${CELL}" && \
+    dnote "Updated client ServeD version property from base system"
 
-    note "Creating user loggers"
     for logger in messages production staging development; do
-        ${MKFIFO_BIN} -m "a=-rwx,u=rw" "${CELL}/var/log/${logger}"
-        ${CHOWN_BIN} ${DEFAULT_WORKER_UID} "${CELL}/var/log/${logger}"
+        wrun ${MKFIFO_BIN} -m "a=-rwx,u=rw" "${CELL}/var/log/${logger}" && \
+        wrun  ${CHOWN_BIN} ${DEFAULT_WORKER_UID} "${CELL}/var/log/${logger}" && \
         ${PRINTF_BIN} "
 source s_${JAIL_NAME}_${logger} {
     pipe(\"${CELL}/var/log/${logger}\");
@@ -490,14 +535,15 @@ log {
     source(s_${JAIL_NAME}_${logger});
     destination(d_${JAIL_NAME}_${logger}_file);
 };
-" > ${JAIL_LOGS_CONF_DIR}/${logger}.conf
+" > ${JAIL_LOGS_CONF_DIR}/${logger}.conf && \
+        dnote "Created logger: ${logger}"
     done
 
     note "Reloading syslog"
-    service syslog-ng reload || service syslog-ng restart
+    service syslog-ng reload >/dev/null || service syslog-ng restart >/dev/null
 
     note "Setting up home domains from main IPs: ${JAIL_ADDRESSES}"
-    MAIN_JAIL_ADDRESS="$(echo "${JAIL_ADDRESSES}" | ${SED_BIN} -e 's#/.*# #g')"
+    MAIN_JAIL_ADDRESS="$(echo "${JAIL_ADDRESSES}" | ${SED_BIN} -e 's#/.*# #g' 2>/dev/null)"
 
     ${PRINTF_BIN} "
 # Default home zone template:
@@ -506,20 +552,20 @@ local-zone: \"${JAIL_NAME}.home.\" redirect
 local-data: \"${JAIL_NAME}.home. 10800 IN NS ns1.${JAIL_NAME}.home.\"
 local-data: \"${JAIL_NAME}.home. 10800 IN NS ns2.${JAIL_NAME}.home.\"
 local-data: \"${JAIL_NAME}.home. 1800  IN SRV 10 10 22 ${JAIL_NAME}.home.\"
-local-data: \"${JAIL_NAME}.home. 10800 IN SOA ns1.${JAIL_NAME}.home. ns2.${JAIL_NAME}.home. $(${DATE_BIN} +%s) 3600 600 86400 3600\"
+local-data: \"${JAIL_NAME}.home. 10800 IN SOA ns1.${JAIL_NAME}.home. ns2.${JAIL_NAME}.home. $(${DATE_BIN} +%s 2>/dev/null) 3600 600 86400 3600\"
 local-data: \"${JAIL_NAME}.home. 10800 IN A ${MAIN_JAIL_ADDRESS}\"
 
 local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.home\"
 
 " >> ${JAIL_LOCAL_DOMAIN_CONF}
 
-    note "Initializing '${JAIL_NAME}.home' zone."
-    service local_unbound configtest && service local_unbound restart
-    if [ "$?" = "0" ]; then
-        jail_start "${JAIL_NAME}"
-    else
-        error "Failed to successfully reload Unbound resolver!"
-    fi
+    wrun "service local_unbound configtest" && \
+    wrun "service local_unbound restart" && \
+    jail_start "${JAIL_NAME}" && \
+    dnote "Zone: ${JAIL_NAME}.home is resolvable" && \
+    return 0
+
+    error "Failed to successfully reload zone: ${JAIL_NAME}.home"
 }
 
 
@@ -529,7 +575,7 @@ jail_status () {
     }
     GIVEN_NAME="${1}"
     VERBOSE="${2}"
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail name given"
     fi
@@ -539,7 +585,8 @@ jail_status () {
     ${PRINTF_BIN} "Status: ${JAIL_STATUS}\n"
     echo ${JAIL_STATUS} | ${GREP_BIN} '\*on\*' > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
+        JAIL_NUM_ID="$(${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}.home" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
+        debug "JAIL_NUM_ID: ${JAIL_NUM_ID}"
         ${PRINTF_BIN} "JID: ${green}${JAIL_NUM_ID}${reset}\n"
     fi
     ${PRINTF_BIN} "Name: ${green}${JAIL_NAME}${reset}\n"
@@ -549,16 +596,16 @@ jail_status () {
     ${PRINTF_BIN} "OS version: ${green}${JAIL_VERSION}${reset}\n\n"
     if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
         ${PRINTF_BIN} "Overriden attributes:\n"
-        for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f); do
-            ${PRINTF_BIN} "${cyan}$(${BASENAME_BIN} ${i}): $(${CAT_BIN} ${i})${reset}\n"
+        for i in $(${FIND_BIN} ${JAIL_ATTRIBUTES_DIR} -type f 2>/dev/null); do
+            ${PRINTF_BIN} "${cyan}$(${BASENAME_BIN} ${i} 2>/dev/null): $(${CAT_BIN} ${i} 2>/dev/null)${reset}\n"
         done
         ${PRINTF_BIN} "\n"
     fi
-    ${PRINTF_BIN} "Live attributes:\n${cyan}$(${RCTL_BIN} -h jail:${JAIL_NAME} | ${SED_BIN} 's/jail:n1://g' | ${SED_BIN} 's/:deny=/: /g')${reset}\n"
+    ${PRINTF_BIN} "Live attributes:\n${cyan}$(${RCTL_BIN} -h jail:${JAIL_NAME} 2>/dev/null | ${SED_BIN} 's/jail:n1://g' 2>/dev/null | ${SED_BIN} 's/:deny=/: /g' 2>/dev/null)${reset}\n"
     case ${VERBOSE} in
         v|-v|-verbose|verbose|more)
             ${PRINTF_BIN} "\nFull configuration:"
-            ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}")\n"
+            ${PRINTF_BIN} "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)\n"
             ;;
     esac
 }
@@ -566,13 +613,13 @@ jail_status () {
 
 jail_list () {
     cd ${DEFAULT_CELLS_LOCATION}
-    for cell in $(${LS_BIN}); do
-        cellname="$(${PRINTF_BIN} "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}')" # first 29 chars visible in jls output
+    for cell in $(${LS_BIN} 2>/dev/null); do
+        cellname="$(${PRINTF_BIN} "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}' 2>/dev/null)" # first 29 chars visible in jls output
         ${PRINTF_BIN} "${cell}"
         if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
-            JAIL_IPS="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" | ${TR_BIN} '\n' ',' | ${SED_BIN} -e 's/,$//')"
+            JAIL_IPS="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -e 's/,$//' 2>/dev/null)"
         fi
-        ${JLS_BIN} -v | ${GREP_BIN} "${cellname}.*ACTIVE" >> ${LOG_FILE} 2>&1
+        ${JLS_BIN} -v | ${EGREP_BIN} "${cellname} .*ACTIVE" >> ${LOG_FILE} 2>&1
         if [ "$?" = "0" ]; then
             ${PRINTF_BIN} " ${cyan}${JAIL_IPS}${reset} ${green}*on*${reset}"
         else
@@ -589,13 +636,13 @@ jail_start () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} start jail-name${reset}"
     }
     GIVEN_NAME="${1}" # hostname?
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail to start"
     fi
     set_values "${GIVEN_NAME}"
 
-    ${JLS_BIN} -v | ${GREP_BIN} "${GIVEN_NAME}.*${GIVEN_NAME}" > /dev/null 2>&1
+    ${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${GIVEN_NAME}.home" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
         note "Jail ${GIVEN_NAME} is already running"
         exit 0
@@ -603,65 +650,59 @@ jail_start () {
 
     check_cell_name "${CELL}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
-        JAIL_IPS="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE} | ${TR_BIN} ',' '\n')"
+        JAIL_IPS="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE} 2>/dev/null | ${TR_BIN} ',' '\n' 2>/dev/null)"
     fi
 
-    # note "Running jail static configuration"
-    # for dset in Services Software User; do
-    #     ${ZFS_BIN} set jailed=off ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
-    #     ${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset} > /dev/null 2>&1
-    # done
-
     # sanity check - required to spawn jail
-    ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} create > /dev/null 2>&1
 
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
         note "Configuring ${VLAN_DEVICE}${VLAN_NUMBER}"
-        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE} > /dev/null 2>&1
+        wrun "ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} || (ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE})"
         for ip in ${JAIL_IPS}; do
-            ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias
+            wrun "ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias"
         done
-        ifconfig ${BRIDGE_DEVICE} create > /dev/null 2>&1
-        ifconfig ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} >> ${LOG_FILE} 2>&1
-        ifconfig ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER} >> ${LOG_FILE} 2>&1 # private ${VLAN_DEVICE}${VLAN_NUMBER}
+        wrun "ifconfig ${BRIDGE_DEVICE} || (ifconfig ${BRIDGE_DEVICE} create && ifconfig ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} && ifconfig ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER})" && \
+        dnote "Bridge configured"
 
-        JAIL_NUM_ID="$(${JLS_BIN} -v | ${GREP_BIN} "${JAIL_NAME}.*${JAIL_NAME}" | ${AWK_BIN} '{print $1;}')"
+        JAIL_NUM_ID="$(${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}.home" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
         note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
 
-        ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S)]" > "${JAIL_STATUS_FILE}"
+        ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         # note "Launching Service Spawner daemon"
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
 
         # alow users creating / in their tree. why not.
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 777 / >> ${LOG_FILE} 2>&1
-        ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${LOG_FILE} 2>&1
+        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
+        dnote "Permissions of jailed / set to 771"
+        # ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${LOG_FILE} 2>&1
 
         # ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
         # ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
 
-        ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}
-        ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/User/${JAIL_NAME}
-        ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}
-        ${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}
-
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s /sbin/zfs /sbin/sysctl # Make sure that these have setuid set!
-        ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} -R ${DEFAULT_WORKER_UID} /Services /User /Software /Shared
-        ${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 4755 /Software/Sudo-static/exports/sudo
-        ${JEXEC_BIN} -U root ${JAIL_NAME} sysctl kern.securelevel=${KERN_SECURELEVEL} > /dev/null 2>&1
-
-        if [ ! -e "${CELL}/User/.zshrc" ]; then
-            note "Creating default user environment file for zsh"
-            ${GREP_BIN} -R "sofin reload" "${CELL}/User/.zshrc" > /dev/null 2>&1 || ${PRINTF_BIN} "sofin reload\n" >> "${CELL}/User/.zshrc"
+        if [ -z "${JAIL_NUM_ID}" ]; then
+            error "Jail ID is empty!"
         fi
+        for dset in Services Software Shared User; do
+            wrun "${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+            wrun "${ZFS_BIN} set canmount=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+            wrun "${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+            dnote "Filesystem jailed: ${dset}"
+        done
+
+        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s /sbin/zfs /sbin/sysctl" && \
+        wrun "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
+        dnote "Zfs datasets mounted"
+        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_WORKER_UID} /Services /User /Software /Shared"
+        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} sysctl kern.securelevel=${KERN_SECURELEVEL}" && \
+        dnote "Securelevel set to: ${KERN_SECURELEVEL}"
 
         mark_running
     else
-        ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} destroy > /dev/null 2>&1
+        wrun "ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} destroy" && \
         error "Jail launch failed. Look into log file: ${LOG_FILE}"
     fi
 }
@@ -672,33 +713,34 @@ jail_stop () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} stop jail-name${reset}"
     }
     GIVEN_NAME="${1}"
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail to stop"
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    note "Terminating jail: ${JAIL_NAME}"
+    JAIL_NUM_ID="$(${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}.home" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
+    for dir in /dev; do
+        wrun "${UMOUNT_BIN} -f ${CELL}${dir}" && \
+        dnote "Unmounted: ${dir}"
+    done
+    for dset in User Services Software; do
+        wrun "${ZFS_BIN} unjail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" || \
+        wrun "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" || \
+        dnote "Unjailed and unmounted: ${dset}"
+    done
 
-    ${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r "${JAIL_NAME}" >> ${LOG_FILE} 2>&1
+    wrun "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
+    dnote "Terminated jail: ${JAIL_NAME}"
     ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
-    note "Unmounting jail datasets"
-    for dir in /dev; do
-        ${UMOUNT_BIN} -f "${CELL}${dir}" >> ${LOG_FILE} 2>&1
-    done
-    for dset in Services User Software; do
-        ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} >> ${LOG_FILE} 2>&1
-        ${UMOUNT_BIN} -f ${CELL}/${dset} >> ${LOG_FILE} 2>&1
-    done
-    ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${CELL} >> ${LOG_FILE} 2>&1
-    ${ZFS_BIN} umount -fr ${DEFAULT_ZPOOL}${SENTRY} >> ${LOG_FILE} 2>&1
+    wrun "ifconfig ${BRIDGE_DEVICE} deletem ${VLAN_DEVICE}${VLAN_NUMBER}" && \
+    wrun "ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} destroy" && \
+    dnote "Destroyed vlan: ${VLAN_DEVICE}${VLAN_NUMBER}"
 
-    note "Stopping ${VLAN_DEVICE} interface"
-    ifconfig ${BRIDGE_DEVICE} deletem ${VLAN_DEVICE}${VLAN_NUMBER}
-    ifconfig ${VLAN_DEVICE}${VLAN_NUMBER} destroy
-
-    ${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}
+    wrun "${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}" && \
+    dnote "Removed jail running indicator"
 }
 
 
@@ -708,7 +750,7 @@ jail_set () {
     }
     GIVEN_NAME="${1}"
     shift
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail name given"
     fi
@@ -716,8 +758,8 @@ jail_set () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
     for argument_pair in $@; do
-        ATTRIBUTE="$(${PRINTF_BIN} "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' )"
-        JAIL_VALUE="$(${PRINTF_BIN} "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[2];}')"
+        ATTRIBUTE="$(${PRINTF_BIN} "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' 2>/dev/null)"
+        JAIL_VALUE="$(${PRINTF_BIN} "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[2];}' 2>/dev/null)"
         debug "arg: ${ATTRIBUTE}, val: ${JAIL_VALUE} "
         note "Setting ${ATTRIBUTE}: ${JAIL_VALUE} for jail: ${JAIL_NAME}"
         ${PRINTF_BIN} "${JAIL_VALUE}\n" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
@@ -731,7 +773,7 @@ jail_unset () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} unset jail-name attribute value${reset}"
     }
     GIVEN_NAME="${1}"
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail name given"
     fi
@@ -740,9 +782,9 @@ jail_unset () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
     for jail_attribute in $*; do
-        note "Unsetting ${jail_attribute} for jail: ${JAIL_NAME}"
-        ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${jail_attribute}"
-        ${RCTL_BIN} -r jail:${JAIL_NAME}:${jail_attribute} >> ${LOG_FILE} 2>&1
+        wrun "${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${jail_attribute}" && \
+        wrun "${RCTL_BIN} -r jail:${JAIL_NAME}:${jail_attribute}" && \
+        note "Unset attribute: ${jail_attribute} for jail: ${JAIL_NAME}"
     done
     apply_attributes
 }
@@ -753,7 +795,7 @@ jail_login () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} login jail-name${reset}"
     }
     GIVEN_NAME="${1}" # hostname?
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail to enter"
     fi
@@ -764,12 +806,13 @@ jail_login () {
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    ${JLS_BIN} -v | ${GREP_BIN} "$(${BASENAME_BIN} ${CELL}).*ACTIVE" >> ${LOG_FILE} 2>&1
+    ${JLS_BIN} -v | ${GREP_BIN} "$(${BASENAME_BIN} ${CELL} 2>/dev/null) .*ACTIVE" >> ${LOG_FILE} 2>&1
     if [ "$?" = "0" ]; then
-        note "Logging as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}"
-        ${DEBUG_EXEC_COMMAND} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_LOGIN}
+        dnote "Logging in as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}" && \
+        ${DEBUG_EXEC_COMMAND} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_LOGIN} && \
+        dnote "Logged out from jail: ${JAIL_NAME}"
     else
-        error "Start jail first"
+        error "Start jail first!"
     fi
 }
 
@@ -779,7 +822,7 @@ jail_restart () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} restart jail-name${reset}"
     }
     GIVEN_NAME="${1}"
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail to restart"
     fi
@@ -793,7 +836,7 @@ jail_destroy () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} destroy jail-name${reset}"
     }
     GIVEN_NAME="${1}"
-    if [ "${GIVEN_NAME}" = "" ]; then
+    if [ -z "${GIVEN_NAME}" ]; then
         usage
         error "No jail to destroy"
     fi
@@ -805,17 +848,18 @@ jail_destroy () {
     read ans
     if [ "${ans}" = "YES" ]; then
         jail_stop $*
-        note "Destroying datasets."
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${SENTRY}"
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}${CELL}"
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
-        ${ZFS_BIN} destroy -rf "${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
-        ${RM_BIN} -rf "${CELL}" >> ${LOG_FILE} 2>&1
-        ${RM_BIN} -rf "${SENTRY}" >> ${LOG_FILE} 2>&1
-        # service local_unbound configtest && service local_unbound restart
+        wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/User/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${SENTRY}" && \
+        wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}" && \
+        wrun "${RM_BIN} -rf ${CELL}" && \
+        wrun "${RM_BIN} -rf ${SENTRY}" && \
+        dnote "Destroyed datasets of jail: ${JAIL_NAME}"
+        service local_unbound configtest && service local_unbound restart >> ${LOG_FILE} 2>&1
     else
-        note "Jail: $(${BASENAME_BIN} ${GIVEN_NAME}) left intact"
+        dnote "Jail: $(${BASENAME_BIN} ${GIVEN_NAME} 2>/dev/null) left intact"
     fi
 }
 
@@ -823,7 +867,7 @@ jail_destroy () {
 case $1 in
     ver|v|version)
         shift
-        name_and_version
+        show_system_versions
         ;;
 
     create|c)
