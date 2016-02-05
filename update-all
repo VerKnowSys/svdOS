@@ -7,6 +7,7 @@ set -e
 . ./update-ports
 
 setup_buildhost
+s i Perl
 update_ports
 
 set +e
