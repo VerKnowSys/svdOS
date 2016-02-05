@@ -385,6 +385,12 @@ wrun "${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSSVD_LOGNG_PREFIX}/
 dnote "Installed: system logger" && \
 INSTALLED_SYSLOGNG="1"
 
+if [ -f "/etc/malloc.conf" ]; then
+    wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/malloc.conf /etc/" && \
+    dnote "Installed: malloc.conf" && \
+    INSTALLED_MALLOC_CONF="1"
+fi
+
 if [ ! -x "/etc/rc.d/buildhost" ]; then
     wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.d/buildhost /etc/rc.d" && \
     dnote "Created rc script for buildhost" && \
