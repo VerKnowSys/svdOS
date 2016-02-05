@@ -385,10 +385,9 @@ wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSSVD_LOGNG_PRE
 dnote "Installed: system logger" && \
 INSTALLED_SYSLOGNG="1"
 
-if [ -f "/etc/malloc.conf" ]; then
-    wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/malloc.conf /etc/" && \
-    dnote "Installed: malloc.conf" && \
-    INSTALLED_MALLOC_CONF="1"
+if [ ! -f "/etc/malloc.conf" ]; then
+    # <Zer0P> it's a "hack" to elliminate the cost of the open and parsing
+    ${LN_BIN} -s 'abort:false,junk:false,lg_chunk:14' /etc/malloc.conf
 fi
 
 if [ ! -x "/etc/rc.d/buildhost" ]; then
