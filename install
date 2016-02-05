@@ -6,7 +6,7 @@
 
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
-INSTALL_SCRIPT_VERSION="0.6.0"
+INSTALL_SCRIPT_VERSION="0.6.1"
 SYSTEM_VERSION="11.0" # the default
 DEFAULT_ZPOOL="zroot"
 INTERNAL_NETWORK="10.2.1.0"
