@@ -380,8 +380,8 @@ dnote "Installed: boot loader configuration" && \
 INSTALLED_BOOT_CONF="1"
 
 ${MKDIR_BIN} -p ${SYSSVD_LOGNG_PREFIX}/etc ${SYSSVD_LOGNG_PREFIX}/var
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSSVD_LOGNG_PREFIX}/etc/" && \
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSSVD_LOGNG_PREFIX}/etc/" && \
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/syslog-ng/syslog-ng.conf ${SYSSVD_LOGNG_PREFIX}/etc/" && \
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/syslog-ng/scl.conf ${SYSSVD_LOGNG_PREFIX}/etc/" && \
 dnote "Installed: system logger" && \
 INSTALLED_SYSLOGNG="1"
 
