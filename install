@@ -60,6 +60,7 @@ DATE_BIN="/bin/date"
 CLANG_BIN="/usr/bin/clang"
 EGREP_BIN="/usr/bin/egrep"
 XZ_BIN="/usr/bin/xz"
+SYNC_BIN="/bin/sync"
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
@@ -145,7 +146,7 @@ dnote () {
 }
 
 wrun () {
-    commands="$@ && sync"
+    commands="$@ && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
     debug "Evaluating: '${commands}'" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
 
