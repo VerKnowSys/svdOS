@@ -8,6 +8,7 @@ set -e
 
 setup_buildhost
 s i Perl
+export PATH=/Software/Perl/exports:/bin:/usr/bin:/sbin:/usr/sbin
 update_ports
 
 set +e
