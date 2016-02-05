@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# @author Daniel (dmilith) Dettaff
+#
+
+readonly red='\033[31;40m'
+readonly green='\033[32;40m'
+readonly cyan='\033[36;40m'
+readonly reset='\033[0m'
+readonly in_source='https://bitbucket.org/verknowsys/served-os/raw/master/install'
+
+printf "${green}Getting latest version of install script from ${cyan}${in_source}${reset}\n"
+fetch -q -o - ${in_source} 2>/dev/null | sh
+
+if [ "$?" = "0" ]; then
+    printf "${green}Ok!${reset}\n"
+    exit 0
+else
+    printf "${red}Failed!${reset}\n"
+    exit 1
+fi
