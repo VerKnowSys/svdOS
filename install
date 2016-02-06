@@ -243,7 +243,7 @@ for snap in "ROOT" "ROOT/default" "User/root" "Services/root"; do
         dnote " * ${DEFAULT_ZPOOL}/${snap}@${ORIGIN}"
     fi
 done
-wrun "${TAR_BIN} -xJ --use-compress-program=\"${XZ_BIN} --threads=0\" -f ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT} --directory /" && \
+wrun "${TAR_BIN} -xJf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT} --directory /" && \
 dnote "Installed ServeD software base: ${SYSTEM_VERSION}-v${VERSION}" && \
 INSTALLED_BASE_SOFTWARE="1"
 
