@@ -848,7 +848,7 @@ jail_destroy () {
 case $1 in
     ver|v|version)
         shift
-        show_system_versions
+        show_version
         ;;
 
     create|c)
