@@ -60,17 +60,18 @@ compile_jails () {
     realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
 
     # Golden linker support:
-    if [ -f "/Software/Gold/lib/LLVMgold.so" ]; then
+    GOLD="/Software/Gold"
+    if [ -f "${GOLD}/lib/LLVMgold.so" ]; then
         note "Syncing golden linker.."
         set -e
-        for file in /Software/Gold/lib/LLVMgold.so /Software/Gold/lib/libLTO.so; do
+        for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
             ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         done
-        for file in $(${FIND_BIN} /Software/Gold/x86_64-unknown-freebsd11.0/bin -type f); do
+        for file in $(${FIND_BIN} ${GOLD}/x86_64-unknown-freebsd11.0/bin -type f); do
             ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         done
         ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
-        for file in $(${FIND_BIN} /Software/Gold/x86_64-unknown-freebsd11.0/lib/ldscripts -type f); do
+        for file in $(${FIND_BIN} ${GOLD}/x86_64-unknown-freebsd11.0/lib/ldscripts -type f); do
             ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         done
         note "Linker installed in destination system"
