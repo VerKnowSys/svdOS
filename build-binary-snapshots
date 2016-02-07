@@ -45,9 +45,8 @@ readonly BBS_LOG="/var/log/messages"
 
 
 clean_before () {
-    unwanted_dirs=(/etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root)
     cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
-    for unnec in ${unwanted_dirs}; do
+    for unnec in /etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root; do
         ${RM_BIN} -rf ".${unnec}" && \
         debug "Removed dir: .${unnec}"
     done
