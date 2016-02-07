@@ -77,22 +77,22 @@ compile_jails () {
     fi
 
     cd /var/.cache
-    debug "RR: ${TAR_BIN} -vcJ --use-compress-program=\"${XZ_BIN} --threads=${CPUS}\" -f ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \"${realpath}\""
-    time ${TAR_BIN} -cJ --use-compress-program="${XZ_BIN} --threads=${CPUS}" -f ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} ${realpath} 2>> ${BBS_LOG}
+    debug "RR: ${TAR_BIN} -vcJ --use-compress-program=\"${XZ_BIN} --threads=${CPUS}\" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \"${realpath}\""
+    time ${TAR_BIN} -cJ --use-compress-program="${XZ_BIN} --threads=${CPUS}" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} ${realpath} 2>> ${BBS_LOG}
     if [ "$?" = "0" ]; then
         note "Compiled successfully."
     else
         error "Something went wrong while compiling snapshot!"
     fi
 
-    ${CHMOD_BIN} a+r ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} || \
+    ${CHMOD_BIN} a+r ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} || \
     error "Snapshot should be readable by everyone. But chmod failed."
 
     note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
     ${SCP_BIN} \
         -o UserKnownHostsFile=/dev/null \
         -o StrictHostKeyChecking=no \
-        ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \
+        ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \
         ${DESTINATION} 2>> ${BBS_LOG} && \
         note "Uploaded successfully."
 
