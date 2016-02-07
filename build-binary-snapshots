@@ -55,10 +55,28 @@ clean_before () {
 
 compile_jails () {
     ${MKDIR_BIN} -p /var/.cache
-    cd /var/.cache
     BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
     note "Compiling snapshot: ${BASE_SNAPSHOT}"
     realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
+
+    # Golden linker support:
+    if [ -f "/Software/Gold/lib/LLVMgold.so" ]; then
+        note "Syncing golden linker.."
+        set -e
+        for file in /Software/Gold/lib/LLVMgold.so /Software/Gold/lib/libLTO.so; do
+            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        done
+        for file in $(${FIND_BIN} /Software/Gold/x86_64-unknown-freebsd11.0/bin -type f); do
+            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        done
+        ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
+        for file in $(${FIND_BIN} /Software/Gold/x86_64-unknown-freebsd11.0/lib/ldscripts -type f); do
+            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        done
+        note "Linker installed in destination system"
+    fi
+
+    cd /var/.cache
     debug "RR: ${TAR_BIN} -vcJ --use-compress-program=\"${XZ_BIN} --threads=${CPUS}\" -f ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \"${realpath}\""
     time ${TAR_BIN} -cJ --use-compress-program="${XZ_BIN} --threads=${CPUS}" -f ../${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} ${realpath} 2>> ${BBS_LOG}
     if [ "$?" = "0" ]; then
