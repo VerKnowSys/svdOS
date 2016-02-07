@@ -1,6 +1,7 @@
 #!/usr/bin/zsh
 
 function precmd {
+    test -f "/.build-host" && return 0
     . /etc/zsh/func/zgitinit
 
     if zgit_isgit; then
