@@ -14,7 +14,7 @@ else
     exit 1
 fi
 
-GVR_VERSION="0.18.1"
+GVR_VERSION="0.18.2"
 GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
