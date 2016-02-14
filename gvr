@@ -330,6 +330,18 @@ mark_running () {
 }
 
 
+check_phantom_worker_existence () {
+    ${EGREP_BIN} "${DEFAULT_JAIL_USER}:\*:${DEFAULT_WORKER_UID}:" /etc/master.passwd >/dev/null 2>&1
+    if [ "$?" != "0" ]; then
+        # NOTE: phantom worker not allowed to write to home dir
+        wrun "${PW_BIN} useradd -u ${DEFAULT_WORKER_UID} -d /var/empty -n ${DEFAULT_JAIL_USER}" && \
+        dnote "Created phantom worker with UID: ${cyan}${DEFAULT_WORKER_UID}"
+    else
+        debug "Phantom worker already exists in system"
+    fi
+}
+
+
 jail_create () {
     usage () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP/Netmask,IP2/Netmask(, … )"
@@ -370,6 +382,7 @@ jail_create () {
     if [ -f "${JAIL_CONF_FILE}" ]; then
         warn "Jail already configured"
     else
+        check_phantom_worker_existence
         ADDRESSES_LIST="$(echo ${JAIL_ADDRESSES} | ${TR_BIN} ',' '\n' 2>/dev/null)"
         if [ -z "${ADDRESSES_LIST}" ]; then
             error "Addresses list can't be empty!"
@@ -635,6 +648,7 @@ jail_start () {
     fi
 
     # sanity check - required to spawn jail
+    check_phantom_worker_existence
 
     note "Deploying jail: ${JAIL_NAME}"
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
