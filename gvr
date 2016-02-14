@@ -89,13 +89,15 @@ dnote () {
 
 wrun () {
     commands="$@ && ${SYNC_BIN}"
-    debug "Evaluating: '${commands}'" && \
-    debug "Evaluating: '${commands}'" >> ${GVR_LOG} 2>> ${GVR_LOG} && \
-    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
-    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> ${GVR_LOG} 2>> ${GVR_LOG}
+    debug "Evaluating: '${commands}'"
+    debug "Evaluating: '${commands}'" >> ${GVR_LOG} 2>> ${GVR_LOG}
+    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN} 2>/dev/null) 2>/dev/null)"
+    eval "PATH=/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core ${commands}" >> ${GVR_LOG} 2>> ${GVR_LOG}
     if [ "$?" != "0" ]; then
-        cecho "Failed to evaluate: '${commands}'" ${red} && \
+        cecho "Failed to evaluate: '${commands}'" ${red}
         cecho "Failed to evaluate: '${commands}'" ${red} >> ${GVR_LOG} 2>> ${GVR_LOG}
+        unset commands gitroot
+        return 1
     fi
     unset commands gitroot
 }
