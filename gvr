@@ -720,7 +720,9 @@ jail_stop () {
         dnote "Unmounted: ${dir}"
     done
     for dset in User Services Software; do
-        wrun "${ZFS_BIN} unjail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+        if [ ! -z "${JAIL_NUM_ID}" ]; then
+            wrun "${ZFS_BIN} unjail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
+        fi
         # wrun "${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" || \
         wrun "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" || \
         dnote "Unjailed and unmounted: ${dset}"
