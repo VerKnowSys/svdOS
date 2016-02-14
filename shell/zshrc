@@ -1,9 +1,9 @@
-#!/usr/bin/zsh
+#!/usr/bin/env zsh
+
+autoload -U zgitinit
+zgitinit
 
 function precmd {
-    test -f "/.build-host" && return 0
-    . /etc/zsh/func/zgitinit
-
     if zgit_isgit; then
         GITBRANCH="${PR_BRIGHT_BLUE}$(zgit_branch)${PR_RESET}"
         if zgit_isworktreeclean; then
@@ -61,10 +61,8 @@ setprompt () {
     esac
 
     # Finally, let's set the prompt
-    PROMPT="${PR_RESET}${PR_BRIGHT_GREY}[%D{%s}] ${PR_RESET}${PR_BLUE}%m${PR_YELLOW}:%$PR_PWDLEN<...<%~% ${GITINFO}${PR_RESET}${user_color} λ${PR_RESET} "
+    export PROMPT="${PR_RESET}${PR_BRIGHT_GREY}[%D{%s}] ${PR_RESET}${PR_BLUE}%m${PR_YELLOW}:%$PR_PWDLEN<...<%~% ${GITINFO}${PR_RESET}${user_color} λ${PR_RESET} "
 }
-
-setprompt
 
 export LSCOLORS=cxfxcxdxbxegedabagacad
 
@@ -239,3 +237,5 @@ if [ "$(uname)" = "Linux" ]; then
 else
   alias ls='ls -GF'
 fi
+
+setprompt

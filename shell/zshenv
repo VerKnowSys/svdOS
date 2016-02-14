@@ -1,3 +1,4 @@
+#!/usr/bin/env zsh
 
 fpath=($fpath /etc/zsh/func)
 typeset -U fpath
