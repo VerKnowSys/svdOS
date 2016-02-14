@@ -24,8 +24,9 @@ LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
 DEFAULT_SOFIN_REPO="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
-SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
-IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
+# SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
+# IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
+JOT_BIN="/usr/bin/jot"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="11.0"
 stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
@@ -60,11 +61,11 @@ JAIL_STATUS_NAME="jail.status"
 JAIL_RUNNING_INDICATOR="jail.running"
 DEFAULT_HOST_ADDRESS="/etc/host.default"
 DEFAULT_JAILS_FIB="1"
-GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0)"
+GVR_SCRIPT_NAME="$(${BASENAME_BIN} $0 2>/dev/null)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 2>/dev/null | ${TAIL_BIN} -n 4 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
 GVR_HOST_IP_ADDR="$(${IFCONFIG_BIN} ${DEFAULT_INTERFACE} 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
-if [ "${DEFAULT_INTERFACE}" = "" ]; then
-    error "Something is wrong with network routing. Governor can't continue"
+if [ -z "${DEFAULT_INTERFACE}" ]; then
+    error "Something is wrong with network routing configuration. Governor can't continue on this host"
 fi
 DEFAULT_JAIL_ETC_SOURCE="${SERVED_REPO}/etc-jail/"
 if [ ! -d "${DEFAULT_JAIL_ETC_SOURCE}" ]; then
@@ -365,10 +366,10 @@ jail_create () {
         JAIL_VERSION="${DEFAULT_VERSION}"
     fi
 
-    VLAN_NUMBER="$(jot -r 1 10 4090 2>/dev/null)" # pick Random vlan Number between 10 and 4090
+    VLAN_NUMBER="$(${JOT_BIN} -r 1 10 4090 2>/dev/null)" # pick Random vlan Number between 10 and 4090
     ${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} > /dev/null 2>&1
     while [ "$?" = "0" ]; do
-        VLAN_NUMBER="$(jot -r 1 10 4090 2>/dev/null)"
+        VLAN_NUMBER="$(${JOT_BIN} -r 1 10 4090 2>/dev/null)"
         wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER}" && \
         dnote "Picked network vlan: ${VLAN_DEVICE}${VLAN_NUMBER}"
     done
@@ -456,7 +457,7 @@ ${JAIL_NAME} {
         wrun "${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}" && \
         wrun "${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         wrun "${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
-        wrun "${ZFS_BIN} allow worker xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+        wrun "${ZFS_BIN} allow ${DEFAULT_JAIL_USER} xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         dnote "Filesystem set: ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
     done
     wrun "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
@@ -556,10 +557,10 @@ local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.home\"
     wrun "service local_unbound configtest" && \
     wrun "service local_unbound restart" && \
     jail_start "${JAIL_NAME}" && \
-    dnote "Zone: ${JAIL_NAME}.home is now locally resolvable. Owned by: ${cyan}${JAIL_NAME}" && \
+    dnote "Zone: ${cyan}${JAIL_NAME}.home ${green}is now locally resolvable. Owned by: ${cyan}${JAIL_NAME}" && \
     return 0
 
-    error "Failed to successfully reload zone: ${JAIL_NAME}.home"
+    error "Failed to successfully reload zone: ${cyan}${JAIL_NAME}.home"
 }
 
 
