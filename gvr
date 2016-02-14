@@ -689,7 +689,7 @@ jail_start () {
         done
 
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s ${ZFS_BIN} ${SYSCTL_BIN}" && \
-        wrun "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} ${MOUNT_BIN} -a" && \
+        wrun "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
         dnote "Zfs datasets mounted"
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_WORKER_UID} /Services /User /Software /Shared"
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && \
