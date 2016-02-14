@@ -449,7 +449,7 @@ ${JAIL_NAME} {
 
     note "Creating jail filesystems.."
     for dset in Software Services User Shared; do
-        ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" || \
+        ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" >/dev/null 2>&1 || \
         wrun "${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
 
         wrun "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
