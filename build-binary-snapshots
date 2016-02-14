@@ -16,6 +16,8 @@ else
 fi
 
 
+readonly LAUNCH_ARGS="$*"
+
 readonly NAME="$1"
 if [ "${NAME}" = "" ]; then
     error "No name specified!"
@@ -62,19 +64,20 @@ compile_jails () {
     # Golden linker support:
     GOLD="/Software/Gold"
     if [ -f "${GOLD}/lib/LLVMgold.so" ]; then
-        note "Syncing golden linker.."
+        note "Preparing golden linker.."
+        TARGET_TRIPPLE="x86_64-unknown-freebsd11.0"
         set -e
         for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
             ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         done
-        for file in $(${FIND_BIN} ${GOLD}/x86_64-unknown-freebsd11.0/bin -type f); do
+        for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/bin -type f); do
             ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         done
         ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
-        for file in $(${FIND_BIN} ${GOLD}/x86_64-unknown-freebsd11.0/lib/ldscripts -type f); do
+        for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
             ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         done
-        note "Linker installed in destination system"
+        note "Golden linker merged with current software base"
     fi
 
     cd /var/.cache
@@ -103,12 +106,11 @@ compile_jails () {
             -o UserKnownHostsFile=/dev/null \
             -o StrictHostKeyChecking=no \
             dmilith@served.verknowsys.com \
-            "grep -R '${A_VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
+            "${GREP_BIN} -R '${A_VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
              echo '${A_VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${BBS_LOG} && \
-            note "Remote version updated."
-
+            note "Remote version file updated successfully with version: ${A_VERSION}"
     else
-        error "Something went wrong while uploading Jails base."
+        error "Something went wrong while uploading Jails base. Launch args: '${LAUNCH_ARGS}';"
     fi
 }
 
