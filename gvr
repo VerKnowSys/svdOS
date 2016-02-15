@@ -739,12 +739,12 @@ jail_stop () {
     dnote "Terminated jail: ${JAIL_NAME}"
     ${PRINTF_BIN} "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
-    wrun "${IFCONFIG_BIN} ${BRIDGE_DEVICE} deletem ${VLAN_DEVICE}${VLAN_NUMBER}" && \
-    wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} destroy" && \
-    dnote "Destroyed vlan: ${VLAN_DEVICE}${VLAN_NUMBER}"
+    # wrun "${IFCONFIG_BIN} ${BRIDGE_DEVICE} deletem ${VLAN_DEVICE}${VLAN_NUMBER}" && \
+    # wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} destroy" && \
+    # dnote "Destroyed vlan: ${VLAN_DEVICE}${VLAN_NUMBER}"
 
     wrun "${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}" && \
-    dnote "Removed jail running indicator"
+    dnote "Removed jail running indicator: ${cyan}${SENTRY}/${JAIL_RUNNING_INDICATOR}"
 }
 
 
