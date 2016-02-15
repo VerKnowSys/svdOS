@@ -653,19 +653,18 @@ jail_start () {
     # sanity check - required to spawn jail
     check_phantom_worker_existence
 
-    note "Deploying jail: ${cyan}${JAIL_NAME}"
+    dnote "Configuring network device: ${cyan}${VLAN_DEVICE}${VLAN_NUMBER}"
+    wrun "${IFCONFIG_BIN} ${BRIDGE_DEVICE} || (${IFCONFIG_BIN} ${BRIDGE_DEVICE} create && ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} && ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER})" && \
+    dnote "Network bridge configured"
+    wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} || (${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} create && ${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE})"
+    for ip in ${JAIL_IPS}; do
+        wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias"
+    done
+
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${GVR_LOG} 2>> ${GVR_LOG}
     if [ "$?" = "0" ]; then
-        note "Configuring device: ${cyan}${VLAN_DEVICE}${VLAN_NUMBER}"
-        wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} || (${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE})"
-        for ip in ${JAIL_IPS}; do
-            wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias"
-        done
-        wrun "${IFCONFIG_BIN} ${BRIDGE_DEVICE} || (${IFCONFIG_BIN} ${BRIDGE_DEVICE} create && ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} && ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER})" && \
-        dnote "Bridge configured"
-
         JAIL_NUM_ID="$(${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}.home" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
-        note "Jailing ZFS for jid: ${JAIL_NUM_ID}"
+        dnote "Deployed jail: ${cyan}${JAIL_NAME} ${green}(${JAIL_NUM_ID})"
 
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         # note "Launching Service Spawner daemon"
