@@ -41,6 +41,7 @@ PF_CONF_FILE="/etc/pf.conf"
 RC_FILE="/etc/rc"
 
 DEFAULT_SHELL="/Software/Zsh/exports/zsh"
+TAIL_BIN="/usr/bin/tail"
 CHFLAGS_BIN="/bin/chflags"
 GIT_BIN="/Software/Git/exports/git"
 ZPOOL_BIN="/sbin/zpool"
@@ -68,6 +69,7 @@ UNAME_OS="$(${UNAME_BIN} -s 2>/dev/null)"
 OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
 SVD_LOG="/var/log/svd-install-${TIMESTAMP}.log"
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}"
+SOFTWARE_PATCHES="P001"
 LATEST_VERSION="$(${FETCH_BIN} -q -o - ${BASE_SOURCE}/version-latest 2>/dev/null)"
 VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
 if [ "${VERSION}" = "-" ]; then
@@ -171,6 +173,15 @@ if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" ]; then
     INSTALLED_SERVED_BASE="1"
 fi
 
+for some_patch in ${SOFTWARE_PATCHES}; do
+    debug "Processing Software/root patch: ${some_patch}"
+    if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" ]; then
+        retry "${FETCH_BIN} ${BASE_SOURCE}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" && \
+        dnote "ServeD support patch: ${cyan}${some_patch} ${green}fetched successfully" && \
+        INSTALLED_SERVED_BASE_${some_patch}="1"
+    fi
+done
+
 if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT}" ]; then
     retry "${FETCH_BIN} ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT} -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT}" && \
     dnote "Jails archive fetched successfully" && \
@@ -181,12 +192,20 @@ ${ZFS_BIN} list 2>/dev/null | grep 'Software/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     wrun ${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software && \
     dnote "Initialized origin of: ${DEFAULT_ZPOOL}/Software"
-    xzcat ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | tail -n1 && \
+    xzcat ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | ${TAIL_BIN} -n1 && \
     wrun ${ZFS_BIN} rename ${DEFAULT_ZPOOL}/Software/root@--head-- @${ORIGIN} && \
     wrun ${ZFS_BIN} set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root && \
     dnote "Dataset: '${DEFAULT_ZPOOL}/Software/root' received successfully" && \
     INSTALLED_SOFTWARE_ROOT="1"
 fi
+
+for some_patch in ${SOFTWARE_PATCHES}; do
+    dnote "Applying updates for dataset: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+    xzcat ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz 2>/dev/null | \
+    ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | \
+    ${TAIL_BIN} -n1 && \
+    dnote "Patch: ${cyan}${some_patch} ${green}applied successfully on: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+done
 
 ${ZFS_BIN} list 2>/dev/null | grep 'User/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
