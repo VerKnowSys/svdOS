@@ -391,9 +391,12 @@ jail_create () {
         note "Configuring jail for addresses: ${JAIL_ADDRESSES}" && \
         wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} create" && \
         wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE}" && \
-        for ip in ${ADDRESSES_LIST}; do
-            wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias"
-        done
+        if [ "${ip}" != "${ADDRESSES_LIST}" ]; then
+            for ip in ${ADDRESSES_LIST}; do
+                wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias" || \
+                warn "Failed to alias to IP: ${ip} on dev: ${VLAN_DEVICE}${VLAN_NUMBER}"
+            done
+        fi
         wrun "${IFCONFIG_BIN} ${BRIDGE_DEVICE} || ${IFCONFIG_BIN} ${BRIDGE_DEVICE} create" && \
         wrun "${IFCONFIG_BIN} ${BRIDGE_DEVICE} | ${GREP_BIN} '${DEFAULT_INTERFACE}' 2>/dev/null || ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE}" && \
         wrun "${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER}" && \
