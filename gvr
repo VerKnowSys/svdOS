@@ -696,7 +696,7 @@ jail_start () {
             dnote "Filesystem jailed: ${cyan}${dset}"
         done
 
-        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s ${ZFS_BIN} ${SYSCTL_BIN}" && \
+        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}" && \
         wrun "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
         dnote "Zfs datasets mounted"
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_WORKER_UID} /Services /User /Software /Shared"
