@@ -500,6 +500,11 @@ if [ "$?" != "0" ]; then
     ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf && \
     dnote "Installed: ServeD specific rc configuration"
 fi
+${GREP_BIN} -R 'gvr boot' /etc/rc >/dev/null 2>&1
+if [ "$?" != "0" ]; then
+    ${SED_BIN} -i '' -e "s/^date$/gvr boot/" /etc/rc && \
+    dnote "Added ${cyan}gvr boot${green} to rc configuration"
+fi
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 ${MKDIR_BIN} -p /etc/ssl
