@@ -14,13 +14,12 @@ else
     exit 1
 fi
 
-GVR_VERSION="0.18.2"
+GVR_VERSION="0.18.3"
 GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
 BRIDGE_DEVICE="bridge0"
 VLAN_DEVICE="vlan"
-LOG_FILE="/var/log/governor.log"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
 DEFAULT_SOFIN_REPO="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
@@ -29,6 +28,7 @@ DEFAULT_SOFIN_REPO="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
 JOT_BIN="/usr/bin/jot"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="11.0"
+DEFAULT_SHELL="/Software/Zsh/exports/zsh"
 stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${stored_version}" != "-" ]; then
     DEFAULT_VERSION="${stored_version}"
@@ -157,7 +157,7 @@ set_values () {
     fi
     debug "Got jail IP(s): ${JAIL_IPS}"
     HOSTNAMES=""
-    for hostnfile in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>${LOG_FILE}); do
+    for hostnfile in $(${FIND_BIN} ${JAIL_DOMAINS_DIR} -type f 2>> ${GVR_LOG}); do
         hostn="$(${CAT_BIN} ${hostnfile} 2>/dev/null | ${GREP_BIN} "local-zone:" 2>/dev/null | ${SED_BIN} 's/^.* "//;s/.".*//' 2>/dev/null)"
         debug "hostn: ${hostn}"
         HOSTNAMES="*.${hostn} ${HOSTNAMES}"
@@ -249,7 +249,7 @@ apply_attributes () {
                 ;;
 
             *)
-                ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value} >> ${LOG_FILE} 2>&1
+                ${RCTL_BIN} -a jail:${JAIL_NAME}:${attribute}:deny=${value} >> ${GVR_LOG} 2>&1
                 if [ "$?" = "0" ]; then
                     note "Overriden attribute: ${attribute} with value: ${value}"
                 else
@@ -614,7 +614,7 @@ jail_list () {
         if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
             JAIL_IPS="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -e 's/,$//' 2>/dev/null)"
         fi
-        ${JLS_BIN} -v | ${EGREP_BIN} "${cellname} .*ACTIVE" >> ${LOG_FILE} 2>&1
+        ${JLS_BIN} -v | ${EGREP_BIN} "${cellname} .*ACTIVE" >> ${GVR_LOG} 2>&1
         if [ "$?" = "0" ]; then
             ${PRINTF_BIN} " ${cyan}${JAIL_IPS}${reset} ${green}*on*${reset}"
         else
@@ -651,10 +651,10 @@ jail_start () {
     # sanity check - required to spawn jail
     check_phantom_worker_existence
 
-    note "Deploying jail: ${JAIL_NAME}"
-    ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${LOG_FILE} 2>&1
+    note "Deploying jail: ${cyan}${JAIL_NAME}"
+    ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${GVR_LOG} 2>> ${GVR_LOG}
     if [ "$?" = "0" ]; then
-        note "Configuring ${VLAN_DEVICE}${VLAN_NUMBER}"
+        note "Configuring device: ${cyan}${VLAN_DEVICE}${VLAN_NUMBER}"
         wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} || (${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE})"
         for ip in ${JAIL_IPS}; do
             wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias"
@@ -667,15 +667,15 @@ jail_start () {
 
         ${PRINTF_BIN} "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         # note "Launching Service Spawner daemon"
-        # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
+        # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${GVR_LOG} 2>&1
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
 
         # alow users creating / in their tree. why not.
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
         dnote "Permissions of jailed / set to 771"
-        # ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${LOG_FILE} 2>&1
+        # ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${GVR_LOG} 2>&1
 
-        # ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${LOG_FILE} 2>&1
+        # ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${GVR_LOG} 2>&1
         # ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
 
@@ -699,9 +699,9 @@ jail_start () {
         dnote "Reloaded shell environment. Marking jail running" && \
         mark_running
     else
-        error "Jail launch failed. Look into log file: ${LOG_FILE}"
         ${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} 2>/dev/null && \
         ${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} destroy 2>/dev/null
+        error "Jail launch failed. Look into log file: ${GVR_LOG}"
     fi
 }
 
@@ -806,9 +806,9 @@ jail_login () {
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    ${JLS_BIN} -v | ${GREP_BIN} "$(${BASENAME_BIN} ${CELL} 2>/dev/null) .*ACTIVE" >> ${LOG_FILE} 2>&1
+    ${JLS_BIN} -v 2>/dev/null | ${GREP_BIN} "$(${BASENAME_BIN} ${CELL} 2>/dev/null) .*ACTIVE" >> ${GVR_LOG} 2>> ${GVR_LOG}
     if [ "$?" = "0" ]; then
-        dnote "Logging in as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}" && \
+        debug "Logging in as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}" && \
         ${DEBUG_EXEC_COMMAND} ${JEXEC_BIN} ${JAIL_NAME} login -f ${JAIL_LOGIN} && \
         dnote "Logged out from jail: ${JAIL_NAME}"
     else
@@ -857,8 +857,8 @@ jail_destroy () {
         wrun "${RM_BIN} -rf ${CELL}" && \
         wrun "${RM_BIN} -rf ${SENTRY}" && \
         dnote "Destroyed datasets of jail: ${JAIL_NAME}" && \
-        service local_unbound configtest >> ${LOG_FILE} 2>&1 && \
-        service local_unbound restart >> ${LOG_FILE} 2>&1 && \
+        service local_unbound configtest >> ${GVR_LOG} 2>&1 && \
+        service local_unbound restart >> ${GVR_LOG} 2>&1 && \
         dnote "Unbound resolver restarted"
     else
         dnote "Jail: ${cyan}$(${BASENAME_BIN} ${GIVEN_NAME} 2>/dev/null) left intact"
