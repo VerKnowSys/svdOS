@@ -6,7 +6,7 @@
 
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
-INSTALL_SCRIPT_VERSION="0.6.1"
+INSTALL_SCRIPT_VERSION="0.6.2"
 SYSTEM_VERSION="11.0" # the default
 DEFAULT_ZPOOL="zroot"
 INTERNAL_NETWORK="10.2.1.0"
@@ -22,6 +22,7 @@ DEFAULT_ARCHIVE_EXT=".txz"
 
 # const definitions:
 reset='\033[0m'
+cyan='\033[36;40m'
 green='\033[32;40m'
 magenta='\033[35;40m'
 red='\033[31;40m'
@@ -62,6 +63,7 @@ CLANG_BIN="/usr/bin/clang"
 EGREP_BIN="/usr/bin/egrep"
 XZ_BIN="/usr/bin/xz"
 SYNC_BIN="/bin/sync"
+XZCAT_BIN="/usr/bin/xzcat"
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
@@ -174,7 +176,6 @@ if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" ]; then
 fi
 
 for some_patch in ${SOFTWARE_PATCHES}; do
-    debug "Processing Software/root patch: ${some_patch}"
     if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" ]; then
         retry "${FETCH_BIN} ${BASE_SOURCE}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" && \
         dnote "ServeD support patch: ${cyan}${some_patch} ${green}fetched successfully" && \
@@ -192,7 +193,7 @@ ${ZFS_BIN} list 2>/dev/null | grep 'Software/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     wrun ${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software && \
     dnote "Initialized origin of: ${DEFAULT_ZPOOL}/Software"
-    xzcat ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | ${TAIL_BIN} -n1 && \
+    ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | ${TAIL_BIN} -n1 && \
     wrun ${ZFS_BIN} rename ${DEFAULT_ZPOOL}/Software/root@--head-- @${ORIGIN} && \
     wrun ${ZFS_BIN} set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root && \
     dnote "Dataset: '${DEFAULT_ZPOOL}/Software/root' received successfully" && \
@@ -200,11 +201,17 @@ if [ "$?" != "0" ]; then
 fi
 
 for some_patch in ${SOFTWARE_PATCHES}; do
-    dnote "Applying updates for dataset: ${cyan}${DEFAULT_ZPOOL}/Software/root"
-    xzcat ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz 2>/dev/null | \
-    ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | \
-    ${TAIL_BIN} -n1 && \
-    dnote "Patch: ${cyan}${some_patch} ${green}applied successfully on: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+    # don't apply same patch more than once.
+    ${ZFS_BIN} list -H -t snap 2>/dev/null | ${EGREP_BIN} "Software/root@${some_patch}" >/dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        dnote "Patch: ${cyan}${some_patch} ${green}already applied on dataset: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+    else
+        dnote "Applying binary patches for dataset: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+        ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz 2>/dev/null | \
+        ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | \
+        ${TAIL_BIN} -n1 && \
+        dnote "Patch: ${cyan}${some_patch} ${green}applied successfully on: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+    fi
 done
 
 ${ZFS_BIN} list 2>/dev/null | grep 'User/root' > /dev/null 2>&1
