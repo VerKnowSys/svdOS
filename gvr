@@ -486,10 +486,13 @@ ${JAIL_NAME} {
                     "${CELL}/Shared" \
                     "${CELL}/User"
 
-    ${PRINTF_BIN} "${VLAN_NUMBER}\n" > ${JAIL_VLAN_NUMBER_FILE} && \
-    ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE} && \
-    ${PRINTF_BIN} "${JAIL_ADDRESSES}\n" >> ${JAIL_ADDRESSES_FILE} && \
-    dnote "Copied volatile part of jail"
+    if [ ! -f ${JAIL_VLAN_NUMBER_FILE} ]; then
+        ${PRINTF_BIN} "${VLAN_NUMBER}\n" > ${JAIL_VLAN_NUMBER_FILE}
+    fi
+    if [ ! -f ${JAIL_VERSION_FILE} ]; then
+        ${PRINTF_BIN} "${JAIL_VERSION}\n" > ${JAIL_VERSION_FILE}
+    fi
+    ${PRINTF_BIN} "${JAIL_ADDRESSES}\n" >> ${JAIL_ADDRESSES_FILE}
 
     wrun "${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc" && \
     wrun "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.home:\" ${CELL}/etc/rc.conf" && \
