@@ -14,7 +14,7 @@ else
     exit 1
 fi
 
-GVR_VERSION="0.18.3"
+GVR_VERSION="0.20.0"
 GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
@@ -388,7 +388,7 @@ jail_create () {
         if [ -z "${ADDRESSES_LIST}" ]; then
             error "Addresses list can't be empty!"
         fi
-        note "Configuring jail for addresses: ${JAIL_ADDRESSES}" && \
+        dnote "Configuring jail for addresses: ${cyan}${JAIL_ADDRESSES}"
         wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} create" && \
         wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE}" && \
         if [ "${ip}" != "${ADDRESSES_LIST}" ]; then
@@ -430,38 +430,37 @@ ${JAIL_NAME} {
     note "Looking for snapshots of ${DEFAULT_JAILS_ROOT_DIR}"
     ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        LAST="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${TAIL_BIN} -n 1 2>/dev/null)"
-        dnote "Last snapshot of: ${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH} is: ${LAST}"
+        LAST="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
+        dnote "Last snapshot of: ${cyan}${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH} ${green}is: ${cyan}${LAST}"
     fi
     if [ -z "${LAST}" ]; then
         LAST="origin"
-        wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${ORIGIN}" && \
+        wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}" && \
         warn "No snapshots found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Created origin snapshot"
     fi
 
     wrun "${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}" && \
     dnote "Cloned last jail system base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}' to ${CELL}"
 
-    note "Looking for origin snapshot of ${DEFAULT_ZPOOL}/Software/root"
-    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}" > /dev/null 2>&1
+    mst_recent_soft="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/Software/root@[Pa-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
+    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}" > /dev/null 2>&1
     if [ "$?" != "0" ]; then
-        error "Something went wrong. Missing origin snapshot: '${DEFAULT_ZPOOL}/Software/root@${ORIGIN}'. Aborting"
+        error "Something went wrong. Missing origin snapshot: '${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}'. Aborting"
+    else
+        dnote "Found an origin snapshot of: ${cyan}${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}"
     fi
-    note "Cloning from origin: ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}"
-    debug "Cloning /Software/root: '${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}'"
-    wrun "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+    dnote "Cloning: ${cyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${green}from most recent snapshot: ${cyan}${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}"
+    wrun "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
 
-    note "Creating jail filesystems.."
     for dset in Software Services User Shared; do
         ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" >/dev/null 2>&1 || \
         wrun "${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
-
         wrun "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         wrun "${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}" && \
         wrun "${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         wrun "${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         wrun "${ZFS_BIN} allow ${DEFAULT_JAIL_USER} xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
-        dnote "Filesystem set: ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
+        dnote "Dataset configured: ${cyan}${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
     done
     wrun "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
 
