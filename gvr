@@ -90,7 +90,6 @@ dnote () {
 
 wrun () {
     commands="$@ && ${SYNC_BIN}"
-    debug "Evaluating: '${commands}'"
     debug "Evaluating: '${commands}'" >> ${GVR_LOG} 2>> ${GVR_LOG}
     gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN} 2>/dev/null) 2>/dev/null)"
     eval "PATH=/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core ${commands}" >> ${GVR_LOG} 2>> ${GVR_LOG}
@@ -464,12 +463,10 @@ ${JAIL_NAME} {
     done
     wrun "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
 
-    note "Setting up ZFS deduplication on Jails and Software"
-    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Software"
-    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Jails"
-    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Shared"
-    wrun "${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Software"
-    wrun "${ZFS_BIN} set compression=lz4 ${DEFAULT_ZPOOL}/Shared"
+    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Software" && \
+    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Jails" && \
+    wrun "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/Shared" && \
+    dnote "Turned deduplication on for: Jails, Software and Shared"
 
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
@@ -656,12 +653,14 @@ jail_start () {
     # sanity check - required to spawn jail
     check_phantom_worker_existence
 
-    dnote "Configuring network device: ${cyan}${VLAN_DEVICE}${VLAN_NUMBER}"
+    wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} || (${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} create && ${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE})" && \
+    dnote "Configured virtual lan device: ${cyan}${VLAN_DEVICE}${VLAN_NUMBER}"
+
     wrun "${IFCONFIG_BIN} ${BRIDGE_DEVICE} || (${IFCONFIG_BIN} ${BRIDGE_DEVICE} create && ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE} && ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${VLAN_DEVICE}${VLAN_NUMBER} sticky ${VLAN_DEVICE}${VLAN_NUMBER})" && \
-    dnote "Network bridge configured"
-    wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} || (${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} create && ${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE})"
+    dnote "Successfully attached virtual device: ${cyan}${VLAN_DEVICE}${VLAN_NUMBER}${green}, to local bridge: ${cyan}${BRIDGE_DEVICE}"
     for ip in ${JAIL_IPS}; do
-        wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias"
+        wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${ip} alias" && \
+        dnote "Attached network alias for: ${cyan}${ip}${green}, to: ${cyan}${VLAN_DEVICE}${VLAN_NUMBER}"
     done
 
     ${DEBUG_COMMAND} ${JAIL_BIN} -c -J ${JAIL_ID_FILE} -f ${JAIL_CONF_FILE} >> ${GVR_LOG} 2>> ${GVR_LOG}
