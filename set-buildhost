@@ -1,0 +1,17 @@
+
+export V="0.11.41" && \
+export SCP_OPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" && \
+export SRC_PATH="dmilith@192.168.1.2:/Users/dmilith/tmp" && \
+echo "nameserver 192.168.1.1" > /etc/resolv.conf && \
+touch /.build-host && \
+mkdir /var/.cache && \
+cd /var/.cache && \
+scp ${SCP_OPTS} ${SRC_PATH}/ServeD-OS-Base-11.0-v${V}-amd64.txz ./ && \
+scp ${SCP_OPTS} ${SRC_PATH}/Software-11.0-origin-amd64.zfs.xz ./ && \
+scp ${SCP_OPTS} ${SRC_PATH}/HardenedBSD-ports.zfs.xz ./ && \
+scp ${SCP_OPTS} ${SRC_PATH}/go1.5.3.freebsd-amd64.tar.gz ./ && \
+scp ${SCP_OPTS} ${SRC_PATH}/ssh-bh.txz ./ && \
+tar xf ssh-bh.txz --directory ${HOME} && \
+tar xf go1.5.3.freebsd-amd64.tar.gz --directory /usr && \
+xzcat HardenedBSD-ports.zfs.xz zfs | zfs receive -Fv zroot/usr/ports && \
+echo "OK!"
