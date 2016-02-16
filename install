@@ -474,7 +474,7 @@ else
     for net in ${NETS_LIST}; do
         NETS="$NETS $net - "
     done
-    ${DIASVD_LOG_BIN} --menu "Pick main IP address:" 0 0 0 ${NETS} 2> ${DEFAULT_HOST_ADDRESS_FILE}
+    ${DIALOG_BIN} --menu "Pick main IP address:" 0 0 0 ${NETS} 2> ${DEFAULT_HOST_ADDRESS_FILE}
 fi
 
 DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS_FILE} 2>/dev/null)"
