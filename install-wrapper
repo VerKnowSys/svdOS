@@ -10,7 +10,7 @@ readonly reset='\033[0m'
 readonly in_source='https://bitbucket.org/verknowsys/served-os/raw/master/install'
 
 printf "${green}Getting latest version of install script from ${cyan}${in_source}${reset}\n"
-fetch -q -o - ${in_source} 2>/dev/null | sh
+fetch --no-verify-peer -q -o - ${in_source} 2>/dev/null | sh
 
 if [ "$?" = "0" ]; then
     printf "${green}Ok!${reset}\n"
