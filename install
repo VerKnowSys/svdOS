@@ -178,8 +178,7 @@ fi
 for some_patch in ${SOFTWARE_PATCHES}; do
     if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" ]; then
         retry "${FETCH_BIN} ${BASE_SOURCE}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" && \
-        dnote "ServeD support patch: ${cyan}${some_patch} ${green}fetched successfully" && \
-        INSTALLED_SERVED_BASE_${some_patch}="1"
+        dnote "ServeD support binary patch: ${cyan}${some_patch} ${green}fetched successfully"
     fi
 done
 
