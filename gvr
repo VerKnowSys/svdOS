@@ -75,9 +75,9 @@ fi
 
 debug () {
     if [ -f "/.build-host" ]; then
-        cecho "# $1" ${cyan}
+        cecho "#bh-dbg: $1" ${cyan}
         if [ -e "${GVR_LOG}" ]; then
-            cecho "# $1" ${cyan} >> ${GVR_LOG} 2>&1
+            cecho "#bh-dbg: $1" ${cyan} >> ${GVR_LOG} 2>> ${GVR_LOG}
         fi
     fi
 }
@@ -85,7 +85,7 @@ debug () {
 
 dnote () {
     note "$@" && \
-    note "$@" >> ${GVR_LOG} 2>&1
+    note "$@" >> ${GVR_LOG} 2>> ${GVR_LOG}
 }
 
 wrun () {
