@@ -855,7 +855,9 @@ jail_destroy () {
     note "Type ${cyan}YES${green} to confirm"
     read ans
     if [ "${ans}" = "YES" ]; then
-        jail_stop $*
+        if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
+            jail_stop $*
+        fi
         wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" && \
         wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" && \
         wrun "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}" && \
