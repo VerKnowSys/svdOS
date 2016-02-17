@@ -208,7 +208,7 @@ for some_patch in ${SOFTWARE_PATCHES}; do
     else
         dnote "Applying binary patches for dataset: ${cyan}${DEFAULT_ZPOOL}/Software/root"
         ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz 2>/dev/null | \
-        ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | \
+        ${ZFS_BIN} receive -vF ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | \
         ${TAIL_BIN} -n1 && \
         dnote "Patch: ${cyan}${some_patch} ${green}applied successfully on: ${cyan}${DEFAULT_ZPOOL}/Software/root"
     fi
