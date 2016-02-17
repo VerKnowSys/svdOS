@@ -197,8 +197,8 @@ apply_attributes () {
         case "${attribute}" in
             key)
                 a_key="ssh-ed25519 ${value} ${JAIL_NAME}\n"
-                ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} "${MKDIR_BIN} -p /User/.ssh; ${PRINTF_BIN} '${a_key}' >> /User/.ssh/authorized_keys"
-                ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} "${CHOWN_BIN} -R ${DEFAULT_WORKER_UID}:${DEFAULT_WORKER_UID} /User/.ssh"
+                ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c "${MKDIR_BIN} -p /User/.ssh; ${PRINTF_BIN} '${a_key}' >> /User/.ssh/authorized_keys"
+                ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c "${CHOWN_BIN} -R ${DEFAULT_WORKER_UID}:${DEFAULT_WORKER_UID} /User/.ssh"
                 ;;
 
             ip)
