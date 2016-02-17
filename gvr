@@ -777,7 +777,7 @@ jail_set () {
         ATTRIBUTE="$(${PRINTF_BIN} "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' 2>/dev/null)"
         JAIL_VALUE="$(${PRINTF_BIN} "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[2];}' 2>/dev/null)"
         debug "arg: ${ATTRIBUTE}, val: ${JAIL_VALUE} "
-        note "Setting ${cyan}${ATTRIBUTE}: ${JAIL_VALUE}${green} for jail: ${cyan}${JAIL_NAME}"
+        note "Setting attribute: ${cyan}${ATTRIBUTE}${green}, value: ${cyan}${JAIL_VALUE}${green} for jail: ${cyan}${JAIL_NAME}"
         ${PRINTF_BIN} "${JAIL_VALUE}\n" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
     done
     apply_attributes
