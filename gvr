@@ -687,7 +687,8 @@ jail_start () {
 
         # alow users creating / in their tree. why not.
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
-        debug "Permissions of jailed / set to 771"
+        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 777 /tmp" && \
+        debug "Permissions of jailed / set to 771, /tmp to 777"
         # ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${GVR_LOG} 2>&1
 
         # ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${GVR_LOG} 2>&1
