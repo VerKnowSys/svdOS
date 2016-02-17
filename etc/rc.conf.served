@@ -16,10 +16,10 @@ local_unbound_enable="YES"
 update_motd="NO"
 
 # PF
-pf_enable="NO" # KP under 11
+pf_enable="YES"
+pflog_enable="YES"
 pf_rules="/etc/pf.conf"
 pf_flags=""
-pflog_enable="NO" # KP under 11
 pflog_logfile="/var/log/pflog"
 pflog_flags=""
 
