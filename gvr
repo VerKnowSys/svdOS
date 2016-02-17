@@ -726,7 +726,7 @@ jail_stop () {
     check_cell_name "${CELL}"
     JAIL_NUM_ID="$(${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}.home" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
     for dir in /dev; do
-        ${MOUNT_BIN} 2>/dev/null | ${GREP_BIN} "${CELL}${dir}" && \
+        ${MOUNT_BIN} >/dev/null 2>&1 | ${GREP_BIN} "${CELL}${dir}" >/dev/null 2>&1 && \
         wrun "${UMOUNT_BIN} -f ${CELL}${dir}" && \
         dnote "Unmounted: ${cyan}${dir}"
     done
