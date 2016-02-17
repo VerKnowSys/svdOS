@@ -6,6 +6,7 @@
 
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
+SOFTWARE_PATCHES="P001 P002"
 INSTALL_SCRIPT_VERSION="0.6.2"
 SYSTEM_VERSION="11.0" # the default
 DEFAULT_ZPOOL="zroot"
@@ -71,7 +72,6 @@ UNAME_OS="$(${UNAME_BIN} -s 2>/dev/null)"
 OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
 SVD_LOG="/var/log/svd-install-${TIMESTAMP}.log"
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}"
-SOFTWARE_PATCHES="P001 P002"
 LATEST_VERSION="$(${FETCH_BIN} -q -o - ${BASE_SOURCE}/version-latest 2>/dev/null)"
 VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
 if [ "${VERSION}" = "-" ]; then
