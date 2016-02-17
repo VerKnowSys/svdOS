@@ -26,6 +26,7 @@ DEFAULT_SOFIN_REPO="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
 # SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
 # IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 JOT_BIN="/usr/bin/jot"
+GMAKE_BIN="/Software/Gmake/bin/gmake"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="11.0"
 DEFAULT_SHELL="/Software/Zsh/exports/zsh"
@@ -517,6 +518,13 @@ ${JAIL_NAME} {
     wrun "${MV_BIN} -v ${CELL}/etc/zsh/zshrc ${CELL}/etc/zshrc" && \
     wrun "${MV_BIN} -v ${CELL}/etc/zsh/zshenv ${CELL}/etc/zshenv" && \
     dnote "Jail system shell configured"
+
+    if [ ! -x "${GMAKE_BIN}" ]; then
+        wrun "s i Gmake"
+    fi
+    wrun "${MV_BIN} ${CELL}/usr/bin/make ${CELL}/usr/bin/bsdmake" && \
+    wrun "${CP_BIN} ${GMAKE_BIN} ${CELL}/usr/bin/make" && \
+    dnote "Replaced default BSD make with GNU make (which is expected when Gold LD is installed)"
 
     svd_version="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
     wrun "${ZFS_BIN} set com.svd:version=${svd_version} ${DEFAULT_ZPOOL}${CELL}" && \
