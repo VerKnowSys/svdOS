@@ -63,22 +63,24 @@ compile_jails () {
 
     # Golden linker support:
     GOLD="/Software/Gold"
-    if [ -f "${GOLD}/lib/LLVMgold.so" ]; then
-        note "Preparing golden linker.."
-        TARGET_TRIPPLE="x86_64-unknown-freebsd11.0"
-        set -e
-        for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
-            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-        done
-        for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/bin -type f); do
-            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-        done
-        ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
-        for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
-            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-        done
-        note "Golden linker merged with current software base"
+    if [ ! -f "${GOLD}/lib/LLVMgold.so" ]; then
+        s i Gold
     fi
+
+    note "Preparing golden linker.."
+    TARGET_TRIPPLE="x86_64-unknown-freebsd11.0"
+    set -e
+    for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
+        ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+    done
+    for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/bin -type f); do
+        ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+    done
+    ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
+    for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
+        ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+    done
+    note "Golden linker merged with current software base"
 
     cd /var/.cache
     debug "RR: ${TAR_BIN} -vcJ --use-compress-program=\"${XZ_BIN} --threads=${CPUS}\" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \"${realpath}\""
