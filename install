@@ -7,7 +7,7 @@
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 SOFTWARE_PATCHES="P001 P002 P003"
-INSTALL_SCRIPT_VERSION="0.6.2"
+INSTALL_SCRIPT_VERSION="0.6.3"
 SYSTEM_VERSION="11.0" # the default
 DEFAULT_ZPOOL="zroot"
 INTERNAL_NETWORK="10.2.1.0"
@@ -331,18 +331,6 @@ if [ "${SHELL}" != "${DEFAULT_SHELL}" ]; then
     dnote "Default shell set to: ${DEFAULT_SHELL}" && \
     INSTALLED_SYSTEM_SHELL="1"
 fi
-
-list="Rsync-static Most Tmux Syslog-ng"
-case ${ARCH} in
-    arm|arm32|arm64)
-        ;;
-    *)
-        list="${list} Glusterfs"
-        ;;
-esac
-
-wrun "${SOFIN_BIN} install ${list}" && \
-dnote "Additional software bundles: ${list} installed successfully"
 
 if [ ! -d "${VKS_KERNEL}" ]; then
     wrun "${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} ${JAIL_SOURCE}/boot/kernel/ ${VKS_KERNEL}" && \
