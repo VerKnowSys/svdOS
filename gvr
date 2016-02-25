@@ -14,7 +14,7 @@ else
     exit 1
 fi
 
-GVR_VERSION="0.20.0"
+GVR_VERSION="0.20.1"
 GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
@@ -35,7 +35,6 @@ if [ "${stored_version}" != "-" ]; then
     DEFAULT_VERSION="${stored_version}"
 fi
 DEFAULT_JAIL_USER="worker"
-DEFAULT_WORKER_UID="501"
 DEFAULT_QUOTA_LIMIT="3G"
 DEFAULT_ROOT_QUOTA_LIMIT="2G"
 DEFAULT_SENTRY_LIMIT="128M"
@@ -199,7 +198,7 @@ apply_attributes () {
             key)
                 a_key="ssh-ed25519 ${value} ${JAIL_NAME}\n"
                 ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c "${MKDIR_BIN} -p /User/.ssh; ${PRINTF_BIN} '${a_key}' >> /User/.ssh/authorized_keys"
-                ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c "${CHOWN_BIN} -R ${DEFAULT_WORKER_UID}:${DEFAULT_WORKER_UID} /User/.ssh"
+                ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c "${CHOWN_BIN} -R ${VLAN_NUMBER}:${VLAN_NUMBER} /User/.ssh"
                 ;;
 
             ip)
@@ -331,18 +330,6 @@ mark_running () {
 }
 
 
-check_phantom_worker_existence () {
-    ${EGREP_BIN} "${DEFAULT_JAIL_USER}:\*:${DEFAULT_WORKER_UID}:" /etc/master.passwd >/dev/null 2>&1
-    if [ "$?" != "0" ]; then
-        # NOTE: phantom worker not allowed to write to home dir
-        wrun "${PW_BIN} useradd -u ${DEFAULT_WORKER_UID} -d /var/empty -n ${DEFAULT_JAIL_USER}" && \
-        dnote "Created phantom worker with UID: ${cyan}${DEFAULT_WORKER_UID}"
-    else
-        debug "Phantom worker already exists in system"
-    fi
-}
-
-
 jail_create () {
     usage () {
         note "Usage: ${cyan}${GVR_SCRIPT_NAME} create myname IP/Netmask,IP2/Netmask(, … )"
@@ -383,7 +370,6 @@ jail_create () {
     if [ -f "${JAIL_CONF_FILE}" ]; then
         warn "Jail already configured"
     else
-        check_phantom_worker_existence
         ADDRESSES_LIST="$(echo ${JAIL_ADDRESSES} | ${TR_BIN} ',' '\n' 2>/dev/null)"
         if [ -z "${ADDRESSES_LIST}" ]; then
             error "Addresses list can't be empty!"
@@ -532,7 +518,7 @@ ${JAIL_NAME} {
 
     for logger in messages production staging development; do
         wrun ${MKFIFO_BIN} -m "a=-rwx,u=rw" "${CELL}/var/log/${logger}" && \
-        wrun  ${CHOWN_BIN} ${DEFAULT_WORKER_UID} "${CELL}/var/log/${logger}" && \
+        wrun  ${CHOWN_BIN} ${VLAN_NUMBER} "${CELL}/var/log/${logger}" && \
         ${PRINTF_BIN} "
 source s_${JAIL_NAME}_${logger} {
     pipe(\"${CELL}/var/log/${logger}\");
@@ -662,9 +648,6 @@ jail_start () {
         JAIL_IPS="$(${CAT_BIN} ${JAIL_ADDRESSES_FILE} 2>/dev/null | ${TR_BIN} ',' '\n' 2>/dev/null)"
     fi
 
-    # sanity check - required to spawn jail
-    check_phantom_worker_existence
-
     wrun "${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} || (${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} create && ${IFCONFIG_BIN} ${VLAN_DEVICE}${VLAN_NUMBER} ${VLAN_DEVICE} ${VLAN_NUMBER} vlandev ${DEFAULT_INTERFACE})" && \
     dnote "Configured virtual lan device: ${cyan}${VLAN_DEVICE}${VLAN_NUMBER}"
 
@@ -684,6 +667,8 @@ jail_start () {
         # note "Launching Service Spawner daemon"
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${GVR_LOG} 2>&1
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
+        ${JEXEC_BIN} -U root ${JAIL_NAME} ${PW_BIN} usermod ${DEFAULT_JAIL_USER} -u ${VLAN_NUMBER} && \
+        note "Jailed worker user ID: ${cyan}${VLAN_NUMBER}"
 
         # alow users creating / in their tree. why not.
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
@@ -708,7 +693,7 @@ jail_start () {
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}" && \
         wrun "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
         dnote "Zfs datasets mounted"
-        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_WORKER_UID} /Services /User /Software /Shared"
+        wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} ${VLAN_NUMBER} /Services /User /Software /Shared"
         wrun "${JEXEC_BIN} -U root ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && \
         dnote "Securelevel set to: ${cyan}${KERN_SECURELEVEL}"
         wrun "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c '${SOFIN_BIN} reload'" && \
