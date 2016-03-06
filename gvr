@@ -5,7 +5,7 @@
 # TODO: gvr copy-attrs sourcejailname destjailname
 
 # load configuration from sofin.conf
-readonly CONF_NAME="sofin.conf.sh"
+readonly CONF_NAME="s.conf"
 readonly CONF_FILE="/etc/${CONF_NAME}"
 if [ -e "${CONF_FILE}" ]; then
     . "${CONF_FILE}"
@@ -487,7 +487,7 @@ ${JAIL_NAME} {
     wrun "${SED_BIN} -i '' -e \"s:__HOST_IP:${GVR_HOST_IP_ADDR}:\" ${CELL}/etc/resolv.conf" && \
     dnote "Built initial jail environment"
 
-    wrun "${INSTALL_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/" && \
+    wrun "${INSTALL_BIN} -v /etc/s.conf ${CELL}/etc/" && \
     wrun "${INSTALL_BIN} -v ${SOFIN_BIN} ${CELL}/usr/bin" && \
     wrun "${INSTALL_BIN} -v /usr/bin/sofin-version-utility ${CELL}/usr/bin" && \
     wrun "${INSTALL_BIN} -v /usr/bin/sofin-microseconds ${CELL}/usr/bin" && \

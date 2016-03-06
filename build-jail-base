@@ -34,7 +34,7 @@ else
 fi
 
 # read sofin definitions
-readonly CONF_FILE="/etc/sofin.conf.sh"
+readonly CONF_FILE="/etc/s.conf"
 if [ -e "${CONF_FILE}" ]; then
     . "${CONF_FILE}"
     validate_env

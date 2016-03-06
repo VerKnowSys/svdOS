@@ -2,7 +2,7 @@
 
 set -e
 
-. /etc/sofin.conf.sh
+. /etc/s.conf
 . ./setup-buildhost
 . ./update-ports
 
