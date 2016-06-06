@@ -29,7 +29,6 @@ yellow='\033[33;40m'
 error_char="✘"
 SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
 DEFAULT_SOFIN_REPOSITORY="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
-RSYNC_DEFAULT_OPTIONS="-h -l -p -E -A -X -o -g -t -r --delete"
 BASE="ServeD-OS-Base"
 BASE_SOURCE="http://served.verknowsys.com/"
 VKS_KERNEL="/boot/verknowsys"
@@ -325,7 +324,7 @@ if [ "${SHELL}" != "${DEFAULT_SHELL}" ]; then
 fi
 
 if [ ! -d "${VKS_KERNEL}" ]; then
-    wrun "${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} ${JAIL_SOURCE}/boot/kernel/ ${VKS_KERNEL}" && \
+    wrun "${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}" && \
     dnote "Kernel: ${VKS_KERNEL} installed successfully" && \
     INSTALLED_KERNEL="1"
 else
