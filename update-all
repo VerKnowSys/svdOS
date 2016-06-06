@@ -2,7 +2,8 @@
 
 set -e
 
-. /etc/s.conf
+. /usr/share/sofin/loader
+
 . ./setup-buildhost
 . ./update-ports
 

@@ -24,7 +24,7 @@ buildhost_prestart () {
     if [ -f "/.build-host" ]; then
         echo "${separator}"
         printf "\nBuild-host: $(hostname -f)\n"
-        . /etc/s.conf
+        . /usr/share/sofin/loader
         . ${SERVED_REPO}/setup-buildhost
         setup_buildhost
     fi

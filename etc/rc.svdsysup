@@ -9,15 +9,9 @@ stty status '^T' 2> /dev/null
 trap : 2
 trap "echo 'Update interrupted'; exit 1" 3
 
+. /usr/share/sofin/loader
+
 export HOME="/User"
-export CONF_NAME="s.conf"
-export CONF_FILE="/etc/${CONF_NAME}"
-if [ -e "${CONF_FILE}" ]; then
-    . "${CONF_FILE}"
-else
-    echo "FATAL: Sofin configuration unavailable. No file found: ${CONF_FILE}"
-    exit 1
-fi
 
 readonly DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
 readonly DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} "${DEFAULT_HOST_ADDRESS_FILE}" 2>/dev/null)"

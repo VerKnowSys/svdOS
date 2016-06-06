@@ -37,7 +37,7 @@ case ${ARCH} in
         sed -i '' -e 's/^CFLAGS.*$/CFLAGS=-O2 -pipe -fno-omit-frame-pointer -fno-strict-aliasing -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
         ;;
 
-    amd64)
+    amd64|x86_64)
         ;;
 
     *)
