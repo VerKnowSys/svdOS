@@ -129,6 +129,7 @@ done
 
 wrun "cd ${SOFIN_REPO} && bin/install" && \
 wrun "${INSTALL_BIN} -v ${SERVED_REPO}/gvr /usr/bin" && \
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/usr/bin/rsync /usr/bin" && \
 wrun "${CP_BIN} ${BACKUP_SVDINIT} /var/svdinit" && \
 wrun "${INSTALL_BIN} -v /var/svdinit /sbin" && \
 wrun "${RM_BIN} -f /var/svdinit" && \
