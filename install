@@ -378,6 +378,10 @@ wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc" && \
 dnote "Installed: system binary updater" && \
 INSTALLED_SVDSYSUP="1"
 
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/usr/bin/rsync /usr/bin" && \
+dnote "Installed: /usr/bin/rsync v3.1.x" && \
+INSTALLED_RSYNC="1"
+
 ${GREP_BIN} -v -R 'ServeD' /boot/loader.conf >/dev/null 2>&1 && \
 echo >> /boot/loader.conf && \
 ${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served >> /boot/loader.conf && \
