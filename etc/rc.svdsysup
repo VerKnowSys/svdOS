@@ -105,7 +105,7 @@ fi
 ${TEST_BIN} ! -f /etc/fstab && wrun ${TOUCH_BIN} /etc/fstab
 if [ -d "/root" ]; then
     dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root" && \
-    wrun "${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ /User 2>/dev/null" && \
+    wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ /User 2>/dev/null" && \
     wrun "${PW_BIN} user mod root -d /User" && \
     wrun "${RM_BIN} -rf /root" && \
     dnote "Home directory synchonized successfully"
@@ -113,14 +113,14 @@ fi
 
 ${RM_BIN} -f /etc/zshenv /etc/zshrc
 ${MKDIR_BIN} -p /etc/zsh
-wrun "${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh 2>/dev/null" && \
+wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh 2>/dev/null" && \
 wrun ${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv && \
 wrun ${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc && \
 dnote "System shell configured successfully"
 
 TRIPPLE="${SYSTEM_NAME}-${PICKED_OS_VERSION}-${SYSTEM_ARCH}"
 for folder in bin lib libexec sbin usr; do
-    wrun "${RSYNC_BIN} -v --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ /${folder} 2>/dev/null" && \
+    wrun "${SERVED_REPO}${RSYNC_BIN} -v --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ /${folder} 2>/dev/null" && \
     dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ to: /${folder}"
 done
 
