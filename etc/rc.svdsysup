@@ -224,6 +224,7 @@ server:
     access-control: 10.0.0.0/8 allow
     access-control: 172.116.0.0/12 allow
     access-control: 192.168.0.0/16 allow
+    access-control: 100.64.1.0/24 allow
     outgoing-num-tcp: 1 # this limits TCP service, uses less buffers.
     incoming-num-tcp: 1
     outgoing-range: 60  # uses less memory, but less performance.
