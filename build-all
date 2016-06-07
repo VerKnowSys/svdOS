@@ -10,21 +10,43 @@ unset MANPATH
 unset LDFLAGS
 unset CXXFLAGS
 unset CFLAGS
+unset MAIL
+unset MAILCHECK
+unset PATH
+unset CDPATH
+unset LANG
+unset LANGUAGE
+unset LC_TIME
+unset LC_NUMERIC
+unset LC_MONETARY
+unset LC_MESSAGES
+unset LC_CTYPE
+unset LC_COLLATE
+unset LC_ALL
+unset KEYTIMEOUT
+unset FIGNORE
+
+
+LANG=C
+SHELL=/bin/sh
+PATH=/Software/Git/exports:/bin:/usr/bin:/sbin:/usr/sbin:/usr/libexec
+s disable
+
 
 # HardenedBSD base branch:
-readonly VERSION="$1"
+VERSION="$1"
 if [ "${VERSION}" = "" ]; then
     echo "No version specified! Specify f.e.: 0.99.10"
     exit 1
 fi
-readonly OS_VER="11.0" # 10.2
-readonly MAIN_REPOSITORY="https://github.com/HardenedBSD/hardenedBSD.git"
-readonly CURRENT_BRANCH="hardened/current/master"
-# readonly MAIN_REPOSITORY="https://github.com/hardenedbsd/hardenedbsd-stable/"
-readonly DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
-readonly BASE_NAME="ServeD-OS-Base"
+OS_VER="11.0" # 10.2
+MAIN_REPOSITORY="https://github.com/HardenedBSD/hardenedBSD.git"
+CURRENT_BRANCH="hardened/current/master"
+# MAIN_REPOSITORY="https://github.com/hardenedbsd/hardenedbsd-stable/"
+DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
+BASE_NAME="ServeD-OS-Base"
 if [ -z "${ARCH}" ]; then
-    readonly ARCH="$(uname -m)"
+    ARCH="$(uname -m)"
 fi
 
 cp -v etc/make.conf /etc/
