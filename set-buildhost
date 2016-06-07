@@ -1,9 +1,9 @@
 
 export V="0.11.43" && \
 export SCP_OPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" && \
-export SRC_PATH="dmilith@192.168.1.2:/Users/dmilith/tmp" && \
+export SRC_PATH="dmilith@1100.64.1.2:/Users/dmilith/tmp" && \
 export go_archive="go1.6.freebsd-amd64.tar.gz" && \
-echo "nameserver 192.168.1.1" > /etc/resolv.conf && \
+echo "nameserver 1100.64.1.1" > /etc/resolv.conf && \
 touch /.build-host && \
 mkdir /var/.cache && \
 cd /var/.cache && \
