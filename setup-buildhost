@@ -1,52 +1,53 @@
 #!/bin/sh
 
 setup_buildhost () {
+    . /usr/share/sofin/loader
     if [ "${SYSTEM_NAME}" = "FreeBSD" ]; then
         ${UNAME_BIN} -a | ${GREP_BIN} "HBSD" >/dev/null 2>&1
         if [ "$?" = "0" ]; then
             note "Setting some zfs options"
-            zfs set primarycache=metadata ${DEFAULT_ZPOOL}
-            zfs set secondarycache=metadata ${DEFAULT_ZPOOL}
-            sysctl vfs.zfs.prefetch_disable=1
-            sysctl debug.witness.trace=0
-            sysctl debug.witness.watch=0
+            ${ZFS_BIN} set primarycache=metadata ${DEFAULT_ZPOOL}
+            ${ZFS_BIN} set secondarycache=metadata ${DEFAULT_ZPOOL}
+            ${SYSCTL_BIN} vfs.zfs.prefetch_disable=1
+            ${SYSCTL_BIN} debug.witness.trace=0
+            ${SYSCTL_BIN} debug.witness.watch=0
 
             note "Setting pageexec and mprotect to 1 for build purposes"
             # erlang, nodejs, java:
-            sysctl hardening.pax.pageexec.status=1
-            sysctl hardening.pax.mprotect.status=1
+            ${SYSCTL_BIN} hardening.pax.pageexec.status=1
+            ${SYSCTL_BIN} hardening.pax.mprotect.status=1
 
             # jemalloc:
-            sysctl hardening.pax.disallow_map32bit.status=1
+            ${SYSCTL_BIN} hardening.pax.disallow_map32bit.status=1
 
             set +e
             note "Loading Dtrace"
-            kldload dtraceall
+            ${KLDLOAD_BIN} dtraceall
 
             note "Creating /User/.ssh/config"
             echo "Host verknowsys.com *.verknowsys.com" > /User/.ssh/config
             echo "Port 60022" >> /User/.ssh/config
 
             note "Turning off Syslog-ng (is part of /Software so cannot be run on build host)"
-            sed -i '' -e 's#syslog_ng_enable="YES"#syslog_ng_enable="NO"#' /etc/rc.conf 2>/dev/null
-            killall -9 syslog-ng >/dev/null 2>&1
+            ${SED_BIN} -i '' -e 's#syslog_ng_enable="YES"#syslog_ng_enable="NO"#' /etc/rc.conf 2>/dev/null
+            ${KILLALL_BIN} -9 syslog-ng >/dev/null 2>&1
 
-            zfs destroy ${DEFAULT_ZPOOL}/usr/src 2>/dev/null
-            zfs destroy ${DEFAULT_ZPOOL}/usr/obj 2>/dev/null
+            ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src 2>/dev/null
+            ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/obj 2>/dev/null
 
             note "Setting up and mounting ramdisks"
-            mkdir -p /usr/src /usr/obj /User/.cache/cache
-            mount | grep '.cache/cache' > /dev/null 2>&1
+            ${MKDIR_BIN} -p /usr/src /usr/obj /User/.cache/cache
+            ${MOUNT_BIN} | ${GREP_BIN} '.cache/cache' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
-                mdmfs -s4G md /User/.cache/cache
+                ${MDMFS_BIN} -s4G md /User/.cache/cache
             fi
-            mount | grep '/usr/src' > /dev/null 2>&1
+            ${MOUNT_BIN} | ${GREP_BIN} '/usr/src' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
-                mdmfs -s5G md /usr/src
+                ${MDMFS_BIN} -s5G md /usr/src
             fi
-            mount | grep '/usr/obj' > /dev/null 2>&1
+            ${MOUNT_BIN} | ${GREP_BIN} '/usr/obj' > /dev/null 2>&1
             if [ "$?" != "0" ]; then
-                mdmfs -s5G md /usr/obj
+                ${MDMFS_BIN} -s5G md /usr/obj
             fi
             set -e
 
