@@ -5,6 +5,8 @@ unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export OS_NAME="FreeBSD"
 
+. /usr/share/sofin/loader
+
 set -e
 
 # FreeBSD base version:
@@ -75,7 +77,7 @@ ${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
 ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/ >> ${LOG_OUTPUT}
 
 note "Syncing sources to src"
-time ${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
+${TIME_BIN} ${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
 
 cd /usr/src
 DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
@@ -84,79 +86,68 @@ ${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
 
 note "Preparing kernel configuration"
 GIT_SSL_NO_VERIFY=true ${GIT_BIN} reset --hard >> ${LOG_OUTPUT}
-rm -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+${RM_BIN} -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 if [ "${ARCH}" = "arm" ]; then
-    cp -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    ${CP_BIN} -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 else
-    cp -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    ${CP_BIN} -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
 fi
 
 note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
 # spawn svdinit first:
-sed -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
+${SED_BIN} -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
 
 # export libucl:
 note "Exporting UCL as regular OS library"
-sed -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
-patch -p0 -f < ${SERVED_REPO}/src/patches/export_ucl.patch >> ${LOG_OUTPUT}
-
-set +e
-echo ${OS_VER} | grep "11" > /dev/null 2>&1
-if [ "$?" = "0" ]; then
-    # https://github.com/freebsd/freebsd/commit/6471c2fc7c1fced2b5d2073b1629aa76588c61e2:
-    sed -i '' -e 's#32#48#' sys/boot/efi/loader/copy.c
-else
-    sed -i '' -e 's#32#48#' sys/boot/amd64/efi/copy.c
-fi
-
-set -e
+${SED_BIN} -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+${PATCH_BIN} -p0 -f < ${SERVED_REPO}/src/patches/export_ucl.patch >> ${LOG_OUTPUT}
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
     note "Building world"
-    make buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE}  >> ${LOG_OUTPUT}  2>&1
+    ${MAKE_BIN} buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE}  >> ${LOG_OUTPUT}  2>&1
 fi
 
 note "Building kernel"
-make buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
+${MAKE_BIN} buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
 
 note "Wiping out previous world"
-rm -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>&1
+${RM_BIN} -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>&1
 
 note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
 ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin
 
 note "Installing kernel"
-make installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
+${MAKE_BIN} installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
 
 if [ -z "${DONT_BUILD_WORLD}" ]; then
-    rm -rf /var/tmp/temproot
+    ${RM_BIN} -rf /var/tmp/temproot
 
     note "Merging Pre-buildworld configuration"
-    mergemaster -p -a >> ${LOG_OUTPUT} 2>&1
+    ${MERGEMASTER_BIN} -p -a >> ${LOG_OUTPUT} 2>&1
 
     note "Installing world"
-    make installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
+    ${MAKE_BIN} installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
     note "Merging configuration in: ${DESTBASE}"
-    mergemaster -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>&1
+    ${MERGEMASTER_BIN} -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>&1
 
     note "Deleting old dirs, files and libs"
-    yes | make delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
+    ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
 fi
 
 note "Cleaning up"
-make clean >> ${LOG_OUTPUT} 2>&1
+${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>&1
 
 note "Snapshotting after installation"
 ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
 
 note "Storing fs diff"
-mkdir -p ${DIFFS_DIR} > /dev/null 2>&1
+${MKDIR_BIN} -p ${DIFFS_DIR} > /dev/null 2>&1
 ${ZFS_BIN} send -i ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
 
 note "Stopping any running jails"
-for node in $(gvr list | awk '{print $1;}'); do
-    gvr stop ${node} || true
+for node in $(${GVR_BIN} list | ${AWK_BIN} '{print $1;}'); do
+    ${GVR_BIN} stop ${node} || true
 done
 
 echo "Process finished @${TIMESTAMP}" >> ${LOG_OUTPUT}

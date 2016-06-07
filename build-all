@@ -69,7 +69,7 @@ case ${ARCH} in
 esac
 
 # build system base
-/bin/sh ./build-jail-base "${OS_VER}" "${MAIN_REPOSITORY}" "${CURRENT_BRANCH}" "${ARCH}"
-/bin/sh ./build-binary-snapshots "${BASE_NAME}" "${VERSION}" "${OS_VER}" "${DESTINATION}" "${ARCH}"
+exec ./build-jail-base "${OS_VER}" "${MAIN_REPOSITORY}" "${CURRENT_BRANCH}" "${ARCH}"
+exec ./build-binary-snapshots "${BASE_NAME}" "${VERSION}" "${OS_VER}" "${DESTINATION}" "${ARCH}"
 
 git reset --hard
