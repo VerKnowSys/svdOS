@@ -2,47 +2,47 @@
 
 unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
 
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin
-export OS_NAME="FreeBSD"
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/libexec
+OS_NAME="FreeBSD"
 
 . /usr/share/sofin/loader
 
 set -e
 
 # FreeBSD base version:
-readonly OS_VER="$1"
+OS_VER="$1"
 if [ "${OS_VER}" = "" ]; then
     error "No version specified!"
 fi
 
-readonly MAIN_REPOSITORY="$2"
+MAIN_REPOSITORY="$2"
 if [ "${MAIN_REPOSITORY}" = "" ]; then
     error "No main repository specified!"
 fi
 
-readonly CURRENT_BRANCH="$3"
+CURRENT_BRANCH="$3"
 if [ "${CURRENT_BRANCH}" = "" ]; then
     error "No current branch specified!"
 fi
 
-readonly ARCH="$4"
+ARCH="$4"
 if [ "${ARCH}" = "" ]; then
     error "No architecture specified!"
 fi
 if [ "${ARCH}" = "arm" ]; then
-    readonly ARCH_SUBTYPE="armv6hf"
+    ARCH_SUBTYPE="armv6hf"
 else
-    readonly ARCH_SUBTYPE="${ARCH}"
+    ARCH_SUBTYPE="${ARCH}"
 fi
 
 . /usr/share/sofin/loader
 
-readonly SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
-readonly SERVED_REPO="/var/ServeD-OS"
-readonly PARALLEL_JOBS="${CPUS}"
-readonly SHARED_DIR="/Jails/Shared"
-readonly DIFFS_DIR="${SHARED_DIR}/Diffs"
-readonly LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
+SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
+SERVED_REPO="/var/ServeD-OS"
+PARALLEL_JOBS="${CPUS}"
+SHARED_DIR="/Jails/Shared"
+DIFFS_DIR="${SHARED_DIR}/Diffs"
+LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
 
 if [ ! -d "${SERVED_REPO}" ]; then
     cd /var
