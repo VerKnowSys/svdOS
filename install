@@ -380,7 +380,7 @@ INSTALLED_SVDSYSUP="1"
 
 ${GREP_BIN} -v -R 'ServeD' /boot/loader.conf >/dev/null 2>&1 && \
 echo >> /boot/loader.conf && \
-${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served >> /boot/loader.conf && \
+${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served >> /boot/loader.conf.local && \
 dnote "Installed: boot loader configuration" && \
 INSTALLED_BOOT_CONF="1"
 
