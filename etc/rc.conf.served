@@ -1,8 +1,17 @@
 
 #
-# Start of options added by 'ServeD-Install-Script'
+# ServeD-Install-Script
 #
 
+# alias configuration example:
+# ifconfig_NETWORK_EXTERNAL_INTERFACE_alias0="inet 100.64.1.30/24"
+
+# auto configuration of ipv4 and ipv6 if available:
+ifconfig_NETWORK_EXTERNAL_INTERFACE_ipv6="inet6 accept_rtadv"
+rtsold_enable="YES"
+
+dumpdev="AUTO"
+zfs_enable="YES"
 sshd_enable="YES"
 buildhost_enable="YES"
 casperd_enable="YES"
@@ -24,10 +33,11 @@ pf_flags=""
 pflog_logfile="/var/log/pflog"
 pflog_flags=""
 
-dumpdev="NO"
+dumpdev="AUTO"
 sendmail_enable="NONE"
 named_enable="NO"
 linux_enable="NO"
+linux64_enable="YES"
 ntpd_enable="YES"
 ntpd_flags="${ntpd_flags} -g -L -N"
 inetd_enable="NO"

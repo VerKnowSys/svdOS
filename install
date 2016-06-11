@@ -7,7 +7,7 @@
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 SOFTWARE_PATCHES="P001 P002 P003"
-INSTALL_SCRIPT_VERSION="0.6.3"
+INSTALL_SCRIPT_VERSION="0.6.4"
 SYSTEM_VERSION="11.0" # the default
 DEFAULT_ZPOOL="zroot"
 INTERNAL_NETWORK="10.2.1.0"
@@ -378,9 +378,10 @@ wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc" && \
 dnote "Installed: system binary updater" && \
 INSTALLED_SVDSYSUP="1"
 
-${GREP_BIN} -v -R 'ServeD' /boot/loader.conf >/dev/null 2>&1 && \
-echo >> /boot/loader.conf && \
-${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served >> /boot/loader.conf.local && \
+local_loader_conf="/boot/loader.conf.local"
+${GREP_BIN} -v -R 'ServeD' ${local_loader_conf} >/dev/null 2>&1 && \
+echo >> ${local_loader_conf} && \
+${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served >> ${local_loader_conf} && \
 dnote "Installed: boot loader configuration" && \
 INSTALLED_BOOT_CONF="1"
 
@@ -460,9 +461,9 @@ fi
 
 DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} ${DEFAULT_HOST_ADDRESS_FILE} 2>/dev/null)"
 wrun "${CP_BIN} -v ${SERVED_REPO}${PF_CONF_FILE}.served ${PF_CONF_FILE}" && \
-${SED_BIN} -i '' -e "s/__INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE} && \
-${SED_BIN} -i '' -e "s/__EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FILE} && \
-${SED_BIN} -i '' -e "s/__EXTERNAL_ADDRESS/${DEFAULT_INTERFACE_ADDRESS}/g" ${PF_CONF_FILE} && \
+${SED_BIN} -i '' -e "s/INTERNAL_NETWORK/${INTERNAL_NETWORK}/g" ${PF_CONF_FILE} && \
+${SED_BIN} -i '' -e "s/NETWORK_EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${PF_CONF_FILE} && \
+${SED_BIN} -i '' -e "s/NETWORK_EXTERNAL_ADDRESS/${DEFAULT_INTERFACE_ADDRESS}/g" ${PF_CONF_FILE} && \
 wrun "${TOUCH_BIN} ${PF_CONF_FILE}.local" && \
 dnote "Installed Packet Filter configuration" && \
 INSTALLED_SYSLOGNG_CONF="1"
@@ -475,10 +476,12 @@ else
     dwarn "Packet Filter is disabled in: '/etc/rc.conf'"
 fi
 
-${GREP_BIN} -R 'ServeD-Install-Script' /etc/rc.conf >/dev/null 2>&1
+rc_local_conf="/etc/rc.conf.local"
+${GREP_BIN} -R 'ServeD-Install-Script' ${rc_local_conf} >/dev/null 2>&1
 if [ "$?" != "0" ]; then
-    ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> /etc/rc.conf && \
-    dnote "Installed: ServeD specific rc configuration"
+    ${CAT_BIN} ${SERVED_REPO}/etc/rc.conf.served >> ${rc_local_conf} && \
+    dnote "Installed: ServeD specific local configuration"
+    ${SED_BIN} -i '' -e "s/NETWORK_EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${rc_local_conf}
 fi
 ${GREP_BIN} -R 'gvr boot' /etc/rc >/dev/null 2>&1
 if [ "$?" != "0" ]; then
