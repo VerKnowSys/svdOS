@@ -108,10 +108,11 @@ fi
 
 ${TEST_BIN} ! -f /etc/fstab && wrun ${TOUCH_BIN} /etc/fstab
 if [ -d "/root" ]; then
-    dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root" && \
-    wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ /User 2>/dev/null" && \
-    wrun "${PW_BIN} user mod root -d /User" && \
-    wrun "${RM_BIN} -rf /root" && \
+    cd /
+    dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root"
+    wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ /User 2>/dev/null"
+    wrun "${PW_BIN} user mod root -d /User"
+    wrun "${RM_BIN} -rf /root"
     dnote "Home directory synchonized successfully"
 fi
 
