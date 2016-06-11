@@ -379,10 +379,8 @@ dnote "Installed: system binary updater" && \
 INSTALLED_SVDSYSUP="1"
 
 local_loader_conf="/boot/loader.conf.local"
-${GREP_BIN} -v -R 'ServeD' ${local_loader_conf} >/dev/null 2>&1 && \
-echo >> ${local_loader_conf} && \
-${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served >> ${local_loader_conf} && \
-dnote "Installed: boot loader configuration" && \
+${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served > ${local_loader_conf} && \
+dnote "Installed: local boot loader configuration" && \
 INSTALLED_BOOT_CONF="1"
 
 ${MKDIR_BIN} -p ${SYSSVD_LOGNG_PREFIX}/etc ${SYSSVD_LOGNG_PREFIX}/var
