@@ -274,8 +274,7 @@ remote-control:
 # Generate Unbound configuration with a little help from local-unbound-setup:
 generate_conf_for_unbound_resolver
 wrun ${RM_BIN} -vf "${UPDATE_PENDING_INDICATOR}"
-wrun ${RM_BIN} -vf "${HOME}/.profile"
-wrun ${SOFIN_BIN} reload
+wrun ${SOFIN_BIN} vars > "${HOME}/.profile"
 
 dnote
 dnote "Update complete."
