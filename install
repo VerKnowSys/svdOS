@@ -211,7 +211,7 @@ for some_patch in ${SOFTWARE_PATCHES}; do
     fi
 done
 
-${ZFS_BIN} list 2>/dev/null | grep 'User/root' > /dev/null 2>&1
+${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} 'User/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     wrun "${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/User" && \
     dnote "Initialized origin of: '${DEFAULT_ZPOOL}/User\n"
