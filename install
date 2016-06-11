@@ -186,7 +186,7 @@ if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_A
     INSTALLED_JAILS_ARCHIVE="1"
 fi
 
-${ZFS_BIN} list 2>/dev/null | grep 'Software/root' > /dev/null 2>&1
+${ZFS_BIN} list 2>/dev/null | ${GREP_BIN} 'Software/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     wrun ${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software && \
     dnote "Initialized origin of: ${DEFAULT_ZPOOL}/Software"
