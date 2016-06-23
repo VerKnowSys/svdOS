@@ -88,6 +88,7 @@ compile_jails () {
     error "Snapshot should be readable by everyone. But chmod failed."
 
     note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
+    ${CHMOD_BIN} 600 ~/.ssh/* >/dev/null 2>&1
     ${SCP_BIN} \
         -o UserKnownHostsFile=/dev/null \
         -o StrictHostKeyChecking=no \
