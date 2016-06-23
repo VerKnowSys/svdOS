@@ -16,6 +16,7 @@ setup_buildhost () {
             # erlang, nodejs, java:
             ${SYSCTL_BIN} hardening.pax.pageexec.status=1
             ${SYSCTL_BIN} hardening.pax.mprotect.status=1
+            ${SYSCTL_BIN} hardening.pax.aslr.status=1
 
             # jemalloc:
             ${SYSCTL_BIN} hardening.pax.disallow_map32bit.status=1
@@ -35,21 +36,21 @@ setup_buildhost () {
             ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/src 2>/dev/null
             ${ZFS_BIN} destroy ${DEFAULT_ZPOOL}/usr/obj 2>/dev/null
 
-            note "Setting up and mounting ramdisks"
-            ${MKDIR_BIN} -p /usr/src /usr/obj /User/.cache/cache
-            ${MOUNT_BIN} | ${GREP_BIN} '.cache/cache' > /dev/null 2>&1
-            if [ "$?" != "0" ]; then
-                ${MDMFS_BIN} -s4G md /User/.cache/cache
-            fi
-            ${MOUNT_BIN} | ${GREP_BIN} '/usr/src' > /dev/null 2>&1
-            if [ "$?" != "0" ]; then
-                ${MDMFS_BIN} -s5G md /usr/src
-            fi
-            ${MOUNT_BIN} | ${GREP_BIN} '/usr/obj' > /dev/null 2>&1
-            if [ "$?" != "0" ]; then
-                ${MDMFS_BIN} -s5G md /usr/obj
-            fi
-            set -e
+            # note "Setting up and mounting ramdisks"
+            # ${MKDIR_BIN} -p /usr/src /usr/obj /User/.cache/cache
+            # ${MOUNT_BIN} | ${GREP_BIN} '.cache/cache' > /dev/null 2>&1
+            # if [ "$?" != "0" ]; then
+            #     ${MDMFS_BIN} -s4G md /User/.cache/cache
+            # fi
+            # ${MOUNT_BIN} | ${GREP_BIN} '/usr/src' > /dev/null 2>&1
+            # if [ "$?" != "0" ]; then
+            #     ${MDMFS_BIN} -s5G md /usr/src
+            # fi
+            # ${MOUNT_BIN} | ${GREP_BIN} '/usr/obj' > /dev/null 2>&1
+            # if [ "$?" != "0" ]; then
+            #     ${MDMFS_BIN} -s5G md /usr/obj
+            # fi
+            # set -e
 
             echo "ServeD-BH" > /.build-host
         fi
