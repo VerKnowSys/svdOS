@@ -24,14 +24,12 @@ gateway_enable="YES"
 local_unbound_enable="YES"
 update_motd="NO"
 
-# PF
-# KP on 11 => http://ół.pl/6b6f47163b803fe99b4f5091e5f718c9.png
-pf_enable="NO"
-pflog_enable="NO"
-pf_rules="/etc/pf.conf"
+pf_enable="YES"
 pf_flags=""
-pflog_logfile="/var/log/pflog"
+pf_rules="/etc/pf.conf"
+pflog_enable="YES"
 pflog_flags=""
+pflog_logfile="/var/log/pflog"
 
 dumpdev="AUTO"
 sendmail_enable="NONE"
