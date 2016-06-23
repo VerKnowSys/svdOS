@@ -48,6 +48,7 @@ if [ -z "${ARCH}" ]; then
 fi
 
 cp -v etc/make.conf /etc/
+cp -v etc/src.conf /etc/
 
 test -z "${DEVEL}" && \
     git reset --hard
