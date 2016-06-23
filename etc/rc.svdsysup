@@ -11,7 +11,7 @@ trap "echo 'Update interrupted'; exit 1" 3
 
 . /usr/share/sofin/loader
 
-HOME="/User"
+HOMEDIR="/User"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
 DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} "${DEFAULT_HOST_ADDRESS_FILE}" 2>/dev/null)"
@@ -109,12 +109,14 @@ fi
 ${TEST_BIN} ! -f /etc/fstab && wrun ${TOUCH_BIN} /etc/fstab
 if [ -d "/root" ]; then
     cd /
-    dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}/User/root"
-    wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ /User 2>/dev/null"
-    wrun "${PW_BIN} user mod root -d /User"
+    dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}${HOMEDIR}/root"
+    wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ ${HOMEDIR} 2>/dev/null"
+    wrun "${PW_BIN} user mod root -d ${HOMEDIR}"
+    wrun "${PW_BIN} user mod toor -d ${HOMEDIR}"
     wrun "${RM_BIN} -rf /root"
     dnote "Home directory synchonized successfully"
 fi
+wrun  "${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}${HOMEDIR}/root"
 
 ${RM_BIN} -f /etc/zshenv /etc/zshrc
 ${MKDIR_BIN} -p /etc/zsh
@@ -274,7 +276,7 @@ remote-control:
 # Generate Unbound configuration with a little help from local-unbound-setup:
 generate_conf_for_unbound_resolver
 wrun ${RM_BIN} -vf "${UPDATE_PENDING_INDICATOR}"
-wrun ${SOFIN_BIN} vars > "${HOME}/.profile"
+wrun ${SOFIN_BIN} vars > "${HOMEDIR}/.profile"
 
 dnote
 dnote "Update complete."
