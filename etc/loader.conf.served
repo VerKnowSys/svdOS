@@ -17,6 +17,7 @@ cc_htcp_load="NO"
 nullfs_load="NO"
 accf_http_load="NO"
 pf_load="NO"
+pflog_load="NO"
 net.inet.tcp.syncache.hashsize=32768
 net.inet.tcp.syncache.bucketlimit=32
 net.inet.tcp.syncache.cachelimit=1048576
