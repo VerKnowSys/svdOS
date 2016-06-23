@@ -49,7 +49,8 @@ fi
 
 cp -v etc/make.conf /etc/
 
-git reset --hard
+test -z "${DEVEL}" && \
+    git reset --hard
 case ${ARCH} in
     arm)
         sed -i '' -e 's/^COPTFLAGS.*$/COPTFLAGS=-O2 -pipe -ffast-math -fno-strict-aliasing -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
@@ -70,4 +71,5 @@ esac
 exec ./build-jail-base "${OS_VER}" "${MAIN_REPOSITORY}" "${CURRENT_BRANCH}" "${ARCH}"
 exec ./build-binary-snapshots "${BASE_NAME}" "${VERSION}" "${OS_VER}" "${DESTINATION}" "${ARCH}"
 
-git reset --hard
+test -z "${DEVEL}" && \
+    git reset --hard
