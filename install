@@ -63,6 +63,7 @@ EGREP_BIN="/usr/bin/egrep"
 XZ_BIN="/usr/bin/xz"
 SYNC_BIN="/bin/sync"
 XZCAT_BIN="/usr/bin/xzcat"
+SED_BIN="/usr/bin/sed"
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
