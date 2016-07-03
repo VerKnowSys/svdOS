@@ -386,3 +386,5 @@ device      netmap                          # netmap(4) support
 device      crypto                          # core crypto support
 device      cryptodev                       # /dev/crypto for access to h/w
 device      aesni
+
+options VIMAGE
