@@ -222,11 +222,9 @@ options     VESA                            # Add support for VESA BIOS Extensio
 
 device      splash                          # Splash screen and screen saver support
 
-# syscons is the default console driver, resembling an SCO console
-device      sc
-options     SC_PIXEL_MODE                   # add support for the raster text mode
-
 # vt is the new video console driver
+options     TERMINAL_KERN_ATTR=(FG_YELLOW|BG_BLACK)
+options     TERMINAL_NORM_ATTR=(FG_GRAY|BG_BLACK)
 device      vt
 device      vt_vga
 device      vt_efifb
