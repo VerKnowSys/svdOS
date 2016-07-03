@@ -2,6 +2,9 @@
 # Start of options added by 'ServeD-Install-Script'
 #
 zfs_load="YES"
+kern.vty="vt"
+kern.vt.enable_bell="1"
+kern.vt.fb.default_mode="1024x768"
 kernel="verknowsys"
 kernels="verknowsys kernel"
 fuse_load="YES"
