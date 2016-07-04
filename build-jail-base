@@ -1,156 +1,147 @@
-#!/Software/Zsh/exports/zsh
 
-unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
+build_base () {
 
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/libexec
-OS_NAME="FreeBSD"
+    # FreeBSD base version:
+    OS_VER="$1"
+    if [ "${OS_VER}" = "" ]; then
+        error "No version specified!"
+    fi
 
-. /usr/share/sofin/loader
+    MAIN_REPOSITORY="$2"
+    if [ "${MAIN_REPOSITORY}" = "" ]; then
+        error "No main repository specified!"
+    fi
 
-# set -e
+    CURRENT_BRANCH="$3"
+    if [ "${CURRENT_BRANCH}" = "" ]; then
+        error "No current branch specified!"
+    fi
 
-# FreeBSD base version:
-OS_VER="$1"
-if [ "${OS_VER}" = "" ]; then
-    error "No version specified!"
-fi
+    ARCH="$4"
+    if [ "${ARCH}" = "" ]; then
+        error "No architecture specified!"
+    fi
+    if [ "${ARCH}" = "arm" ]; then
+        ARCH_SUBTYPE="armv6hf"
+    else
+        ARCH_SUBTYPE="${ARCH}"
+    fi
 
-MAIN_REPOSITORY="$2"
-if [ "${MAIN_REPOSITORY}" = "" ]; then
-    error "No main repository specified!"
-fi
+    SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
+    SERVED_REPO="/var/ServeD-OS"
+    PARALLEL_JOBS="${CPUS}"
+    SHARED_DIR="/Jails/Shared"
+    DIFFS_DIR="${SHARED_DIR}/Diffs"
+    LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
 
-CURRENT_BRANCH="$3"
-if [ "${CURRENT_BRANCH}" = "" ]; then
-    error "No current branch specified!"
-fi
+    if [ ! -d "${SERVED_REPO}" ]; then
+        cd /var
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
+    else
+        cd ${SERVED_REPO}
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
+    fi
 
-ARCH="$4"
-if [ "${ARCH}" = "" ]; then
-    error "No architecture specified!"
-fi
-if [ "${ARCH}" = "arm" ]; then
-    ARCH_SUBTYPE="armv6hf"
-else
-    ARCH_SUBTYPE="${ARCH}"
-fi
+    # main()
+    TIMESTAMP="$(${DATE_BIN} +%F-%s)"
+    ${RM_BIN} -f ${LOG_OUTPUT}
+    ${TOUCH_BIN} ${LOG_OUTPUT}
+    echo "Process started for OS version: ${OS_VER}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}" >> ${LOG_OUTPUT}
+    note "Process started for OS version: ${OS_VER}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
 
-. /usr/share/sofin/loader
-
-SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
-SERVED_REPO="/var/ServeD-OS"
-PARALLEL_JOBS="${CPUS}"
-SHARED_DIR="/Jails/Shared"
-DIFFS_DIR="${SHARED_DIR}/Diffs"
-LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
-
-if [ ! -d "${SERVED_REPO}" ]; then
     cd /var
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
-else
-    cd ${SERVED_REPO}
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
-fi
+    if [ ! -d "${OS_VER}-src" ]; then
+        # svn co http://svn0.eu.FreeBSD.org/base/releng/${OS_VER} ${OS_VER}-src
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${OS_VER}-src
+        cd ${OS_VER}-src
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true
+    else
+        cd ${OS_VER}-src
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} checkout ${CURRENT_BRANCH} > /dev/null 2>&1
+        GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull origin ${CURRENT_BRANCH}
+        note "Working on branch: $(${GIT_BIN} branch)"
+    fi
 
-# main()
-TIMESTAMP="$(${DATE_BIN} +%F-%s)"
-${RM_BIN} -f ${LOG_OUTPUT}
-${TOUCH_BIN} ${LOG_OUTPUT}
-echo "Process started for OS version: ${OS_VER}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}" >> ${LOG_OUTPUT}
-note "Process started for OS version: ${OS_VER}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
+    note "Setting up src.conf"
+    ${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
+    ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/ >> ${LOG_OUTPUT}
 
-cd /var
-if [ ! -d "${OS_VER}-src" ]; then
-    # svn co http://svn0.eu.FreeBSD.org/base/releng/${OS_VER} ${OS_VER}-src
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${OS_VER}-src
-    cd ${OS_VER}-src
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true
-else
-    cd ${OS_VER}-src
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} checkout ${CURRENT_BRANCH} > /dev/null 2>&1
-    GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull origin ${CURRENT_BRANCH}
-    note "Working on branch: $(${GIT_BIN} branch)"
-fi
+    note "Syncing sources to src"
+    ${TIME_BIN} ${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
 
-note "Setting up src.conf"
-${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
-${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/ >> ${LOG_OUTPUT}
+    cd /usr/src
+    DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
+    ${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
+    # DESTDIR="${DESTBASE}-${TIMESTAMP}"
 
-note "Syncing sources to src"
-${TIME_BIN} ${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
+    note "Preparing kernel configuration"
+    GIT_SSL_NO_VERIFY=true ${GIT_BIN} reset --hard >> ${LOG_OUTPUT}
+    ${RM_BIN} -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    if [ "${ARCH}" = "arm" ]; then
+        ${CP_BIN} -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    else
+        ${CP_BIN} -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
+    fi
 
-cd /usr/src
-DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
-${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
-# DESTDIR="${DESTBASE}-${TIMESTAMP}"
+    note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
+    # spawn svdinit first:
+    ${SED_BIN} -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
 
-note "Preparing kernel configuration"
-GIT_SSL_NO_VERIFY=true ${GIT_BIN} reset --hard >> ${LOG_OUTPUT}
-${RM_BIN} -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-if [ "${ARCH}" = "arm" ]; then
-    ${CP_BIN} -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-else
-    ${CP_BIN} -v ${SERVED_REPO}/kernel/VERKNOWSYS-${OS_VER} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-fi
+    # export libucl:
+    note "Exporting UCL as regular OS library"
+    ${SED_BIN} -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
+    ${PATCH_BIN} -p0 -f < ${SERVED_REPO}/src/patches/export_ucl.patch >> ${LOG_OUTPUT}
 
-note "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
-# spawn svdinit first:
-${SED_BIN} -i '' -e 's#"/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#"/sbin/svdinit:/sbin/init:/sbin/oinit:/sbin/init.bak:/rescue/init"#' sys/kern/init_main.c
+    if [ -z "${DONT_BUILD_WORLD}" ]; then
+        note "Building world"
+        ${MAKE_BIN} buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE}  >> ${LOG_OUTPUT}  2>&1
+    fi
 
-# export libucl:
-note "Exporting UCL as regular OS library"
-${SED_BIN} -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
-${PATCH_BIN} -p0 -f < ${SERVED_REPO}/src/patches/export_ucl.patch >> ${LOG_OUTPUT}
+    note "Building kernel"
+    ${MAKE_BIN} buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
 
-if [ -z "${DONT_BUILD_WORLD}" ]; then
-    note "Building world"
-    ${MAKE_BIN} buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE}  >> ${LOG_OUTPUT}  2>&1
-fi
+    note "Wiping out previous world"
+    ${RM_BIN} -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>&1
 
-note "Building kernel"
-${MAKE_BIN} buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
+    note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
+    ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin
 
-note "Wiping out previous world"
-${RM_BIN} -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>&1
+    note "Installing kernel"
+    ${MAKE_BIN} installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
 
-note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
-${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin
+    if [ -z "${DONT_BUILD_WORLD}" ]; then
+        ${RM_BIN} -rf /var/tmp/temproot
 
-note "Installing kernel"
-${MAKE_BIN} installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
+        note "Merging Pre-buildworld configuration"
+        ${MERGEMASTER_BIN} -p -a >> ${LOG_OUTPUT} 2>&1
 
-if [ -z "${DONT_BUILD_WORLD}" ]; then
-    ${RM_BIN} -rf /var/tmp/temproot
+        note "Installing world"
+        ${MAKE_BIN} installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
 
-    note "Merging Pre-buildworld configuration"
-    ${MERGEMASTER_BIN} -p -a >> ${LOG_OUTPUT} 2>&1
+        note "Merging configuration in: ${DESTBASE}"
+        ${MERGEMASTER_BIN} -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>&1
 
-    note "Installing world"
-    ${MAKE_BIN} installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
+        note "Deleting old dirs, files and libs"
+        ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
+    fi
 
-    note "Merging configuration in: ${DESTBASE}"
-    ${MERGEMASTER_BIN} -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>&1
+    note "Cleaning up"
+    ${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>&1
 
-    note "Deleting old dirs, files and libs"
-    ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
-fi
+    note "Snapshotting after installation"
+    ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
 
-note "Cleaning up"
-${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>&1
+    note "Storing fs diff"
+    ${MKDIR_BIN} -p ${DIFFS_DIR} > /dev/null 2>&1
+    ${ZFS_BIN} send -i ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
 
-note "Snapshotting after installation"
-${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
+    # set +e
 
-note "Storing fs diff"
-${MKDIR_BIN} -p ${DIFFS_DIR} > /dev/null 2>&1
-${ZFS_BIN} send -i ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
+    note "Stopping any running jails"
+    for node in $(${GVR_BIN} list | ${AWK_BIN} '{print $1;}'); do
+        ${GVR_BIN} stop ${node} || true
+    done
 
-# set +e
-
-note "Stopping any running jails"
-for node in $(${GVR_BIN} list | ${AWK_BIN} '{print $1;}'); do
-    ${GVR_BIN} stop ${node} || true
-done
-
-echo "Process finished @${TIMESTAMP}" >> ${LOG_OUTPUT}
-note "Process finished @${TIMESTAMP}"
+    echo "Process finished @${TIMESTAMP}" >> ${LOG_OUTPUT}
+    note "Process finished @${TIMESTAMP}"
+}

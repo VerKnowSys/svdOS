@@ -50,8 +50,8 @@ fi
 cp -v etc/make.conf /etc/
 cp -v etc/src.conf /etc/
 
-test -z "${DEVEL}" && \
-    git reset --hard
+# test -z "${DEVEL}" && \
+#     git reset --hard
 case ${ARCH} in
     arm)
         sed -i '' -e 's/^COPTFLAGS.*$/COPTFLAGS=-O2 -pipe -ffast-math -fno-strict-aliasing -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
@@ -68,9 +68,17 @@ case ${ARCH} in
         ;;
 esac
 
-# build system base
-${SHELL} ./build-jail-base "${OS_VER}" "${MAIN_REPOSITORY}" "${CURRENT_BRANCH}" "${ARCH}"
-${SHELL} ./build-binary-snapshots "${BASE_NAME}" "${VERSION}" "${OS_VER}" "${DESTINATION}" "${ARCH}"
+unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
 
-test -z "${DEVEL}" && \
-    git reset --hard
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/libexec
+OS_NAME="FreeBSD"
+
+# load functions for base build
+. ./build-jail-base
+. ./build-binary-snapshots
+
+build_base "${OS_VER}" "${MAIN_REPOSITORY}" "${CURRENT_BRANCH}" "${ARCH}"
+commit_snapshots_build "${BASE_NAME}" "${VERSION}" "${OS_VER}" "${DESTINATION}" "${ARCH}"
+
+# test -z "${DEVEL}" && \
+#     git reset --hard

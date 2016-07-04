@@ -1,115 +1,109 @@
-#!/usr/bin/env zsh
-# ZSH is required
-#
-# 2014-09-02 13:11:55
-# blame: @dmilith
 
-# set -e
+commit_snapshots_build () {
 
-. /usr/share/sofin/loader
+    LAUNCH_ARGS="$*"
 
-
-readonly LAUNCH_ARGS="$*"
-
-readonly NAME="$1"
-if [ "${NAME}" = "" ]; then
-    error "No name specified!"
-fi
-
-readonly A_VERSION="$2"
-if [ "${A_VERSION}" = "" ]; then
-    error "No version specified!"
-fi
-
-readonly OS_VER="$3"
-if [ "${OS_VER}" = "" ]; then
-    error "No OS version specified!"
-fi
-
-readonly DESTINATION="$4"
-if [ "${DESTINATION}" = "" ]; then
-    error "No destination path specified!"
-fi
-
-readonly ARCH="$5"
-if [ "${ARCH}" = "" ]; then
-    error "No architecture specified!"
-fi
-
-readonly BBS_LOG="/var/log/messages"
-
-
-clean_before () {
-    cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
-    for unnec in /etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root; do
-        ${FIND_BIN} ".${unnec}" -delete 2>> ${BBS_LOG} && \
-        note "Removed dir: .${unnec}"
-    done
-}
-
-
-compile_jails () {
-    ${MKDIR_BIN} -p /var/.cache
-    BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
-    note "Compiling snapshot: ${BASE_SNAPSHOT}"
-    realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
-
-    # Golden linker support:
-    GOLD="/Software/Gold"
-    if [ ! -f "${GOLD}/lib/LLVMgold.so" ]; then
-        s i Gold
+    NAME="$1"
+    if [ "${NAME}" = "" ]; then
+        error "No name specified!"
     fi
 
-    note "Preparing golden linker.."
-    TARGET_TRIPPLE="x86_64-unknown-freebsd11.0"
-    set -e
-    for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
-        ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-    done
-    for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/bin -type f); do
-        ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-    done
-    ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
-    for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
-        ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-    done
-    note "Golden linker merged with current software base"
-
-    cd /var/.cache
-    debug "RR: ${TAR_BIN} -vcJ --use-compress-program=\"${XZ_BIN} --threads=${CPUS}\" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \"${realpath}\""
-    time ${TAR_BIN} -cJ --use-compress-program="${XZ_BIN} --threads=${CPUS}" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} ${realpath} 2>> ${BBS_LOG}
-    if [ "$?" = "0" ]; then
-        note "Compiled successfully."
-    else
-        error "Something went wrong while compiling snapshot!"
+    A_VERSION="$2"
+    if [ "${A_VERSION}" = "" ]; then
+        error "No version specified!"
     fi
 
-    ${CHMOD_BIN} a+r ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} || \
-    error "Snapshot should be readable by everyone. But chmod failed."
+    OS_VER="$3"
+    if [ "${OS_VER}" = "" ]; then
+        error "No OS version specified!"
+    fi
 
-    note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
-    ${CHMOD_BIN} 600 ~/.ssh/* >/dev/null 2>&1
-    ${SCP_BIN} \
-        -o UserKnownHostsFile=/dev/null \
-        -o StrictHostKeyChecking=no \
-        ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \
-        ${DESTINATION} 2>> ${BBS_LOG} && \
-        note "Uploaded successfully."
+    DESTINATION="$4"
+    if [ "${DESTINATION}" = "" ]; then
+        error "No destination path specified!"
+    fi
 
-    if [ "$?" = "0" ]; then
-        note "Finished successfully. Checking latest version on remote destination.."
-        ${SSH_BIN} \
+    ARCH="$5"
+    if [ "${ARCH}" = "" ]; then
+        error "No architecture specified!"
+    fi
+
+    BBS_LOG="/var/log/messages"
+
+
+    clean_before () {
+        cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
+        for unnec in /etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root; do
+            ${FIND_BIN} ".${unnec}" -delete 2>> ${BBS_LOG} && \
+            note "Removed dir: .${unnec}"
+        done
+    }
+
+
+    compile_jails () {
+        ${MKDIR_BIN} -p /var/.cache
+        BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
+        note "Compiling snapshot: ${BASE_SNAPSHOT}"
+        realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
+
+        # Golden linker support:
+        GOLD="/Software/Gold"
+        if [ ! -f "${GOLD}/lib/LLVMgold.so" ]; then
+            s i Gold
+        fi
+
+        note "Preparing golden linker.."
+        TARGET_TRIPPLE="x86_64-unknown-freebsd11.0"
+        set -e
+        for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
+            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        done
+        for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/bin -type f); do
+            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        done
+        ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
+        for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
+            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        done
+        note "Golden linker merged with current software base"
+
+        cd /var/.cache
+        debug "RR: ${TAR_BIN} -vcJ --use-compress-program=\"${XZ_BIN} --threads=${CPUS}\" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \"${realpath}\""
+        time ${TAR_BIN} -cJ --use-compress-program="${XZ_BIN} --threads=${CPUS}" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} ${realpath} 2>> ${BBS_LOG}
+        if [ "$?" = "0" ]; then
+            note "Compiled successfully."
+        else
+            error "Something went wrong while compiling snapshot!"
+        fi
+
+        ${CHMOD_BIN} a+r ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} || \
+        error "Snapshot should be readable by everyone. But chmod failed."
+
+        note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
+        ${CHMOD_BIN} 600 ~/.ssh/* >/dev/null 2>&1
+        ${SCP_BIN} \
             -o UserKnownHostsFile=/dev/null \
             -o StrictHostKeyChecking=no \
-            dmilith@served.verknowsys.com \
-            "${GREP_BIN} -R '${A_VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
-             echo '${A_VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${BBS_LOG} && \
-            note "Remote version file updated successfully with version: ${A_VERSION}"
-    else
-        error "Something went wrong while uploading Jails base. Launch args: '${LAUNCH_ARGS}';"
-    fi
+            ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \
+            ${DESTINATION} 2>> ${BBS_LOG} && \
+            note "Uploaded successfully."
+
+        if [ "$?" = "0" ]; then
+            note "Finished successfully. Checking latest version on remote destination.."
+            ${SSH_BIN} \
+                -o UserKnownHostsFile=/dev/null \
+                -o StrictHostKeyChecking=no \
+                dmilith@served.verknowsys.com \
+                "${GREP_BIN} -R '${A_VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
+                 echo '${A_VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${BBS_LOG} && \
+                note "Remote version file updated successfully with version: ${A_VERSION}"
+        else
+            error "Something went wrong while uploading Jails base. Launch args: '${LAUNCH_ARGS}';"
+        fi
+    }
+
+
+    clean_before
+    compile_jails
 }
 
-
-clean_before
-compile_jails
