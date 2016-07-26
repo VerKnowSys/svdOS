@@ -131,9 +131,9 @@ build_base () {
     note "Snapshotting after installation"
     ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
 
-    note "Storing fs diff"
-    ${MKDIR_BIN} -p ${DIFFS_DIR} > /dev/null 2>&1
-    ${ZFS_BIN} send -i ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
+    # note "Storing fs diff"
+    # ${MKDIR_BIN} -p ${DIFFS_DIR} > /dev/null 2>&1
+    # ${ZFS_BIN} send -i ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
 
     # set +e
 
