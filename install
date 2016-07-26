@@ -288,7 +288,6 @@ fi
 if [ ! -d "${SOFIN_REPO}" ]; then
     wrun "cd /var" && \
     wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${DEFAULT_SOFIN_REPOSITORY}" && \
-    wrun "cd ${SOFIN_REPO}" && \
     method="cloned"
 else
     wrun "cd ${SOFIN_REPO}" && \
@@ -296,8 +295,9 @@ else
     wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}" && \
     method="pulled"
 fi && \
-dnote "Sofin repository ${method} successfully" && \
-wrun "bin/install" && \
+dnote "Sofin repository ${_method} successfully" && \
+cd ${SOFIN_REPO} && \
+bin/install && \
 INSTALLED_SOFIN="1" && \
 unset method
 
