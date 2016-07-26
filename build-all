@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. /usr/share/sofin/loader
+
 unset CXX
 unset CPP
 unset CC
