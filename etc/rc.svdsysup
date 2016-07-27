@@ -55,7 +55,7 @@ dnote () {
 }
 
 wrun () {
-    commands="$@ && sync"
+    commands="$@ && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
     debug "Evaluating: '${commands}'" >> ${SVD_LOG} 2>> ${SVD_LOG} && \
     gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
@@ -80,7 +80,7 @@ ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/ROOT/default && \
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/var && \
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/var/log && \
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/usr && \
-sync && \
+${SYNC_BIN} && \
 dnote "Core datasets were successfully set writable and mounted"
 
 # ______________________________________________________________________________
@@ -130,10 +130,9 @@ wrun ${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv && \
 wrun ${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc && \
 dnote "System shell configured successfully"
 
-TRIPPLE="${SYSTEM_NAME}-${PICKED_OS_VERSION}-${SYSTEM_ARCH}"
 for folder in bin lib libexec sbin usr; do
-    wrun "${SERVED_REPO}${RSYNC_BIN} -v --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ /${folder} 2>/dev/null" && \
-    dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${TRIPPLE}/${folder}/ to: /${folder}"
+    wrun "${SERVED_REPO}${RSYNC_BIN} -v --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ /${folder} 2>/dev/null" && \
+    dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ to: /${folder}"
 done
 
 #-------------------------------------------------------------------------------
