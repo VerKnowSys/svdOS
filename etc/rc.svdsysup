@@ -9,9 +9,6 @@ stty status '^T' 2> /dev/null
 trap : 2
 trap "echo 'Update interrupted'; exit 1" 3
 
-. /usr/share/sofin/funs/self.fun
-load_requirements
-
 HOMEDIR="/User"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
@@ -36,6 +33,13 @@ PICKED_OS_VERSION="11.0" # the default
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
 PATH="${DEFAULT_PATH}"
+
+# Load Sofin environment:
+if [ -d "${SOFIN_REPO}" ]; then
+    cd ${SOFIN_REPO}
+    . share/sofin/funs/self.fun
+    load_requirements
+fi
 
 
 debug () {
