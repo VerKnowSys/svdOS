@@ -287,14 +287,14 @@ if [ -f "${HOME}/.gitconfig" ]; then
 fi
 
 if [ -d "${SERVED_REPO}" ]; then
-    method="fetched"
+    method="updated"
     cd ${SERVED_REPO} && \
     wrun "${GIT_BIN} reset --hard" && \
-    wrun "${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}"
+    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}"
 else
     method="cloned"
     cd /var && \
-    wrun "${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS"
+    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS"
 fi && \
 dnote "ServeD-OS repository ${method} successfully" && \
 INSTALLED_SERVED_OS="1" && \
