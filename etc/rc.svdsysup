@@ -9,10 +9,7 @@ stty status '^T' 2> /dev/null
 trap : 2
 trap "echo 'Update interrupted'; exit 1" 3
 
-HOMEDIR="/User"
-DEFAULT_ZPOOL="zroot"
 DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
-DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} "${DEFAULT_HOST_ADDRESS_FILE}" 2>/dev/null)"
 UPDATE_PENDING_INDICATOR="/.svdsysup"
 SERVED_REPO="/var/ServeD-OS"
 SOFIN_REPO="/var/sofin"
@@ -29,7 +26,7 @@ SNAPSHOT_REGEXP="@[a-z0-9]{6,10}$" # origin or timestamp
 SETUID_UNUSED_BINS="/bin/rsh /bin/rlogin"
 SETUID_BINS="/sbin/init /sbin/svdinit /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login"
 
-PICKED_OS_VERSION="11.0" # the default
+SVDSYSUP_PICKED_OS_VERSION="11.0" # the default
 PATH="${DEFAULT_PATH}"
 
 # Load Sofin environment:
@@ -38,8 +35,9 @@ if [ -d "${SOFIN_REPO}" ]; then
     . share/sofin/funs/self.fun
     load_requirements
 fi
-TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
-SVD_LOG="/var/log/svdsysup-${TIMESTAMP}.log"
+SVDSYSUP_TIMESTAMP="${SVDSYSUP_TIMESTAMP:-$(${DATE_BIN} +%s 2>/dev/null)}"
+SVDSYSUP_LOG="/var/log/svdsysup-${SVDSYSUP_TIMESTAMP:-initial}.log"
+SVDSYSUP_DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} "${DEFAULT_HOST_ADDRESS_FILE}" 2>/dev/null)"
 
 
 debug () {
@@ -51,18 +49,18 @@ debug () {
 
 dnote () {
     note "$@" && \
-    note "$@" >> ${SVD_LOG} 2>&1
+    note "$@" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
 }
 
 wrun () {
     commands="$@ && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
-    debug "Evaluating: '${commands}'" >> ${SVD_LOG} 2>> ${SVD_LOG} && \
+    debug "Evaluating: '${commands}'" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG} && \
     gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
-    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
     if [ "$?" != "0" ]; then
         cecho "Failed to evaluate: '${commands}'" ${red} && \
-        cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVD_LOG} 2>> ${SVD_LOG}
+        cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
     fi
     unset commands gitroot
 }
@@ -71,7 +69,7 @@ if [ -z "${DEFAULT_ZPOOL}" ]; then
     error "No default zpool name!"
 fi
 
-# these must be mounted to +w SVD_LOG:
+# these must be mounted to +w SVDSYSUP_LOG:
 note "Mounting core datasets.."
 ${ZFS_BIN} mount -v -a
 
@@ -86,10 +84,10 @@ dnote "Core datasets were successfully set writable and mounted"
 # ______________________________________________________________________________
 # From now on, we want to log each svdsysup command to the log file..
 
-wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP}" && \
-wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP}" && \
-wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP}" && \
-dnote "Done pre-update snapshots with timestamp: ${TIMESTAMP}"
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP}" && \
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${SVDSYSUP_TIMESTAMP}" && \
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${SVDSYSUP_TIMESTAMP}" && \
+dnote "Done pre-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
 
 # Set snochg flags.
 for f in ${SETUID_BINS}; do
@@ -108,20 +106,20 @@ stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}
 debug "got stored_version: ${stored_version}"
 debug "got served_version: ${served_version}"
 if [ "${stored_version}" != "-" ]; then
-    PICKED_OS_VERSION="${stored_version}"
+    SVDSYSUP_PICKED_OS_VERSION="${stored_version}"
 fi
 
 ${TEST_BIN} ! -f /etc/fstab && wrun ${TOUCH_BIN} /etc/fstab
 if [ -d "/root" ]; then
     cd /
-    dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}${HOMEDIR}/root"
-    wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ ${HOMEDIR} 2>/dev/null"
-    wrun "${PW_BIN} user mod root -d ${HOMEDIR}"
-    wrun "${PW_BIN} user mod toor -d ${HOMEDIR}"
+    dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
+    wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} /root/ ${DEFAULT_HOME} 2>/dev/null"
+    wrun "${PW_BIN} user mod root -d ${DEFAULT_HOME}"
+    wrun "${PW_BIN} user mod toor -d ${DEFAULT_HOME}"
     wrun "${RM_BIN} -rf /root"
     dnote "Home directory synchonized successfully"
 fi
-wrun  "${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}${HOMEDIR}/root"
+wrun  "${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
 
 ${RM_BIN} -f /etc/zshenv /etc/zshrc
 ${MKDIR_BIN} -p /etc/zsh
@@ -147,13 +145,13 @@ wrun "${RM_BIN} -f /var/svdinit" && \
 dnote "Installed core software"
 
 # motd setup
-vblock="v${served_version}+v${PICKED_OS_VERSION}"
+vblock="v${served_version}+v${SVDSYSUP_PICKED_OS_VERSION}"
 header_extension="${vblock} "
 if [ -x "${GIT_BIN}" ]; then
-    if [ -f "/var/${PICKED_OS_VERSION}-src/Makefile" ]; then
-        cd /var/${PICKED_OS_VERSION}-src/
+    if [ -f "/var/${SVDSYSUP_PICKED_OS_VERSION}-src/Makefile" ]; then
+        cd /var/${SVDSYSUP_PICKED_OS_VERSION}-src/
         head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | ${CUT_BIN} -c -16 2>/dev/null)"
-        debug "HBSD repository HEAD: ${head16_hbsd_sha}" >> ${SVD_LOG} 2>&1
+        debug "HBSD repository HEAD: ${head16_hbsd_sha}" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
         header_extension="${header_extension}#${head16_hbsd_sha}…"
     else
         header_extension="\t ${header_extension} (binary)"
@@ -171,11 +169,10 @@ for f in ${SETUID_BINS}; do
     wrun ${CHFLAGS_BIN} schg ${f}
 done
 
-TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${TIMESTAMP} && \
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${TIMESTAMP} && \
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${TIMESTAMP} && \
-dnote "Done post-update snapshots with timestamp: ${TIMESTAMP}"
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP} && \
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${SVDSYSUP_TIMESTAMP} && \
+wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${SVDSYSUP_TIMESTAMP} && \
+dnote "Done post-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
 
 destroy_oldest_snapshot () {
     dataset_name="${1}"
@@ -227,7 +224,7 @@ server:
     chroot: /var/unbound
     pidfile: /var/run/local_unbound.pid
     interface: 127.0.0.1
-    interface: ${DEFAULT_INTERFACE_ADDRESS}
+    interface: ${SVDSYSUP_DEFAULT_INTERFACE_ADDRESS}
     access-control: 10.0.0.0/8 allow
     access-control: 172.116.0.0/12 allow
     access-control: 192.168.0.0/16 allow
@@ -280,7 +277,7 @@ remote-control:
 # Generate Unbound configuration with a little help from local-unbound-setup:
 generate_conf_for_unbound_resolver
 wrun "${RM_BIN} -vf ${UPDATE_PENDING_INDICATOR}"
-wrun "${SOFIN_BIN} vars > ${HOMEDIR}/.profile"
+wrun "${SOFIN_BIN} vars > ${DEFAULT_HOME}/.profile"
 
 dnote
 dnote "Update complete."
