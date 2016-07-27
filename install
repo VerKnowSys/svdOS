@@ -286,6 +286,20 @@ if [ -f "${HOME}/.gitconfig" ]; then
     fi
 fi
 
+if [ -d "${SERVED_REPO}" ]; then
+    method="fetched"
+    cd ${SERVED_REPO} && \
+    wrun "${GIT_BIN} reset --hard" && \
+    wrun "${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}"
+else
+    method="cloned"
+    cd /var && \
+    wrun "${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS"
+fi && \
+dnote "ServeD-OS repository ${method} successfully" && \
+INSTALLED_SERVED_OS="1" && \
+unset method
+
 note "Installing provided CA root certificates.."
 ${MKDIR_BIN} -p /etc/ssl
 wrun "${CP_BIN} -v ${SERVED_REPO}/etc/ssl/cacert.pem /etc/ssl/cert.pem"
@@ -348,20 +362,6 @@ fi
 # ${CP_BIN} /Software/Sudo-static/bin/sudo ${JAIL_SOURCE}/usr/bin/
 # ${CHMOD_BIN} 4755 ${JAIL_SOURCE}/usr/bin/sudo
 # note "Updating sudo for ${SYSTEM_VERSION} jail base"
-
-if [ -d "${SERVED_REPO}" ]; then
-    method="fetched"
-    cd ${SERVED_REPO} && \
-    wrun "${GIT_BIN} reset --hard" && \
-    wrun "${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}"
-else
-    method="cloned"
-    cd /var && \
-    wrun "${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS"
-fi && \
-dnote "ServeD-OS repository ${method} successfully" && \
-INSTALLED_SERVED_OS="1" && \
-unset method
 
 for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
     ${TEST_BIN} -f ${f} && wrun "${CHFLAGS_BIN} -v noschg ${f}"
