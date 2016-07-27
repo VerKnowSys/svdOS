@@ -9,7 +9,7 @@ export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 SOFTWARE_PATCHES="P001 P002 P003"
 INSTALL_SCRIPT_VERSION="0.6.4"
 SYSTEM_VERSION="11.0" # the default
-DEFAULT_ZPOOL="zroot"
+ZFS_DEF_POOL_NAME="zroot"
 INTERNAL_NETWORK="10.2.1.0"
 ORIGIN="origin"
 SYSSVD_LOGNG_PREFIX="/Services/Syslog-ng"
@@ -72,7 +72,7 @@ OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
 SVD_LOG="/var/log/svd-install-${TIMESTAMP}.log"
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}"
 LATEST_VERSION="$(${FETCH_BIN} -q -o - ${BASE_SOURCE}/version-latest 2>/dev/null)"
-VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
+VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${ZFS_DEF_POOL_NAME}/ROOT 2>/dev/null)"
 if [ "${VERSION}" = "-" ]; then
     ${PRINTF_BIN} "No version specified. Picking last version: ${LATEST_VERSION}\n"
 else
@@ -189,12 +189,12 @@ fi
 
 ${ZFS_BIN} list 2>/dev/null | ${GREP_BIN} 'Software/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    wrun ${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/Software && \
-    dnote "Initialized origin of: ${DEFAULT_ZPOOL}/Software"
-    ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | ${TAIL_BIN} -n1 && \
-    wrun ${ZFS_BIN} rename ${DEFAULT_ZPOOL}/Software/root@--head-- @${ORIGIN} && \
-    wrun ${ZFS_BIN} set mountpoint=/Software ${DEFAULT_ZPOOL}/Software/root && \
-    dnote "Dataset: '${DEFAULT_ZPOOL}/Software/root' received successfully" && \
+    wrun ${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${ZFS_DEF_POOL_NAME}/Software && \
+    dnote "Initialized origin of: ${ZFS_DEF_POOL_NAME}/Software"
+    ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root 2>/dev/null | ${TAIL_BIN} -n1 && \
+    wrun ${ZFS_BIN} rename ${ZFS_DEF_POOL_NAME}/Software/root@--head-- @${ORIGIN} && \
+    wrun ${ZFS_BIN} set mountpoint=/Software ${ZFS_DEF_POOL_NAME}/Software/root && \
+    dnote "Dataset: '${ZFS_DEF_POOL_NAME}/Software/root' received successfully" && \
     INSTALLED_SOFTWARE_ROOT="1"
 fi
 
@@ -202,33 +202,33 @@ for some_patch in ${SOFTWARE_PATCHES}; do
     # don't apply same patch more than once.
     ${ZFS_BIN} list -H -t snap 2>/dev/null | ${EGREP_BIN} "Software/root@${some_patch}" >/dev/null 2>&1
     if [ "$?" = "0" ]; then
-        dnote "Patch: ${cyan}${some_patch} ${green}already applied on dataset: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+        dnote "Patch: ${cyan}${some_patch} ${green}already applied on dataset: ${cyan}${ZFS_DEF_POOL_NAME}/Software/root"
     else
-        dnote "Applying binary patches for dataset: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+        dnote "Applying binary patches for dataset: ${cyan}${ZFS_DEF_POOL_NAME}/Software/root"
         ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz 2>/dev/null | \
-        ${ZFS_BIN} receive -vF ${DEFAULT_ZPOOL}/Software/root 2>/dev/null | \
+        ${ZFS_BIN} receive -vF ${ZFS_DEF_POOL_NAME}/Software/root 2>/dev/null | \
         ${TAIL_BIN} -n1 && \
-        dnote "Patch: ${cyan}${some_patch} ${green}applied successfully on: ${cyan}${DEFAULT_ZPOOL}/Software/root"
+        dnote "Patch: ${cyan}${some_patch} ${green}applied successfully on: ${cyan}${ZFS_DEF_POOL_NAME}/Software/root"
     fi
 done
 
 ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} 'User/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    wrun "${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${DEFAULT_ZPOOL}/User" && \
-    dnote "Initialized origin of: '${DEFAULT_ZPOOL}/User\n"
-    wrun "${ZFS_BIN} create -o mountpoint=/User ${DEFAULT_ZPOOL}/User/root" && \
-    dnote "Dataset: ${DEFAULT_ZPOOL}/User/root created successfully" && \
+    wrun "${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${ZFS_DEF_POOL_NAME}/User" && \
+    dnote "Initialized origin of: '${ZFS_DEF_POOL_NAME}/User\n"
+    wrun "${ZFS_BIN} create -o mountpoint=/User ${ZFS_DEF_POOL_NAME}/User/root" && \
+    dnote "Dataset: ${ZFS_DEF_POOL_NAME}/User/root created successfully" && \
     INSTALLED_USER_ROOT="1"
 fi
 
 create_dset_if_doesnt_exist () {
     mntpt="${1}"
     mount_opt="${2}"
-    debug "Checking existence of dataset: ${DEFAULT_ZPOOL}${mntpt}"
-    ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}${mntpt} " > /dev/null 2>&1
+    debug "Checking existence of dataset: ${ZFS_DEF_POOL_NAME}${mntpt}"
+    ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${ZFS_DEF_POOL_NAME}${mntpt} " > /dev/null 2>&1
     if [ "$?" != "0" ]; then
-        wrun "${ZFS_BIN} create -o mountpoint=${mount_opt} ${DEFAULT_ZPOOL}${mntpt}" && \
-        dnote "Dataset: ${DEFAULT_ZPOOL}${mntpt} created successfully"
+        wrun "${ZFS_BIN} create -o mountpoint=${mount_opt} ${ZFS_DEF_POOL_NAME}${mntpt}" && \
+        dnote "Dataset: ${ZFS_DEF_POOL_NAME}${mntpt} created successfully"
     fi
 }
 
@@ -248,7 +248,7 @@ done
 
 locations="User Services Shared"
 for loc in ${locations}; do
-    elem="${DEFAULT_ZPOOL}/${loc}/root"
+    elem="${ZFS_DEF_POOL_NAME}/${loc}/root"
     sroot="$(${ZFS_BIN} get -H -o value mountpoint ${elem} 2>/dev/null)"
     if [ "${sroot}" != "/${loc}" ]; then
         wrun "${ZFS_BIN} set mountpoint=/${loc} ${elem}" && \
@@ -261,10 +261,10 @@ origin_snap_regexp="@[a-z]{6}[$ ]{1}" # origin
 for snap in "ROOT" "ROOT/default" "User/root" "Services/root"; do
     ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${snap}${origin_snap_regexp}" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        dnote " * ${DEFAULT_ZPOOL}/${snap}@${ORIGIN} (untouched)"
+        dnote " * ${ZFS_DEF_POOL_NAME}/${snap}@${ORIGIN} (untouched)"
     else
-        wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/${snap}@${ORIGIN}" && \
-        dnote " * ${DEFAULT_ZPOOL}/${snap}@${ORIGIN}"
+        wrun "${ZFS_BIN} snapshot ${ZFS_DEF_POOL_NAME}/${snap}@${ORIGIN}" && \
+        dnote " * ${ZFS_DEF_POOL_NAME}/${snap}@${ORIGIN}"
     fi
 done
 wrun "${TAR_BIN} -xJf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT} --directory /" && \
@@ -277,8 +277,8 @@ if [ -f "${HOME}/.gitconfig" ]; then
     ${GREP_BIN} -R 'ServeD' "${HOME}/.gitconfig" >/dev/null 2>&1
     if [ "$?" != "0" ]; then
         dnote "Detected no local Git configuration" && \
-        wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} config --global user.name 'ServeD node'" && \
-        wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} config --global user.email 'admin@verknowsys.com'" && \
+        wrun "${GIT_BIN} config --global user.name 'ServeD node'" && \
+        wrun "${GIT_BIN} config --global user.email 'admin@verknowsys.com'" && \
         dnote "Git configuration set in HOME: ${HOME}"
     else
         dnote "Local Git configuration looks fine"
@@ -287,12 +287,12 @@ fi
 
 if [ ! -d "${SOFIN_REPO}" ]; then
     wrun "cd /var" && \
-    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${DEFAULT_SOFIN_REPOSITORY}" && \
+    wrun "${GIT_BIN} clone ${DEFAULT_SOFIN_REPOSITORY}" && \
     method="cloned"
 else
     wrun "cd ${SOFIN_REPO}" && \
     wrun "${GIT_BIN} stash save \"install-update-${TIMESTAMP}\"" && \
-    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}" && \
+    wrun "${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}" && \
     method="pulled"
 fi && \
 dnote "Sofin repository ${_method} successfully" && \
@@ -345,11 +345,11 @@ if [ -d "${SERVED_REPO}" ]; then
     method="fetched"
     cd ${SERVED_REPO} && \
     wrun "${GIT_BIN} reset --hard" && \
-    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}"
+    wrun "${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}"
 else
     method="cloned"
     cd /var && \
-    wrun "GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS"
+    wrun "${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN} ServeD-OS"
 fi && \
 dnote "ServeD-OS repository ${method} successfully" && \
 INSTALLED_SERVED_OS="1" && \
@@ -507,8 +507,8 @@ elif [ ${cert_size} -gt 220000 ]; then
     INSTALLED_ROOT_SSL_CERTS="1"
 fi
 
-# note "Checking for a ZFS-feature-updates of zpool: ${DEFAULT_ZPOOL}"
-# ${ZPOOL_BIN} upgrade ${DEFAULT_ZPOOL} | ${HEAD_BIN} -n1
+# note "Checking for a ZFS-feature-updates of zpool: ${ZFS_DEF_POOL_NAME}"
+# ${ZPOOL_BIN} upgrade ${ZFS_DEF_POOL_NAME} | ${HEAD_BIN} -n1
 
 disks=$(${GEOM_BIN} disk list 2>/dev/null | ${EGREP_BIN} 'Name: [a-z]?da.*$' 2>/dev/null | ${SED_BIN} 's/^.*\ //' 2>/dev/null)
 if [ -z "${disks}" ]; then
@@ -522,8 +522,8 @@ done
 wrun "${KLDXREF_BIN} ${VKS_KERNEL}" && \
 dnote "Generated kernel hints for kernel: ${VKS_KERNEL}"
 
-wrun "${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${DEFAULT_ZPOOL}/ROOT" && \
-wrun "${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${DEFAULT_ZPOOL}/ROOT" && \
+wrun "${ZFS_BIN} set com.svd:version=${LATEST_VERSION} ${ZFS_DEF_POOL_NAME}/ROOT" && \
+wrun "${ZFS_BIN} set com.svd:os_version=${SYSTEM_VERSION} ${ZFS_DEF_POOL_NAME}/ROOT" && \
 wrun "${TOUCH_BIN} /.svdsysup" && \
 dnote "ServeD system properties set successfully"
 
