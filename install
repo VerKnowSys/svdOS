@@ -317,7 +317,7 @@ else
     wrun "${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}" && \
     method="pulled"
 fi && \
-dnote "Sofin repository ${_method} successfully" && \
+dnote "Sofin repository ${method} successfully" && \
 cd ${SOFIN_REPO} && \
 bin/install && \
 INSTALLED_SOFIN="1" && \
