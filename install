@@ -20,12 +20,14 @@ CACERT_SOURCE_ALT="http://raw.githubusercontent.com/bagder/ca-bundle/master/ca-b
 DEFAULT_ARCHIVE_EXT=".txz"
 
 # const definitions:
-reset='\033[0m'
-cyan='\033[36;40m'
-green='\033[32;40m'
-magenta='\033[35;40m'
-red='\033[31;40m'
-yellow='\033[33;40m'
+ColorGray="\033[39m" # default color of terminal
+ColorReset="${ColorGray}"
+ColorCyan="\033[36m"
+ColorMagenta="\033[35m"
+ColorRed="\033[31m"
+ColorGreen="\033[32m"
+ColorYellow="\033[33m"
+
 error_char="✘"
 SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
 DEFAULT_SOFIN_REPOSITORY="https://verknowsys@bitbucket.org/verknowsys/sofin.git"
@@ -96,7 +98,7 @@ fi
 
 
 cecho () {
-    ${PRINTF_BIN} "${2}${1}${reset}\n"
+    ${PRINTF_BIN} "${2}${1}${ColorReset}\n"
 }
 
 retry () {
@@ -116,32 +118,32 @@ retry () {
 }
 
 error () {
-    cecho "${error_char} $1" ${red}
+    cecho "${error_char} $1" ${ColorRed}
     exit 1
 }
 
 debug () {
     if [ -f "/.build-host" ]; then
-        cecho "# $1" "${magenta}"
+        cecho "# $1" "${ColorMagenta}"
     fi
 }
 
 warn () {
-    cecho "$1" ${yellow}
+    cecho "$1" ${ColorYellow}
 }
 
 note () {
-    cecho "$1" "${green}"
+    cecho "$1" "${ColorGreen}"
 }
 
 dwarn () {
-    cecho "${@}" "${yellow}" && \
-    cecho "${@}" "${yellow}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+    cecho "${@}" "${ColorYellow}" && \
+    cecho "${@}" "${ColorYellow}" >> ${SVD_LOG} 2>> ${SVD_LOG}
 }
 
 derror () {
-    cecho "${@}" "${red}" && \
-    cecho "${@}" "${red}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+    cecho "${@}" "${ColorRed}" && \
+    cecho "${@}" "${ColorRed}" >> ${SVD_LOG} 2>> ${SVD_LOG}
 }
 
 dnote () {
@@ -157,8 +159,8 @@ wrun () {
     gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} "${GIT_BIN}" 2>/dev/null) 2>/dev/null)"
     eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
     if [ "$?" != "0" ]; then
-        cecho "Failed to evaluate: '${commands}'" "${red}" && \
-        cecho "Failed to evaluate: '${commands}'" "${red}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
+        cecho "Failed to evaluate: '${commands}'" "${ColorRed}" && \
+        cecho "Failed to evaluate: '${commands}'" "${ColorRed}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
         return 1
     fi
     unset commands gitroot
@@ -178,7 +180,7 @@ fi
 for some_patch in ${SOFTWARE_PATCHES}; do
     if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" ]; then
         retry "${FETCH_BIN} ${BASE_SOURCE}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" && \
-        dnote "ServeD support binary patch: ${cyan}${some_patch} ${green}fetched successfully"
+        dnote "ServeD support binary patch: ${ColorCyan}${some_patch} ${ColorGreen}fetched successfully"
     fi
 done
 
@@ -203,13 +205,13 @@ for some_patch in ${SOFTWARE_PATCHES}; do
     # don't apply same patch more than once.
     ${ZFS_BIN} list -H -t snap 2>/dev/null | ${EGREP_BIN} "Software/root@${some_patch}" >/dev/null 2>&1
     if [ "$?" = "0" ]; then
-        dnote "Patch: ${cyan}${some_patch} ${green}already applied on dataset: ${cyan}${ZFS_DEF_POOL_NAME}/Software/root"
+        dnote "Patch: ${ColorCyan}${some_patch} ${ColorGreen}already applied on dataset: ${ColorCyan}${ZFS_DEF_POOL_NAME}/Software/root"
     else
-        dnote "Applying binary patches for dataset: ${cyan}${ZFS_DEF_POOL_NAME}/Software/root"
+        dnote "Applying binary patches for dataset: ${ColorCyan}${ZFS_DEF_POOL_NAME}/Software/root"
         ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz 2>/dev/null | \
         ${ZFS_BIN} receive -vF ${ZFS_DEF_POOL_NAME}/Software/root 2>/dev/null | \
         ${TAIL_BIN} -n1 && \
-        dnote "Patch: ${cyan}${some_patch} ${green}applied successfully on: ${cyan}${ZFS_DEF_POOL_NAME}/Software/root"
+        dnote "Patch: ${ColorCyan}${some_patch} ${ColorGreen}applied successfully on: ${ColorCyan}${ZFS_DEF_POOL_NAME}/Software/root"
     fi
 done
 
@@ -493,7 +495,7 @@ fi
 ${GREP_BIN} -R 'gvr boot' /etc/rc >/dev/null 2>&1
 if [ "$?" != "0" ]; then
     ${SED_BIN} -i '' -e "s/^date$/gvr boot/" /etc/rc && \
-    dnote "Added ${cyan}gvr boot${green} to rc configuration"
+    dnote "Added ${ColorCyan}gvr boot${ColorGreen} to rc configuration"
 fi
 
 # TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
