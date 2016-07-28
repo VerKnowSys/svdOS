@@ -3,7 +3,7 @@
 # blame: dmilith
 # © 2011-2016 verknowsys.com
 #
-# PROVIDE: buildhost
+# PROVIDE: served
 # REQUIRE: NETWORK syslog-ng FILESYSTEMS mountcritremote
 # KEYWORD: shutdown
 
@@ -12,15 +12,15 @@
 
 command="/usr/bin/true" # irrelevant
 
-name="buildhost"
-rcvar="buildhost_enable"
-start_precmd="buildhost_prestart"
+name="served"
+rcvar="served_enable"
+start_precmd="served_prestart"
 separator="---------------------------------------------------------------------------"
 
-export SERVED_REPO="/var/ServeD-OS"
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin
+SERVED_REPO="/var/ServeD-OS"
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
-buildhost_prestart () {
+served_prestart () {
     if [ -f "/.build-host" ]; then
         echo "${separator}"
         printf "\nBuild-host: $(hostname -f)\n"

@@ -406,9 +406,9 @@ INSTALLED_SYSLOGNG="1"
 #     ${LN_BIN} -s 'abort:false,junk:false,lg_chunk:14' /etc/malloc.conf
 # fi
 
-if [ ! -x "/etc/rc.d/buildhost" ]; then
-    wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.d/buildhost /etc/rc.d" && \
-    dnote "Created rc script for buildhost" && \
+if [ ! -x "/etc/rc.d/served" ]; then
+    wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.d/served /etc/rc.d" && \
+    dnote "Installed rc script for: ServeD" && \
     INSTALLED_BUILDHOST_RC="1"
 fi
 if [ ! -x "/etc/rc.d/syslog-ng" ]; then

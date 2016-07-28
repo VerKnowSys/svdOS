@@ -3,6 +3,9 @@
 # ServeD-Install-Script
 #
 
+# ServeD-OS specific boot initialisation stuff goes here:
+served_enable="YES"
+
 # alias configuration example:
 # ifconfig_NETWORK_EXTERNAL_INTERFACE_alias0="inet 100.64.1.30/24"
 
@@ -12,7 +15,6 @@ rtsold_enable="YES"
 
 dumpdev="AUTO"
 sshd_enable="YES"
-buildhost_enable="YES"
 accounting_enable="NO"
 icmp_drop_redirect="YES"
 icmp_log_redirect="NO"
