@@ -49,8 +49,8 @@ debug () {
 
 
 dnote () {
-    note "$@" && \
-    note "$@" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
+    note "${@}" && \
+    note "${@}" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
 }
 
 wrun () {

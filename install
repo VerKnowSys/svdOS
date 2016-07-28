@@ -100,18 +100,18 @@ cecho () {
 }
 
 retry () {
-    retries="***"
+    retries="OOO"
     while [ ! -z "${retries}" ]; do
         if [ ! -z "$1" ]; then
             gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
-            eval PATH="/bin:/usr/bin:${gitroot}/bin:${gitroot}/libexec/git-core" "$@" >> "${SVD_LOG}" 2>&1 && \
+            eval "PATH=/bin:/usr/bin:${gitroot}/bin:${gitroot}/libexec/git-core ${@} >> ${SVD_LOG} 2>> ${SVD_LOG}" && \
             return 0
         else
             error "An empty command to retry?"
         fi
-        retries="$(echo "${retries}" | ${SED_BIN} 's/\*//' 2>/dev/null)"
+        retries="$(echo "${retries}" | ${SED_BIN} 's/\O//' 2>/dev/null)"
     done
-    ${PRINTF_BIN} "All retries exhausted for launch command: '$@'\n" && \
+    ${PRINTF_BIN} "All retries exhausted for launch command: '${@}'\n" && \
     return 2
 }
 
@@ -135,26 +135,26 @@ note () {
 }
 
 dwarn () {
-    cecho "$@" "${yellow}" && \
-    cecho "$@" "${yellow}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+    cecho "${@}" "${yellow}" && \
+    cecho "${@}" "${yellow}" >> ${SVD_LOG} 2>> ${SVD_LOG}
 }
 
 derror () {
-    cecho "$@" "${red}" && \
-    cecho "$@" "${red}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+    cecho "${@}" "${red}" && \
+    cecho "${@}" "${red}" >> ${SVD_LOG} 2>> ${SVD_LOG}
 }
 
 dnote () {
-    note "$@" && \
-    note "$@" >> "${SVD_LOG}" 2>> ${SVD_LOG}
+    note "${@}" && \
+    note "${@}" >> "${SVD_LOG}" 2>> ${SVD_LOG}
 }
 
 wrun () {
-    commands="$@ && ${SYNC_BIN}"
+    commands="${@} && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
     debug "Evaluating: '${commands}'" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
 
-    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN} 2>/dev/null) 2>/dev/null)"
+    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} "${GIT_BIN}" 2>/dev/null) 2>/dev/null)"
     eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
     if [ "$?" != "0" ]; then
         cecho "Failed to evaluate: '${commands}'" "${red}" && \
