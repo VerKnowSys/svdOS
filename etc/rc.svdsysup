@@ -43,7 +43,7 @@ DEFAULT_ZPOOL="${DEFAULT_ZPOOL:-zroot}"
 
 debug () {
     if [ -f "/.build-host" ]; then
-        cecho "# $1" ${magenta}
+        cecho "# ${ColorMagenta} ${*}"
     fi
 }
 
