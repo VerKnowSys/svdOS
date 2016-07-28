@@ -42,30 +42,18 @@ DEFAULT_ZPOOL="${DEFAULT_ZPOOL:-zroot}"
 
 dnote () {
     note "${@}" && \
-    note "${@}" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
+    note "${@}" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}"
 }
 
 wrun () {
     commands="${@} && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
-    debug "Evaluating: '${commands}'" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG} && \
-
-    grootadd=""
-    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN} 2>/dev/null) 2>/dev/null)"
-    if [ -z "${gitroot}" ]; then
-        grootadd=":${gitroot}/bin:${gitroot}/libexec/git-core"
-    fi
-    eval "PATH=/bin:/sbin:/usr/bin:/usr/sbin${grootadd} ${commands} >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}"
-    if [ "$?" != "0" ]; then
-        cecho "Failed to evaluate: '${commands}'" ${red} && \
-        cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
-    fi
-    unset commands gitroot
+    debug "Evaluating: '${commands}'" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}" && \
+    run "${commands}"
 }
 
-if [ -z "${DEFAULT_ZPOOL}" ]; then
-    error "No default zpool name!"
-fi
+# Just in case..
+DEFAULT_ZPOOL="${DEFAULT_ZPOOL:-zroot}"
 
 # these must be mounted to +w SVDSYSUP_LOG:
 note "Mounting core datasets.."
@@ -89,12 +77,12 @@ dnote "Done pre-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
 
 # Set snochg flags.
 for f in ${SETUID_BINS}; do
-    wrun ${CHFLAGS_BIN} noschg $f
+    wrun "${CHFLAGS_BIN} noschg $f"
 done
 for f in ${SETUID_UNUSED_BINS}; do
     if [ -e "$f" ]; then
-        wrun ${CHFLAGS_BIN} noschg "$f" && \
-        wrun ${RM_BIN} -f "$f"
+        wrun "${CHFLAGS_BIN} noschg $f" && \
+            wrun "${RM_BIN} -f $f"
     fi
 done
 
@@ -149,7 +137,7 @@ if [ -x "${GIT_BIN}" ]; then
     if [ -f "/var/${SVDSYSUP_PICKED_OS_VERSION}-src/Makefile" ]; then
         cd /var/${SVDSYSUP_PICKED_OS_VERSION}-src/
         head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | ${CUT_BIN} -c -16 2>/dev/null)"
-        debug "HBSD repository HEAD: ${head16_hbsd_sha}" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
+        debug "HBSD repository HEAD: ${head16_hbsd_sha}" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}"
         header_extension="${header_extension}#${head16_hbsd_sha}…"
     else
         header_extension="\t ${header_extension} (binary)"
@@ -164,12 +152,12 @@ cd /
 
 # Bring back schg flags
 for f in ${SETUID_BINS}; do
-    wrun ${CHFLAGS_BIN} schg ${f}
+    wrun "${CHFLAGS_BIN} schg ${f}"
 done
 
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP} && \
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${SVDSYSUP_TIMESTAMP} && \
-wrun ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${SVDSYSUP_TIMESTAMP} && \
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP}" && \
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${SVDSYSUP_TIMESTAMP}" && \
+wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${SVDSYSUP_TIMESTAMP}" && \
 dnote "Done post-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
 
 destroy_oldest_snapshot () {
@@ -208,7 +196,7 @@ done
 
 generate_conf_for_unbound_resolver () {
     dnote "Generating base configuration for Unbound"
-    wrun /usr/sbin/local-unbound-setup -n
+    wrun "/usr/sbin/local-unbound-setup -n"
 
     if [ ! -f "${UNBOUND_CONF_DIR}/jailed.conf" ]; then
         dnote "Creating jailed.conf loader, with contents: '${JAIL_DOMAINS_COMMON_LOADER}'"
@@ -270,13 +258,13 @@ remote-control:
     control-interface: /var/run/local_unbound.ctl
     control-use-cert: no
 " > ${UNBOUND_CONTROL_CONF}
-    wrun ${CHOWN_BIN} -R unbound /var/unbound
+    try "${CHOWN_BIN} -R unbound /var/unbound"
 }
 
 # Generate Unbound configuration with a little help from local-unbound-setup:
 generate_conf_for_unbound_resolver
-wrun "${RM_BIN} -vf ${UPDATE_PENDING_INDICATOR}"
-wrun "${SOFIN_BIN} vars > ${DEFAULT_HOME}/.profile"
+try "${RM_BIN} -vf ${UPDATE_PENDING_INDICATOR}"
+try "${SOFIN_BIN} vars > ${DEFAULT_HOME}/.profile"
 
 dnote
 dnote "Update complete."
