@@ -54,11 +54,16 @@ dnote () {
 }
 
 wrun () {
-    commands="$@ && ${SYNC_BIN}"
+    commands="${@} && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
     debug "Evaluating: '${commands}'" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG} && \
-    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
-    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
+
+    grootadd=""
+    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN} 2>/dev/null) 2>/dev/null)"
+    if [ -z "${gitroot}" ]; then
+        grootadd=":${gitroot}/bin:${gitroot}/libexec/git-core"
+    fi
+    eval "PATH=/bin:/sbin:/usr/bin:/usr/sbin${grootadd} ${commands} >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}"
     if [ "$?" != "0" ]; then
         cecho "Failed to evaluate: '${commands}'" ${red} && \
         cecho "Failed to evaluate: '${commands}'" ${red} >> ${SVDSYSUP_LOG} 2>> ${SVDSYSUP_LOG}
