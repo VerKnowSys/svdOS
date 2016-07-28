@@ -7,7 +7,7 @@
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 SOFTWARE_PATCHES="P001 P002 P003"
-INSTALL_SCRIPT_VERSION="0.6.4"
+INSTALL_SCRIPT_VERSION="0.6.5"
 SYSTEM_VERSION="11.0" # the default
 ZFS_DEF_POOL_NAME="zroot"
 INTERNAL_NETWORK="10.2.1.0"
