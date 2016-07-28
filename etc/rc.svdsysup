@@ -42,7 +42,8 @@ DEFAULT_ZPOOL="${DEFAULT_ZPOOL:-zroot}"
 
 
 debug () {
-    if [ -f "/.build-host" ]; then
+    if [ -f "/.build-host" -o \
+         -f "/.debug-host" ]; then
         cecho "# ${ColorMagenta} ${*}"
     fi
 }
