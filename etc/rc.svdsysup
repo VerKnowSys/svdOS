@@ -35,15 +35,15 @@ if [ -d "${SOFIN_REPO}" ]; then
     . share/sofin/funs/self.fun
     load_requirements
 fi
-SVDSYSUP_TIMESTAMP="${SVDSYSUP_TIMESTAMP:-$(${DATE_BIN} +%s 2>/dev/null)}"
-SVDSYSUP_LOG="/var/log/svdsysup-${SVDSYSUP_TIMESTAMP:-initial}.log"
-SVDSYSUP_DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} "${DEFAULT_HOST_ADDRESS_FILE}" 2>/dev/null)"
-DEFAULT_ZPOOL="${DEFAULT_ZPOOL:-zroot}"
+# ______________________________________________________________________________
+# From now on, we want to log each svdsysup command to the log file..
+
 
 dnote () {
     note "${@}" && \
     note "${@}" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}"
 }
+
 
 wrun () {
     commands="${@} && ${SYNC_BIN}"
@@ -52,12 +52,16 @@ wrun () {
     run "${commands}"
 }
 
-# Just in case..
+
+# Some important values:
 DEFAULT_ZPOOL="${DEFAULT_ZPOOL:-zroot}"
+SVDSYSUP_TIMESTAMP="${SVDSYSUP_TIMESTAMP:-$(${DATE_BIN} +%s 2>/dev/null)}"
+SVDSYSUP_LOG="/var/log/svdsysup-${SVDSYSUP_TIMESTAMP:-initial}.log"
+SVDSYSUP_DEFAULT_INTERFACE_ADDRESS="$(${CAT_BIN} "${DEFAULT_HOST_ADDRESS_FILE}" 2>/dev/null)"
 
 # these must be mounted to +w SVDSYSUP_LOG:
-note "Mounting core datasets.."
-${ZFS_BIN} mount -v -a
+${ZFS_BIN} mount -v -a && \
+    note "ZFS datasets mounted"
 
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL} && \
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/ROOT/default && \
@@ -65,10 +69,7 @@ ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/var && \
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/var/log && \
 ${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}/usr && \
 ${SYNC_BIN} && \
-dnote "Core datasets were successfully set writable and mounted"
-
-# ______________________________________________________________________________
-# From now on, we want to log each svdsysup command to the log file..
+    dnote "Core datasets were successfully set writable and mounted"
 
 wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP}" && \
 wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${SVDSYSUP_TIMESTAMP}" && \
