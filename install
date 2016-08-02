@@ -192,11 +192,11 @@ fi
 
 ${ZFS_BIN} list 2>/dev/null | ${GREP_BIN} 'Software/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    wrun ${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${ZFS_DEF_POOL_NAME}/Software && \
+    wrun "${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${ZFS_DEF_POOL_NAME}/Software" && \
     dnote "Initialized origin of: ${ZFS_DEF_POOL_NAME}/Software"
     ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root 2>/dev/null | ${TAIL_BIN} -n1 && \
-    wrun ${ZFS_BIN} rename ${ZFS_DEF_POOL_NAME}/Software/root@--head-- @${ORIGIN} && \
-    wrun ${ZFS_BIN} set mountpoint=/Software ${ZFS_DEF_POOL_NAME}/Software/root && \
+    wrun "${ZFS_BIN} rename ${ZFS_DEF_POOL_NAME}/Software/root@--head-- @${ORIGIN}" && \
+    wrun "${ZFS_BIN} set mountpoint=/Software ${ZFS_DEF_POOL_NAME}/Software/root" && \
     dnote "Dataset: '${ZFS_DEF_POOL_NAME}/Software/root' received successfully" && \
     INSTALLED_SOFTWARE_ROOT="1"
 fi
