@@ -96,7 +96,7 @@ if [ "${stored_version}" != "-" ]; then
     SVDSYSUP_PICKED_OS_VERSION="${stored_version}"
 fi
 
-${TEST_BIN} ! -f /etc/fstab && wrun ${TOUCH_BIN} /etc/fstab
+${TEST_BIN} ! -f /etc/fstab && wrun "${TOUCH_BIN} /etc/fstab"
 if [ -d "/root" ]; then
     cd /
     dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
@@ -106,13 +106,13 @@ if [ -d "/root" ]; then
     wrun "${RM_BIN} -rf /root"
     dnote "Home directory synchonized successfully"
 fi
-wrun  "${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
+wrun "${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
 
 ${RM_BIN} -f /etc/zshenv /etc/zshrc
 ${MKDIR_BIN} -p /etc/zsh
 wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh 2>/dev/null" && \
-wrun ${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv && \
-wrun ${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc && \
+wrun "${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv" && \
+wrun "${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc" && \
 dnote "System shell configured successfully"
 
 for folder in bin lib libexec sbin usr; do
