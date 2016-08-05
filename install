@@ -3,7 +3,7 @@
 # @author Daniel (dmilith) Dettaff
 #
 
-set +v
+set +x
 
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
@@ -107,14 +107,14 @@ retry () {
     while [ ! -z "${retries}" ]; do
         if [ ! -z "$1" ]; then
             gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
-            eval "PATH=/bin:/usr/bin:${gitroot}/bin:${gitroot}/libexec/git-core ${@}"  >> ${SVD_LOG} 2>> ${SVD_LOG} && \
+            eval "PATH=/bin:/usr/bin:${gitroot}/bin:${gitroot}/libexec/git-core ${*}"  >> ${SVD_LOG} 2>> ${SVD_LOG} && \
             return 0
         else
             error "An empty command to retry?"
         fi
         retries="$(echo "${retries}" | ${SED_BIN} 's/\O//' 2>/dev/null)"
     done
-    ${PRINTF_BIN} "All retries exhausted for launch command: '${@}'\n" && \
+    ${PRINTF_BIN} "All retries exhausted for launch command: '${*}'\n" && \
     return 2
 }
 
@@ -138,22 +138,22 @@ note () {
 }
 
 dwarn () {
-    cecho "${@}" "${ColorYellow}" && \
-    cecho "${@}" "${ColorYellow}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+    cecho "${*}" "${ColorYellow}" && \
+    cecho "${*}" "${ColorYellow}" >> ${SVD_LOG} 2>> ${SVD_LOG}
 }
 
 derror () {
-    cecho "${@}" "${ColorRed}" && \
-    cecho "${@}" "${ColorRed}" >> ${SVD_LOG} 2>> ${SVD_LOG}
+    cecho "${*}" "${ColorRed}" && \
+    cecho "${*}" "${ColorRed}" >> ${SVD_LOG} 2>> ${SVD_LOG}
 }
 
 dnote () {
-    note "${@}" && \
-    note "${@}" >> "${SVD_LOG}" 2>> ${SVD_LOG}
+    note "${*}" && \
+    note "${*}" >> "${SVD_LOG}" 2>> ${SVD_LOG}
 }
 
 wrun () {
-    commands="${@} && ${SYNC_BIN}"
+    commands="${*} && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
     debug "Evaluating: '${commands}'" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
 
