@@ -153,17 +153,12 @@ dnote () {
 }
 
 wrun () {
-    commands="${1} && ${SYNC_BIN}"
-    debug "Evaluating: '${commands}'" && \
-    debug "Evaluating: '${commands}'" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
-
-    eval "PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Git/exports ${commands}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
+    eval "PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Git/exports ${1}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
     if [ "$?" != "0" ]; then
-        cecho "Failed to evaluate: '${commands}'" "${ColorRed}" && \
-        cecho "Failed to evaluate: '${commands}'" "${ColorRed}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
+        cecho "Failed to evaluate: '${1}'" "${ColorRed}" && \
+        cecho "Failed to evaluate: '${1}'" "${ColorRed}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
         return 1
     fi
-    unset commands
 }
 
 dnote "Installer is setting no-op traps for some shell signals.."
