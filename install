@@ -106,7 +106,7 @@ retry () {
     while [ ! -z "${retries}" ]; do
         if [ ! -z "$1" ]; then
             gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} ${GIT_BIN}))"
-            eval "PATH=/bin:/usr/bin:${gitroot}/bin:${gitroot}/libexec/git-core ${@} >> ${SVD_LOG} 2>> ${SVD_LOG}" && \
+            eval "PATH=/bin:/usr/bin:${gitroot}/bin:${gitroot}/libexec/git-core ${@}"  >> ${SVD_LOG} 2>> ${SVD_LOG} && \
             return 0
         else
             error "An empty command to retry?"
@@ -152,18 +152,17 @@ dnote () {
 }
 
 wrun () {
-    commands="\"${@}\" && ${SYNC_BIN}"
+    commands="${@} && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
     debug "Evaluating: '${commands}'" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
 
-    gitroot="$(${BASENAME_BIN} $(${BASENAME_BIN} "${GIT_BIN}" 2>/dev/null) 2>/dev/null)"
-    eval PATH="/bin:/sbin:/usr/bin:/usr/sbin:${gitroot}/bin:${gitroot}/libexec/git-core" "${commands}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
+    eval "PATH=/bin:/sbin:/usr/bin:/usr/sbin:/Software/Git/exports ${commands}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
     if [ "$?" != "0" ]; then
         cecho "Failed to evaluate: '${commands}'" "${ColorRed}" && \
         cecho "Failed to evaluate: '${commands}'" "${ColorRed}" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
         return 1
     fi
-    unset commands gitroot
+    unset commands
 }
 
 dnote "Installer is setting no-op traps for some shell signals.."
