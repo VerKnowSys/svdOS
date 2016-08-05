@@ -3,6 +3,7 @@
 # @author Daniel (dmilith) Dettaff
 #
 
+set +v
 
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
