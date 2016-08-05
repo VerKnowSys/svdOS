@@ -98,7 +98,7 @@ fi
 
 
 cecho () {
-    ${PRINTF_BIN} "${2}${1}${ColorReset}\n"
+    ${PRINTF_BIN} "${2}%s${ColorReset}\n" "${1}"
 }
 
 retry () {
