@@ -152,7 +152,7 @@ dnote () {
 }
 
 wrun () {
-    commands="${@} && ${SYNC_BIN}"
+    commands="\"${@}\" && ${SYNC_BIN}"
     debug "Evaluating: '${commands}'" && \
     debug "Evaluating: '${commands}'" >> "${SVD_LOG}" 2>> "${SVD_LOG}"
 
