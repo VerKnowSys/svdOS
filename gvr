@@ -509,8 +509,8 @@ ${JAIL_NAME} {
     dnote "Updated client ServeD version property from base system"
 
     for logger in messages production staging development; do
-        wrun ${MKFIFO_BIN} -m "a=-rwx,u=rw" "${CELL}/var/log/${logger}" && \
-        wrun  ${CHOWN_BIN} ${VLAN_NUMBER} "${CELL}/var/log/${logger}" && \
+        wrun "${MKFIFO_BIN} -m \"a=-rwx,u=rw\" \"${CELL}/var/log/${logger}\"" && \
+        ${CHOWN_BIN} ${VLAN_NUMBER} "${CELL}/var/log/${logger}" && \
         ${PRINTF_BIN} "
 source s_${JAIL_NAME}_${logger} {
     pipe(\"${CELL}/var/log/${logger}\");
