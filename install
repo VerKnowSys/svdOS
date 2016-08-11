@@ -164,7 +164,7 @@ dnote "Installer is setting no-op traps for some shell signals.."
 noop () {
     :
 }
-trap 'noop' EXIT INT TERM QUIT TTIN TTOU USR1 USR2
+trap 'noop' QUIT TTIN TTOU USR1 USR2
 
 
 ${MKDIR_BIN} -p ${CACHE_DIR}
