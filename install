@@ -75,8 +75,8 @@ OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
 SVD_LOG="/var/log/svd-install-${TIMESTAMP}.log"
 DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}"
 LATEST_VERSION="$(${FETCH_BIN} -q -o - ${BASE_SOURCE}/version-latest 2>/dev/null)"
-VERSION="$(${ZFS_BIN} get -H -o value com.svd:version ${ZFS_DEF_POOL_NAME}/ROOT 2>/dev/null)"
-if [ "${VERSION}" = "-" ]; then
+VERSION="${VERSION:-$(${ZFS_BIN} get -H -o value com.svd:version ${ZFS_DEF_POOL_NAME}/ROOT 2>/dev/null)}"
+if [ "${VERSION}" = "-"  -o -z "${VERSION}" ]; then
     ${PRINTF_BIN} "No version specified. Picking last version: ${LATEST_VERSION}\n"
 else
     if [ "${VERSION}" = "${LATEST_VERSION}" ]; then
