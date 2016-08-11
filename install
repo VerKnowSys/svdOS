@@ -196,17 +196,17 @@ if [ "$?" != "0" ]; then
     dnote "Installing base software required by ServeD base system.."
 
     # XXX hardcoded:
-    ${FETCH_BIN} -o /tmp/Zsh.txz http://software.verknowsys.com/binary/FreeBSD-11.0-amd64-old/Zsh-5.2.txz
-    ${TAR_BIN} xf /tmp/Zsh.txz --directory /Software
+    ${FETCH_BIN} -o /tmp/Zsh${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Zsh-5.2-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
+    ${XZCAT_BIN} /tmp/Zsh${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Zsh | ${TAIL_BIN} -n1 2>/dev/null
 
     ${FETCH_BIN} -o /tmp/Ccache${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Ccache-3.1.9-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
-    ${XZCAT_BIN} /tmp/Ccache${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Ccache
+    ${XZCAT_BIN} /tmp/Ccache${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Ccache | ${TAIL_BIN} -n1 2>/dev/null
 
     ${FETCH_BIN} -o /tmp/Gold${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Gold-3.8.1-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
-    ${XZCAT_BIN} /tmp/Gold${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Gold
+    ${XZCAT_BIN} /tmp/Gold${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Gold | ${TAIL_BIN} -n1 2>/dev/null
 
     ${FETCH_BIN} -o /tmp/Git${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Git-2.8.2-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
-    ${XZCAT_BIN} /tmp/Git${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Git
+    ${XZCAT_BIN} /tmp/Git${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Git | ${TAIL_BIN} -n1 2>/dev/null
 fi
 
 
