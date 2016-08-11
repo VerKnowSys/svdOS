@@ -204,6 +204,9 @@ if [ "$?" != "0" ]; then
 
     ${FETCH_BIN} -o /tmp/Gold${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Gold-3.8.1-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
     ${XZCAT_BIN} /tmp/Gold${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Gold
+
+    ${FETCH_BIN} -o /tmp/Git${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Git-2.8.2-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
+    ${XZCAT_BIN} /tmp/Git${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Git
 fi
 
 
@@ -263,7 +266,7 @@ for snap in "ROOT" "ROOT/default" "User/root" "Services/root"; do
         dnote " * ${ZFS_DEF_POOL_NAME}/${snap}@${ORIGIN}"
     fi
 done
-wrun "${TAR_BIN} -xJf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT} --directory /" && \
+wrun "${TAR_BIN} -xJf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ZFS_STREAM_EXT} --directory /" && \
 dnote "Installed ServeD software base: ${SYSTEM_VERSION}-v${VERSION}" && \
 INSTALLED_BASE_SOFTWARE="1"
 
