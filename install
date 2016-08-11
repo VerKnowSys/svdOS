@@ -171,7 +171,7 @@ ${MKDIR_BIN} -p ${CACHE_DIR}
 for _an_origin in Software-${ORIGIN}${DEFAULT_ZFS_STREAM_EXT} Software-user-${ORIGIN}${DEFAULT_ZFS_STREAM_EXT}; do
     if [ ! -f "${CACHE_DIR}/${_an_origin}" ]; then
         wrun "${FETCH_BIN} ${BASE_SOURCE}/${_an_origin} -o ${CACHE_DIR}/${_an_origin}" && \
-            dnote "Fetched origin: ${_an_origin}" && \
+            dnote "Fetched origin: ${_an_origin}"
     fi
 done
 
