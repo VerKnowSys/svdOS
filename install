@@ -197,7 +197,7 @@ if [ "$?" != "0" ]; then
 
     # XXX hardcoded:
     ${FETCH_BIN} -o /tmp/Zsh.txz http://software.verknowsys.com/binary/FreeBSD-11.0-amd64-old/Zsh-5.2.txz
-    ${XZCAT_BIN} /tmp/Zsh.txz | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Zsh
+    ${TAR_BIN} xf /tmp/Zsh.txz --directory /Software/Zsh
 
     ${FETCH_BIN} -o /tmp/Ccache${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Ccache-3.1.9-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
     ${XZCAT_BIN} /tmp/Ccache${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Ccache
