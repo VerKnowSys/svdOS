@@ -7,8 +7,7 @@ set +x
 
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
-SOFTWARE_PATCHES="P001 P002 P003"
-INSTALL_SCRIPT_VERSION="0.6.5"
+INSTALL_SCRIPT_VERSION="0.8.0"
 SYSTEM_VERSION="11.0" # the default
 ZFS_DEF_POOL_NAME="zroot"
 INTERNAL_NETWORK="10.2.1.0"
@@ -18,7 +17,7 @@ SOFIN_REPO="/var/sofin"
 SERVED_REPO="/var/ServeD-OS"
 CACERT_SOURCE="http://curl.haxx.se/ca/cacert.pem"
 CACERT_SOURCE_ALT="http://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt"
-DEFAULT_ARCHIVE_EXT=".txz"
+DEFAULT_ZFS_STREAM_EXT=".zfsx"
 
 # const definitions:
 ColorGray="\033[39m" # default color of terminal
@@ -162,53 +161,52 @@ wrun () {
 }
 
 dnote "Installer is setting no-op traps for some shell signals.."
-trap '' EXIT INT TERM QUIT TTIN TTOU
+noop () {
+    :
+}
+trap 'noop' EXIT INT TERM QUIT TTIN TTOU USR1 USR2
 
 
 ${MKDIR_BIN} -p ${CACHE_DIR}
-if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" ]; then
-    retry "${FETCH_BIN} ${BASE_SOURCE}/Software-${OS_TRIPPLE}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz" && \
-    dnote "ServeD base archive fetched successfully" && \
-    INSTALLED_SERVED_BASE="1"
-fi
-
-for some_patch in ${SOFTWARE_PATCHES}; do
-    if [ ! -f "${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" ]; then
-        retry "${FETCH_BIN} ${BASE_SOURCE}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz -o ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz" && \
-        dnote "ServeD support binary patch: ${ColorCyan}${some_patch} ${ColorGreen}fetched successfully"
+for _an_origin in Software-${ORIGIN}${DEFAULT_ZFS_STREAM_EXT} Software-user-${ORIGIN}${DEFAULT_ZFS_STREAM_EXT}; do
+    if [ ! -f "${CACHE_DIR}/${_an_origin}" ]; then
+        wrun "${FETCH_BIN} ${BASE_SOURCE}/${_an_origin} -o ${CACHE_DIR}/${_an_origin}" && \
+            dnote "Fetched origin: ${_an_origin}" && \
     fi
 done
 
-if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT}" ]; then
-    retry "${FETCH_BIN} ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT} -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ARCHIVE_EXT}" && \
-    dnote "Jails archive fetched successfully" && \
-    INSTALLED_JAILS_ARCHIVE="1"
+# Single archive - contains fresh base system
+if [ ! -f "${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ZFS_STREAM_EXT}" ]; then
+    retry "${FETCH_BIN} ${BASE_SOURCE}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ZFS_STREAM_EXT} -o ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ZFS_STREAM_EXT}" && \
+    dnote "Base system archive fetched successfully"
 fi
 
-${ZFS_BIN} list 2>/dev/null | ${GREP_BIN} 'Software/root' > /dev/null 2>&1
+${ZFS_BIN} list "${ZFS_DEF_POOL_NAME}/Software" >/dev/null 2>&1
 if [ "$?" != "0" ]; then
-    wrun "${ZFS_BIN} create ${ZFS_CREATE_OPTS_FOR_ROOT_ELEMS} ${ZFS_DEF_POOL_NAME}/Software" && \
-    dnote "Initialized origin of: ${ZFS_DEF_POOL_NAME}/Software"
-    ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.zfs.xz | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root 2>/dev/null | ${TAIL_BIN} -n1 && \
-    wrun "${ZFS_BIN} rename ${ZFS_DEF_POOL_NAME}/Software/root@--head-- @${ORIGIN}" && \
-    wrun "${ZFS_BIN} set mountpoint=/Software ${ZFS_DEF_POOL_NAME}/Software/root" && \
+    ${XZCAT_BIN} ${CACHE_DIR}/Software-${ORIGIN}${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software 2>/dev/null | ${TAIL_BIN} -n1 && \
+    dnote "Dataset: '${ZFS_DEF_POOL_NAME}/Software' received successfully" && \
+    INSTALLED_SOFTWARE="1"
+fi
+
+${ZFS_BIN} list "${ZFS_DEF_POOL_NAME}/Software/root" >/dev/null 2>&1
+if [ "$?" != "0" ]; then
+    ${XZCAT_BIN} ${CACHE_DIR}/Software-user-${ORIGIN}${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root 2>/dev/null | ${TAIL_BIN} -n1 && \
     dnote "Dataset: '${ZFS_DEF_POOL_NAME}/Software/root' received successfully" && \
     INSTALLED_SOFTWARE_ROOT="1"
+    dnote "Installing base software required by ServeD base system.."
+
+    # XXX hardcoded:
+    ${FETCH_BIN} -o /tmp/Zsh.txz http://software.verknowsys.com/binary/FreeBSD-11.0-amd64-old/Zsh-5.2.txz
+    ${XZCAT_BIN} /tmp/Zsh.txz | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Zsh
+
+    ${FETCH_BIN} -o /tmp/Ccache${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Ccache-3.1.9-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
+    ${XZCAT_BIN} /tmp/Ccache${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Ccache
+
+    ${FETCH_BIN} -o /tmp/Gold${DEFAULT_ZFS_STREAM_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Gold-3.8.1-FreeBSD-11.0-amd64${DEFAULT_ZFS_STREAM_EXT}
+    ${XZCAT_BIN} /tmp/Gold${DEFAULT_ZFS_STREAM_EXT} | ${ZFS_BIN} receive -v ${ZFS_DEF_POOL_NAME}/Software/root/Gold
 fi
 
-for some_patch in ${SOFTWARE_PATCHES}; do
-    # don't apply same patch more than once.
-    ${ZFS_BIN} list -H -t snap 2>/dev/null | ${EGREP_BIN} "Software/root@${some_patch}" >/dev/null 2>&1
-    if [ "$?" = "0" ]; then
-        dnote "Patch: ${ColorCyan}${some_patch} ${ColorGreen}already applied on dataset: ${ColorCyan}${ZFS_DEF_POOL_NAME}/Software/root"
-    else
-        dnote "Applying binary patches for dataset: ${ColorCyan}${ZFS_DEF_POOL_NAME}/Software/root"
-        ${XZCAT_BIN} ${CACHE_DIR}/Software-${OS_TRIPPLE}.${some_patch}.zfs.xz 2>/dev/null | \
-        ${ZFS_BIN} receive -vF ${ZFS_DEF_POOL_NAME}/Software/root 2>/dev/null | \
-        ${TAIL_BIN} -n1 && \
-        dnote "Patch: ${ColorCyan}${some_patch} ${ColorGreen}applied successfully on: ${ColorCyan}${ZFS_DEF_POOL_NAME}/Software/root"
-    fi
-done
+
 
 ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} 'User/root' > /dev/null 2>&1
 if [ "$?" != "0" ]; then
