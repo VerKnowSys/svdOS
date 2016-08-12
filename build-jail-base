@@ -67,7 +67,7 @@ build_base () {
     ${INSTALL_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/
 
     note "Syncing sources to src"
-    ${TIME_BIN} ${SERVED_REPO}${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/ 2>> ${LOG_OUTPUT}
+    ${TIME_BIN} ${SERVED_REPO}${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/ 2>/dev/null
 
     cd /usr/src
     DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
@@ -94,17 +94,17 @@ build_base () {
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         note "Building world"
-        ${MAKE_BIN} buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE}  >> ${LOG_OUTPUT}  2>&1
+        ${MAKE_BIN} buildworld -j${PARALLEL_JOBS} DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE}  >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
     fi
 
     note "Building kernel"
-    ${MAKE_BIN} buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
+    ${MAKE_BIN} buildkernel -j${PARALLEL_JOBS} DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
-    note "Wiping out previous world"
-    ${RM_BIN} -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>&1
+    # note "Wiping out previous world"
+    # ${RM_BIN} -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
 
-    note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
-    ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin
+    # note "Creating snapshot of destbase: ${DESTBASE}@${TIMESTAMP}_begin"
+    # ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin
 
     note "Installing kernel"
     ${MAKE_BIN} installkernel DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT} 2>&1
@@ -128,8 +128,8 @@ build_base () {
     note "Cleaning up"
     ${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>&1
 
-    note "Snapshotting after installation"
-    ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
+    # note "Snapshotting after installation"
+    # ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
 
     # note "Storing fs diff"
     # ${MKDIR_BIN} -p ${DIFFS_DIR} > /dev/null 2>&1
