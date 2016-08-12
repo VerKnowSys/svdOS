@@ -375,6 +375,7 @@ for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
 done
 
 wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc" && \
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup.sh /etc" && \
 dnote "Installed: system binary updater" && \
 INSTALLED_SVDSYSUP="1"
 
