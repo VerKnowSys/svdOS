@@ -479,10 +479,10 @@ if [ "$?" != "0" ]; then
     dnote "Installed: ServeD specific local configuration"
     ${SED_BIN} -i '' -e "s/NETWORK_EXTERNAL_INTERFACE/${DEFAULT_INTERFACE}/g" ${rc_local_conf}
 fi
-${GREP_BIN} -R 'gvr boot' /etc/rc >/dev/null 2>&1
+${GREP_BIN} 'gvr boot' /etc/rc >/dev/null 2>&1
 if [ "$?" != "0" ]; then
-    ${SED_BIN} -i '' -e "s/^date$/gvr boot/" /etc/rc && \
-    dnote "Added ${ColorCyan}gvr boot${ColorGreen} to rc configuration"
+    ${SED_BIN} -i '' -e "s|^date$|${GVR_BIN} boot|" /etc/rc && \
+    dnote "Added $(distn "gvr boot") to rc configuration"
 fi
 
 # TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"

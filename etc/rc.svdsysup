@@ -104,7 +104,7 @@ if [ -d "/root" ]; then
     wrun "${PW_BIN} user mod root -d ${DEFAULT_HOME}"
     wrun "${PW_BIN} user mod toor -d ${DEFAULT_HOME}"
     wrun "${RM_BIN} -rf /root"
-    dnote "Home directory synchonized successfully"
+    dnote "Home directory synchronized successfully"
 fi
 wrun "${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
 
@@ -116,19 +116,19 @@ wrun "${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc" && \
 dnote "System shell configured successfully"
 
 for folder in bin lib libexec sbin usr; do
-    wrun "${SERVED_REPO}${RSYNC_BIN} -v --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ /${folder} 2>/dev/null" && \
+    wrun "${SERVED_REPO}${RSYNC_BIN} --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ /${folder} 2>/dev/null" && \
     dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ to: /${folder}"
 done
 
 #-------------------------------------------------------------------------------
 # NOTE: always do custom software installation after rsync synchro!
 
-wrun "cd ${SOFIN_REPO} && bin/install" && \
-wrun "${INSTALL_BIN} -v ${SERVED_REPO}/gvr /usr/bin" && \
-wrun "${INSTALL_BIN} -v ${SERVED_REPO}/usr/bin/rsync /usr/bin" && \
-wrun "${CP_BIN} ${BACKUP_SVDINIT} /var/svdinit" && \
-wrun "${INSTALL_BIN} -v /var/svdinit /sbin" && \
-wrun "${RM_BIN} -f /var/svdinit" && \
+wrun "cd ${SOFIN_REPO} && bin/install"
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/gvr /usr/bin"
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/usr/bin/rsync /usr/bin"
+wrun "${CP_BIN} ${BACKUP_SVDINIT} /var/svdinit"
+wrun "${INSTALL_BIN} -v /var/svdinit /sbin"
+wrun "${RM_BIN} -f /var/svdinit"
 dnote "Installed core software"
 
 # motd setup

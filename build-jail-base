@@ -31,7 +31,7 @@ build_base () {
     SERVED_REPO="/var/ServeD-OS"
     PARALLEL_JOBS="${CPUS}"
     SHARED_DIR="/Jails/Shared"
-    DIFFS_DIR="${SHARED_DIR}/Diffs"
+    # DIFFS_DIR="${SHARED_DIR}/Diffs"
     LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
 
     if [ ! -d "${SERVED_REPO}" ]; then
@@ -63,15 +63,15 @@ build_base () {
     fi
 
     note "Setting up src.conf"
-    ${RM_BIN} -fv /etc/src.conf >> ${LOG_OUTPUT}
-    ${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/ >> ${LOG_OUTPUT}
+    ${RM_BIN} -f /etc/src.conf
+    ${INSTALL_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/
 
     note "Syncing sources to src"
-    ${TIME_BIN} ${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/
+    ${TIME_BIN} ${SERVED_REPO}${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/ 2>> ${LOG_OUTPUT}
 
     cd /usr/src
     DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
-    ${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
+    # ${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
     # DESTDIR="${DESTBASE}-${TIMESTAMP}"
 
     note "Preparing kernel configuration"
