@@ -252,4 +252,4 @@ remote-control:
 # Generate Unbound configuration with a little help from local-unbound-setup:
 generate_conf_for_unbound_resolver
 try "${RM_BIN} -vf ${UPDATE_PENDING_INDICATOR}"
-try "${SOFIN_BIN} vars > ${DEFAULT_HOME}/.profile"
+# try "${SOFIN_BIN} vars > ${DEFAULT_HOME}/.profile"
