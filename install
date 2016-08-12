@@ -50,7 +50,6 @@ ZPOOL_BIN="/sbin/zpool"
 ZFS_BIN="/sbin/zfs"
 SVDINIT_BIN="/sbin/svdinit"
 SVDINIT_BACKUP_BIN="/var/.svdinit"
-TAR_BIN="/usr/bin/tar"
 FETCH_BIN="/usr/bin/fetch"
 BASENAME_BIN="/usr/bin/basename"
 GRPART_BIN="/sbin/gpart"
@@ -258,6 +257,7 @@ for loc in ${locations}; do
 done
 
 wrun "${XZCAT_BIN} '${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ZFS_STREAM_EXT}' | ${ZFS_BIN} receive ${ZFS_RECEIVE_OPTS} '${ZFS_DEF_POOL_NAME}${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}' | ${TAIL_BIN} -n1 2>/dev/null" && \
+    ${ZFS_BIN} snapshot ${ZFS_DEF_POOL_NAME}${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}@v${VERSION} && \
     dnote "Installed ServeD software base: ${SYSTEM_VERSION}-v${VERSION}" && \
     INSTALLED_BASE_SOFTWARE="1"
 
@@ -369,7 +369,7 @@ dnote "Installed: ${SVDINIT_BIN}" && \
 INSTALLED_SVDINIT="1"
 
 for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
-    ${TEST_BIN} -f ${f} && wrun "${CHFLAGS_BIN} -v schg ${f}"
+    ${TEST_BIN} -f "${f}" && wrun "${CHFLAGS_BIN} -v schg ${f}"
 done
 
 wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc" && \
@@ -377,7 +377,7 @@ dnote "Installed: system binary updater" && \
 INSTALLED_SVDSYSUP="1"
 
 local_loader_conf="/boot/loader.conf.local"
-${INSTALL_BIN} -v ${SERVED_REPO}/etc/loader.conf.served ${local_loader_conf} && \
+wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/loader.conf.served ${local_loader_conf}" && \
 dnote "Installed: local boot loader configuration" && \
 INSTALLED_BOOT_CONF="1"
 
@@ -425,16 +425,16 @@ wrun "${CP_BIN} -v ${SERVED_REPO}/etc/sysctl.conf.served /etc/sysctl.conf" && \
 dnote "Installed: sysctl configuration" && \
 INSTALLED_SYSCTL_CONF="1"
 
-dnote "Installed: periodic configuration" && \
+dnote "Installed: periodic configuration"
 
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/" && \
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/" && \
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types" && \
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys" && \
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf" && \
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf" && \
-wrun "${CAP_MKDB_BIN} /etc/login.conf" && \
-dnote "Installed to /etc: make.conf, src.conf, mime.types, ttys, login.conf, periodic.conf" && \
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/"
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/make.conf /etc/"
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/mime.types.served /etc/mime.types"
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/ttys.served /etc/ttys"
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/login.conf.served /etc/login.conf"
+wrun "${CP_BIN} -v ${SERVED_REPO}/etc/periodic.conf.served /etc/periodic.conf"
+wrun "${CAP_MKDB_BIN} /etc/login.conf"
+dnote "Installed to /etc: make.conf, src.conf, mime.types, ttys, login.conf, periodic.conf"
 INSTALLED_LOGIN_CONF="1"
 
 dnote "Setting up network"
