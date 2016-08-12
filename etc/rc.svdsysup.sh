@@ -66,7 +66,6 @@ ${SYNC_BIN} && \
 
 wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP}" && \
 wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${SVDSYSUP_TIMESTAMP}" && \
-wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${SVDSYSUP_TIMESTAMP}" && \
 dnote "Done pre-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
 
 # Set snochg flags.
