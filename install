@@ -508,6 +508,14 @@ disks=$(${GEOM_BIN} disk list 2>/dev/null | ${EGREP_BIN} 'Name: [a-z]?da.*$' 2>/
 if [ -z "${disks}" ]; then
     error "System GEOM detected NO hard disks available on this machine. Installer can't do his thing -_-"
 fi
+# update /boot code:
+dnote "Updating /boot.."
+for bootelem in zfsloader zfsboot userboot.so pxeboot pmbr mbr loader.efi loader gptzfsboot gptboot boot2 boot1.efifat boot1.efi boot1 boot0sio boot0 boot cdboot; do
+    ${CP_BIN} -vf "${JAIL_SOURCE}/boot/${bootelem}" "/boot/${bootelem}"
+done
+${CP_BIN} -f ${JAIL_SOURCE}/boot/*.4th /boot/
+${CP_BIN} -f ${JAIL_SOURCE}/boot/*.rc /boot/
+${CP_BIN} -f ${JAIL_SOURCE}/boot/*.so /boot/
 for disk in ${disks}; do
     wrun "${GRPART_BIN} bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ${disk}" && \
     dnote "Updated ZFS bootcode for disk: ${disk}" && \
