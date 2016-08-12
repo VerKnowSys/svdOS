@@ -2,6 +2,9 @@
 #
 # ServeD system script to perform lockless filesystem binary updates
 
+set +e
+
+DEFAULT_PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/libexec:/Software/Zsh/exports:/Software/Git/exports"
 DEFAULT_HOST_ADDRESS_FILE="/etc/host.default"
 UPDATE_PENDING_INDICATOR="/.svdsysup"
 SERVED_REPO="/var/ServeD-OS"
@@ -32,17 +35,21 @@ fi
 # From now on, we want to log each svdsysup command to the log file..
 
 
+debug () {
+    /usr/bin/logger "${@}" || true
+}
+
+
 dnote () {
     note "${@}" && \
-    note "${@}" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}"
+    debug "${@}" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}"
 }
 
 
 wrun () {
-    commands="${@} && ${SYNC_BIN}"
-    debug "Evaluating: '${commands}'" && \
-    debug "Evaluating: '${commands}'" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}" && \
-    run "${commands}"
+    _args="${@}"
+    debug "wrun: ${@}"
+    run "${_args} && ${SYNC_BIN}"
 }
 
 
@@ -70,12 +77,12 @@ dnote "Done pre-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
 
 # Set snochg flags.
 for f in ${SETUID_BINS}; do
-    wrun "${CHFLAGS_BIN} noschg $f"
+    ${CHFLAGS_BIN} noschg "${f}"
 done
 for f in ${SETUID_UNUSED_BINS}; do
-    if [ -e "$f" ]; then
-        wrun "${CHFLAGS_BIN} noschg $f" && \
-            wrun "${RM_BIN} -f $f"
+    if [ -e "${f}" ]; then
+        ${CHFLAGS_BIN} noschg "${f}" &&
+            ${RM_BIN} -f "${f}"
     fi
 done
 
@@ -86,7 +93,7 @@ if [ "${served_os_version}" != "-" ]; then
     SVDSYSUP_PICKED_OS_VERSION="${served_os_version}"
 fi
 
-${TEST_BIN} ! -f /etc/fstab && wrun "${TOUCH_BIN} /etc/fstab"
+${TEST_BIN} ! -f /etc/fstab && ${TOUCH_BIN} /etc/fstab
 if [ -d "/root" ]; then
     cd /
     dnote "Synchronizing /root to dataset: ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
@@ -99,24 +106,24 @@ fi
 wrun "${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
 ${RM_BIN} -f /etc/zshenv /etc/zshrc
 ${MKDIR_BIN} -p /etc/zsh
-${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh 2>/dev/null
+${SERVED_REPO}${RSYNC_BIN} ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh
 ${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv
 ${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc
 
 for folder in bin lib libexec sbin usr; do
-    wrun "${SERVED_REPO}${RSYNC_BIN} --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ /${folder} 2>/dev/null" && \
+    wrun "${SERVED_REPO}${RSYNC_BIN} --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ /${folder}" 2>> ${SVDSYSUP_LOG} && \
     dnote "Synchronized: ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ to: /${folder}"
 done
 
 #-------------------------------------------------------------------------------
 # NOTE: always do custom software installation after rsync synchro!
 
-wrun "cd ${SOFIN_REPO} && bin/install"
-wrun "${INSTALL_BIN} -v ${SERVED_REPO}/gvr /usr/bin"
-wrun "${INSTALL_BIN} -v ${SERVED_REPO}/usr/bin/rsync /usr/bin"
-wrun "${CP_BIN} ${BACKUP_SVDINIT} /var/svdinit"
-wrun "${INSTALL_BIN} -v /var/svdinit /sbin"
-wrun "${RM_BIN} -f /var/svdinit"
+cd ${SOFIN_REPO} && bin/install
+${INSTALL_BIN} -v ${SERVED_REPO}/gvr /usr/bin
+${INSTALL_BIN} -v ${SERVED_REPO}/usr/bin/rsync /usr/bin
+${CP_BIN} ${BACKUP_SVDINIT} /var/svdinit
+${INSTALL_BIN} -v /var/svdinit /sbin
+${RM_BIN} -f /var/svdinit
 dnote "Installed core software"
 
 # motd setup
@@ -125,7 +132,7 @@ if [ -x "${GIT_BIN}" ]; then
     if [ -f "/var/${SVDSYSUP_PICKED_OS_VERSION}-src/Makefile" ]; then
         cd /var/${SVDSYSUP_PICKED_OS_VERSION}-src/
         head16_hbsd_sha="$(${GIT_BIN} rev-parse HEAD 2>/dev/null | ${CUT_BIN} -c -16 2>/dev/null)"
-        debug "HBSD repository HEAD: ${head16_hbsd_sha}" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}"
+        debug "HBSD repository HEAD: ${head16_hbsd_sha}"
         header_extension="${header_extension}#${head16_hbsd_sha}…"
     else
         header_extension="\t\t ${header_extension} (binary)"
@@ -139,7 +146,7 @@ cd /
 
 # Bring back schg flags
 for f in ${SETUID_BINS}; do
-    wrun "${CHFLAGS_BIN} schg ${f}"
+    ${CHFLAGS_BIN} schg "${f}"
 done
 
 # wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP}-pre-v${served_version}" && \
@@ -147,43 +154,43 @@ done
 # wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${SVDSYSUP_TIMESTAMP}-pre-v${served_version}" && \
 # dnote "Done post-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
 
-destroy_oldest_snapshot () {
-    dataset_name="${1}"
-    dataset_last="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset_name}${SNAPSHOT_REGEXP}" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' 2>/dev/null | ${TAIL_BIN} -n1 2>/dev/null)"
-    wrun "${ZFS_BIN} destroy ${dataset_name}@${dataset_last}" && \
-    dnote "Dataset destroyed: ${dataset_name}@${dataset_last}"
-    unset dataset_name dataset_last
-}
+# destroy_oldest_snapshot () {
+#     dataset_name="${1}"
+#     dataset_last="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset_name}${SNAPSHOT_REGEXP}" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' 2>/dev/null | ${TAIL_BIN} -n1 2>/dev/null)"
+#     wrun "${ZFS_BIN} destroy ${dataset_name}@${dataset_last}" && \
+#     dnote "Dataset destroyed: ${dataset_name}@${dataset_last}"
+#     unset dataset_name dataset_last
+# }
 
-for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOOL}/var; do
-    value="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset}${SNAPSHOT_REGEXP}" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
-    wiped="0"
-    if [ ${value} -gt 20 ]; then
-        for s in $(${SEQ_BIN} 1 5); do
-            destroy_oldest_snapshot "${dataset}" && \
-            wiped="${wiped} +1"
-        done
-    elif [ ${value} -gt 10 ]; then
-        for s in $(${SEQ_BIN} 1 3); do
-            destroy_oldest_snapshot "${dataset}" && \
-            wiped="${wiped} +1"
-        done
-    elif [ ${value} -gt 5 ]; then
-        for s in $(${SEQ_BIN} 1 2); do
-            destroy_oldest_snapshot "${dataset}" && \
-            wiped="${wiped} +1"
-        done
-    fi && \
-    wiped="$(echo "${wiped}" 2>/dev/null | ${BC_BIN} 2>/dev/null)"
-    value="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset}${SNAPSHOT_REGEXP}" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
-    dnote "Done snapshot cleanup of: ${dataset} (${value} available, ${wiped} wiped out)"
-    unset value wiped
-done
+# for dataset in ${DEFAULT_ZPOOL}/ROOT/default ${DEFAULT_ZPOOL}/usr ${DEFAULT_ZPOOL}/var; do
+#     value="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset}${SNAPSHOT_REGEXP}" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
+#     wiped="0"
+#     if [ ${value} -gt 20 ]; then
+#         for s in $(${SEQ_BIN} 1 5); do
+#             destroy_oldest_snapshot "${dataset}" && \
+#             wiped="${wiped} +1"
+#         done
+#     elif [ ${value} -gt 10 ]; then
+#         for s in $(${SEQ_BIN} 1 3); do
+#             destroy_oldest_snapshot "${dataset}" && \
+#             wiped="${wiped} +1"
+#         done
+#     elif [ ${value} -gt 5 ]; then
+#         for s in $(${SEQ_BIN} 1 2); do
+#             destroy_oldest_snapshot "${dataset}" && \
+#             wiped="${wiped} +1"
+#         done
+#     fi && \
+#     wiped="$(echo "${wiped}" 2>/dev/null | ${BC_BIN} 2>/dev/null)"
+#     value="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${dataset}${SNAPSHOT_REGEXP}" 2>/dev/null | ${WC_BIN} -l 2>/dev/null | ${SED_BIN} 's/ //g' 2>/dev/null)"
+#     dnote "Done snapshot cleanup of: ${dataset} (${value} available, ${wiped} wiped out)"
+#     unset value wiped
+# done
 
 
 generate_conf_for_unbound_resolver () {
     dnote "Generating base configuration for Unbound"
-    wrun "/usr/sbin/local-unbound-setup -n"
+    /usr/sbin/local-unbound-setup -n
 
     if [ ! -f "${UNBOUND_CONF_DIR}/jailed.conf" ]; then
         dnote "Creating jailed.conf loader, with contents: '${JAIL_DOMAINS_COMMON_LOADER}'"
@@ -199,8 +206,6 @@ server:
     interface: 127.0.0.1
     interface: ${SVDSYSUP_DEFAULT_INTERFACE_ADDRESS}
     access-control: 10.0.0.0/8 allow
-    access-control: 172.116.0.0/12 allow
-    access-control: 192.168.0.0/16 allow
     access-control: 100.64.1.0/24 allow
     access-control: 2001:470:1f15:488::/64 allow
     outgoing-num-tcp: 1 # this limits TCP service, uses less buffers.
@@ -245,10 +250,14 @@ remote-control:
     control-interface: /var/run/local_unbound.ctl
     control-use-cert: no
 " > ${UNBOUND_CONTROL_CONF}
-    try "${CHOWN_BIN} -R unbound /var/unbound"
+    ${CHOWN_BIN} -vR unbound /var/unbound || true
 }
 
 # Generate Unbound configuration with a little help from local-unbound-setup:
 generate_conf_for_unbound_resolver
-try "${RM_BIN} -vf ${UPDATE_PENDING_INDICATOR}"
-# try "${SOFIN_BIN} vars > ${DEFAULT_HOME}/.profile"
+${RM_BIN} -vf ${UPDATE_PENDING_INDICATOR}
+update_shell_vars || true
+# wrun "${SOFIN_BIN} vars > ${DEFAULT_HOME}/.profile"
+
+echo "Finished"
+exit 0

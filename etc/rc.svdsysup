@@ -9,7 +9,7 @@ stty status '^T' 2> /dev/null
 trap : 2
 trap "echo 'Update interrupted'; exit 1" 3
 
-eval "/etc/rc.svdsysup.sh"
+exec "/etc/rc.svdsysup.sh"
 
 printf '\n\n%s\n' "Update complete."
 exit 0
