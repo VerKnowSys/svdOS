@@ -3,6 +3,7 @@
 # @author Daniel (dmilith) Dettaff
 #
 
+cd /var
 set +x
 
 # tunables:
@@ -67,6 +68,7 @@ SYNC_BIN="/bin/sync"
 XZCAT_BIN="/usr/bin/xzcat"
 SED_BIN="/usr/bin/sed"
 CP_BIN="/bin/cp"
+PWD_MKDB_BIN="/usr/sbin/pwd_mkdb"
 
 TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
@@ -255,20 +257,9 @@ for loc in ${locations}; do
     fi
 done
 
-dnote "Checking ${ORIGIN} snapshots.."
-origin_snap_regexp="@[a-z]{6}[$ ]{1}" # origin
-for snap in "ROOT" "ROOT/default" "User/root" "Services/root"; do
-    ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${snap}${origin_snap_regexp}" > /dev/null 2>&1
-    if [ "$?" = "0" ]; then
-        dnote " * ${ZFS_DEF_POOL_NAME}/${snap}@${ORIGIN} (untouched)"
-    else
-        wrun "${ZFS_BIN} snapshot ${ZFS_DEF_POOL_NAME}/${snap}@${ORIGIN}" && \
-        dnote " * ${ZFS_DEF_POOL_NAME}/${snap}@${ORIGIN}"
-    fi
-done
-wrun "${TAR_BIN} -xJf ${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ZFS_STREAM_EXT} --directory /" && \
-dnote "Installed ServeD software base: ${SYSTEM_VERSION}-v${VERSION}" && \
-INSTALLED_BASE_SOFTWARE="1"
+wrun "${XZCAT_BIN} '${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ZFS_STREAM_EXT}' | ${ZFS_BIN} receive ${ZFS_RECEIVE_OPTS} '${ZFS_DEF_POOL_NAME}${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}' | ${TAIL_BIN} -n1 2>/dev/null" && \
+    dnote "Installed ServeD software base: ${SYSTEM_VERSION}-v${VERSION}" && \
+    INSTALLED_BASE_SOFTWARE="1"
 
 export HOME="/User"
 export PWD="/User"
@@ -306,19 +297,18 @@ ${FETCH_BIN} --no-verify-peer ${CACERT_SOURCE_ALT} -o /etc/ssl/cert.pem >> ${SVD
 warn "CA CERTS: Both sources are unavailable!"
 
 if [ ! -d "${SOFIN_REPO}" ]; then
-    wrun "cd /var" && \
-    wrun "${GIT_BIN} clone ${DEFAULT_SOFIN_REPOSITORY}" && \
+    wrun "cd /var"
+    wrun "${GIT_BIN} clone ${DEFAULT_SOFIN_REPOSITORY}"
     method="cloned"
 else
-    wrun "cd ${SOFIN_REPO}" && \
-    wrun "${GIT_BIN} stash save \"install-update-${TIMESTAMP}\"" && \
-    wrun "${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}" && \
+    wrun "cd ${SOFIN_REPO}"
+    wrun "${GIT_BIN} pull ${DEFAULT_SOFIN_REPOSITORY}"
     method="pulled"
-fi && \
-dnote "Sofin repository ${method} successfully" && \
-cd ${SOFIN_REPO} && \
+fi
+cd ${SOFIN_REPO}
 bin/install && \
 INSTALLED_SOFIN="1" && \
+dnote "Sofin repository ${method} successfully"
 unset method
 
 . /usr/share/sofin/loader
@@ -337,15 +327,16 @@ if [ "${SHELL}" != "${DEFAULT_SHELL}" ]; then
     ${GREP_BIN} -R 'Zsh/exports/zsh' /etc/shells > /dev/null 2>&1
     if [ "$?" != "0" ]; then
         ${PRINTF_BIN} "${DEFAULT_SHELL}\n" >> /etc/shells && \
-        debug "Appending: ${DEFAULT_SHELL} to: /etc/shells"
+            debug "Appended: ${DEFAULT_SHELL} to: /etc/shells"
     fi
-    wrun "${CHSH_BIN} -s ${DEFAULT_SHELL}" && \
-    dnote "Default shell set to: ${DEFAULT_SHELL}" && \
+    wrun "${CHSH_BIN} -s ${DEFAULT_SHELL}"
+    wrun "${PWD_MKDB_BIN} -p /etc/master.passwd"
+    dnote "Default shell set to: ${DEFAULT_SHELL}"
     INSTALLED_SYSTEM_SHELL="1"
 fi
 
 if [ ! -d "${VKS_KERNEL}" ]; then
-    wrun "${CP_BIN} -vr ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}" && \
+    wrun "${CP_BIN} -r ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}" && \
     dnote "Kernel: ${VKS_KERNEL} installed successfully" && \
     INSTALLED_KERNEL="1"
 else
@@ -386,7 +377,7 @@ dnote "Installed: system binary updater" && \
 INSTALLED_SVDSYSUP="1"
 
 local_loader_conf="/boot/loader.conf.local"
-${CAT_BIN} ${SERVED_REPO}/etc/loader.conf.served > ${local_loader_conf} && \
+${INSTALL_BIN} -v ${SERVED_REPO}/etc/loader.conf.served ${local_loader_conf} && \
 dnote "Installed: local boot loader configuration" && \
 INSTALLED_BOOT_CONF="1"
 
@@ -530,9 +521,9 @@ dnote "ServeD system properties set successfully"
 
 ${UNAME_BIN} -a 2>/dev/null | ${GREP_BIN} VERKNOWSYS > /dev/null 2>&1
 if [ "$?" = "0" ]; then
-    dnote "ServeD update complete!\n"
+    dnote "ServeD update complete!"
 else
-    dnote "ServeD installation complete!\n" # with status: "jedenelement: 0 drugi: 0 jakis: 1 trzeci: 0 itd.."
+    dnote "ServeD installation complete!" # with status: "jedenelement: 0 drugi: 0 jakis: 1 trzeci: 0 itd.."
 fi
 
 exit 0
