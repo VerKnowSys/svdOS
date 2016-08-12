@@ -89,11 +89,9 @@ done
 
 # Update system version from system property
 served_version="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
-stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
-debug "got stored_version: ${stored_version}"
-debug "got served_version: ${served_version}"
-if [ "${stored_version}" != "-" ]; then
-    SVDSYSUP_PICKED_OS_VERSION="${stored_version}"
+served_os_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
+if [ "${served_os_version}" != "-" ]; then
+    SVDSYSUP_PICKED_OS_VERSION="${served_os_version}"
 fi
 
 ${TEST_BIN} ! -f /etc/fstab && wrun "${TOUCH_BIN} /etc/fstab"
@@ -132,8 +130,7 @@ wrun "${RM_BIN} -f /var/svdinit"
 dnote "Installed core software"
 
 # motd setup
-vblock="v${served_version}+v${SVDSYSUP_PICKED_OS_VERSION}"
-header_extension="${vblock} "
+header_extension="v${served_version}+v${SVDSYSUP_PICKED_OS_VERSION} "
 if [ -x "${GIT_BIN}" ]; then
     if [ -f "/var/${SVDSYSUP_PICKED_OS_VERSION}-src/Makefile" ]; then
         cd /var/${SVDSYSUP_PICKED_OS_VERSION}-src/
@@ -141,7 +138,7 @@ if [ -x "${GIT_BIN}" ]; then
         debug "HBSD repository HEAD: ${head16_hbsd_sha}" >> "${SVDSYSUP_LOG}" 2>> "${SVDSYSUP_LOG}"
         header_extension="${header_extension}#${head16_hbsd_sha}…"
     else
-        header_extension="\t ${header_extension} (binary)"
+        header_extension="\t\t ${header_extension} (binary)"
     fi
 fi
 # build motd:
