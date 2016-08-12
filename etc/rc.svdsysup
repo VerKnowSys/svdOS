@@ -105,13 +105,11 @@ if [ -d "/root" ]; then
     dnote "Home directory synchronized successfully"
 fi
 wrun "${ZFS_BIN} set readonly=off ${DEFAULT_ZPOOL}${DEFAULT_HOME}/root"
-
 ${RM_BIN} -f /etc/zshenv /etc/zshrc
 ${MKDIR_BIN} -p /etc/zsh
-wrun "${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh 2>/dev/null" && \
-wrun "${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv" && \
-wrun "${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc" && \
-dnote "System shell configured successfully"
+${SERVED_REPO}${RSYNC_BIN} -v ${RSYNC_DEFAULT_OPTIONS} ${SERVED_REPO}/shell/ /etc/zsh 2>/dev/null
+${LN_BIN} -s /etc/zsh/zshenv /etc/zshenv
+${LN_BIN} -s /etc/zsh/zshrc /etc/zshrc
 
 for folder in bin lib libexec sbin usr; do
     wrun "${SERVED_REPO}${RSYNC_BIN} --exclude='home' --exclude='ports' ${RSYNC_DEFAULT_OPTIONS} ${DEFAULT_JAIL_SHARED_LOCATION}/${OS_TRIPPLE}/${folder}/ /${folder} 2>/dev/null" && \
@@ -142,10 +140,9 @@ if [ -x "${GIT_BIN}" ]; then
     fi
 fi
 # build motd:
-wrun "${RM_BIN} -f /etc/motd" && \
-wrun "${CP_BIN} -v ${SERVED_REPO}/etc/motd.served /etc/motd" && \
-${PRINTF_BIN} "\t${header_extension}\n-----------------------------------------\n\n" >> /etc/motd && \
-dnote "MOTD updated successfully"
+${RM_BIN} -f /etc/motd
+${CP_BIN} -v ${SERVED_REPO}/etc/motd.served /etc/motd
+${PRINTF_BIN} "\t${header_extension}\n-----------------------------------------\n\n" >> /etc/motd
 cd /
 
 # Bring back schg flags
@@ -153,10 +150,10 @@ for f in ${SETUID_BINS}; do
     wrun "${CHFLAGS_BIN} schg ${f}"
 done
 
-wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP}" && \
-wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${SVDSYSUP_TIMESTAMP}" && \
-wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${SVDSYSUP_TIMESTAMP}" && \
-dnote "Done post-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
+# wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/ROOT/default@${SVDSYSUP_TIMESTAMP}-pre-v${served_version}" && \
+# wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/usr@${SVDSYSUP_TIMESTAMP}-pre-v${served_version}" && \
+# wrun "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}/var@${SVDSYSUP_TIMESTAMP}-pre-v${served_version}" && \
+# dnote "Done post-update snapshots with timestamp: ${SVDSYSUP_TIMESTAMP}"
 
 destroy_oldest_snapshot () {
     dataset_name="${1}"
