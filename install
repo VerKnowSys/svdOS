@@ -142,11 +142,6 @@ dwarn () {
     cecho "${*}" "${ColorYellow}" >> ${SVD_LOG} 2>> ${SVD_LOG}
 }
 
-derror () {
-    cecho "${*}" "${ColorRed}" && \
-    cecho "${*}" "${ColorRed}" >> ${SVD_LOG} 2>> ${SVD_LOG}
-}
-
 dnote () {
     note "${*}" && \
     note "${*}" >> "${SVD_LOG}" 2>> ${SVD_LOG}
@@ -161,11 +156,8 @@ wrun () {
     fi
 }
 
-dnote "Installer is setting no-op traps for some shell signals.."
-noop () {
-    :
-}
-trap 'noop' QUIT TTIN TTOU USR1 USR2
+# dnote "Installer is setting no-op traps for some shell signals.."
+# trap : QUIT TTIN TTOU USR1 USR2
 
 
 ${MKDIR_BIN} -p ${CACHE_DIR}
