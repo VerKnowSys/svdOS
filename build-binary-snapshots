@@ -42,6 +42,7 @@ commit_snapshots_build () {
 
     compile_jails () {
         ${MKDIR_BIN} -p /var/.cache
+        DEFAULT_ARCHIVE_EXT=".zfsx"
         BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
         note "Compiling snapshot: ${BASE_SNAPSHOT}"
         realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
@@ -68,16 +69,15 @@ commit_snapshots_build () {
         note "Golden linker merged with current software base"
 
         cd /var/.cache
-        debug "RR: ${TAR_BIN} -vcJ --use-compress-program=\"${XZ_BIN} --threads=${CPUS}\" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \"${realpath}\""
-        time ${TAR_BIN} -cJ --use-compress-program="${XZ_BIN} --threads=${CPUS}" -f ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} ${realpath} 2>> ${BBS_LOG}
+        ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${BBS_LOG}"
         if [ "$?" = "0" ]; then
-            note "Compiled successfully."
+            note "Snapshot successfully sent."
         else
-            error "Something went wrong while compiling snapshot!"
+            error "Something went wrong while sending snapshot!"
         fi
 
         ${CHMOD_BIN} a+r ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} || \
-        error "Snapshot should be readable by everyone. But chmod failed."
+            error "Snapshot should be readable by everyone."
 
         note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
         ${CHMOD_BIN} 600 ~/.ssh/* >/dev/null 2>&1
