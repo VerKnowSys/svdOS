@@ -70,7 +70,7 @@ commit_snapshots_build () {
 
         cd /var/.cache
         # destroy a snapshot if already exists
-        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}" 2>/dev/null
+        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}" 2>/dev/null || true
         ${ZFS_BIN} snapshot "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}"
         ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${BBS_LOG}"
         if [ "$?" = "0" ]; then
