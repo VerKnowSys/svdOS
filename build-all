@@ -34,11 +34,11 @@ s disable
 
 
 # HardenedBSD base branch:
-VERSION="$1"
-if [ "${VERSION}" = "" ]; then
-    echo "No version specified! Specify f.e.: 0.99.10"
-    exit 1
-fi
+# VERSION="$1"
+# if [ "${VERSION}" = "" ]; then
+#     echo "No version specified! Specify f.e.: 0.99.10"
+#     exit 1
+# fi
 OS_VER="11.0" # 10.2
 MAIN_REPOSITORY="https://github.com/HardenedBSD/hardenedBSD.git"
 CURRENT_BRANCH="hardened/11-stable/master"
