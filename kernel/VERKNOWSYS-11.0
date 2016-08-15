@@ -30,7 +30,9 @@ options     SEMMNI=4096
 options     HZ=100
 options     DUMMYNET
 options     KTR
+options     VIMAGE
 
+device epair
 device pf
 # device pflog
 # device pfsync                                 # Synchronization interface for PF
@@ -386,6 +388,3 @@ device      netmap                          # netmap(4) support
 device      crypto                          # core crypto support
 device      cryptodev                       # /dev/crypto for access to h/w
 device      aesni
-
-# options VIMAGE
-# device  epair
