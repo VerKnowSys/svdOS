@@ -1,4 +1,10 @@
-# Security
+# Security defaults:
+security.bsd.see_other_uids=0
+security.bsd.see_other_gids=0
+security.bsd.unprivileged_read_msgbuf=0
+security.bsd.unprivileged_proc_debug=0
+security.bsd.stack_guard_page=1
+
 # net.inet.tcp.blackhole defines what happens when a TCP packet is received on a closed port. When set to '1', SYN packets arriving on a closed port will be dropped without a RST packet being sent back. When set to '2', all packets arriving on a closed port are dropped without an RST being sent back.
 net.inet.udp.blackhole=2
 net.inet.tcp.blackhole=2
@@ -193,11 +199,11 @@ security.mac.portacl.rules=uid:501:tcp:80,uid:501:tcp:443,uid:501:tcp:12
 # Security settings
 
 # This is required for several intepreters like Node or Elixir to not crash with SIGABRT/SIGSEGV:
-hardening.pax.mprotect.status=1
-hardening.pax.pageexec.status=1
+# hardening.pax.mprotect.status=1
+# hardening.pax.pageexec.status=1
 
 # for Erlang/Elixir:
-hardening.pax.disallow_map32bit.status=1
+# hardening.pax.disallow_map32bit.status=1
 
 # disable witnessing:
 debug.witness.trace=0
