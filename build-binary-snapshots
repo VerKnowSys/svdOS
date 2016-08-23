@@ -75,6 +75,10 @@ commit_snapshots_build () {
         ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${BBS_LOG}"
         if [ "$?" = "0" ]; then
             note "Snapshot successfully sent."
+            if [ -f "/.build-host" ]; then
+                note "Detected built-host type, removing version snapshot: ${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}.."
+                ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}"
+            fi
         else
             error "Something went wrong while sending snapshot!"
         fi
