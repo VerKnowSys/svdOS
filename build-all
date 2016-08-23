@@ -79,7 +79,9 @@ OS_NAME="FreeBSD"
 . ./build-jail-base
 . ./build-binary-snapshots
 
+printf "PRE: ${OS_VER} ${MAIN_REPOSITORY} ${CURRENT_BRANCH} ${ARCH}"
 build_base "${OS_VER}" "${MAIN_REPOSITORY}" "${CURRENT_BRANCH}" "${ARCH}"
+printf "POST: ${BASE_NAME} ${VERSION} ${OS_VER} ${DESTINATION} ${ARCH}"
 commit_snapshots_build "${BASE_NAME}" "${VERSION}" "${OS_VER}" "${DESTINATION}" "${ARCH}"
 
 # test -z "${DEVEL}" && \
