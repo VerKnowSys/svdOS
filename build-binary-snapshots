@@ -48,25 +48,25 @@ commit_snapshots_build () {
         realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
 
         # Golden linker support:
-        GOLD="/Software/Gold"
-        if [ ! -f "${GOLD}/lib/LLVMgold.so" ]; then
-            s i Gold
-        fi
+        # GOLD="/Software/Gold"
+        # if [ ! -f "${GOLD}/lib/LLVMgold.so" ]; then
+        #     s i Gold
+        # fi
 
-        note "Preparing golden linker.."
-        TARGET_TRIPPLE="x86_64-unknown-freebsd11.0"
-        set -e
-        for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
-            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-        done
-        for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/bin -type f); do
-            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-        done
-        ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
-        for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
-            ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-        done
-        note "Golden linker merged with current software base"
+        # note "Preparing golden linker.."
+        # TARGET_TRIPPLE="x86_64-unknown-freebsd11.0"
+        # set -e
+        # for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
+        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        # done
+        # for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/bin -type f); do
+        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        # done
+        # ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
+        # for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
+        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        # done
+        # note "Golden linker merged with current software base"
 
         cd /var/.cache
         # destroy a snapshot if already exists
