@@ -18,7 +18,7 @@ DEFAULT_JAIL_SHARED_LOCATION="/Jails/Shared"
 JAIL_DOMAINS_COMMON_LOADER="include: ${DEFAULT_JAIL_PRISON_LOCATION}/Sentry/*/jail-domains/*.conf"
 RSYNC_DEFAULT_OPTIONS="-l -p -E -A -X -o -g -t -r --delete"
 
-SNAPSHOT_REGEXP="@[a-z0-9]{6,10}$" # origin or timestamp
+# SNAPSHOT_REGEXP="@[a-z0-9]{6,10}$" # origin or timestamp
 SETUID_UNUSED_BINS="/bin/rsh /bin/rlogin"
 SETUID_BINS="/sbin/init /sbin/svdinit /lib/libthr.so.3 /lib/libc.so.7 /lib/libcrypt.so.5 /libexec/ld-elf.so.1 /usr/lib/librt.so.1 /usr/bin/chfn /usr/bin/chsh /usr/bin/opiepasswd /usr/bin/crontab /usr/bin/passwd /usr/bin/chpass /usr/bin/opieinfo /usr/bin/su /usr/bin/login"
 
