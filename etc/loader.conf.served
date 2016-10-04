@@ -49,3 +49,9 @@ verbose_loading="YES"
 boot_mute="YES"
 net.fibs=16
 kern.racct.enable=1
+
+# HBSD is aggressive with stack randomization, which can cause issues under some edge cases:
+# hardening.pax.aslr.vdso_len: (default on amd64: 28)
+hardening.pax.aslr.vdso_len=18
+# hardening.pax.aslr.stack_len: (default to 42 on amd64):
+hardening.pax.aslr.stack_len=30
