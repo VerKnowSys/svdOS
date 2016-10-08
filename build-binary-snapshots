@@ -50,7 +50,7 @@ commit_snapshots_build () {
         LLD="/Software/Lld/bin/lld"
         if [ -x "${LLD}" ]; then
             permnote "Installing additional linker: $(distn "${LLD}")"
-            ${INSTALL_BIN} -v "${LLD}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+            ${INSTALL_BIN} -v "${LLD}" "${realpath}/usr/bin/ld.lld" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         fi
 
         GOLD="/Software/Gold/bin/ld.gold"
