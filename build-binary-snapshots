@@ -47,15 +47,20 @@ commit_snapshots_build () {
         note "Compiling snapshot: ${BASE_SNAPSHOT}"
         realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
 
-        # Golden linker support:
-        # GOLD="/Software/Gold"
-        # if [ ! -f "${GOLD}/lib/LLVMgold.so" ]; then
-        #     s i Gold
-        # fi
+        LLD="/Software/Lld/bin/lld"
+        if [ -x "${LLD}" ]; then
+            permnote "Installing additional linker: $(distn "${LLD}")"
+            ${INSTALL_BIN} -v "${LLD}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        fi
 
-        # note "Preparing golden linker.."
-        # TARGET_TRIPPLE="x86_64-unknown-freebsd11.0"
-        # set -e
+        GOLD="/Software/Gold/bin/ld.gold"
+        GOLD_PLUGIN="/Software/Gold/lib/LLVMgold.so"
+        if [ -x "${GOLD}" -a -x "${GOLD_PLUGIN}" ]; then
+            permnote "Installing additional linker: $(distn "${GOLD}")"
+            ${INSTALL_BIN} -v "${GOLD}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+            ${INSTALL_BIN} -v "${GOLD_PLUGIN}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        fi
+
         # for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
         #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         # done
