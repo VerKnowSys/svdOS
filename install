@@ -249,7 +249,7 @@ for loc in ${locations}; do
 done
 
 # OPTIMIZE: XXX: TODO: extend this functionality with incremental patches of differences without destroy:
-wrun "${ZFS_BIN} destroy -r '${ZFS_DEF_POOL_NAME}${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}'"
+wrun "${ZFS_BIN} destroy -fR '${ZFS_DEF_POOL_NAME}${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}'"
 wrun "${XZCAT_BIN} '${CACHE_DIR}/${BASE}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}${DEFAULT_ZFS_STREAM_EXT}' | ${ZFS_BIN} receive -F -v '${ZFS_DEF_POOL_NAME}${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}' | ${TAIL_BIN} -n1 2>/dev/null" && \
     ${ZFS_BIN} snapshot ${ZFS_DEF_POOL_NAME}${DEFAULT_JAIL_SHARED_LOCATION}/${UNAME_OS}-${SYSTEM_VERSION}-${ARCH}@v${VERSION} && \
     dnote "Installed ServeD software base: ${SYSTEM_VERSION}-v${VERSION}" && \
