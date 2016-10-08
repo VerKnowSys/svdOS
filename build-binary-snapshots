@@ -35,7 +35,7 @@ commit_snapshots_build () {
         cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
         for unnec in /etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root; do
             ${FIND_BIN} ".${unnec}" -delete 2>> ${BBS_LOG} && \
-            note "Removed dir: .${unnec}"
+            permnote "Removed dir: .${unnec}"
         done
     }
 
@@ -44,7 +44,7 @@ commit_snapshots_build () {
         ${MKDIR_BIN} -p /var/.cache
         DEFAULT_ARCHIVE_EXT=".zfsx"
         BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
-        note "Compiling snapshot: ${BASE_SNAPSHOT}"
+        permnote "Compiling snapshot: ${BASE_SNAPSHOT}"
         realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
 
         LLD="/Software/Lld/bin/lld"
@@ -71,7 +71,7 @@ commit_snapshots_build () {
         # for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
         #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
         # done
-        # note "Golden linker merged with current software base"
+        # permnote "Golden linker merged with current software base"
 
         cd /var/.cache
         # destroy a snapshot if already exists
@@ -79,9 +79,9 @@ commit_snapshots_build () {
         ${ZFS_BIN} snapshot "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}"
         ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${BBS_LOG}"
         if [ "$?" = "0" ]; then
-            note "Snapshot successfully sent."
+            permnote "Snapshot successfully sent."
             if [ -f "/.build-host" ]; then
-                note "Detected built-host type, removing version snapshot: ${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}.."
+                permnote "Detected built-host type, removing version snapshot: ${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}.."
                 ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}"
             fi
         else
@@ -91,24 +91,24 @@ commit_snapshots_build () {
         ${CHMOD_BIN} a+r ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} || \
             error "Snapshot should be readable by everyone."
 
-        note "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
+        permnote "Uploading Jail snapshot: ${BASE_SNAPSHOT}"
         ${CHMOD_BIN} 600 ~/.ssh/* >/dev/null 2>&1
         ${SCP_BIN} \
             -o UserKnownHostsFile=/dev/null \
             -o StrictHostKeyChecking=no \
             ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \
             ${DESTINATION} 2>> ${BBS_LOG} && \
-            note "Uploaded successfully."
+            permnote "Uploaded successfully."
 
         if [ "$?" = "0" ]; then
-            note "Finished successfully. Checking latest version on remote destination.."
+            permnote "Finished successfully. Checking latest version on remote destination.."
             ${SSH_BIN} \
                 -o UserKnownHostsFile=/dev/null \
                 -o StrictHostKeyChecking=no \
                 dmilith@served.verknowsys.com \
                 "${GREP_BIN} -R '${A_VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
                  echo '${A_VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${BBS_LOG} && \
-                note "Remote version file updated successfully with version: ${A_VERSION}"
+                permnote "Remote version file updated successfully with version: ${A_VERSION}"
         else
             error "Something went wrong while uploading Jails base. Launch args: '${LAUNCH_ARGS}';"
         fi
