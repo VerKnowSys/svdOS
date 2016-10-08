@@ -41,7 +41,7 @@ if [ "${VERSION}" = "" ]; then
 fi
 OS_VER="11.0" # 10.2
 MAIN_REPOSITORY="https://github.com/HardenedBSD/hardenedBSD.git"
-CURRENT_BRANCH="hardened/11-stable/master"
+CURRENT_BRANCH="hardened/11-stable/master-libressl"
 # MAIN_REPOSITORY="https://github.com/hardenedbsd/hardenedbsd-stable/"
 DESTINATION="dmilith@served.verknowsys.com:/Users/dmilith/ServeD/Web/"
 BASE_NAME="ServeD-OS-Base"
