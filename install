@@ -375,6 +375,9 @@ dnote "Installed: system binary updater" && \
 INSTALLED_SVDSYSUP="1"
 
 local_loader_conf="/boot/loader.conf.local"
+if [ -f "${local_loader_conf}" ]; then
+    cp "${local_loader_conf}" "${local_loader_conf}.old"
+fi
 wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/loader.conf.served ${local_loader_conf}" && \
 dnote "Installed: local boot loader configuration" && \
 INSTALLED_BOOT_CONF="1"
