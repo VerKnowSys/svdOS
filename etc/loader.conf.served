@@ -49,6 +49,19 @@ boot_mute="YES"
 net.fibs=16
 kern.racct.enable=1
 
+# DigitalOcean addon:
+virtio_balloon_load="YES"
+virtio_blk_load="YES"
+virtio_load="YES"
+virtio_pci_load="YES"
+if_vtnet_load="YES"
+
+# 512MiB RAM conditions:
+vfs.zfs.arc_max="128M"
+vfs.zfs.vdev.cache.size="5M"
+console="vidconsole,comconsole"
+
+
 # HBSD is aggressive with stack randomization, which can cause issues under some edge cases:
 # hardening.pax.aslr.vdso_len: (default on amd64: 28)
 hardening.pax.aslr.vdso_len=18
