@@ -503,7 +503,7 @@ fi
 # note "Checking for a ZFS-feature-updates of zpool: ${ZFS_DEF_POOL_NAME}"
 # ${ZPOOL_BIN} upgrade ${ZFS_DEF_POOL_NAME} | ${HEAD_BIN} -n1
 
-disks=$(${GEOM_BIN} disk list 2>/dev/null | ${EGREP_BIN} 'Name: [a-z]?da.*$' 2>/dev/null | ${SED_BIN} 's/^.*\ //' 2>/dev/null)
+disks=$(${GEOM_BIN} disk list 2>/dev/null | ${EGREP_BIN} 'Name: [a-z]?.*$' 2>/dev/null | ${SED_BIN} 's/^.*\ //' 2>/dev/null)
 if [ -z "${disks}" ]; then
     error "System GEOM detected NO hard disks available on this machine. Installer can't do his thing -_-"
 fi
