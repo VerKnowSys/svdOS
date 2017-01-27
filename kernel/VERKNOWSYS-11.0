@@ -123,7 +123,6 @@ options     DDB                             # Support DDB.
 
 # Make an SMP-capable kernel by default
 options     SMP                             # Symmetric MultiProcessor Kernel
-options     INTRNG                          # use intrng cause old interrupt handling code is expected to be removed soon
 options     IMAGACT_BINMISC                 # enables app exec through emulators, such as QEMU via binmiscctl(8). [r266531]
 options     DEVICE_NUMA                     # I/O Device Affinity
 
