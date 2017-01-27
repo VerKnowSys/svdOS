@@ -27,7 +27,7 @@ build_base () {
         ARCH_SUBTYPE="${ARCH}"
     fi
 
-    SERVEDOS_GIT_ORIGIN="https://verknowsys@bitbucket.org/verknowsys/served-os.git"
+    SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
     SERVED_REPO="/var/ServeD-OS"
     PARALLEL_JOBS="${CPUS}"
     SHARED_DIR="/Jails/Shared"
