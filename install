@@ -332,7 +332,7 @@ if [ "${SHELL}" != "${DEFAULT_SHELL}" ]; then
     INSTALLED_SYSTEM_SHELL="1"
 fi
 
-if [ ! -d "${VKS_KERNEL}" ]; then
+if [ ! -x "${VKS_KERNEL}/kernel" ]; then
     wrun "${CP_BIN} -r ${JAIL_SOURCE}/boot/kernel ${VKS_KERNEL}" && \
     dnote "Kernel: ${VKS_KERNEL} installed successfully" && \
     INSTALLED_KERNEL="1"
