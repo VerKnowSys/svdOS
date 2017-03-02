@@ -1,0 +1,142 @@
+#!/bin/sh
+#
+# @author Daniel (dmilith) Dettaff
+#
+
+reset
+
+# tunables:
+export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
+SYSTEM_VERSION="11" # the default
+ZPOOL="zroot"
+ORIGIN="origin"
+SOFIN_REPO="/var/sofin"
+SERVED_REPO="/var/ServeD-OS"
+CACERT_SOURCE="http://curl.haxx.se/ca/cacert.pem"
+CACERT_SOURCE_ALT="http://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt"
+DEFAULT_ZFS_STREAM_EXT=".zfsx"
+
+error_char="✘"
+SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
+DEFAULT_SOFIN_REPOSITORY="https://github.com/VerKnowSys/sofin.git"
+BASE="ServeD-OS-Base"
+BASE_SOURCE="http://served.verknowsys.com/"
+VKS_KERNEL="/boot/verknowsys"
+CACHE_DIR="/var/.cache"
+
+DEFAULT_SHELL="/Software/Zsh/exports/zsh"
+TAIL_BIN="/usr/bin/tail"
+CHFLAGS_BIN="/bin/chflags"
+GIT_BIN="/Software/Git/exports/git"
+ZPOOL_BIN="/sbin/zpool"
+ZFS_BIN="/sbin/zfs"
+SVDINIT_BIN="/sbin/svdinit"
+SVDINIT_BACKUP_BIN="/var/.svdinit"
+FETCH_BIN="/usr/bin/fetch"
+BASENAME_BIN="/usr/bin/basename"
+GRPART_BIN="/sbin/gpart"
+GEOM_BIN="/sbin/geom"
+KLDXREF_BIN="/usr/sbin/kldxref"
+PRINTF_BIN="/usr/bin/printf"
+MKDIR_BIN="/bin/mkdir"
+UNAME_BIN="/usr/bin/uname"
+DATE_BIN="/bin/date"
+CLANG_BIN="/usr/bin/clang"
+GREP_BIN="/usr/bin/grep"
+EGREP_BIN="/usr/bin/egrep"
+XZ_BIN="/usr/bin/xz"
+SYNC_BIN="/bin/sync"
+XZCAT_BIN="/usr/bin/xzcat"
+SED_BIN="/usr/bin/sed"
+CP_BIN="/bin/cp"
+SCP_BIN="/usr/bin/scp"
+PWD_MKDB_BIN="/usr/sbin/pwd_mkdb"
+
+# TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
+# ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
+# UNAME_OS="$(${UNAME_BIN} -s 2>/dev/null)"
+# OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
+# VERSION="0.11.88"
+
+
+# host side preparation:
+echo "Preparing dirs…"
+ssh root@xh1 \
+    "${MKDIR_BIN} -p ${CACHE_DIR} ${HOME}/.ssh"
+
+echo 'Installing ED25519 SSH key…'
+${SCP_BIN} \
+    "${HOME}/.ssh/id_ed25519.pub" \
+    "root@xh1:${HOME}/.ssh/authorized_keys"
+
+echo "Installing default cert.pem from: ${CACERT_SOURCE}…"
+ssh root@xh1 \
+    "${FETCH_BIN} \
+    --no-verify-peer \
+    ${CACERT_SOURCE} \
+    -o /etc/ssl/cert.pem"
+
+for _ds in var/mail usr/src usr/home usr/ports var/audit; do
+    ssh root@xh1 \
+        "${ZFS_BIN} destroy -r ${ZPOOL}/${_ds}"
+done
+
+
+echo "Creating origins for major release: ${SYSTEM_VERSION}…"
+for _dataset_origin in Software Services User; do
+
+    ssh root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
+    if [ "${?}" != "0" ]; then
+        echo "Creating origin base: ${ZPOOL}/${_dataset_origin}"
+        ssh root@xh1 \
+            "${ZFS_BIN} create \
+            -o mountpoint=none \
+            -o casesensitivity=sensitive \
+            -o readonly=on \
+            -o utf8only=on \
+            -o devices=off \
+            -o dedup=off \
+            -o checksum=fletcher4 \
+            -o atime=off \
+            -o aclmode=discard \
+            -o exec=off \
+            -o canmount=off \
+            -o compression=lz4 \
+            ${ZPOOL}/${_dataset_origin}"
+    fi
+
+    ssh root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
+    if [ "${?}" != "0" ]; then
+        echo "Creating ${ZPOOL}/${_dataset_origin} origin"
+        ssh root@xh1 \
+            "${ZFS_BIN} create \
+            -o readonly=off \
+            -o canmount=on \
+            -o exec=on \
+            -o mountpoint=/${_dataset_origin} \
+            ${ZPOOL}/${_dataset_origin}/root"
+
+        _software_origin_file="${_dataset_origin}-${ORIGIN}${DEFAULT_ZFS_STREAM_EXT}"
+        echo "Storing origin snapshot to file: ${_software_origin_file}"
+        ssh root@xh1 \
+            "${ZFS_BIN} snapshot \
+            ${ZPOOL}/${_dataset_origin}/root@${ORIGIN}"
+
+        echo "Send origin to file: ${_software_origin_file}"
+        ssh root@xh1 \
+            "${ZFS_BIN} send \
+            -D -L -e -p -v \
+            ${ZPOOL}/${_dataset_origin}/root@${ORIGIN} \
+            | ${XZ_BIN} --threads=4 > ${CACHE_DIR}/${_software_origin_file}"
+
+        # echo "Push origin to remote"
+        ${MKDIR_BIN} -p "./Origins/${SYSTEM_VERSION}"
+        ${SCP_BIN} \
+            root@xh1:${CACHE_DIR}/${_software_origin_file} \
+            Origins/${SYSTEM_VERSION}/
+    fi
+done
+
+
+echo "Done"
+exit
