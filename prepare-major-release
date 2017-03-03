@@ -62,12 +62,12 @@ PWD_MKDB_BIN="/usr/sbin/pwd_mkdb"
 # host side preparation:
 echo "Preparing dirs…"
 ssh root@xh1 \
-    "${MKDIR_BIN} -p ${CACHE_DIR} ${HOME}/.ssh"
+    "${MKDIR_BIN} -p ${CACHE_DIR} /User/.ssh"
 
 echo 'Installing ED25519 SSH key…'
 ${SCP_BIN} \
     "${HOME}/.ssh/id_ed25519.pub" \
-    "root@xh1:${HOME}/.ssh/authorized_keys"
+    "root@xh1:/User/.ssh/authorized_keys"
 
 echo "Installing default cert.pem from: ${CACERT_SOURCE}…"
 ssh root@xh1 \
@@ -78,11 +78,11 @@ ssh root@xh1 \
 
 for _ds in var/mail usr/src usr/home usr/ports var/audit; do
     ssh root@xh1 \
-        "${ZFS_BIN} destroy -r ${ZPOOL}/${_ds}"
+        "${ZFS_BIN} destroy -r ${ZPOOL}/${_ds}" 2>/dev/null
 done
 
 
-echo "Creating origins for major release: ${SYSTEM_VERSION}…"
+echo "Release base: ${SYSTEM_VERSION}…"
 for _dataset_origin in Software Services User; do
 
     ssh root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
@@ -137,6 +137,13 @@ for _dataset_origin in Software Services User; do
     fi
 done
 
+
+echo "Setting HOME to /User, Zsh as default shell"
+ssh root@xh1 \
+    "pw user mod root -d /User; \
+    sed -i '' -e 's|^/bin/tcsh|/Software/Zsh/exports/zsh|g' /etc/shells; \
+    chsh -s /Software/Zsh/exports/zsh root; \
+    rm -rf /root"
 
 echo "Done"
 exit
