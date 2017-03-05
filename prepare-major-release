@@ -5,6 +5,8 @@
 
 reset
 
+_host_number="${1:-"1"}"
+
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 SYSTEM_VERSION="11" # the default
@@ -49,7 +51,10 @@ SYNC_BIN="/bin/sync"
 XZCAT_BIN="/usr/bin/xzcat"
 SED_BIN="/usr/bin/sed"
 CP_BIN="/bin/cp"
+RM_BIN="/bin/rm"
+TAR_BIN="/usr/bin/tar"
 SCP_BIN="/usr/bin/scp"
+SSH_BIN="/usr/bin/ssh"
 PWD_MKDB_BIN="/usr/sbin/pwd_mkdb"
 
 # TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
@@ -60,8 +65,9 @@ PWD_MKDB_BIN="/usr/sbin/pwd_mkdb"
 
 
 # host side preparation:
+echo "Host number: ${_host_number}"
 echo "Preparing dirs…"
-ssh root@xh1 \
+${SSH_BIN} root@xh1 \
     "${MKDIR_BIN} -p ${CACHE_DIR} /User/.ssh"
 
 echo 'Installing ED25519 SSH key…'
@@ -70,14 +76,14 @@ ${SCP_BIN} \
     "root@xh1:/User/.ssh/authorized_keys"
 
 echo "Installing default cert.pem from: ${CACERT_SOURCE}…"
-ssh root@xh1 \
+${SSH_BIN} root@xh1 \
     "${FETCH_BIN} \
     --no-verify-peer \
     ${CACERT_SOURCE} \
     -o /etc/ssl/cert.pem"
 
 for _ds in var/mail usr/src usr/home usr/ports var/audit; do
-    ssh root@xh1 \
+    ${SSH_BIN} root@xh1 \
         "${ZFS_BIN} destroy -r ${ZPOOL}/${_ds}" 2>/dev/null
 done
 
@@ -85,10 +91,10 @@ done
 echo "Release base: ${SYSTEM_VERSION}…"
 for _dataset_origin in Software Services User; do
 
-    ssh root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
+    ${SSH_BIN} root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         echo "Creating origin base: ${ZPOOL}/${_dataset_origin}"
-        ssh root@xh1 \
+        ${SSH_BIN} root@xh1 \
             "${ZFS_BIN} create \
             -o mountpoint=none \
             -o casesensitivity=sensitive \
@@ -105,10 +111,10 @@ for _dataset_origin in Software Services User; do
             ${ZPOOL}/${_dataset_origin}"
     fi
 
-    ssh root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
+    ${SSH_BIN} root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         echo "Creating ${ZPOOL}/${_dataset_origin} origin"
-        ssh root@xh1 \
+        ${SSH_BIN} root@xh1 \
             "${ZFS_BIN} create \
             -o readonly=off \
             -o canmount=on \
@@ -118,12 +124,12 @@ for _dataset_origin in Software Services User; do
 
         _software_origin_file="${_dataset_origin}-${ORIGIN}${DEFAULT_ZFS_STREAM_EXT}"
         echo "Storing origin snapshot to file: ${_software_origin_file}"
-        ssh root@xh1 \
+        ${SSH_BIN} root@xh1 \
             "${ZFS_BIN} snapshot \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN}"
 
         echo "Send origin to file: ${_software_origin_file}"
-        ssh root@xh1 \
+        ${SSH_BIN} root@xh1 \
             "${ZFS_BIN} send \
             -D -L -e -p -v \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN} \
@@ -137,13 +143,28 @@ for _dataset_origin in Software Services User; do
     fi
 done
 
+echo "Creating projects archive…"
+${RM_BIN} -f archive-base-projects.tar.xz
+${TAR_BIN} -cJf archive-base-projects.tar.xz \
+    /Projects/ServeD-OS \
+    /Projects/Sofin
 
-echo "Setting HOME to /User, Zsh as default shell"
-ssh root@xh1 \
+${SCP_BIN} \
+    "archive-base-projects.tar.xz" \
+    "root@xh1:${CACHE_DIR}/"
+
+echo "Setting HOME to /User, Zsh as default shell, installing base software"
+${SSH_BIN} root@xh1 \
     "pw user mod root -d /User; \
     sed -i '' -e 's|^/bin/tcsh|/Software/Zsh/exports/zsh|g' /etc/shells; \
     chsh -s /Software/Zsh/exports/zsh root; \
-    rm -rf /root"
+    rm -rf /root; \
+    tar xfJ ${CACHE_DIR}/archive-base-projects.tar.xz --directory /; \
+    cd /Projects/Sofin; \
+    bin/install; \
+    echo LANG=\"en_GB.UTF-8\" > /User/.zshrc; \
+    echo LANGUAGE=\"en_GB.UTF-8\" >> /User/.zshrc; \
+    "
 
 echo "Done"
 exit
