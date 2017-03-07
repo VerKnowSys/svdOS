@@ -87,7 +87,7 @@ done
 echo "Creating ${SHARED_DIR}"
 ${SSH_BIN} root@xh1 \
     "${ZFS_BIN} create -o mountpoint=${SHARED_DIR} ${ZPOOL}${SHARED_DIR}; \
-    ${ZFS_BIN} create ${ZPOOL}${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}; \
+    ${ZFS_BIN} create ${ZPOOL}${SHARED_DIR}/${SYSTEM_NAME}-${OS_VER}-${ARCH}; \
     "
 
 echo "Configuring base RC system"
@@ -134,7 +134,7 @@ ${SSH_BIN} root@xh1 \
     ${CP_BIN} -fr shell/ /etc/zsh; \
     ${LN_BIN} -fvs /etc/zsh/zshenv /etc/zshenv; \
     ${LN_BIN} -fvs /etc/zsh/zshrc /etc/zshrc; \
-    touch /.build-host; \
+    ${TOUCH_BIN} ${BUILD_HOST_MARKER}; \
     printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' > /User/.ssh/config; \
     "
 

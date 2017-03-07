@@ -3,7 +3,7 @@ commit_snapshots_build () {
 
 
     clean_before () {
-        cd "${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
+        cd "${SHARED_DIR}/${SYSTEM_NAME}-${OS_VER}-${ARCH}"
         for unnec in /etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root; do
             ${FIND_BIN} ".${unnec}" -delete 2>> ${LOG_BBS} && \
             permnote "Removed dir: .${unnec}"
@@ -15,7 +15,7 @@ commit_snapshots_build () {
         ${MKDIR_BIN} -p "${CACHE_DIR}"
         BASE_SNAPSHOT="${BASE_NAME}-${OS_VER}-v${VERSION}-${ARCH}"
         permnote "Compiling snapshot: ${BASE_SNAPSHOT}"
-        realpath="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
+        realpath="${SHARED_DIR}/${SYSTEM_NAME}-${OS_VER}-${ARCH}"
 
         if [ -x "${LLD_BIN}" ]; then
             permnote "Installing additional linker: $(distn "${LLD_BIN}")"
@@ -44,10 +44,10 @@ commit_snapshots_build () {
         # destroy a snapshot if already exists
         ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" 2>/dev/null || true
         ${ZFS_BIN} snapshot "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}"
-        ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${LOG_BBS}"
+        ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" | ${XZ_BIN} --threads=${XZ_THREADS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${LOG_BBS}"
         if [ "$?" = "0" ]; then
             permnote "Snapshot successfully sent."
-            if [ -f "/.build-host" ]; then
+            if [ -f "${BUILD_HOST_MARKER}" ]; then
                 permnote "Detected built-host type, removing version snapshot: ${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}.."
                 ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}"
             fi

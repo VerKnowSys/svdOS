@@ -70,7 +70,7 @@ build_base () {
     ${TIME_BIN} ${SERVED_REPO}${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}/ /usr/src/
 
     cd /usr/src || exit 6
-    DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
+    DESTBASE="${SHARED_DIR}/${SYSTEM_NAME}-${OS_VER}-${ARCH}"
     # ${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
     # DESTDIR="${DESTBASE}-${TIMESTAMP}"
 

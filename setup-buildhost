@@ -22,12 +22,6 @@ setup_buildhost () {
             ${SYSCTL_BIN} hardening.pax.disallow_map32bit.status=1
 
             set +e
-            note "Loading Dtrace"
-            ${KLDLOAD_BIN} dtraceall
-
-            note "Creating /User/.ssh/config"
-            echo "Host verknowsys.com *.verknowsys.com" > /User/.ssh/config
-            echo "Port 60022" >> /User/.ssh/config
 
             note "Turning off Syslog-ng (is part of /Software so cannot be run on build host)"
             ${SED_BIN} -i '' -e 's#syslog_ng_enable="YES"#syslog_ng_enable="NO"#' /etc/rc.conf 2>/dev/null

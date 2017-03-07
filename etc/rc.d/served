@@ -17,11 +17,12 @@ rcvar="served_enable"
 start_precmd="served_prestart"
 separator="---------------------------------------------------------------------------"
 
-SERVED_REPO="/var/ServeD-OS"
+SERVED_REPO="/Projects/ServeD-OS"
+BUILD_HOST_MARKER="/.build-host"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 served_prestart () {
-    if [ -f "/.build-host" ]; then
+    if [ -f "${BUILD_HOST_MARKER}" ]; then
         echo "${separator}"
         printf "\nBuild-host: $(hostname -f)\n"
         . /usr/share/sofin/loader
