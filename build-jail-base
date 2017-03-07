@@ -1,47 +1,7 @@
+#!/bin/sh
+
 
 build_base () {
-
-    # # FreeBSD base version:
-    # SYSTEM_VERSION="$1"
-    # if [ "${SYSTEM_VERSION}" = "" ]; then
-    #     error "No version specified!"
-    # fi
-
-    # MAIN_REPOSITORY="$2"
-    # if [ "${MAIN_REPOSITORY}" = "" ]; then
-    #     error "No main repository specified!"
-    # fi
-
-    # CURRENT_BRANCH="$3"
-    # if [ "${CURRENT_BRANCH}" = "" ]; then
-    #     error "No current branch specified!"
-    # fi
-
-    # ARCH="$4"
-    # if [ "${ARCH}" = "" ]; then
-    #     error "No architecture specified!"
-    # fi
-    # if [ "${ARCH}" = "arm" ]; then
-    #     ARCH_SUBTYPE="armv6hf"
-    # else
-    #     ARCH_SUBTYPE="${ARCH}"
-    # fi
-
-    # SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
-    # SERVED_REPO="/Projects/ServeD-OS"
-    # PARALLEL_JOBS="6"
-    # SHARED_DIR="/Shared"
-    # # DIFFS_DIR="${SHARED_DIR}/Diffs"
-    # LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
-
-    # if [ ! -d "${SERVED_REPO}" ]; then
-    #     cd /var
-    #     GIT_SSL_NO_VERIFY=true ${GIT_BIN} clone ${SERVEDOS_GIT_ORIGIN}
-    # else
-    #     cd ${SERVED_REPO}
-    #     GIT_SSL_NO_VERIFY=true ${GIT_BIN} pull ${SERVEDOS_GIT_ORIGIN}
-    # fi
-
     # main()
     TIMESTAMP="$(${DATE_BIN} +%F-%s)"
     ${RM_BIN} -f ${LOG_OUTPUT}
@@ -54,10 +14,10 @@ build_base () {
         # svn co http://svn0.eu.FreeBSD.org/base/releng/${SYSTEM_VERSION} ${SYSTEM_VERSION}
         ${GIT_BIN} clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${SYSTEM_VERSION} # GIT_SSL_NO_VERIFY=true
         cd ${SYSTEM_VERSION}
-        ${GIT_BIN} checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true # GIT_SSL_NO_VERIFY=true
+        ${GIT_BIN} checkout -B ${CURRENT_BRANCH} > /dev/null 2>> ${LOG_OUTPUT} || true # GIT_SSL_NO_VERIFY=true
     else
         cd ${SYSTEM_VERSION}
-        ${GIT_BIN} checkout ${CURRENT_BRANCH} > /dev/null 2>&1 # GIT_SSL_NO_VERIFY=true
+        ${GIT_BIN} checkout ${CURRENT_BRANCH} > /dev/null 2>> ${LOG_OUTPUT} # GIT_SSL_NO_VERIFY=true
         ${GIT_BIN} pull origin ${CURRENT_BRANCH} # GIT_SSL_NO_VERIFY=true
         permnote "Working on branch: $(${GIT_BIN} branch)"
     fi
@@ -100,7 +60,7 @@ build_base () {
             DESTDIR=${DESTBASE} \
             TARGET=${ARCH} \
             TARGET_ARCH=${ARCH_SUBTYPE} \
-            >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
+            >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT} || exit 11
     fi
 
     permnote "Building kernel"
@@ -109,7 +69,7 @@ build_base () {
         DESTDIR=${DESTBASE} \
         TARGET=${ARCH} \
         TARGET_ARCH=${ARCH_SUBTYPE} \
-        >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
+        >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT} || exit 10
 
     # permnote "Wiping out previous world"
     # ${RM_BIN} -rf ${DESTBASE}/* >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
@@ -122,32 +82,32 @@ build_base () {
         DESTDIR=${DESTBASE} \
         TARGET=${ARCH} \
         TARGET_ARCH=${ARCH_SUBTYPE} \
-        >> ${LOG_OUTPUT} 2>&1
+        >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         ${RM_BIN} -rf /var/tmp/temproot
 
         permnote "Merging Pre-buildworld configuration"
-        ${MERGEMASTER_BIN} -p -a >> ${LOG_OUTPUT} 2>&1
+        ${MERGEMASTER_BIN} -p -a >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
         permnote "Installing world"
-        ${MAKE_BIN} installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1
+        ${MAKE_BIN} installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
 
         permnote "Merging configuration in: ${DESTBASE}"
-        ${MERGEMASTER_BIN} -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>&1
+        ${MERGEMASTER_BIN} -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
         permnote "Deleting old dirs, files and libs"
-        ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>&1 || true
+        ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT} || true
     fi
 
     permnote "Cleaning up"
-    ${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>&1
+    ${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
     # permnote "Snapshotting after installation"
     # ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
 
     # permnote "Storing fs diff"
-    # ${MKDIR_BIN} -p ${DIFFS_DIR} > /dev/null 2>&1
+    # ${MKDIR_BIN} -p ${DIFFS_DIR} > /dev/null 2>> ${LOG_OUTPUT}
     # ${ZFS_BIN} send -i ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end > ${DIFFS_DIR}/build-${TIMESTAMP}.zfs
 
     # set +e

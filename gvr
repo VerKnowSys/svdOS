@@ -12,15 +12,15 @@ ORIGIN="origin"
 KERN_SECURELEVEL="0"
 BRIDGE_DEVICE="bridge0"
 VLAN_DEVICE="vlan"
-SERVED_REPO="/var/ServeD-OS"
-SOFIN_REPO="/var/sofin"
+SERVED_REPO="/Projects/ServeD-OS"
+SOFIN_REPO="/Projects/Sofin"
 DEFAULT_SOFIN_REPO="https://github.com/VerKnowSys/sofin.git"
 # SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
 # IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 JOT_BIN="/usr/bin/jot"
 GMAKE_BIN="/Software/Make/bin/make"
 DEFAULT_ZPOOL="zroot"
-DEFAULT_VERSION="11.0"
+DEFAULT_VERSION="12"
 DEFAULT_SHELL="/Software/Zsh/exports/zsh"
 stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
 if [ "${stored_version}" != "-" ]; then
@@ -497,9 +497,6 @@ ${JAIL_NAME} {
     wrun "${MV_BIN} -v ${CELL}/etc/zsh/zshenv ${CELL}/etc/zshenv" && \
     dnote "Jail system shell configured"
 
-    if [ ! -x "${GMAKE_BIN}" ]; then
-        wrun "s i Gmake"
-    fi
     wrun "${MV_BIN} ${CELL}/usr/bin/make ${CELL}/usr/bin/bsdmake" && \
     wrun "${CP_BIN} ${GMAKE_BIN} ${CELL}/usr/bin/make" && \
     dnote "Replaced default BSD make with GNU make (which is expected when Gold LD is installed)"

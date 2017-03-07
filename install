@@ -318,7 +318,7 @@ unset method
 
 JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
 
-wrun "${TEST_BIN} -d ${JAIL_SOURCE}" # ASSERT:
+wrun "test -d ${JAIL_SOURCE}" # ASSERT:
 
 if [ "${SHELL}" != "${DEFAULT_SHELL}" ]; then
     ${GREP_BIN} -R 'Zsh/exports/zsh' /etc/shells > /dev/null 2>&1
@@ -350,7 +350,7 @@ fi
 # note "Updating sudo for ${SYSTEM_VERSION} jail base"
 
 for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
-    ${TEST_BIN} -f ${f} && wrun "${CHFLAGS_BIN} -v noschg ${f}"
+    test -f ${f} && wrun "${CHFLAGS_BIN} -v noschg ${f}"
 done
 if [ -f "${SVDINIT_BIN}" ]; then
     wrun "${RM_BIN} -fv ${SVDINIT_BIN}" && \
@@ -366,7 +366,7 @@ dnote "Installed: ${SVDINIT_BIN}" && \
 INSTALLED_SVDINIT="1"
 
 for f in ${SVDINIT_BIN} ${SVDINIT_BACKUP_BIN}; do
-    ${TEST_BIN} -f "${f}" && wrun "${CHFLAGS_BIN} -v schg ${f}"
+    test -f "${f}" && wrun "${CHFLAGS_BIN} -v schg ${f}"
 done
 
 wrun "${INSTALL_BIN} -v ${SERVED_REPO}/etc/rc.svdsysup /etc" && \

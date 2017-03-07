@@ -1,3 +1,4 @@
+#!/bin/sh
 
 commit_snapshots_build () {
 
@@ -42,14 +43,14 @@ commit_snapshots_build () {
 
         cd "${CACHE_DIR}"
         # destroy a snapshot if already exists
-        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" 2>/dev/null || true
-        ${ZFS_BIN} snapshot "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}"
-        ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" | ${XZ_BIN} --threads=${XZ_THREADS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${LOG_BBS}"
+        ${ZFS_BIN} destroy "${ZPOOL}${realpath}@v${VERSION}" 2>/dev/null || true
+        ${ZFS_BIN} snapshot "${ZPOOL}${realpath}@v${VERSION}"
+        ${ZFS_BIN} send -D -L -e -p -v "${ZPOOL}${realpath}@v${VERSION}" | ${XZ_BIN} --threads=${XZ_THREADS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${LOG_BBS}"
         if [ "$?" = "0" ]; then
             permnote "Snapshot successfully sent."
             if [ -f "${BUILD_HOST_MARKER}" ]; then
-                permnote "Detected built-host type, removing version snapshot: ${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}.."
-                ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}"
+                permnote "Detected built-host type, removing version snapshot: ${ZPOOL}${realpath}@v${VERSION}.."
+                ${ZFS_BIN} destroy "${ZPOOL}${realpath}@v${VERSION}"
             fi
         else
             error "Something went wrong while sending snapshot!"
