@@ -87,7 +87,7 @@ done
 echo "Creating ${SHARED_DIR}"
 ${SSH_BIN} root@xh1 \
     "${ZFS_BIN} create -o mountpoint=${SHARED_DIR} ${ZPOOL}${SHARED_DIR}; \
-    ${ZFS_BIN} create ${ZPOOL}${SHARED_DIR}/${SYSTEM_NAME}-${OS_VER}-${ARCH}; \
+    ${ZFS_BIN} create ${ZPOOL}${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}; \
     "
 
 echo "Configuring base RC system"

@@ -3,7 +3,7 @@ commit_snapshots_build () {
 
 
     clean_before () {
-        cd "${SHARED_DIR}/${SYSTEM_NAME}-${OS_VER}-${ARCH}"
+        cd "${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
         for unnec in /etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root; do
             ${FIND_BIN} ".${unnec}" -delete 2>> ${LOG_BBS} && \
             permnote "Removed dir: .${unnec}"
@@ -13,9 +13,9 @@ commit_snapshots_build () {
 
     compile_jails () {
         ${MKDIR_BIN} -p "${CACHE_DIR}"
-        BASE_SNAPSHOT="${BASE_NAME}-${OS_VER}-v${VERSION}-${ARCH}"
+        BASE_SNAPSHOT="${BASE_NAME}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}"
         permnote "Compiling snapshot: ${BASE_SNAPSHOT}"
-        realpath="${SHARED_DIR}/${SYSTEM_NAME}-${OS_VER}-${ARCH}"
+        realpath="${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
 
         if [ -x "${LLD_BIN}" ]; then
             permnote "Installing additional linker: $(distn "${LLD_BIN}")"
@@ -77,7 +77,7 @@ commit_snapshots_build () {
                  echo '${VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${LOG_BBS} && \
                 permnote "Remote version file updated successfully with version: ${VERSION}"
         else
-            error "Something went wrong while uploading Jails base. Launch args: '${LAUNCH_ARGS}';"
+            error "Something went wrong while uploading Jails base!"
         fi
     }
 
