@@ -41,11 +41,12 @@ commit_snapshots_build () {
 
 
     compile_jails () {
+        SHARED_DIR="/Shared"
         ${MKDIR_BIN} -p /var/.cache
         DEFAULT_ARCHIVE_EXT=".zfsx"
         BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
         permnote "Compiling snapshot: ${BASE_SNAPSHOT}"
-        realpath="/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
+        realpath="${SHARED_DIR}/FreeBSD-${OS_VER}-${ARCH}"
 
         LLD="/Software/Lld/bin/lld"
         if [ -x "${LLD}" ]; then
