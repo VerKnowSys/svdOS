@@ -9,11 +9,11 @@ _host_number="${1:-"1"}"
 
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
-SYSTEM_VERSION="11" # the default
+SYSTEM_VERSION="12" # the default
 ZPOOL="zroot"
 ORIGIN="origin"
-SOFIN_REPO="/var/sofin"
-SERVED_REPO="/var/ServeD-OS"
+SOFIN_REPO="/Projects/sofin"
+SERVED_REPO="/Projects/ServeD-OS"
 CACERT_SOURCE="http://curl.haxx.se/ca/cacert.pem"
 CACERT_SOURCE_ALT="http://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt"
 DEFAULT_ZFS_STREAM_EXT=".zfsx"
@@ -51,6 +51,7 @@ SYNC_BIN="/bin/sync"
 XZCAT_BIN="/usr/bin/xzcat"
 SED_BIN="/usr/bin/sed"
 CP_BIN="/bin/cp"
+LN_BIN="/bin/ln"
 RM_BIN="/bin/rm"
 TAR_BIN="/usr/bin/tar"
 SCP_BIN="/usr/bin/scp"
@@ -60,6 +61,7 @@ INSTALL_BIN="/usr/bin/install"
 GZIP_BIN="/usr/bin/gzip"
 PW_BIN="/usr/sbin/pw"
 CHSH_BIN="/usr/bin/chsh"
+MAKE_BIN="/usr/bin/make"
 
 # TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 # ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
@@ -157,14 +159,18 @@ ${SCP_BIN} \
     "root@xh1:/boot/loader.conf"
 
 echo "Creating projects archive…"
-${RM_BIN} -f .archive-base-projects.tar.xz
-${TAR_BIN} -cJf .archive-base-projects.tar.xz \
+${TAR_BIN} -cJf ".archive-base-projects.tar.xz" \
     /Projects/ServeD-OS \
     /Projects/Sofin
 
+echo "Sending projects archive…"
 ${SCP_BIN} \
     ".archive-base-projects.tar.xz" \
     "root@xh1:${CACHE_DIR}/"
+
+echo "Cleaning local archive…"
+${RM_BIN} -f \
+    ".archive-base-projects.tar.xz"
 
 echo "Setting HOME to /User, Zsh as default shell, installing base software"
 ${SSH_BIN} root@xh1 \
@@ -172,11 +178,22 @@ ${SSH_BIN} root@xh1 \
     ${SED_BIN} -i '' -e 's|^/bin/tcsh|/Software/Zsh/exports/zsh|g' /etc/shells; \
     ${CHSH_BIN} -s /Software/Zsh/exports/zsh root; \
     ${RM_BIN} -rf /root; \
-    ${TAR_BIN} qxfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory /; \
+    ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / 2>/dev/null; \
     cd /Projects/Sofin; \
     bin/install; \
     echo LANG=\"en_GB.UTF-8\" > /User/.zshenv; \
     echo LANGUAGE=\"en_GB.UTF-8\" >> /User/.zshenv; \
+    cd /Projects; \
+    ${GIT_BIN} clone https://github.com/vermaden/beadm.git 2>/dev/null; \
+    ${GZIP_BIN} beadm/beadm.1 2>/dev/null; \
+    ${INSTALL_BIN} -v beadm/beadm.1.gz /usr/share/man/man1/; 2>/dev/null \
+    ${INSTALL_BIN} -v beadm/beadm /usr/sbin/beadm; \
+    cd ${SERVED_REPO}; \
+    ${CP_BIN} -fr shell/ /etc/zsh; \
+    ${LN_BIN} -fvs /etc/zsh/zshenv /etc/zshenv; \
+    ${LN_BIN} -fvs /etc/zsh/zshrc /etc/zshrc; \
+    touch /.build-host; \
+    printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' > /User/.ssh/config; \
     "
 
 echo "Done"
