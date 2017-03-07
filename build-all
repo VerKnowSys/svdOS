@@ -2,6 +2,8 @@
 
 . /usr/share/sofin/loader
 
+s disable
+
 unset CXX
 unset CPP
 unset CC
