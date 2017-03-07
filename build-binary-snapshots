@@ -3,53 +3,48 @@ commit_snapshots_build () {
 
 
     clean_before () {
-        cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
+        cd "${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
         for unnec in /etc /tmp /dev /mnt /media /proc /COPYRIGHT /sys /var/mail /usr/home /var/mail /var/tmp /.profile /rescue /root; do
-            ${FIND_BIN} ".${unnec}" -delete 2>> ${BBS_LOG} && \
+            ${FIND_BIN} ".${unnec}" -delete 2>> ${LOG_BBS} && \
             permnote "Removed dir: .${unnec}"
         done
     }
 
 
     compile_jails () {
-        SHARED_DIR="/Shared"
-        ${MKDIR_BIN} -p /var/.cache
-        DEFAULT_ARCHIVE_EXT=".zfsx"
+        ${MKDIR_BIN} -p "${CACHE_DIR}"
         BASE_SNAPSHOT="${BASE_NAME}-${OS_VER}-v${VERSION}-${ARCH}"
         permnote "Compiling snapshot: ${BASE_SNAPSHOT}"
-        realpath="${SHARED_DIR}/FreeBSD-${OS_VER}-${ARCH}"
+        realpath="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
 
-        LLD="/Software/Lld/bin/lld"
-        if [ -x "${LLD}" ]; then
-            permnote "Installing additional linker: $(distn "${LLD}")"
-            ${INSTALL_BIN} -v "${LLD}" "${realpath}/usr/bin/ld.lld" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        if [ -x "${LLD_BIN}" ]; then
+            permnote "Installing additional linker: $(distn "${LLD_BIN}")"
+            ${INSTALL_BIN} -v "${LLD_BIN}" "${realpath}/usr/bin/ld.lld" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
         fi
 
-        GOLD="/Software/Gold/bin/ld.gold"
-        GOLD_PLUGIN="/Software/Gold/lib/LLVMgold.so"
-        if [ -x "${GOLD}" -a -x "${GOLD_PLUGIN}" ]; then
-            permnote "Installing additional linker: $(distn "${GOLD}")"
-            ${INSTALL_BIN} -v "${GOLD}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
-            ${INSTALL_BIN} -v "${GOLD_PLUGIN}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        if [ -x "${GOLD_BIN}" ] && [ -x "${GOLD_PLUGIN}" ]; then
+            permnote "Installing additional linker: $(distn "${GOLD_BIN}")"
+            ${INSTALL_BIN} -v "${GOLD_BIN}" "${realpath}/usr/bin" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
+            ${INSTALL_BIN} -v "${GOLD_PLUGIN}" "${realpath}/usr/lib" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
         fi
 
-        # for file in ${GOLD}/lib/LLVMgold.so ${GOLD}/lib/libLTO.so; do
-        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        # for file in ${GOLD_BIN}/lib/LLVMgold.so ${GOLD_BIN}/lib/libLTO.so; do
+        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
         # done
-        # for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/bin -type f); do
-        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        # for file in $(${FIND_BIN} ${GOLD_BIN}/${TARGET_TRIPPLE}/bin -type f); do
+        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/bin" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
         # done
         # ${MKDIR_BIN} -p "${realpath}/usr/lib/ldscripts"
-        # for file in $(${FIND_BIN} ${GOLD}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
-        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${BBS_LOG}" 2>> "${BBS_LOG}"
+        # for file in $(${FIND_BIN} ${GOLD_BIN}/${TARGET_TRIPPLE}/lib/ldscripts -type f); do
+        #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib/ldscripts" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
         # done
         # permnote "Golden linker merged with current software base"
 
-        cd /var/.cache
+        cd "${CACHE_DIR}"
         # destroy a snapshot if already exists
         ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" 2>/dev/null || true
         ${ZFS_BIN} snapshot "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}"
-        ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${BBS_LOG}"
+        ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${LOG_BBS}"
         if [ "$?" = "0" ]; then
             permnote "Snapshot successfully sent."
             if [ -f "/.build-host" ]; then
@@ -69,7 +64,7 @@ commit_snapshots_build () {
             -o UserKnownHostsFile=/dev/null \
             -o StrictHostKeyChecking=no \
             ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} \
-            ${DESTINATION} 2>> ${BBS_LOG} && \
+            ${DESTINATION} 2>> ${LOG_BBS} && \
             permnote "Uploaded successfully."
 
         if [ "$?" = "0" ]; then
@@ -79,7 +74,7 @@ commit_snapshots_build () {
                 -o StrictHostKeyChecking=no \
                 dmilith@served.verknowsys.com \
                 "${GREP_BIN} -R '${VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
-                 echo '${VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${BBS_LOG} && \
+                 echo '${VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${LOG_BBS} && \
                 permnote "Remote version file updated successfully with version: ${VERSION}"
         else
             error "Something went wrong while uploading Jails base. Launch args: '${LAUNCH_ARGS}';"

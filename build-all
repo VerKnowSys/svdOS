@@ -3,61 +3,18 @@
 
 LAUNCH_ARGS="$*"
 
-
-MAIN_REPOSITORY="https://github.com/HardenedBSD/hardenedBSD.git"
-CURRENT_BRANCH="hardened/current/master"
-
-
 test -x /usr/bin/s && s disable
 . /usr/share/sofin/loader
 
-
-unset CXX
-unset CPP
-unset CC
-unset PKG_CONFIG_PATH
-unset MANPATH
-unset LDFLAGS
-unset CXXFLAGS
-unset CFLAGS
-unset MAIL
-unset MAILCHECK
-unset PATH
-unset CDPATH
-unset LANG
-unset LANGUAGE
-unset LC_TIME
-unset LC_NUMERIC
-unset LC_MONETARY
-unset LC_MESSAGES
-unset LC_CTYPE
-unset LC_COLLATE
-unset LC_ALL
-unset KEYTIMEOUT
-unset FIGNORE
-
 . build.env
 
-VERSION_MAJOR="1"
-OS_VER="12"
-LANG="C"
-SHELL="/bin/sh"
-PATH="/Software/Git/exports:/bin:/usr/bin:/sbin:/usr/sbin:/usr/libexec"
-BUILD_NUMBER_FILE="${HOME}/.svd-os.build.number"
 
 test -f "${BUILD_NUMBER_FILE}" || echo "1" > "${BUILD_NUMBER_FILE}"
-BUILD_NUMBER="$(echo "$(cat "${BUILD_NUMBER_FILE}" 2>/dev/null)+1" | bc 2>/dev/null)"
-VERSION="${VERSION_MAJOR}.${OS_VER}.${BUILD_NUMBER}"
+export BUILD_NUMBER="$(echo "$(cat "${BUILD_NUMBER_FILE}" 2>/dev/null)+1" | bc 2>/dev/null)"
+export VERSION="${VERSION_MAJOR}.${OS_VER}.${BUILD_NUMBER}"
 
 echo "BUILD no: ${BUILD_NUMBER}"
 echo "${BUILD_NUMBER}" > "${BUILD_NUMBER_FILE}"
-
-# MAIN_REPOSITORY="https://github.com/hardenedbsd/hardenedbsd-stable/"
-DESTINATION="dmilith@served.verknowsys.com:/home/dmilith/ServeD/Web/"
-BASE_NAME="ServeD"
-if [ -z "${ARCH}" ]; then
-    ARCH="$(uname -m)"
-fi
 
 ${INSTALL_BIN} -v etc/make.conf /etc/
 ${INSTALL_BIN} -v etc/src.conf /etc/
@@ -81,32 +38,12 @@ case ${ARCH} in
 esac
 
 unset CC CPP CXX CFLAGS CXXFLAGS LDFLAGS MANPATH PATH PKG_CONFIG_PATH MAIL
-
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/libexec
-OS_NAME="FreeBSD"
-SERVED_REPO="/Projects/ServeD-OS"
-PARALLEL_JOBS="6"
-SHARED_DIR="/Shared"
-# DIFFS_DIR="${SHARED_DIR}/Diffs"
-LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
-LOG_BBS="/var/log/messages"
-
-
-# load functions for base build
-zfs create -p zroot${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}
+export PATH
 
 set -e
+
 . ./build-jail-base
 . ./build-binary-snapshots
-
-
-# FreeBSD base version:
-
-if [ "${ARCH}" = "arm" ]; then
-    ARCH_SUBTYPE="armv6hf"
-else
-    ARCH_SUBTYPE="${ARCH}"
-fi
 
 build_base
 commit_snapshots_build

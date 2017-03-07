@@ -5,35 +5,8 @@
 
 reset
 
-# tunables:
-export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
-SYSTEM_VERSION="12" # the default
-ZPOOL="zroot"
-SERVED_REPO="/Projects/ServeD-OS"
-CACERT_SOURCE="http://curl.haxx.se/ca/cacert.pem"
-CACERT_SOURCE_ALT="http://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt"
-DEFAULT_ZFS_STREAM_EXT=".zfsx"
-
-error_char="✘"
-SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
-DEFAULT_SOFIN_REPOSITORY="https://github.com/VerKnowSys/sofin.git"
-BASE="ServeD-OS-Base"
-BASE_SOURCE="http://served.verknowsys.com/"
-VKS_KERNEL="/boot/verknowsys"
-CACHE_DIR="/var/.cache"
-
 . build.env
 
-
-# TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
-# ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
-# UNAME_OS="$(${UNAME_BIN} -s 2>/dev/null)"
-# OS_TRIPPLE="${SYSTEM_VERSION}-${ORIGIN}-${ARCH}"
-# VERSION="0.11.88"
-
-
-# host side preparation:
-# echo "Host number: ${_host_number}"
 echo "Preparing dirs…"
 ${SSH_BIN} root@xh1 \
     "${MKDIR_BIN} -p ${CACHE_DIR} /User/.ssh"
@@ -111,6 +84,12 @@ for _dataset_origin in Software Services User; do
     fi
 done
 
+echo "Creating ${SHARED_DIR}"
+${SSH_BIN} root@xh1 \
+    "${ZFS_BIN} create -o mountpoint=${SHARED_DIR} ${ZPOOL}${SHARED_DIR}; \
+    ${ZFS_BIN} create ${ZPOOL}${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}; \
+    "
+
 echo "Configuring base RC system"
 ${SCP_BIN} \
     "etc/rc.build.conf" \
@@ -123,7 +102,8 @@ ${SCP_BIN} \
 echo "Creating projects archive…"
 ${TAR_BIN} -cJf ".archive-base-projects.tar.xz" \
     /Projects/ServeD-OS \
-    /Projects/Sofin
+    /Projects/Sofin \
+    >/dev/null
 
 echo "Sending projects archive…"
 ${SCP_BIN} \
@@ -140,7 +120,7 @@ ${SSH_BIN} root@xh1 \
     ${SED_BIN} -i '' -e 's|^/bin/tcsh|${DEFAULT_SHELL}|g' /etc/shells; \
     ${CHSH_BIN} -s ${DEFAULT_SHELL} root; \
     ${RM_BIN} -rf /root; \
-    ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / 2>/dev/null; \
+    ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / >/dev/null; \
     cd /Projects/Sofin; \
     bin/install; \
     echo LANG=\"en_GB.UTF-8\" > /User/.zshenv; \
