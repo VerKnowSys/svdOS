@@ -61,6 +61,9 @@ vfs.zfs.arc_max="128M"
 vfs.zfs.vdev.cache.size="5M"
 console="vidconsole,comconsole"
 
+# Tracing, monitoring and all the DTrace goodies:
+dtrace_load="YES"
+dtraceall_load="YES"
 
 # HBSD is aggressive with stack randomization, which can cause issues under some edge cases:
 # hardening.pax.aslr.vdso_len: (default on amd64: 28)
