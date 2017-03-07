@@ -27,21 +27,20 @@ unset KEYTIMEOUT
 unset FIGNORE
 
 
-LANG=C
-SHELL=/bin/sh
-PATH=/Software/Git/exports:/bin:/usr/bin:/sbin:/usr/sbin:/usr/libexec
-s disable
+OS_VER="12"
+LANG="C"
+SHELL="/bin/sh"
+PATH="/Software/Git/exports:/bin:/usr/bin:/sbin:/usr/sbin:/usr/libexec"
+BUILD_NUMBER_FILE="${HOME}/.svd-os.build.number"
 
+test ! -f "${BUILD_NUMBER_FILE}" || echo "1" > "${BUILD_NUMBER_FILE}"
+BUILD_NUMBER="$(echo "$(cat "${BUILD_NUMBER_FILE}" 2>/dev/null)+1" | bc 2>/dev/null)"
+VERSION="0.${OS_VER}.${BUILD_NUMBER}"
 
-# HardenedBSD base branch:
-VERSION="$1"
-if [ "${VERSION}" = "" ]; then
-    echo "No version specified! Specify f.e.: 0.99.10"
-    exit 1
-fi
-OS_VER="11.0" # 10.2
+echo "BUILD no: ${BUILD_NUMBER}"
+echo "${BUILD_NUMBER}" > "${BUILD_NUMBER_FILE}"
+
 MAIN_REPOSITORY="https://github.com/HardenedBSD/hardenedBSD.git"
-# CURRENT_BRANCH="hardened/11-stable/master-libressl"
 CURRENT_BRANCH="hardened/current/master"
 
 # MAIN_REPOSITORY="https://github.com/hardenedbsd/hardenedbsd-stable/"
