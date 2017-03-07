@@ -5,8 +5,6 @@
 
 reset
 
-_host_number="${1:-"1"}"
-
 # tunables:
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 SYSTEM_VERSION="12" # the default
@@ -71,7 +69,7 @@ MAKE_BIN="/usr/bin/make"
 
 
 # host side preparation:
-echo "Host number: ${_host_number}"
+# echo "Host number: ${_host_number}"
 echo "Preparing dirs…"
 ${SSH_BIN} root@xh1 \
     "${MKDIR_BIN} -p ${CACHE_DIR} /User/.ssh"
