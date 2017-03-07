@@ -147,6 +147,15 @@ for _dataset_origin in Software Services User; do
     fi
 done
 
+echo "Configuring base RC system"
+${SCP_BIN} \
+    "etc/rc.build.conf" \
+    "root@xh1:/etc/rc.conf"
+
+${SCP_BIN} \
+    "etc/loader.build.conf" \
+    "root@xh1:/boot/loader.conf"
+
 echo "Creating projects archive…"
 ${RM_BIN} -f .archive-base-projects.tar.xz
 ${TAR_BIN} -cJf .archive-base-projects.tar.xz \
