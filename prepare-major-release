@@ -56,6 +56,10 @@ TAR_BIN="/usr/bin/tar"
 SCP_BIN="/usr/bin/scp"
 SSH_BIN="/usr/bin/ssh"
 PWD_MKDB_BIN="/usr/sbin/pwd_mkdb"
+INSTALL_BIN="/usr/bin/install"
+GZIP_BIN="/usr/bin/gzip"
+PW_BIN="/usr/sbin/pw"
+CHSH_BIN="/usr/bin/chsh"
 
 # TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 # ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
@@ -144,22 +148,22 @@ for _dataset_origin in Software Services User; do
 done
 
 echo "Creating projects archive…"
-${RM_BIN} -f archive-base-projects.tar.xz
-${TAR_BIN} -cJf archive-base-projects.tar.xz \
+${RM_BIN} -f .archive-base-projects.tar.xz
+${TAR_BIN} -cJf .archive-base-projects.tar.xz \
     /Projects/ServeD-OS \
     /Projects/Sofin
 
 ${SCP_BIN} \
-    "archive-base-projects.tar.xz" \
+    ".archive-base-projects.tar.xz" \
     "root@xh1:${CACHE_DIR}/"
 
 echo "Setting HOME to /User, Zsh as default shell, installing base software"
 ${SSH_BIN} root@xh1 \
-    "pw user mod root -d /User; \
-    sed -i '' -e 's|^/bin/tcsh|/Software/Zsh/exports/zsh|g' /etc/shells; \
-    chsh -s /Software/Zsh/exports/zsh root; \
-    rm -rf /root; \
-    tar xfJ ${CACHE_DIR}/archive-base-projects.tar.xz --directory /; \
+    "${PW_BIN} user mod root -d /User; \
+    ${SED_BIN} -i '' -e 's|^/bin/tcsh|/Software/Zsh/exports/zsh|g' /etc/shells; \
+    ${CHSH_BIN} -s /Software/Zsh/exports/zsh root; \
+    ${RM_BIN} -rf /root; \
+    ${TAR_BIN} qxfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory /; \
     cd /Projects/Sofin; \
     bin/install; \
     echo LANG=\"en_GB.UTF-8\" > /User/.zshenv; \
