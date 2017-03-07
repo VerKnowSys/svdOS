@@ -1,38 +1,38 @@
 
 build_base () {
 
-    # FreeBSD base version:
-    OS_VER="$1"
-    if [ "${OS_VER}" = "" ]; then
-        error "No version specified!"
-    fi
+    # # FreeBSD base version:
+    # OS_VER="$1"
+    # if [ "${OS_VER}" = "" ]; then
+    #     error "No version specified!"
+    # fi
 
-    MAIN_REPOSITORY="$2"
-    if [ "${MAIN_REPOSITORY}" = "" ]; then
-        error "No main repository specified!"
-    fi
+    # MAIN_REPOSITORY="$2"
+    # if [ "${MAIN_REPOSITORY}" = "" ]; then
+    #     error "No main repository specified!"
+    # fi
 
-    CURRENT_BRANCH="$3"
-    if [ "${CURRENT_BRANCH}" = "" ]; then
-        error "No current branch specified!"
-    fi
+    # CURRENT_BRANCH="$3"
+    # if [ "${CURRENT_BRANCH}" = "" ]; then
+    #     error "No current branch specified!"
+    # fi
 
-    ARCH="$4"
-    if [ "${ARCH}" = "" ]; then
-        error "No architecture specified!"
-    fi
-    if [ "${ARCH}" = "arm" ]; then
-        ARCH_SUBTYPE="armv6hf"
-    else
-        ARCH_SUBTYPE="${ARCH}"
-    fi
+    # ARCH="$4"
+    # if [ "${ARCH}" = "" ]; then
+    #     error "No architecture specified!"
+    # fi
+    # if [ "${ARCH}" = "arm" ]; then
+    #     ARCH_SUBTYPE="armv6hf"
+    # else
+    #     ARCH_SUBTYPE="${ARCH}"
+    # fi
 
-    SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
-    SERVED_REPO="/Projects/ServeD-OS"
-    PARALLEL_JOBS="${CPUS}"
-    SHARED_DIR="/Shared"
-    # DIFFS_DIR="${SHARED_DIR}/Diffs"
-    LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
+    # SERVEDOS_GIT_ORIGIN="https://github.com/VerKnowSys/ServeD-OS.git"
+    # SERVED_REPO="/Projects/ServeD-OS"
+    # PARALLEL_JOBS="6"
+    # SHARED_DIR="/Shared"
+    # # DIFFS_DIR="${SHARED_DIR}/Diffs"
+    # LOG_OUTPUT="/var/log/build-$(${DATE_BIN} +%F 2>/dev/null).log"
 
     # if [ ! -d "${SERVED_REPO}" ]; then
     #     cd /var
@@ -50,13 +50,13 @@ build_base () {
     permnote "Process started for OS version: ${OS_VER}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
 
     cd /var
-    if [ ! -d "${OS_VER}-src" ]; then
-        # svn co http://svn0.eu.FreeBSD.org/base/releng/${OS_VER} ${OS_VER}-src
-        ${GIT_BIN} clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${OS_VER} # GIT_SSL_NO_VERIFY=true -src
-        cd ${OS_VER}-src
+    if [ ! -d "${OS_VER}" ]; then
+        # svn co http://svn0.eu.FreeBSD.org/base/releng/${OS_VER} ${OS_VER}
+        ${GIT_BIN} clone --single-branch --branch ${CURRENT_BRANCH} ${MAIN_REPOSITORY} ${OS_VER} # GIT_SSL_NO_VERIFY=true
+        cd ${OS_VER}
         ${GIT_BIN} checkout -B ${CURRENT_BRANCH} > /dev/null 2>&1 || true # GIT_SSL_NO_VERIFY=true
     else
-        cd ${OS_VER}-src
+        cd ${OS_VER}
         ${GIT_BIN} checkout ${CURRENT_BRANCH} > /dev/null 2>&1 # GIT_SSL_NO_VERIFY=true
         ${GIT_BIN} pull origin ${CURRENT_BRANCH} # GIT_SSL_NO_VERIFY=true
         permnote "Working on branch: $(${GIT_BIN} branch)"
@@ -67,9 +67,9 @@ build_base () {
     ${INSTALL_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/
 
     permnote "Syncing sources to src"
-    ${TIME_BIN} ${SERVED_REPO}${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}-src/ /usr/src/ 2>/dev/null
+    ${TIME_BIN} ${SERVED_REPO}${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${OS_VER}/ /usr/src/
 
-    cd /usr/src
+    cd /usr/src || exit 6
     DESTBASE="${SHARED_DIR}/${OS_NAME}-${OS_VER}-${ARCH}"
     # ${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
     # DESTDIR="${DESTBASE}-${TIMESTAMP}"

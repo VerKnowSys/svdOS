@@ -1,35 +1,6 @@
 
 commit_snapshots_build () {
 
-    LAUNCH_ARGS="$*"
-
-    NAME="$1"
-    if [ "${NAME}" = "" ]; then
-        error "No name specified!"
-    fi
-
-    A_VERSION="$2"
-    if [ "${A_VERSION}" = "" ]; then
-        error "No version specified!"
-    fi
-
-    OS_VER="$3"
-    if [ "${OS_VER}" = "" ]; then
-        error "No OS version specified!"
-    fi
-
-    DESTINATION="$4"
-    if [ "${DESTINATION}" = "" ]; then
-        error "No destination path specified!"
-    fi
-
-    ARCH="$5"
-    if [ "${ARCH}" = "" ]; then
-        error "No architecture specified!"
-    fi
-
-    BBS_LOG="/var/log/messages"
-
 
     clean_before () {
         cd "/Jails/Shared/FreeBSD-${OS_VER}-${ARCH}"
@@ -44,7 +15,7 @@ commit_snapshots_build () {
         SHARED_DIR="/Shared"
         ${MKDIR_BIN} -p /var/.cache
         DEFAULT_ARCHIVE_EXT=".zfsx"
-        BASE_SNAPSHOT="${NAME}-${OS_VER}-v${A_VERSION}-${ARCH}"
+        BASE_SNAPSHOT="${BASE_NAME}-${OS_VER}-v${VERSION}-${ARCH}"
         permnote "Compiling snapshot: ${BASE_SNAPSHOT}"
         realpath="${SHARED_DIR}/FreeBSD-${OS_VER}-${ARCH}"
 
@@ -76,14 +47,14 @@ commit_snapshots_build () {
 
         cd /var/.cache
         # destroy a snapshot if already exists
-        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}" 2>/dev/null || true
-        ${ZFS_BIN} snapshot "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}"
-        ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${BBS_LOG}"
+        ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" 2>/dev/null || true
+        ${ZFS_BIN} snapshot "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}"
+        ${ZFS_BIN} send -D -L -e -p -v "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}" | ${XZ_BIN} --threads=${CPUS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${BBS_LOG}"
         if [ "$?" = "0" ]; then
             permnote "Snapshot successfully sent."
             if [ -f "/.build-host" ]; then
-                permnote "Detected built-host type, removing version snapshot: ${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}.."
-                ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${A_VERSION}"
+                permnote "Detected built-host type, removing version snapshot: ${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}.."
+                ${ZFS_BIN} destroy "${DEFAULT_ZPOOL:-zroot}${realpath}@v${VERSION}"
             fi
         else
             error "Something went wrong while sending snapshot!"
@@ -107,9 +78,9 @@ commit_snapshots_build () {
                 -o UserKnownHostsFile=/dev/null \
                 -o StrictHostKeyChecking=no \
                 dmilith@served.verknowsys.com \
-                "${GREP_BIN} -R '${A_VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
-                 echo '${A_VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${BBS_LOG} && \
-                permnote "Remote version file updated successfully with version: ${A_VERSION}"
+                "${GREP_BIN} -R '${VERSION}' /Users/dmilith/ServeD/Web/version-latest >/dev/null 2>&1 || \
+                 echo '${VERSION}' > /Users/dmilith/ServeD/Web/version-latest" 2>> ${BBS_LOG} && \
+                permnote "Remote version file updated successfully with version: ${VERSION}"
         else
             error "Something went wrong while uploading Jails base. Launch args: '${LAUNCH_ARGS}';"
         fi

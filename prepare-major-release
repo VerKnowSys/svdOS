@@ -9,8 +9,6 @@ reset
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 SYSTEM_VERSION="12" # the default
 ZPOOL="zroot"
-ORIGIN="origin"
-SOFIN_REPO="/Projects/sofin"
 SERVED_REPO="/Projects/ServeD-OS"
 CACERT_SOURCE="http://curl.haxx.se/ca/cacert.pem"
 CACERT_SOURCE_ALT="http://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt"
@@ -24,42 +22,8 @@ BASE_SOURCE="http://served.verknowsys.com/"
 VKS_KERNEL="/boot/verknowsys"
 CACHE_DIR="/var/.cache"
 
-DEFAULT_SHELL="/Software/Zsh/exports/zsh"
-TAIL_BIN="/usr/bin/tail"
-CHFLAGS_BIN="/bin/chflags"
-GIT_BIN="/Software/Git/exports/git"
-ZPOOL_BIN="/sbin/zpool"
-ZFS_BIN="/sbin/zfs"
-SVDINIT_BIN="/sbin/svdinit"
-SVDINIT_BACKUP_BIN="/var/.svdinit"
-FETCH_BIN="/usr/bin/fetch"
-BASENAME_BIN="/usr/bin/basename"
-GRPART_BIN="/sbin/gpart"
-GEOM_BIN="/sbin/geom"
-KLDXREF_BIN="/usr/sbin/kldxref"
-PRINTF_BIN="/usr/bin/printf"
-MKDIR_BIN="/bin/mkdir"
-UNAME_BIN="/usr/bin/uname"
-DATE_BIN="/bin/date"
-CLANG_BIN="/usr/bin/clang"
-GREP_BIN="/usr/bin/grep"
-EGREP_BIN="/usr/bin/egrep"
-XZ_BIN="/usr/bin/xz"
-SYNC_BIN="/bin/sync"
-XZCAT_BIN="/usr/bin/xzcat"
-SED_BIN="/usr/bin/sed"
-CP_BIN="/bin/cp"
-LN_BIN="/bin/ln"
-RM_BIN="/bin/rm"
-TAR_BIN="/usr/bin/tar"
-SCP_BIN="/usr/bin/scp"
-SSH_BIN="/usr/bin/ssh"
-PWD_MKDB_BIN="/usr/sbin/pwd_mkdb"
-INSTALL_BIN="/usr/bin/install"
-GZIP_BIN="/usr/bin/gzip"
-PW_BIN="/usr/sbin/pw"
-CHSH_BIN="/usr/bin/chsh"
-MAKE_BIN="/usr/bin/make"
+. build.env
+
 
 # TIMESTAMP="$(${DATE_BIN} +%s 2>/dev/null)"
 # ARCH="$(${UNAME_BIN} -m 2>/dev/null)"
@@ -173,8 +137,8 @@ ${RM_BIN} -f \
 echo "Setting HOME to /User, Zsh as default shell, installing base software"
 ${SSH_BIN} root@xh1 \
     "${PW_BIN} user mod root -d /User; \
-    ${SED_BIN} -i '' -e 's|^/bin/tcsh|/Software/Zsh/exports/zsh|g' /etc/shells; \
-    ${CHSH_BIN} -s /Software/Zsh/exports/zsh root; \
+    ${SED_BIN} -i '' -e 's|^/bin/tcsh|${DEFAULT_SHELL}|g' /etc/shells; \
+    ${CHSH_BIN} -s ${DEFAULT_SHELL} root; \
     ${RM_BIN} -rf /root; \
     ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / 2>/dev/null; \
     cd /Projects/Sofin; \
