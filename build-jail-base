@@ -3,7 +3,6 @@
 
 build_base () {
     # main()
-    TIMESTAMP="$(${DATE_BIN} +%F-%s)"
     ${RM_BIN} -f ${LOG_OUTPUT}
     ${TOUCH_BIN} ${LOG_OUTPUT}
     echo "Process started for OS version: ${SYSTEM_VERSION}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}" >> ${LOG_OUTPUT}
@@ -30,18 +29,33 @@ build_base () {
     ${TIME_BIN} ${SERVED_REPO}${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${SYSTEM_VERSION}/ /usr/src/
 
     cd /usr/src || exit 6
-    DESTBASE="${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
-    # ${ZFS_BIN} create ${DEFAULT_ZPOOL}${DESTBASE} 2>> ${LOG_OUTPUT} || true
-    # DESTDIR="${DESTBASE}-${TIMESTAMP}"
 
-    permnote "Preparing kernel configuration"
+    DESTBASE="${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
+    permnote "Preparing kernel configuration for destbase: ${DESTBASE}"
     ${GIT_BIN} reset --hard >> ${LOG_OUTPUT} # GIT_SSL_NO_VERIFY=true
-    ${RM_BIN} -fv sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-    if [ "${ARCH}" = "arm" ]; then
-        ${CP_BIN} -v ${SERVED_REPO}/kernel/VERKNOWSYS-${SYSTEM_VERSION}-RPI2 sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-    else
-        ${CP_BIN} -v ${SERVED_REPO}/kernel/VERKNOWSYS-${SYSTEM_VERSION} sys/${ARCH}/conf/VERKNOWSYS >> ${LOG_OUTPUT}
-    fi
+    ${RM_BIN} -fv sys/*/conf/VERKNOWSYS >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
+
+    echo "${ARCH} mode"
+    case "${ARCH}" in
+        arm|arm64)
+            ${CP_BIN} -v \
+                ${SERVED_REPO}/kernel/VERKNOWSYS-${SYSTEM_VERSION}-RPI2 \
+                sys/${ARCH}/conf/VERKNOWSYS \
+                >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
+            ;;
+
+        x86_64|amd64)
+            # NOTE: overriding x86_64 for architecture used by build system
+            ARCH="amd64"
+            DESTBASE="${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
+
+            ${CP_BIN} -v \
+                ${SERVED_REPO}/kernel/VERKNOWSYS-${SYSTEM_VERSION} \
+                sys/${ARCH}/conf/VERKNOWSYS \
+                >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
+            ;;
+
+    esac
 
     # permnote "Patching sources" # (exporting libucl, libxo, adding svdsysup to init apps)"
     # # spawn svdinit first:
@@ -50,16 +64,16 @@ build_base () {
     # # export libucl:
     permnote "Exporting UCL as regular OS library"
     ${SED_BIN} -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile
-    ${PATCH_BIN} -p0 -f < ${SERVED_REPO}/src/patches/export_ucl.patch >> ${LOG_OUTPUT}
+    ${PATCH_BIN} -p0 -f < ${SERVED_REPO}/src/patches/export_ucl.patch >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         permnote "Building world"
         ${MAKE_BIN} buildworld \
             -j${PARALLEL_JOBS} \
-            DEBUG= \
             DESTDIR=${DESTBASE} \
-            TARGET=${ARCH} \
             TARGET_ARCH=${ARCH_SUBTYPE} \
+            DEBUG= \
+            TARGET= \
             >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT} || exit 11
     fi
 
@@ -67,8 +81,9 @@ build_base () {
     ${MAKE_BIN} buildkernel \
         -j${PARALLEL_JOBS} \
         DESTDIR=${DESTBASE} \
-        TARGET=${ARCH} \
         TARGET_ARCH=${ARCH_SUBTYPE} \
+        TARGET= \
+        DEBUG= \
         >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT} || exit 10
 
     # permnote "Wiping out previous world"
@@ -80,9 +95,10 @@ build_base () {
     permnote "Installing kernel"
     ${MAKE_BIN} installkernel \
         DESTDIR=${DESTBASE} \
-        TARGET=${ARCH} \
         TARGET_ARCH=${ARCH_SUBTYPE} \
-        >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
+        TARGET= \
+        DEBUG= \
+        >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT} || exit 12
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         ${RM_BIN} -rf /var/tmp/temproot
@@ -91,13 +107,13 @@ build_base () {
         ${MERGEMASTER_BIN} -p -a >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
         permnote "Installing world"
-        ${MAKE_BIN} installworld DEBUG= DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
+        ${MAKE_BIN} installworld DEBUG= DESTDIR=${DESTBASE} TARGET= TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
 
         permnote "Merging configuration in: ${DESTBASE}"
         ${MERGEMASTER_BIN} -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
         permnote "Deleting old dirs, files and libs"
-        ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET=${ARCH} TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT} || true
+        ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET= TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT} || true
     fi
 
     permnote "Cleaning up"
