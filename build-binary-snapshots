@@ -14,7 +14,7 @@ commit_snapshots_build () {
 
     compile_jails () {
         ${MKDIR_BIN} -p "${CACHE_DIR}"
-        BASE_SNAPSHOT="${BASE_NAME}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}"
+        BASE_SNAPSHOT="${SYSTEM_NAME}-${SYSTEM_VERSION}-v${VERSION}-${ARCH}"
         permnote "Compiling snapshot: ${BASE_SNAPSHOT}"
         realpath="${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
 
