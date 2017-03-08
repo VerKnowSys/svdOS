@@ -26,7 +26,7 @@ build_base () {
     ${INSTALL_BIN} -v ${SERVED_REPO}/etc/src.conf /etc/
 
     permnote "Syncing sources to src"
-    ${TIME_BIN} ${SERVED_REPO}${RSYNC_BIN} -l -p -E -A -X -o -g -t -r --delete /var/${SYSTEM_VERSION}/ /usr/src/
+    ${GIT_BIN} clone --single-branch /var/${SYSTEM_VERSION} /usr/src
 
     cd /usr/src || exit 6
 
