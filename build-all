@@ -41,6 +41,8 @@ case ${ARCH} in
         ;;
 esac
 
+echo "Cleaning /usr/src"
+${RM_BIN} -rf /usr/src
 
 set -e
 echo "Pedantic mode enabled!"
