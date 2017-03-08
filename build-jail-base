@@ -68,7 +68,7 @@ build_base () {
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         permnote "Building world"
-        ${MAKE_BIN} buildworld \
+        ${MAKE_BIN} -s buildworld \
             -j${PARALLEL_JOBS} \
             DESTDIR=${DESTBASE} \
             TARGET_ARCH=${ARCH_SUBTYPE} \
@@ -78,7 +78,7 @@ build_base () {
     fi
 
     permnote "Building kernel"
-    ${MAKE_BIN} buildkernel \
+    ${MAKE_BIN} -s buildkernel \
         -j${PARALLEL_JOBS} \
         DESTDIR=${DESTBASE} \
         TARGET_ARCH=${ARCH_SUBTYPE} \
@@ -93,7 +93,7 @@ build_base () {
     # ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_begin
 
     permnote "Installing kernel"
-    ${MAKE_BIN} installkernel \
+    ${MAKE_BIN} -s installkernel \
         DESTDIR=${DESTBASE} \
         TARGET_ARCH=${ARCH_SUBTYPE} \
         TARGET= \
@@ -107,7 +107,7 @@ build_base () {
         ${MERGEMASTER_BIN} -p -a >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
         permnote "Installing world"
-        ${MAKE_BIN} installworld DEBUG= DESTDIR=${DESTBASE} TARGET= TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
+        ${MAKE_BIN} -s installworld DEBUG= DESTDIR=${DESTBASE} TARGET= TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
 
         permnote "Merging configuration in: ${DESTBASE}"
         ${MERGEMASTER_BIN} -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
