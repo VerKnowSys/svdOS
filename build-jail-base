@@ -32,7 +32,7 @@ build_base () {
 
     DESTBASE="${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
     permnote "Preparing kernel configuration for destbase: ${DESTBASE}"
-    ${GIT_BIN} reset --hard >> ${LOG_OUTPUT} # GIT_SSL_NO_VERIFY=true
+    # ${GIT_BIN} reset --hard >> ${LOG_OUTPUT} # GIT_SSL_NO_VERIFY=true
     ${RM_BIN} -fv sys/*/conf/VERKNOWSYS >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
     echo "${ARCH} mode"
@@ -71,9 +71,6 @@ build_base () {
         ${MAKE_BIN} -s buildworld \
             -j${PARALLEL_JOBS} \
             DESTDIR=${DESTBASE} \
-            TARGET_ARCH=${ARCH_SUBTYPE} \
-            DEBUG= \
-            TARGET= \
             >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT} || exit 11
     fi
 
@@ -81,9 +78,6 @@ build_base () {
     ${MAKE_BIN} -s buildkernel \
         -j${PARALLEL_JOBS} \
         DESTDIR=${DESTBASE} \
-        TARGET_ARCH=${ARCH_SUBTYPE} \
-        TARGET= \
-        DEBUG= \
         >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT} || exit 10
 
     # permnote "Wiping out previous world"
@@ -95,9 +89,6 @@ build_base () {
     permnote "Installing kernel"
     ${MAKE_BIN} -s installkernel \
         DESTDIR=${DESTBASE} \
-        TARGET_ARCH=${ARCH_SUBTYPE} \
-        TARGET= \
-        DEBUG= \
         >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT} || exit 12
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
@@ -107,17 +98,17 @@ build_base () {
         ${MERGEMASTER_BIN} -p -a >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
         permnote "Installing world"
-        ${MAKE_BIN} -s installworld DEBUG= DESTDIR=${DESTBASE} TARGET= TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
+        ${MAKE_BIN} -s installworld DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT}
 
         permnote "Merging configuration in: ${DESTBASE}"
         ${MERGEMASTER_BIN} -P -a -D${DESTBASE} >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
         permnote "Deleting old dirs, files and libs"
-        ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} TARGET= TARGET_ARCH=${ARCH_SUBTYPE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT} || true
+        ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT} || true
     fi
 
-    permnote "Cleaning up"
-    ${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
+    # permnote "Cleaning up"
+    # ${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
 
     # permnote "Snapshotting after installation"
     # ${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DESTBASE}@${TIMESTAMP}_end
