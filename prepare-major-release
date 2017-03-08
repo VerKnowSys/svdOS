@@ -134,8 +134,20 @@ ${SSH_BIN} root@xh1 \
     ${CP_BIN} -fr shell/ /etc/zsh; \
     ${LN_BIN} -fvs /etc/zsh/zshenv /etc/zshenv; \
     ${LN_BIN} -fvs /etc/zsh/zshrc /etc/zshrc; \
-    ${TOUCH_BIN} ${BUILD_HOST_MARKER}; \
     printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' > /User/.ssh/config; \
+    ${SYSCTL_BIN} vfs.zfs.prefetch_disable=1; \
+    ${SYSCTL_BIN} debug.witness.trace=0; \
+    ${SYSCTL_BIN} debug.witness.watch=0; \
+    ${SYSCTL_BIN} hardening.pax.pageexec.status=1; \
+    ${SYSCTL_BIN} hardening.pax.mprotect.status=1; \
+    ${SYSCTL_BIN} hardening.pax.aslr.status=1; \
+    ${SYSCTL_BIN} hardening.pax.disallow_map32bit.status=1; \
+    ${ZFS_BIN} set primarycache=none ${ZPOOL}/usr; \
+    ${ZFS_BIN} set secondarycache=none ${ZPOOL}/usr; \
+    ${ZFS_BIN} set checksum=fletcher4 ${ZPOOL}/usr; \
+    ${ZFS_BIN} set recordsize=4k ${ZPOOL}/usr; \
+    ${ZFS_BIN} set sync=disabled ${ZPOOL}/usr; \
+    ${TOUCH_BIN} ${BUILD_HOST_MARKER}; \
     "
 
 echo "Done"
