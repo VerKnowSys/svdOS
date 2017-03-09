@@ -18,16 +18,16 @@ commit_snapshots_build () {
         permnote "Compiling snapshot: ${BASE_SNAPSHOT}"
         realpath="${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
 
-        if [ -x "${LLD_BIN}" ]; then
-            permnote "Installing additional linker: $(distn "${LLD_BIN}")"
-            ${INSTALL_BIN} -v "${LLD_BIN}" "${realpath}/usr/bin/ld.lld" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
-        fi
+        # if [ -x "${LLD_BIN}" ]; then
+        #     permnote "Installing additional linker: $(distn "${LLD_BIN}")"
+        #     ${INSTALL_BIN} -v "${LLD_BIN}" "${realpath}/usr/bin/ld.lld" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
+        # fi
 
-        if [ -x "${GOLD_BIN}" ] && [ -x "${GOLD_PLUGIN}" ]; then
-            permnote "Installing additional linker: $(distn "${GOLD_BIN}")"
-            ${INSTALL_BIN} -v "${GOLD_BIN}" "${realpath}/usr/bin" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
-            ${INSTALL_BIN} -v "${GOLD_PLUGIN}" "${realpath}/usr/lib" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
-        fi
+        # if [ -x "${GOLD_BIN}" ] && [ -x "${GOLD_PLUGIN}" ]; then
+        #     permnote "Installing additional linker: $(distn "${GOLD_BIN}")"
+        #     ${INSTALL_BIN} -v "${GOLD_BIN}" "${realpath}/usr/bin" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
+        #     ${INSTALL_BIN} -v "${GOLD_PLUGIN}" "${realpath}/usr/lib" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
+        # fi
 
         # for file in ${GOLD_BIN}/lib/LLVMgold.so ${GOLD_BIN}/lib/libLTO.so; do
         #     ${INSTALL_BIN} -v "${file}" "${realpath}/usr/lib" >> "${LOG_BBS}" 2>> "${LOG_BBS}"
@@ -48,10 +48,10 @@ commit_snapshots_build () {
         ${ZFS_BIN} send -D -L -e -p -v "${ZPOOL}${realpath}@v${VERSION}" | ${XZ_BIN} --threads=${XZ_THREADS} > ${BASE_SNAPSHOT}${DEFAULT_ARCHIVE_EXT} 2>> "${LOG_BBS}"
         if [ "$?" = "0" ]; then
             permnote "Snapshot successfully sent."
-            if [ -f "${BUILD_HOST_MARKER}" ]; then
-                permnote "Detected built-host type, removing version snapshot: ${ZPOOL}${realpath}@v${VERSION}.."
-                ${ZFS_BIN} destroy "${ZPOOL}${realpath}@v${VERSION}"
-            fi
+            # if [ -f "${BUILD_HOST_MARKER}" ]; then
+            #     permnote "Detected built-host type, removing version snapshot: ${ZPOOL}${realpath}@v${VERSION}.."
+            #     ${ZFS_BIN} destroy "${ZPOOL}${realpath}@v${VERSION}"
+            # fi
         else
             error "Something went wrong while sending snapshot!"
         fi
