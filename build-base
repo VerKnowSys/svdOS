@@ -1,0 +1,177 @@
+#!/bin/sh
+
+
+build_base () {
+    ${RM_BIN} -f "${LOG_OUTPUT}"
+    ${TOUCH_BIN} "${LOG_OUTPUT}"
+    permnote "Process started for OS version: ${SYSTEM_VERSION}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
+
+    permnote "${SYSTEM_TYPE} version: ${VERSION}"
+    permnote "Build branch: ${CURRENT_BRANCH}"
+
+    if [ ! -d "/usr/${SYSTEM_NAME}-${SYSTEM_VERSION}" ]; then
+        cd /usr
+        # svn co http://svn0.eu.FreeBSD.org/base/releng/${VERSION} ${VERSION}
+        ${GIT_BIN} clone \
+            --single-branch \
+            --branch "${CURRENT_BRANCH}" \
+            "${MAIN_REPOSITORY}" \
+            "${SYSTEM_VERSION}"
+        cd "/usr/${SYSTEM_NAME}-${SYSTEM_VERSION}"
+    else
+        cd "/usr/${SYSTEM_NAME}-${SYSTEM_VERSION}"
+
+        ${GIT_BIN} pull origin "${CURRENT_BRANCH}"
+        permnote "On branch: $(${GIT_BIN} branch)"
+    fi
+
+    permnote "Setting up src.conf"
+    ${RM_BIN} -f /etc/src.conf
+    ${INSTALL_BIN} -v \
+        "${SERVED_REPO}/etc/src.conf" \
+        "/etc/src.conf"
+
+    permnote "Syncing sources to /usr/src"
+    ${GIT_BIN} clone \
+        --single-branch \
+        --branch "${CURRENT_BRANCH}" \
+        "/usr/${SYSTEM_NAME}-${SYSTEM_VERSION}" \
+        "/usr/src" 2>> "${LOG_OUTPUT}"
+
+    cd /usr/src || exit 106
+
+    test ! -z "${VERSION}" || exit 107
+    test ! -z "${ARCH}" || exit 108
+    test ! -z "${SYSTEM_TYPE}" || exit 109
+
+    NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}-v${VERSION}"
+
+    case "${ARCH}" in
+        arm|arm64)
+            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}-RPI2" || exit 110
+            ${INSTALL_BIN} -v \
+                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}-RPI2" \
+                "sys/${ARCH}/conf/${SYSTEM_KERNEL}" \
+                2>> "${LOG_OUTPUT}" || exit 111
+            ;;
+
+        x86_64|amd64)
+            # NOTE: overriding x86_64 for architecture used by build system
+            ARCH="amd64"
+            NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}-v${VERSION}"
+            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}" || exit 110
+
+            ${INSTALL_BIN} -v \
+                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}" \
+                "sys/${ARCH}/conf/${SYSTEM_KERNEL}" \
+                2>> "${LOG_OUTPUT}" || exit 111
+            ;;
+
+    esac
+
+    ${BEADM_BIN} create "${NEW_BOOT_ENV}" && \
+        permnote "Created new boot environment: ${NEW_BOOT_ENV}"
+
+    DESTBASE="${SHARED_DIR}/${NEW_BOOT_ENV}"
+    ${BEADM_BIN} mount "${NEW_BOOT_ENV}" "${DESTBASE}" && \
+        permnote "Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}"
+
+    # # export libucl:
+    permnote "Exporting UCL as regular OS library"
+    ${SED_BIN} -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile 2>> "${LOG_OUTPUT}"
+    ${PATCH_BIN} -p0 -f \
+        < "${SERVED_REPO}/src/patches/export_ucl.patch" \
+        2>> "${LOG_OUTPUT}"
+
+    if [ -z "${DONT_BUILD_WORLD}" ]; then
+        permnote "Building world v${VERSION}"
+        ${MAKE_BIN} \
+            -s buildworld \
+            -j "${PARALLEL_JOBS}" \
+            DESTDIR="${DESTBASE}" \
+            2>> "${LOG_OUTPUT}" || exit 119
+    fi
+
+    permnote "Building kernel ${SYSTEM_KERNEL}"
+    ${MAKE_BIN} \
+        -s buildkernel \
+        -j "${PARALLEL_JOBS}" \
+        DESTDIR="${DESTBASE}" \
+        2>> "${LOG_OUTPUT}" || exit 120
+
+    permnote "Installing kernel ${SYSTEM_KERNEL}"
+    ${MAKE_BIN} \
+        -s installkernel \
+        DESTDIR="${DESTBASE}" \
+        2>> "${LOG_OUTPUT}" || exit 121
+
+    if [ -z "${DONT_BUILD_WORLD}" ]; then
+        ${RM_BIN} -rf /var/tmp/temproot
+
+        permnote "Merging Pre-buildworld configuration"
+        ${MERGEMASTER_BIN} -p -a 2>> "${LOG_OUTPUT}"
+
+        permnote "Installing world to: ${DESTBASE}"
+        ${MAKE_BIN} \
+            -s installworld \
+            DESTDIR="${DESTBASE}" \
+            2>> "${LOG_OUTPUT}"
+
+        permnote "Merging configuration in: ${DESTBASE}"
+        ${MERGEMASTER_BIN} -P -a \
+            -D "${DESTBASE}" \
+            2>> "${LOG_OUTPUT}"
+
+        permnote "Deleting old dirs, files and libs under: ${DESTBASE}"
+        ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs \
+            DESTDIR="${DESTBASE}" \
+            2>> "${LOG_OUTPUT}" || true
+    fi
+
+    ${BEADM_BIN} umount "${NEW_BOOT_ENV}" && \
+        permnote "Unmounted boot environment: ${NEW_BOOT_ENV}"
+
+    ${BEADM_BIN} activate "${NEW_BOOT_ENV}" && \
+        permnote "Boot environment activated: ${NEW_BOOT_ENV}"
+
+    NEW_BOOT_ORIGIN="${ZPOOL}/ROOT/${NEW_BOOT_ENV}@${ORIGIN}"
+    NEW_BOOT_ORIGIN_FILE="${DIFFS_DIR}/${SYSTEM_TYPE}-${VERSION}.${ZFSX_EXT}"
+    ${ZFS_BIN} snapshot "${NEW_BOOT_ORIGIN}" && \
+        permnote "Origin snapshot: ${NEW_BOOT_ORIGIN}"
+
+    ${MKDIR_BIN} \
+        -p "${DIFFS_DIR}" \
+        2>> "${LOG_OUTPUT}"
+
+    permnote "Sending origin snapshot: ${NEW_BOOT_ORIGIN}, to file: ${NEW_BOOT_ORIGIN_FILE}"
+    ${ZFS_BIN} send "${DEFAULT_SNAPSHOT_SEND_OPTS}" \
+        "${NEW_BOOT_ORIGIN}" \
+        > "${NEW_BOOT_ORIGIN_FILE}"
+    ${CHMOD_BIN} a+r "${NEW_BOOT_ORIGIN_FILE}"
+    ${CHMOD_BIN} 600 /User/.ssh/* >/dev/null 2>&1
+
+    permnote "Uploading origin snapshot: ${NEW_BOOT_ORIGIN_FILE}, to: ${DESTINATION}, using identity: ${HOME_DIR}/.ssh/vks.auth"
+    ${SCP_BIN} -4 -B \
+        -o UserKnownHostsFile=/dev/null \
+        -o StrictHostKeyChecking=no \
+        -i "${HOME_DIR}/.ssh/vks.auth" \
+        "${NEW_BOOT_ORIGIN_FILE}" \
+        "${DESTINATION}" \
+        2>> "${LOG_OUTPUT}"
+    if [ "$?" = "0" ]; then
+        permnote "Checking latest version on remote, using identity: ${HOME_DIR}/.ssh/vks.auth"
+        ${SSH_BIN} -4 -B \
+            -o UserKnownHostsFile=/dev/null \
+            -o StrictHostKeyChecking=no \
+            -i "${HOME_DIR}/.ssh/vks.auth" \
+            "${DEST_ACCOUNT}" \
+            "${MKDIR_BIN} -p ${DEST_PATH}; \
+            echo '${VERSION}' > ${DEST_PATH}/version-latest" \
+            2>> "${LOG_OUTPUT}" && \
+                permnote "Remote version updated to: ${VERSION}"
+    else
+        error "Something went wrong while uploading Jails base!"
+    fi
+
+    permnote "Process: ${0} ${*}, finished @${TIMESTAMP}"
+}
