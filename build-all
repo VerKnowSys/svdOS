@@ -16,6 +16,9 @@ test -f "${SOFIN_DATA_DIR}/loader" && \
 test -f "${BUILD_NUMBER_FILE}" || echo "1" > "${BUILD_NUMBER_FILE}"
 export BUILD_NUMBER="$(echo "$(cat "${BUILD_NUMBER_FILE}" 2>/dev/null)+1" | bc 2>/dev/null)"
 export VERSION="${VERSION_MAJOR}.${SYSTEM_VERSION}.${BUILD_NUMBER}"
+test -z "${BUILD_NUMBER_FILE}" && exit 122
+test -z "${BUILD_NUMBER}" && exit 123
+test -z "${VERSION}" && exit 124
 
 echo "BUILD no: ${BUILD_NUMBER}"
 echo "${BUILD_NUMBER}" > "${BUILD_NUMBER_FILE}"
