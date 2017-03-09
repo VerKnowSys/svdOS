@@ -5,42 +5,83 @@
 
 reset
 
+set -e
 . build.env
 
-echo "Preparing dirs…"
-${SSH_BIN} root@xh1 \
-    "${MKDIR_BIN} -p ${CACHE_DIR} ${HOME_DIR}/.ssh"
 
 no_vks_auth () {
-    echo "Local private SSH RSA key file is required: ${HOME}/.ssh/vks.auth"
-    echo "Generate it via 'ssh-keygen -b4096' first!"
+    echo "Local private SSH RSA key file is required: ${HOME}/.ssh/${SSH_IDENTITY_FILE}"
+    echo "Generate it via 'ssh-keygen -b4096 && mv ~/.ssh/id_rsa ~/.ssh/${SSH_IDENTITY_FILE}' first!"
     exit 101
 }
-test -f "${HOME}/.ssh/vks.auth" || no_vks_auth
+test -f "${HOME}/.ssh/${SSH_IDENTITY_FILE}" || no_vks_auth
+${CHMOD_BIN} 600 "${HOME}/.ssh/${SSH_IDENTITY_FILE}"
 
-echo 'Installing RSA remote key…'
-${SCP_BIN} \
-    "${HOME}/.ssh/vks.auth" \
-    "root@xh1:${HOME_DIR}/.ssh/vks.auth"
+echo "Cleaning previous entries from ~/.ssh/known_hosts"
+${SED_BIN} -i '' -e "/^xhbh-.*,192.168.*$/ d" "${HOME}/.ssh/known_hosts" 2>/dev/null
 
-echo 'Installing ED25519 SSH key…'
+${GREP_BIN} "${HOSTADDR_NAME}" "${HOME}/.ssh/config" >/dev/null 2>&1
+if [ "${?}" != "0" ]; then
+    echo "Adding SSH entry: 'Host ${HOSTADDR_NAME} … hostname ${HOSTADDR_IP}'  to: ${HOME}/.ssh/config"
+    printf "\n%s\n%s\n%s\n" \
+        "host ${HOSTADDR_NAME}" \
+        "user root" \
+        "hostname ${HOSTADDR_IP}" \
+        >> "${HOME}/.ssh/config"
+fi
+
+echo
+echo "Create home dataset: ${HOME_DIR}, dataset and switch as new default"
+${SSH_BIN} root@${HOSTADDR_NAME} \
+    "${ZFS_BIN} list '${ZPOOL}${HOME_DIR}' >/dev/null || ${ZFS_BIN} create -o mountpoint=none \
+        -o casesensitivity=sensitive \
+        -o readonly=on \
+        -o utf8only=on \
+        -o devices=off \
+        -o dedup=off \
+        -o checksum=fletcher4 \
+        -o atime=off \
+        -o aclmode=discard \
+        -o exec=off \
+        -o canmount=off \
+        -o compression=lz4 \
+        ${ZPOOL}${HOME_DIR}; \
+    ${ZFS_BIN} list '${ZPOOL}${HOME_DIR}/root' >/dev/null || ${ZFS_BIN} create \
+        -o mountpoint=${HOME_DIR} \
+        -o readonly=off \
+        -o utf8only=on \
+        -o devices=off \
+        -o exec=on \
+        -o canmount=on \
+        ${ZPOOL}${HOME_DIR}/root; \
+    ${MKDIR_BIN} -p ${HOME_DIR}/.ssh ${CACHE_DIR}; \
+    ${PW_BIN} user mod root -d ${HOME_DIR}; \
+    " && echo "Created and switched home dir to: ${ZPOOL}${HOME_DIR}"
+
+echo 'Installing local ED25519 SSH key…'
 ${SCP_BIN} \
     "${HOME}/.ssh/id_ed25519.pub" \
-    "root@xh1:${HOME_DIR}/.ssh/authorized_keys"
+    "root@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/authorized_keys"
+
+echo 'Installing remote ED25519 SSH access key…'
+${SCP_BIN} \
+    "${HOME}/.ssh/${SSH_IDENTITY_FILE}" \
+    "root@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/${SSH_IDENTITY_FILE}"
 
 for _ds in var/mail usr/src usr/home usr/ports var/audit; do
-    ${SSH_BIN} root@xh1 \
+    ${SSH_BIN} root@${HOSTADDR_NAME} \
         "${ZFS_BIN} destroy -r ${ZPOOL}/${_ds}" 2>/dev/null
 done
 
-
+echo
+echo
 echo "Release base: ${SYSTEM_VERSION}…"
-for _dataset_origin in Software Services User; do
+for _dataset_origin in Software Services; do
 
-    ${SSH_BIN} root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
+    ${SSH_BIN} root@${HOSTADDR_NAME} "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         echo "Creating origin base: ${ZPOOL}/${_dataset_origin}"
-        ${SSH_BIN} root@xh1 \
+        ${SSH_BIN} root@${HOSTADDR_NAME} \
             "${ZFS_BIN} create \
             -o mountpoint=none \
             -o casesensitivity=sensitive \
@@ -57,10 +98,10 @@ for _dataset_origin in Software Services User; do
             ${ZPOOL}/${_dataset_origin}"
     fi
 
-    ${SSH_BIN} root@xh1 "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
+    ${SSH_BIN} root@${HOSTADDR_NAME} "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         echo "Creating ${ZPOOL}/${_dataset_origin} ${ORIGIN}"
-        ${SSH_BIN} root@xh1 \
+        ${SSH_BIN} root@${HOSTADDR_NAME} \
             "${ZFS_BIN} create \
             -o readonly=off \
             -o canmount=on \
@@ -70,12 +111,12 @@ for _dataset_origin in Software Services User; do
 
         _software_origin_file="${_dataset_origin}-${ORIGIN}${ZFSX_EXT}"
         echo "Storing origin snapshot to file: ${_software_origin_file}"
-        ${SSH_BIN} root@xh1 \
+        ${SSH_BIN} root@${HOSTADDR_NAME} \
             "${ZFS_BIN} snapshot \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN}"
 
         echo "Send origin to file: ${_software_origin_file}"
-        ${SSH_BIN} root@xh1 \
+        ${SSH_BIN} root@${HOSTADDR_NAME} \
             "${ZFS_BIN} send \
             -D -L -e -p -v \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN} \
@@ -84,25 +125,27 @@ for _dataset_origin in Software Services User; do
         # echo "Push origin to remote"
         ${MKDIR_BIN} -p "./Origins/${SYSTEM_VERSION}"
         ${SCP_BIN} \
-            root@xh1:${CACHE_DIR}/${_software_origin_file} \
+            root@${HOSTADDR_NAME}:${CACHE_DIR}/${_software_origin_file} \
             Origins/${SYSTEM_VERSION}/
     fi
 done
 
-echo "Creating ${SHARED_DIR}"
-${SSH_BIN} root@xh1 \
-    "${ZFS_BIN} create -o mountpoint=${SHARED_DIR} ${ZPOOL}${SHARED_DIR}; \
-    ${ZFS_BIN} create ${ZPOOL}${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}; \
-    "
+${SSH_BIN} root@${HOSTADDR_NAME} \
+    "${ZFS_BIN} list '${ZPOOL}${SHARED_DIR}' || ${ZFS_BIN} create -o mountpoint=${SHARED_DIR} ${ZPOOL}${SHARED_DIR}; \
+    " && echo "Created dataset: ${ZPOOL}${SHARED_DIR}"
 
 echo "Configuring base RC system"
 ${SCP_BIN} \
     "etc/rc.build.conf" \
-    "root@xh1:/etc/rc.conf"
+    "root@${HOSTADDR_NAME}:/etc/rc.conf"
+
+echo "Setting up static TCP/IP configuration in /etc/rc.conf"
+${SSH_BIN} root@${HOSTADDR_NAME} \
+    "${SED_BIN} -i '' -e 's|HOSTADDR_MASK|${HOSTADDR_MASK}|g; s|HOSTADDR_IP|${HOSTADDR_IP}|g; s|HOSTADDR_GW|${HOSTADDR_GW}|g; s|HOSTADDR_NAME|${HOSTADDR_NAME}|g;' /etc/rc.conf"
 
 ${SCP_BIN} \
     "etc/loader.build.conf" \
-    "root@xh1:/boot/loader.conf"
+    "root@${HOSTADDR_NAME}:/boot/loader.conf"
 
 echo "Creating projects archive…"
 ${TAR_BIN} -cJf ".archive-base-projects.tar.xz" \
@@ -113,7 +156,7 @@ ${TAR_BIN} -cJf ".archive-base-projects.tar.xz" \
 echo "Sending projects archive…"
 ${SCP_BIN} \
     ".archive-base-projects.tar.xz" \
-    "root@xh1:${CACHE_DIR}/"
+    "root@${HOSTADDR_NAME}:${CACHE_DIR}/"
 
 echo "Cleaning local archive…"
 ${RM_BIN} -f \
@@ -126,20 +169,20 @@ CCACHE_VERSION="3.3.4"
 MC_VERSION="4.8.18-master"
 
 echo "Setting HOME to ${HOME_DIR}, Zsh as default shell, installing base software"
-${SSH_BIN} root@xh1 \
-    "${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp ${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
+${SSH_BIN} root@${HOSTADDR_NAME} \
+    "${FETCH_BIN} --no-verify-peer ${CACERT_SOURCE} -o /etc/ssl/cert.pem; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp ${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Git-${GIT_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Git; ${XZCAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Git; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Git-common.zfsp ${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Git-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Git; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Git-${GIT_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Git; ${XZCAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Git; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Git-common.zfsp ${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Git-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Git; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Mc${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Mc-${MC_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Mc; ${XZCAT_BIN} ${CACHE_DIR}/Mc${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Mc; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Mc-common.zfsp ${SOFIN_BIN_REPO}/Common/Mc-${MC_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Mc-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Mc; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Mc-common.zfsp ${SOFIN_BIN_REPO}/Common/Mc-${MC_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Mc-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Mc; \
     ${MKDIR_BIN} -p ${SERVICES_DIR}/Git/etc/ssl; \
     ${CP_BIN} -v /etc/ssl/cert.pem ${SERVICES_DIR}/Git/etc/ssl/cert.pem; \
     ${SED_BIN} -i '' -e 's|^/bin/tcsh|${DEFAULT_SHELL}|g' /etc/shells; \
     ${CHSH_BIN} -s ${DEFAULT_SHELL} root; \
     ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / >/dev/null; \
-    ${FETCH_BIN} ${CACERT_SOURCE} -o /etc/ssl/cert.pem 2>/dev/null; \
     cd /Projects/Sofin; \
     bin/install; \
     echo LANG=\"en_GB.UTF-8\" > ${HOME_DIR}/.zshenv; \
@@ -164,9 +207,6 @@ ${SSH_BIN} root@xh1 \
     ${ZFS_BIN} set checksum=fletcher4 ${ZPOOL}/usr; \
     ${ZFS_BIN} set recordsize=4k ${ZPOOL}/usr; \
     ${ZFS_BIN} set sync=disabled ${ZPOOL}/usr; \
-    test -d /root && ${CP_BIN} -rf /root/* ${HOME_DIR}; \
-    ${PW_BIN} user mod root -d ${HOME_DIR}; \
-    ${RM_BIN} -rf /media /mnt /proc /root; \
     ${TOUCH_BIN} ${BUILD_HOST_MARKER}; \
     "
 
