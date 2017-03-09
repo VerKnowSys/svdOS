@@ -6,24 +6,32 @@ build_base () {
     ${TOUCH_BIN} "${LOG_OUTPUT}"
     permnote "Process started for OS version: ${SYSTEM_VERSION}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
 
-    permnote "${SYSTEM_TYPE} version: ${VERSION}"
-    permnote "Build branch: ${CURRENT_BRANCH}"
+    _branch="$(echo "${CURRENT_BRANCH}" | ${TR_BIN} '/' '-' 2>/dev/null)"
+    COMMON_BARE_REPO="${SYSTEM_NAME}-${SYSTEM_VERSION}-${_branch}.git"
 
-    if [ ! -d "/usr/${SYSTEM_NAME}-${SYSTEM_VERSION}" ]; then
+    permnote "${SYSTEM_TYPE} version: ${VERSION}"
+    permnote "Build repository: ${COMMON_BARE_REPO}"
+    permnote "Build branch: ${_branch}"
+
+    if [ ! -d "/usr/${COMMON_BARE_REPO}" ]; then
         cd /usr
         # svn co http://svn0.eu.FreeBSD.org/base/releng/${VERSION} ${VERSION}
         ${GIT_BIN} clone \
+            --ipv4 \
+            --bare \
+            --progress \
             --single-branch \
             --branch "${CURRENT_BRANCH}" \
+            --jobs "${PARALLEL_JOBS}" \
             "${MAIN_REPOSITORY}" \
-            "${SYSTEM_VERSION}"
-        cd "/usr/${SYSTEM_NAME}-${SYSTEM_VERSION}"
-    else
-        cd "/usr/${SYSTEM_NAME}-${SYSTEM_VERSION}"
-
-        ${GIT_BIN} pull origin "${CURRENT_BRANCH}"
-        permnote "On branch: $(${GIT_BIN} branch)"
+            "${COMMON_BARE_REPO}"
     fi
+    cd "/usr/${COMMON_BARE_REPO}"
+    permnote "Fetching changes for source bare repo: /usr/${COMMON_BARE_REPO}"
+    ${GIT_BIN} fetch \
+        --force \
+        --all \
+        --progress
 
     permnote "Setting up src.conf"
     ${RM_BIN} -f /etc/src.conf
@@ -33,9 +41,11 @@ build_base () {
 
     permnote "Syncing sources to /usr/src"
     ${GIT_BIN} clone \
+        --progress \
         --single-branch \
         --branch "${CURRENT_BRANCH}" \
-        "/usr/${SYSTEM_NAME}-${SYSTEM_VERSION}" \
+        --jobs "${PARALLEL_JOBS}" \
+        "/usr/${COMMON_BARE_REPO}" \
         "/usr/src" 2>> "${LOG_OUTPUT}"
 
     cd /usr/src || exit 106
