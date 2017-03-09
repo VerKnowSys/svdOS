@@ -9,12 +9,12 @@ reset
 
 echo "Preparing dirs…"
 ${SSH_BIN} root@xh1 \
-    "${MKDIR_BIN} -p ${CACHE_DIR} /User/.ssh"
+    "${MKDIR_BIN} -p ${CACHE_DIR} ${HOME_DIR}/.ssh"
 
 echo 'Installing ED25519 SSH key…'
 ${SCP_BIN} \
     "${HOME}/.ssh/id_ed25519.pub" \
-    "root@xh1:/User/.ssh/authorized_keys"
+    "root@xh1:${HOME_DIR}/.ssh/authorized_keys"
 
 echo "Installing default cert.pem from: ${CACERT_SOURCE}…"
 ${SSH_BIN} root@xh1 \
@@ -114,18 +114,28 @@ echo "Cleaning local archive…"
 ${RM_BIN} -f \
     ".archive-base-projects.tar.xz"
 
-echo "Setting HOME to /User, Zsh as default shell, installing base software"
+PREVIOUS="FreeBSD-11.0-amd64"
+GIT_VERSION="2.12.0"
+ZSH_VERSION="5.3.1"
+CCACHE_VERSION="3.3.4"
+MC_VERSION="4.8.18-master"
+
+echo "Setting HOME to ${HOME_DIR}, Zsh as default shell, installing base software"
 ${SSH_BIN} root@xh1 \
-    "${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Zsh-5.3.1-FreeBSD-11.0-amd64${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}/Software/root/Zsh && ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}/Software/root/Zsh; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Ccache-3.1.9-FreeBSD-11.0-amd64${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}/Software/root/Ccache && ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}/Software/root/Ccache; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} http://software.verknowsys.com/binary/FreeBSD-11.0-amd64/Git-2.12.0-FreeBSD-11.0-amd64${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}/Software/root/Git && ${XZCAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}/Software/root/Git; \
+    "${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} http://software.verknowsys.com/binary/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh && ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp http://software.verknowsys.com/binary/Common/Zsh-${ZSH_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} http://software.verknowsys.com/binary/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache && ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} http://software.verknowsys.com/binary/${PREVIOUS}/Git-${GIT_VERSION}-${PREVIOUS}${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Git && ${XZCAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Git; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Git-common.zfsp http://software.verknowsys.com/binary/Common/Git-${GIT_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Git-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Git; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Mc${ZFSX_EXT} http://software.verknowsys.com/binary/${PREVIOUS}/Mc-${MC_VERSION}-${PREVIOUS}${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Mc && ${XZCAT_BIN} ${CACHE_DIR}/Mc${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Mc; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Mc-common.zfsp http://software.verknowsys.com/binary/Common/Mc-${MC_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Mc-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Mc; \
     ${SED_BIN} -i '' -e 's|^/bin/tcsh|${DEFAULT_SHELL}|g' /etc/shells; \
     ${CHSH_BIN} -s ${DEFAULT_SHELL} root; \
     ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / >/dev/null; \
     cd /Projects/Sofin; \
     bin/install; \
-    echo LANG=\"en_GB.UTF-8\" > /User/.zshenv; \
-    echo LANGUAGE=\"en_GB.UTF-8\" >> /User/.zshenv; \
+    echo LANG=\"en_GB.UTF-8\" > ${HOME_DIR}/.zshenv; \
+    echo LANGUAGE=\"en_GB.UTF-8\" >> ${HOME_DIR}/.zshenv; \
     cd /Projects; \
     ${GIT_BIN} clone https://github.com/vermaden/beadm.git; \
     ${GZIP_BIN} beadm/beadm.1; \
@@ -135,7 +145,7 @@ ${SSH_BIN} root@xh1 \
     ${CP_BIN} -fr shell/ /etc/zsh; \
     ${LN_BIN} -fvs /etc/zsh/zshenv /etc/zshenv; \
     ${LN_BIN} -fvs /etc/zsh/zshrc /etc/zshrc; \
-    printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' > /User/.ssh/config; \
+    printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' > ${HOME_DIR}/.ssh/config; \
     ${SYSCTL_BIN} vfs.zfs.prefetch_disable=1; \
     ${SYSCTL_BIN} debug.witness.trace=0; \
     ${SYSCTL_BIN} debug.witness.watch=0; \
@@ -148,8 +158,8 @@ ${SSH_BIN} root@xh1 \
     ${ZFS_BIN} set checksum=fletcher4 ${ZPOOL}/usr; \
     ${ZFS_BIN} set recordsize=4k ${ZPOOL}/usr; \
     ${ZFS_BIN} set sync=disabled ${ZPOOL}/usr; \
-    test -d /root && ${CP_BIN} -rf /root/* /User; \
-    ${PW_BIN} user mod root -d /User; \
+    test -d /root && ${CP_BIN} -rf /root/* ${HOME_DIR}; \
+    ${PW_BIN} user mod root -d ${HOME_DIR}; \
     ${RM_BIN} -rf /media /mnt /proc /root; \
     ${TOUCH_BIN} ${BUILD_HOST_MARKER}; \
     "
