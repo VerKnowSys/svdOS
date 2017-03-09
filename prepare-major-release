@@ -32,8 +32,8 @@ fi
 
 echo
 echo "Create home dataset: ${HOME_DIR}, dataset and switch as new default"
-${SSH_BIN} root@${HOSTADDR_NAME} \
-    "${ZFS_BIN} list '${ZPOOL}${HOME_DIR}' >/dev/null || ${ZFS_BIN} create -o mountpoint=none \
+${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
+    "${ZFS_BIN} list '${ZPOOL}${HOME_DIR}' >/dev/null 2>&1 || ${ZFS_BIN} create -o mountpoint=none \
         -o casesensitivity=sensitive \
         -o readonly=on \
         -o utf8only=on \
@@ -46,7 +46,7 @@ ${SSH_BIN} root@${HOSTADDR_NAME} \
         -o canmount=off \
         -o compression=lz4 \
         ${ZPOOL}${HOME_DIR}; \
-    ${ZFS_BIN} list '${ZPOOL}${HOME_DIR}/root' >/dev/null || ${ZFS_BIN} create \
+    ${ZFS_BIN} list '${ZPOOL}${HOME_DIR}/root' >/dev/null 2>&1 || ${ZFS_BIN} create \
         -o mountpoint=${HOME_DIR} \
         -o readonly=off \
         -o utf8only=on \
@@ -78,7 +78,7 @@ echo
 echo "Release base: ${SYSTEM_VERSION}…"
 for _dataset_origin in Software Services; do
 
-    ${SSH_BIN} root@${HOSTADDR_NAME} "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
+    ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         echo "Creating origin base: ${ZPOOL}/${_dataset_origin}"
         ${SSH_BIN} root@${HOSTADDR_NAME} \
@@ -98,7 +98,9 @@ for _dataset_origin in Software Services; do
             ${ZPOOL}/${_dataset_origin}"
     fi
 
-    ${SSH_BIN} root@${HOSTADDR_NAME} "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
+    ${SSH_BIN} \
+        "${ADMIN_USER}@${HOSTADDR_NAME}" \
+        "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         echo "Creating ${ZPOOL}/${_dataset_origin} ${ORIGIN}"
         ${SSH_BIN} root@${HOSTADDR_NAME} \
