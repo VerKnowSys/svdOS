@@ -28,13 +28,6 @@ ${SCP_BIN} \
     "${HOME}/.ssh/id_ed25519.pub" \
     "root@xh1:${HOME_DIR}/.ssh/authorized_keys"
 
-echo "Installing default cert.pem from: ${CACERT_SOURCE}…"
-${SSH_BIN} root@xh1 \
-    "${FETCH_BIN} \
-    --no-verify-peer \
-    ${CACERT_SOURCE} \
-    -o /etc/ssl/cert.pem"
-
 for _ds in var/mail usr/src usr/home usr/ports var/audit; do
     ${SSH_BIN} root@xh1 \
         "${ZFS_BIN} destroy -r ${ZPOOL}/${_ds}" 2>/dev/null
@@ -134,16 +127,19 @@ MC_VERSION="4.8.18-master"
 
 echo "Setting HOME to ${HOME_DIR}, Zsh as default shell, installing base software"
 ${SSH_BIN} root@xh1 \
-    "${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh && ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
+    "${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp ${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache && ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Git-${GIT_VERSION}-${PREVIOUS}${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Git && ${XZCAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Git; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Git-${GIT_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Git; ${XZCAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Git; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Git-common.zfsp ${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Git-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Git; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Mc${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Mc-${MC_VERSION}-${PREVIOUS}${ZFSX_EXT} && ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Mc && ${XZCAT_BIN} ${CACHE_DIR}/Mc${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Mc; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Mc${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Mc-${MC_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Mc; ${XZCAT_BIN} ${CACHE_DIR}/Mc${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Mc; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Mc-common.zfsp ${SOFIN_BIN_REPO}/Common/Mc-${MC_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Mc-common.zfsp | ${ZFS_BIN} receive -vF ${ZPOOL}${SERVICES_DIR}/root/Mc; \
+    ${MKDIR_BIN} -p ${SERVICES_DIR}/Git/etc/ssl; \
+    ${CP_BIN} -v /etc/ssl/cert.pem ${SERVICES_DIR}/Git/etc/ssl/cert.pem; \
     ${SED_BIN} -i '' -e 's|^/bin/tcsh|${DEFAULT_SHELL}|g' /etc/shells; \
     ${CHSH_BIN} -s ${DEFAULT_SHELL} root; \
     ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / >/dev/null; \
+    ${FETCH_BIN} ${CACERT_SOURCE} -o /etc/ssl/cert.pem 2>/dev/null; \
     cd /Projects/Sofin; \
     bin/install; \
     echo LANG=\"en_GB.UTF-8\" > ${HOME_DIR}/.zshenv; \
