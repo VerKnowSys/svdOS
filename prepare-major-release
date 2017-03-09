@@ -134,6 +134,14 @@ ${SSH_BIN} root@${HOSTADDR_NAME} \
     "${ZFS_BIN} list '${ZPOOL}${SHARED_DIR}' || ${ZFS_BIN} create -o mountpoint=${SHARED_DIR} ${ZPOOL}${SHARED_DIR}; \
     " && echo "Created dataset: ${ZPOOL}${SHARED_DIR}"
 
+${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
+    "${ZFS_BIN} list '${ZPOOL}${ARCHIVE_SNAPSHOTS_DIR}' || \
+    ${ZFS_BIN} create \
+        -p \
+        -o mountpoint=${ARCHIVE_SNAPSHOTS_DIR} \
+        ${ZPOOL}${ARCHIVE_SNAPSHOTS_DIR}; \
+    " && echo "Created dataset for snapshots archive: ${ZPOOL}${ARCHIVE_SNAPSHOTS_DIR}"
+
 echo "Configuring base RC system"
 ${SCP_BIN} \
     "etc/rc.build.conf" \
