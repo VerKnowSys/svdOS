@@ -1,11 +1,9 @@
 ServeD-OS
 =========
 
-ServeD-OS
-Because you deserve to be ServeD!
+"Because you deserve to be ServeD!"
 
 
 ## Install
-1. Install vanilla FreeBSD 11.0-CURRENT (amd64) with ZFS on pool zroot.
-2. Log in to installed machine
-3. fetch -q -o - http://served.verknowsys.com/install | sh
+1. Install HardenedBSD 64bit 11.0+. For local xHyve setup. Please [follow steps from README here](https://github.com/VerKnowSys/xhyve).
+2. `./prepare-major-release` to install ServeD base.
