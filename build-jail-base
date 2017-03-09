@@ -30,7 +30,12 @@ build_base () {
 
     cd /usr/src || exit 6
 
+    echo "Creating new boot environment: ${SYSTEM_NAME}-${SYSTEM_VERSION}-v${VERSION}"
+    beadm create "${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}-v${VERSION}"
+
     DESTBASE="${SHARED_DIR}/${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}"
+    beadm mount "${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}-v${VERSION}" "${DESTBASE}"
+
     permnote "Preparing kernel configuration for destbase: ${DESTBASE}"
     # ${GIT_BIN} reset --hard >> ${LOG_OUTPUT} # GIT_SSL_NO_VERIFY=true
     ${RM_BIN} -fv sys/*/conf/VERKNOWSYS >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
@@ -106,6 +111,9 @@ build_base () {
         permnote "Deleting old dirs, files and libs"
         ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs DESTDIR=${DESTBASE} >> ${LOG_OUTPUT}  2>> ${LOG_OUTPUT} || true
     fi
+
+    beadm umount "${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}-v${VERSION}"
+    beadm activate "${SYSTEM_NAME}-${SYSTEM_VERSION}-${ARCH}-v${VERSION}"
 
     # permnote "Cleaning up"
     # ${MAKE_BIN} clean >> ${LOG_OUTPUT} 2>> ${LOG_OUTPUT}
