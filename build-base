@@ -18,6 +18,7 @@ build_base () {
         # svn co http://svn0.eu.FreeBSD.org/base/releng/${VERSION} ${VERSION}
         ${GIT_BIN} clone \
             --ipv4 \
+            --depth 1 \
             --bare \
             --progress \
             --single-branch \
