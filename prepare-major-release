@@ -39,12 +39,12 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
         -o utf8only=on \
         -o devices=off \
         -o dedup=off \
-        -o checksum=fletcher4 \
+        -o checksum=off \
         -o atime=off \
         -o aclmode=discard \
         -o exec=off \
         -o canmount=off \
-        -o compression=lz4 \
+        -o compression=off \
         ${ZPOOL}${HOME_DIR}; \
     ${ZFS_BIN} list '${ZPOOL}${HOME_DIR}/root' >/dev/null 2>&1 || ${ZFS_BIN} create \
         -o mountpoint=${HOME_DIR} \
@@ -56,8 +56,6 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
         ${ZPOOL}${HOME_DIR}/root; \
     ${MKDIR_BIN} -p ${HOME_DIR}/.ssh ${CACHE_DIR}; \
     ${PW_BIN} user mod root -d ${HOME_DIR}; \
-    echo 'Cleanup…'; \
-    ${RM_BIN} -rf /.profile /.cshrc /root /mnt /media /proc /COPYRIGHT /sys
     " && echo "Created and switched home dir to: ${ZPOOL}${HOME_DIR}"
 
 echo 'Installing local ED25519 SSH key…'
@@ -86,12 +84,12 @@ for _dataset_origin in Software Services; do
             -o utf8only=on \
             -o devices=off \
             -o dedup=off \
-            -o checksum=fletcher4 \
+            -o checksum=off \
             -o atime=off \
             -o aclmode=discard \
             -o exec=off \
             -o canmount=off \
-            -o compression=lz4 \
+            -o compression=off \
             ${ZPOOL}/${_dataset_origin}"
     fi
 
@@ -155,19 +153,19 @@ ${SCP_BIN} \
     "${ADMIN_USER}@${HOSTADDR_NAME}:/boot/loader.conf"
 
 echo "Creating projects archive…"
-${TAR_BIN} -cJf ".archive-base-projects.tar.xz" \
+${TAR_BIN} -cf ".archive-base-projects.tar.gz" \
     "${SERVED_REPO}" \
     "${SOFIN_REPO}" \
-    >/dev/null 2>/dev/null
+    >/dev/null
 
 echo "Sending projects archive…"
 ${SCP_BIN} \
-    ".archive-base-projects.tar.xz" \
+    ".archive-base-projects.tar.gz" \
     "${ADMIN_USER}@${HOSTADDR_NAME}:${CACHE_DIR}/"
 
 echo "Cleaning local archive…"
 ${RM_BIN} -f \
-    ".archive-base-projects.tar.xz"
+    ".archive-base-projects.tar.gz"
 
 PREVIOUS="FreeBSD-11.0-amd64"
 GIT_VERSION="2.12.0"
@@ -178,18 +176,18 @@ MC_VERSION="4.8.18-master"
 echo "Setting HOME to ${HOME_DIR}, Zsh as default shell, installing base software"
 ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
     "${FETCH_BIN} --no-verify-peer ${CACERT_SOURCE} -o /etc/ssl/cert.pem; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp ${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Git-${GIT_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Git; ${XZCAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Git; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Git-common.zfsp ${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Git-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Git; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Mc${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Mc-${MC_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Mc; ${XZCAT_BIN} ${CACHE_DIR}/Mc${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Mc; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Mc${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Mc-${MC_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Mc; ${XZCAT_BIN} ${CACHE_DIR}/Mc${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Mc; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Mc-common.zfsp ${SOFIN_BIN_REPO}/Common/Mc-${MC_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Mc-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Mc; \
     ${MKDIR_BIN} -p ${SERVICES_DIR}/Git/etc/ssl; \
     ${CP_BIN} -v /etc/ssl/cert.pem ${SERVICES_DIR}/Git/etc/ssl/cert.pem; \
     ${SED_BIN} -i '' -e 's|^/bin/tcsh|${DEFAULT_SHELL}|g' /etc/shells; \
     ${CHSH_BIN} -s ${DEFAULT_SHELL} root; \
-    ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / >/dev/null; \
+    ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.gz --directory / >/dev/null; \
     cd ${SOFIN_REPO}; \
     bin/install; \
     echo LANG=\"en_GB.UTF-8\" > ${HOME_DIR}/.zshenv; \
@@ -209,13 +207,16 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
     ${SYSCTL_BIN} hardening.pax.mprotect.status=1; \
     ${SYSCTL_BIN} hardening.pax.aslr.status=1; \
     ${SYSCTL_BIN} hardening.pax.disallow_map32bit.status=1; \
-    ${ZFS_BIN} set primarycache=none ${ZPOOL}/usr; \
-    ${ZFS_BIN} set secondarycache=none ${ZPOOL}/usr; \
-    ${ZFS_BIN} set checksum=fletcher4 ${ZPOOL}/usr; \
-    ${ZFS_BIN} set recordsize=4k ${ZPOOL}/usr; \
-    ${ZFS_BIN} set sync=disabled ${ZPOOL}/usr; \
+    ${ZFS_BIN} set primarycache=metadata ${ZPOOL}/ROOT; \
+    ${ZFS_BIN} set secondarycache=none ${ZPOOL}/ROOT; \
+    ${ZFS_BIN} set checksum=off ${ZPOOL}/ROOT; \
+    ${ZFS_BIN} set recordsize=16k ${ZPOOL}/ROOT; \
+    ${ZFS_BIN} set sync=disabled ${ZPOOL}/ROOT; \
     ${TOUCH_BIN} ${BUILD_HOST_MARKER}; \
+    echo 'Cleanup…'; \
     for _ds in var/mail usr; do ${ZFS_BIN} destroy -r ${ZPOOL}/\${_ds} 2>/dev/null; done; \
+    ${RM_BIN} -rf /.profile /.cshrc /root /mnt /media /proc /COPYRIGHT /sys; \
+    echo OK; \
     "
 
 echo "Done"
