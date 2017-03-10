@@ -70,11 +70,6 @@ ${SCP_BIN} \
     "${HOME}/.ssh/${SSH_IDENTITY_FILE}" \
     "${ADMIN_USER}@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/${SSH_IDENTITY_FILE}"
 
-for _ds in var/mail usr/src usr/home usr/ports var/audit; do
-    ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
-        "${ZFS_BIN} destroy -r ${ZPOOL}/${_ds}" 2>/dev/null
-done
-
 echo
 echo
 echo "Release base: ${SYSTEM_VERSION}…"
@@ -220,6 +215,7 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
     ${ZFS_BIN} set recordsize=4k ${ZPOOL}/usr; \
     ${ZFS_BIN} set sync=disabled ${ZPOOL}/usr; \
     ${TOUCH_BIN} ${BUILD_HOST_MARKER}; \
+    for _ds in var/mail usr; do ${ZFS_BIN} destroy -r ${ZPOOL}/\${_ds} 2>/dev/null; done; \
     "
 
 echo "Done"
