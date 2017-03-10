@@ -164,8 +164,8 @@ build_base () {
         2>> "${LOG_OUTPUT}"
 
     permnote "Sending origin snapshot: ${NEW_BOOT_ORIGIN}, to file: ${NEW_BOOT_ORIGIN_FILE}"
-    ${ZFS_BIN} send "${DEFAULT_SNAPSHOT_SEND_OPTS}" \
-        "${NEW_BOOT_ORIGIN}" | ${XZ_BIN} "${DEFAULT_XZ_OPTS}" \
+    ${ZFS_BIN} send ${DEFAULT_SNAPSHOT_SEND_OPTS} \
+        "${NEW_BOOT_ORIGIN}" | ${XZ_BIN} ${DEFAULT_XZ_OPTS} \
         > "${NEW_BOOT_ORIGIN_FILE}"
     ${CHMOD_BIN} a+r "${NEW_BOOT_ORIGIN_FILE}"
     ${CHMOD_BIN} 600 /User/.ssh/* >/dev/null 2>&1
