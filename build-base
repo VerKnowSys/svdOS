@@ -138,6 +138,15 @@ build_base () {
             2>> "${LOG_OUTPUT}" || true
     fi
 
+    permnote "Removing sources, debug and other cache files before ZFS send…"
+    ${RM_BIN} -rf "${DESTBASE}/COPYRIGHT" "${DESTBASE}/.profile" "${DESTBASE}/mnt" "${DESTBASE}/proc" "${DESTBASE}/media" "${DESTBASE}/sys" &
+    ${FIND_BIN} "${DESTBASE}/usr/${COMMON_BARE_REPO}" -delete &
+    ${FIND_BIN} "${DESTBASE}/Projects" -delete &
+    ${FIND_BIN} "${DESTBASE}/usr/src" -delete &
+
+    sync
+
+    permnote "Commiting and activating new boot environment: ${NEW_BOOT_ENV}"
     ${BEADM_BIN} umount "${NEW_BOOT_ENV}" && \
         permnote "Unmounted boot environment: ${NEW_BOOT_ENV}"
 
