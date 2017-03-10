@@ -56,6 +56,8 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
         ${ZPOOL}${HOME_DIR}/root; \
     ${MKDIR_BIN} -p ${HOME_DIR}/.ssh ${CACHE_DIR}; \
     ${PW_BIN} user mod root -d ${HOME_DIR}; \
+    echo 'Cleanup…'; \
+    ${RM_BIN} -rf /.profile /.cshrc /root /mnt /media /proc /COPYRIGHT /sys
     " && echo "Created and switched home dir to: ${ZPOOL}${HOME_DIR}"
 
 echo 'Installing local ED25519 SSH key…'
