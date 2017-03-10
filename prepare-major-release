@@ -61,15 +61,15 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
 echo 'Installing local ED25519 SSH key…'
 ${SCP_BIN} \
     "${HOME}/.ssh/id_ed25519.pub" \
-    "root@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/authorized_keys"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/authorized_keys"
 
 echo 'Installing remote ED25519 SSH access key…'
 ${SCP_BIN} \
     "${HOME}/.ssh/${SSH_IDENTITY_FILE}" \
-    "root@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/${SSH_IDENTITY_FILE}"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/${SSH_IDENTITY_FILE}"
 
 for _ds in var/mail usr/src usr/home usr/ports var/audit; do
-    ${SSH_BIN} root@${HOSTADDR_NAME} \
+    ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
         "${ZFS_BIN} destroy -r ${ZPOOL}/${_ds}" 2>/dev/null
 done
 
@@ -81,7 +81,7 @@ for _dataset_origin in Software Services; do
     ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         echo "Creating origin base: ${ZPOOL}/${_dataset_origin}"
-        ${SSH_BIN} root@${HOSTADDR_NAME} \
+        ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
             "${ZFS_BIN} create \
             -o mountpoint=none \
             -o casesensitivity=sensitive \
@@ -103,7 +103,7 @@ for _dataset_origin in Software Services; do
         "${ZFS_BIN} list ${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         echo "Creating ${ZPOOL}/${_dataset_origin} ${ORIGIN}"
-        ${SSH_BIN} root@${HOSTADDR_NAME} \
+        ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
             "${ZFS_BIN} create \
             -o readonly=off \
             -o canmount=on \
@@ -113,26 +113,26 @@ for _dataset_origin in Software Services; do
 
         _software_origin_file="${_dataset_origin}-${ORIGIN}${ZFSX_EXT}"
         echo "Storing origin snapshot to file: ${_software_origin_file}"
-        ${SSH_BIN} root@${HOSTADDR_NAME} \
+        ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
             "${ZFS_BIN} snapshot \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN}"
 
         echo "Send origin to file: ${_software_origin_file}"
-        ${SSH_BIN} root@${HOSTADDR_NAME} \
+        ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
             "${ZFS_BIN} send \
             -D -L -e -p -v \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN} \
-            | ${XZ_BIN} --threads=4 > ${CACHE_DIR}/${_software_origin_file}"
+            | ${XZ_BIN} --threads=${DEFAULT_XZ_OPTS} > ${CACHE_DIR}/${_software_origin_file}"
 
         # echo "Push origin to remote"
         ${MKDIR_BIN} -p "./Origins/${SYSTEM_VERSION}"
         ${SCP_BIN} \
-            root@${HOSTADDR_NAME}:${CACHE_DIR}/${_software_origin_file} \
-            Origins/${SYSTEM_VERSION}/
+            "${ADMIN_USER}@${HOSTADDR_NAME}:${CACHE_DIR}/${_software_origin_file}" \
+            "Origins/${SYSTEM_VERSION}/"
     fi
 done
 
-${SSH_BIN} root@${HOSTADDR_NAME} \
+${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
     "${ZFS_BIN} list '${ZPOOL}${SHARED_DIR}' || ${ZFS_BIN} create -o mountpoint=${SHARED_DIR} ${ZPOOL}${SHARED_DIR}; \
     " && echo "Created dataset: ${ZPOOL}${SHARED_DIR}"
 
@@ -147,26 +147,26 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
 echo "Configuring base RC system"
 ${SCP_BIN} \
     "etc/rc.build.conf" \
-    "root@${HOSTADDR_NAME}:/etc/rc.conf"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:/etc/rc.conf"
 
 echo "Setting up static TCP/IP configuration in /etc/rc.conf"
-${SSH_BIN} root@${HOSTADDR_NAME} \
+${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
     "${SED_BIN} -i '' -e 's|HOSTADDR_MASK|${HOSTADDR_MASK}|g; s|HOSTADDR_IP|${HOSTADDR_IP}|g; s|HOSTADDR_GW|${HOSTADDR_GW}|g; s|HOSTADDR_NAME|${HOSTADDR_NAME}|g;' /etc/rc.conf"
 
 ${SCP_BIN} \
     "etc/loader.build.conf" \
-    "root@${HOSTADDR_NAME}:/boot/loader.conf"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:/boot/loader.conf"
 
 echo "Creating projects archive…"
 ${TAR_BIN} -cJf ".archive-base-projects.tar.xz" \
-    /Projects/ServeD-OS \
-    /Projects/Sofin \
+    "${SERVED_REPO}" \
+    "${SOFIN_REPO}" \
     >/dev/null 2>/dev/null
 
 echo "Sending projects archive…"
 ${SCP_BIN} \
     ".archive-base-projects.tar.xz" \
-    "root@${HOSTADDR_NAME}:${CACHE_DIR}/"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:${CACHE_DIR}/"
 
 echo "Cleaning local archive…"
 ${RM_BIN} -f \
@@ -179,7 +179,7 @@ CCACHE_VERSION="3.3.4"
 MC_VERSION="4.8.18-master"
 
 echo "Setting HOME to ${HOME_DIR}, Zsh as default shell, installing base software"
-${SSH_BIN} root@${HOSTADDR_NAME} \
+${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
     "${FETCH_BIN} --no-verify-peer ${CACERT_SOURCE} -o /etc/ssl/cert.pem; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive -vF ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp ${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
@@ -193,7 +193,7 @@ ${SSH_BIN} root@${HOSTADDR_NAME} \
     ${SED_BIN} -i '' -e 's|^/bin/tcsh|${DEFAULT_SHELL}|g' /etc/shells; \
     ${CHSH_BIN} -s ${DEFAULT_SHELL} root; \
     ${TAR_BIN} xfJ ${CACHE_DIR}/.archive-base-projects.tar.xz --directory / >/dev/null; \
-    cd /Projects/Sofin; \
+    cd ${SOFIN_REPO}; \
     bin/install; \
     echo LANG=\"en_GB.UTF-8\" > ${HOME_DIR}/.zshenv; \
     echo LANGUAGE=\"en_GB.UTF-8\" >> ${HOME_DIR}/.zshenv; \

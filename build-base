@@ -145,35 +145,33 @@ build_base () {
         permnote "Boot environment activated: ${NEW_BOOT_ENV}"
 
     NEW_BOOT_ORIGIN="${ZPOOL}/ROOT/${NEW_BOOT_ENV}@${ORIGIN}"
-    NEW_BOOT_ORIGIN_FILE="${DIFFS_DIR}/${SYSTEM_TYPE}-${VERSION}.${ZFSX_EXT}"
+    NEW_BOOT_ORIGIN_FILE="${ARCHIVE_SNAPSHOTS_DIR}/${SYSTEM_TYPE}-${VERSION}${ZFSX_EXT}"
     ${ZFS_BIN} snapshot "${NEW_BOOT_ORIGIN}" && \
         permnote "Origin snapshot: ${NEW_BOOT_ORIGIN}"
 
     ${MKDIR_BIN} \
-        -p "${DIFFS_DIR}" \
+        -p "${ARCHIVE_SNAPSHOTS_DIR}" \
         2>> "${LOG_OUTPUT}"
 
     permnote "Sending origin snapshot: ${NEW_BOOT_ORIGIN}, to file: ${NEW_BOOT_ORIGIN_FILE}"
     ${ZFS_BIN} send "${DEFAULT_SNAPSHOT_SEND_OPTS}" \
-        "${NEW_BOOT_ORIGIN}" \
+        "${NEW_BOOT_ORIGIN}" | ${XZ_BIN} "${DEFAULT_XZ_OPTS}" \
         > "${NEW_BOOT_ORIGIN_FILE}"
     ${CHMOD_BIN} a+r "${NEW_BOOT_ORIGIN_FILE}"
     ${CHMOD_BIN} 600 /User/.ssh/* >/dev/null 2>&1
 
-    permnote "Uploading origin snapshot: ${NEW_BOOT_ORIGIN_FILE}, to: ${DESTINATION}, using identity: ${HOME_DIR}/.ssh/vks.auth"
+    permnote "Uploading origin snapshot: ${NEW_BOOT_ORIGIN_FILE}, to: ${DESTINATION}"
     ${SCP_BIN} -4 -B \
         -o UserKnownHostsFile=/dev/null \
         -o StrictHostKeyChecking=no \
-        -i "${HOME_DIR}/.ssh/vks.auth" \
         "${NEW_BOOT_ORIGIN_FILE}" \
         "${DESTINATION}" \
         2>> "${LOG_OUTPUT}"
     if [ "$?" = "0" ]; then
-        permnote "Checking latest version on remote, using identity: ${HOME_DIR}/.ssh/vks.auth"
+        permnote "Checking latest version on remote"
         ${SSH_BIN} -4 -B \
             -o UserKnownHostsFile=/dev/null \
             -o StrictHostKeyChecking=no \
-            -i "${HOME_DIR}/.ssh/vks.auth" \
             "${DEST_ACCOUNT}" \
             "${MKDIR_BIN} -p ${DEST_PATH}; \
             echo '${VERSION}' > ${DEST_PATH}/version-latest" \
