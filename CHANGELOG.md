@@ -67,7 +67,7 @@
     - Removed limits from login.conf
 
 * v0.6.3
-    - Removed bundled version of ServeD-OS in core
+    - Removed bundled version of svdOS in core
     - Update rc.conf only once on install / update action
     - Added support for RCTL resources limits
     - Install action will now automatically behave like update action when launched again on host with ServeD installed
@@ -125,7 +125,7 @@
 
 * v0.4.4
     - updated TheSS to v0.96.6
-    - added automated installation from ServeD-OS repository (bundled with Base package)
+    - added automated installation from svdOS repository (bundled with Base package)
     - /VERSION is now bundled with Base package
     - code cleanup, logger improvements
 

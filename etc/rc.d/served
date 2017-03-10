@@ -17,7 +17,7 @@ rcvar="served_enable"
 start_precmd="served_prestart"
 separator="---------------------------------------------------------------------------"
 
-SERVED_REPO="/Projects/ServeD-OS"
+SERVED_REPO="/Projects/svdOS"
 BUILD_HOST_MARKER="/.build-host"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 

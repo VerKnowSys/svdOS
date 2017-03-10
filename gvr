@@ -12,7 +12,7 @@ ORIGIN="origin"
 KERN_SECURELEVEL="0"
 BRIDGE_DEVICE="bridge0"
 VLAN_DEVICE="vlan"
-SERVED_REPO="/Projects/ServeD-OS"
+SERVED_REPO="/Projects/svdOS"
 SOFIN_REPO="/Projects/Sofin"
 DEFAULT_SOFIN_REPO="https://github.com/VerKnowSys/sofin.git"
 # SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
@@ -487,7 +487,7 @@ ${JAIL_NAME} {
 
     if [ ! -f ${CELL}/etc/sysctl.conf ]; then
         wrun "${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf" && \
-        dnote "Created sysctl.conf from ServeD-OS repository"
+        dnote "Created sysctl.conf from svdOS repository"
     fi
 
     wrun "${RM_BIN} -f ${CELL}/etc/zshenv ${CELL}/etc/zshrc" && \
@@ -937,7 +937,7 @@ case $1 in
         note "  ${CMD} command arg1 arg2 [...]"
         note
         note "List of commands:"
-        note "  ${cyan}ver${reset}: ${green}prints Governor and ServeD-OS versions${reset}"
+        note "  ${cyan}ver${reset}: ${green}prints Governor and svdOS versions${reset}"
         note "  ${cyan}boot${reset}: ${green}launches all previously running jails${reset}"
         note "  ${cyan}create${reset}: ${green}creates new jail${reset}"
         note "  ${cyan}list${reset} | ${cyan}lst${reset} | ${cyan}l${reset}: ${green}lists created jails${reset}"

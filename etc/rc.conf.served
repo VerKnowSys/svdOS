@@ -3,7 +3,7 @@
 # ServeD-Install-Script
 #
 
-# ServeD-OS specific boot initialisation stuff goes here:
+# svdOS specific boot initialisation stuff goes here:
 served_enable="YES"
 
 # alias configuration example:

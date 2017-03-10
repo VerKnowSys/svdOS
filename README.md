@@ -1,4 +1,4 @@
-ServeD-OS
+svdOS
 =========
 
 "Because you deserve to be ServeD!"
