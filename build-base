@@ -7,32 +7,34 @@ build_base () {
     permnote "Process started for OS version: ${SYSTEM_VERSION}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
 
     _branch="$(echo "${CURRENT_BRANCH}" | ${TR_BIN} '/' '-' 2>/dev/null)"
-    COMMON_BARE_REPO="${SYSTEM_NAME}-${SYSTEM_VERSION}-${_branch}.git"
+    _common_bare_repo="${WORKSTATION_USER}@${HOSTADDR_GW}:${WORKSTATION_REPO_CACHED}"
 
     permnote "${SYSTEM_TYPE} version: ${VERSION}"
-    permnote "Build repository: ${COMMON_BARE_REPO}"
+    permnote "Build repository: ${_common_bare_repo}"
     permnote "Build branch: ${_branch}"
 
-    if [ ! -d "/usr/${COMMON_BARE_REPO}" ]; then
-        cd /usr
-        # svn co http://svn0.eu.FreeBSD.org/base/releng/${VERSION} ${VERSION}
-        ${GIT_BIN} clone \
-            --ipv4 \
-            --depth 1 \
-            --bare \
-            --progress \
-            --single-branch \
-            --branch "${CURRENT_BRANCH}" \
-            --jobs "${PARALLEL_JOBS}" \
-            "${MAIN_REPOSITORY}" \
-            "${COMMON_BARE_REPO}"
-    fi
-    cd "/usr/${COMMON_BARE_REPO}"
-    permnote "Fetching changes for source bare repo: /usr/${COMMON_BARE_REPO}"
-    ${GIT_BIN} fetch \
-        --depth 1 \
-        --jobs "${PARALLEL_JOBS}" \
-        --progress
+    # if [ ! -d "/usr/${_common_bare_repo}" ]; then
+    #     cd /usr
+    #     # svn co http://svn0.eu.FreeBSD.org/base/releng/${VERSION} ${VERSION}
+    #     ${GIT_BIN} clone \
+    #         --ipv4 \
+    #         --depth 1 \
+    #         --bare \
+    #         --progress \
+    #         --single-branch \
+    #         --branch "${CURRENT_BRANCH}" \
+    #         --jobs "${PARALLEL_JOBS}" \
+    #         "${MAIN_REPOSITORY}" \
+    #         "${_common_bare_repo}"
+    # fi
+
+
+    # cd "/usr/${_common_bare_repo}"
+    # permnote "Fetching changes for source bare repo: /usr/${_common_bare_repo}"
+    # ${GIT_BIN} fetch \
+    #     --depth 1 \
+    #     --jobs "${PARALLEL_JOBS}" \
+    #     --progress
 
     permnote "Setting up src.conf and make.conf"
     ${RM_BIN} -f /etc/src.conf /etc/make.conf
@@ -73,7 +75,7 @@ build_base () {
         --single-branch \
         --branch "${CURRENT_BRANCH}" \
         --jobs "${PARALLEL_JOBS}" \
-        "/usr/${COMMON_BARE_REPO}" \
+        "${_common_bare_repo}" \
         "/usr/src/λ" 2>> "${LOG_OUTPUT}"
 
     cd "/usr/src/λ" || exit 106
@@ -167,7 +169,7 @@ build_base () {
 
     permnote "Removing sources, debug and other cache files before ZFS send…"
     ${RM_BIN} -rf "${DESTBASE}/COPYRIGHT" "${DESTBASE}/.profile" "${DESTBASE}/mnt" "${DESTBASE}/proc" "${DESTBASE}/media" "${DESTBASE}/sys" &
-    ${FIND_BIN} "${DESTBASE}/usr/${COMMON_BARE_REPO}" -delete &
+    ${FIND_BIN} "${DESTBASE}/usr/${_common_bare_repo}" -delete &
     ${FIND_BIN} "${DESTBASE}/Projects" -delete &
     ${MKDIR_BIN} -p "${DESTBASE}/usr/src" "${DESTBASE}/usr/obj"
 
@@ -209,19 +211,19 @@ build_base () {
         "${NEW_BOOT_ORIGIN_FILE}" \
         "${DESTINATION}" \
         2>> "${LOG_OUTPUT}"
-    if [ "$?" = "0" ]; then
-        permnote "Checking latest version on remote"
-        ${SSH_BIN} -4 -B \
-            -o UserKnownHostsFile=/dev/null \
-            -o StrictHostKeyChecking=no \
-            "${DEST_ACCOUNT}" \
-            "${MKDIR_BIN} -p ${DEST_PATH}; \
-            echo '${VERSION}' > ${DEST_PATH}/version-latest" \
-            2>> "${LOG_OUTPUT}" && \
-                permnote "Remote version updated to: ${VERSION}"
-    else
-        error "Something went wrong while uploading Jails base!"
-    fi
+    # if [ "$?" = "0" ]; then
+    #     permnote "Checking latest version on remote"
+    #     ${SSH_BIN} -4 -B \
+    #         -o UserKnownHostsFile=/dev/null \
+    #         -o StrictHostKeyChecking=no \
+    #         "${DEST_ACCOUNT}" \
+    #         "${MKDIR_BIN} -p ${DEST_PATH}; \
+    #         echo '${VERSION}' > ${DEST_PATH}/version-latest" \
+    #         2>> "${LOG_OUTPUT}" && \
+    #             permnote "Remote version updated to: ${VERSION}"
+    # else
+    #     error "Something went wrong while uploading base snapshot!"
+    # fi
 
     permnote "Process: ${0} ${*}, finished @${TIMESTAMP}"
 }
