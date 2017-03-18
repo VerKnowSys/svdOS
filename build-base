@@ -30,8 +30,8 @@ build_base () {
     cd "/usr/${COMMON_BARE_REPO}"
     permnote "Fetching changes for source bare repo: /usr/${COMMON_BARE_REPO}"
     ${GIT_BIN} fetch \
-        --force \
-        --all \
+        --depth 1 \
+        --jobs "${PARALLEL_JOBS}" \
         --progress
 
     permnote "Setting up src.conf"
@@ -40,16 +40,34 @@ build_base () {
         "${SERVED_REPO}/etc/src.conf" \
         "/etc/src.conf"
 
+    printf "# default svdOS fstab file:\n \
+tmpfs   /tmp        tmpfs   rw,mode=777     0 0\n \
+tmpfs   /usr/src    tmpfs   rw,mode=777     0 0\n \
+tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
+" > /etc/fstab.svd
+    ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab
+
+    permnote "(re)Mounting tmpfs under: /usr/src, /usr/obj and /tmp"
+    ${UMOUNT_BIN} -f /usr/src >/dev/null
+    ${UMOUNT_BIN} -f /usr/obj >/dev/null
+    ${UMOUNT_BIN} -f /tmp >/dev/null
+    ${MKDIR_BIN} -p /usr/src /usr/obj /tmp
+
+    ${MOUNT_BIN} /tmp && permnote "Mounted: /tmp"
+    ${MOUNT_BIN} /usr/src && permnote "Mounted: /usr/src"
+    ${MOUNT_BIN} /usr/obj && permnote "Mounted: /usr/obj"
+
     permnote "Syncing sources to /usr/src"
     ${GIT_BIN} clone \
         --progress \
+        --depth 1 \
         --single-branch \
         --branch "${CURRENT_BRANCH}" \
         --jobs "${PARALLEL_JOBS}" \
         "/usr/${COMMON_BARE_REPO}" \
-        "/usr/src" 2>> "${LOG_OUTPUT}"
+        "/usr/src/λ" 2>> "${LOG_OUTPUT}"
 
-    cd /usr/src || exit 106
+    cd /usr/src/λ || exit 106
 
     test ! -z "${VERSION}" || exit 107
     test ! -z "${ARCH}" || exit 108
