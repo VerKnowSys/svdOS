@@ -175,7 +175,7 @@ build_base () {
 
     sync
 
-    ${BEADM_BIN} umount "${NEW_BOOT_ENV}"
+    ${UMOUNT_BIN} -f "${SHARED_DIR}/${NEW_BOOT_ENV}"
     permnote "Unmounted boot environment: ${NEW_BOOT_ENV}"
     ${BEADM_BIN} activate "${NEW_BOOT_ENV}"
     permnote "Commited new boot environment: ${NEW_BOOT_ENV}"
