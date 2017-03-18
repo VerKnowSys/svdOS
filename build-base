@@ -179,10 +179,8 @@ build_base () {
     ${RM_BIN} -rf "${DESTBASE}/COPYRIGHT" "${DESTBASE}/.profile" "${DESTBASE}/mnt" "${DESTBASE}/proc" "${DESTBASE}/media" "${DESTBASE}/sys" &
     ${FIND_BIN} "${DESTBASE}/Projects" -delete &
     ${MKDIR_BIN} -p "${DESTBASE}/usr/src" "${DESTBASE}/usr/obj"
-
-    sync
-
-    ${UMOUNT_BIN} -f "${SHARED_DIR}/${NEW_BOOT_ENV}"
+    ${UMOUNT_BIN} "${SHARED_DIR}/${NEW_BOOT_ENV}"
+    ${BEADM_BIN} umount -f "${NEW_BOOT_ENV}"
     permnote "Unmounted boot environment: ${NEW_BOOT_ENV}"
     ${BEADM_BIN} activate "${NEW_BOOT_ENV}"
     permnote "Commited new boot environment: ${NEW_BOOT_ENV}"
