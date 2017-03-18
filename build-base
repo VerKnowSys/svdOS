@@ -179,6 +179,13 @@ build_base () {
     permnote "Unmounted boot environment: ${NEW_BOOT_ENV}"
     ${BEADM_BIN} activate "${NEW_BOOT_ENV}"
     permnote "Commited new boot environment: ${NEW_BOOT_ENV}"
+
+    gpart bootcode \
+        -b "${DESTBASE}/boot/pmbr" \
+        -p "${DESTBASE}/boot/gptzfsboot" \
+        -i 1 \
+        "${DEFAULT_BOOT_DEVICE}"
+    permnote "Boot environment activated: ${NEW_BOOT_ENV}"
     ${BEADM_BIN} activate "${NEW_BOOT_ENV}"
 
     NEW_BOOT_ORIGIN="${ZPOOL}/ROOT/${NEW_BOOT_ENV}@${ORIGIN}"
