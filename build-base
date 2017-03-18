@@ -34,11 +34,14 @@ build_base () {
         --jobs "${PARALLEL_JOBS}" \
         --progress
 
-    permnote "Setting up src.conf"
-    ${RM_BIN} -f /etc/src.conf
+    permnote "Setting up src.conf and make.conf"
+    ${RM_BIN} -f /etc/src.conf /etc/make.conf
     ${INSTALL_BIN} -v \
         "${SERVED_REPO}/etc/src.conf" \
         "/etc/src.conf"
+    ${INSTALL_BIN} -v \
+        "${SERVED_REPO}/etc/make.conf" \
+        "/etc/make.conf"
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         printf "# default svdOS fstab file:\n \
