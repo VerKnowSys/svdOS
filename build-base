@@ -186,15 +186,15 @@ build_base () {
         "${DEFAULT_BOOT_DEVICE}"
     permnote "Boot code updated for: ${NEW_BOOT_ENV}"
 
-    ${BEADM_BIN} umount -f "${NEW_BOOT_ENV}"
+    ${BEADM_BIN} umount -f "${NEW_BOOT_ENV}" && \
     permnote "Unmounted boot environment: ${NEW_BOOT_ENV}"
-    ${BEADM_BIN} activate "${NEW_BOOT_ENV}"
+    ${BEADM_BIN} activate "${NEW_BOOT_ENV}" && \
     permnote "Commited and activated new boot environment: ${NEW_BOOT_ENV}"
 
     NEW_RELEASE="${ZPOOL}/ROOT/${NEW_BOOT_ENV}@v${VERSION}"
     NEW_BOOT_ORIGIN_FILE="${ARCHIVE_SNAPSHOTS_DIR}/${SYSTEM_TYPE}-v${VERSION}-${ARCH}${ZFSX_EXT}"
     ${ZFS_BIN} snapshot "${NEW_RELEASE}" && \
-        permnote "Origin snapshot: ${NEW_RELEASE}"
+        permnote "Release snapshot: ${NEW_RELEASE}"
 
     ${MKDIR_BIN} \
         -p "${ARCHIVE_SNAPSHOTS_DIR}" \
