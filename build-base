@@ -55,9 +55,7 @@ build_base () {
         permnote "(re)Mounting tmpfs under: /usr/src, /usr/obj and /tmp"
         ${UMOUNT_BIN} -f /usr/src >/dev/null
         ${UMOUNT_BIN} -f /usr/obj >/dev/null
-        ${UMOUNT_BIN} -f /tmp >/dev/null
 
-        ${MOUNT_BIN} /tmp && permnote "Mounted: /tmp"
         ${MOUNT_BIN} /usr/src && permnote "Mounted: /usr/src"
         ${MOUNT_BIN} /usr/obj && permnote "Mounted: /usr/obj"
     else
