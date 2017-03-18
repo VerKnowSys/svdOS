@@ -83,7 +83,7 @@ build_base () {
     test -n "${ARCH}" || exit 108
     test -n "${SYSTEM_TYPE}" || exit 109
 
-    NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}-v${VERSION}"
+    NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}"
 
     case "${ARCH}" in
         arm|arm64)
@@ -97,7 +97,7 @@ build_base () {
         x86_64|amd64)
             # NOTE: overriding x86_64 for architecture used by build system
             ARCH="amd64"
-            NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}-v${VERSION}"
+            NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}"
             test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}" || exit 110
 
             ${INSTALL_BIN} -v \
@@ -192,21 +192,21 @@ build_base () {
         -p "${DESTBASE}/boot/gptzfsboot" \
         -i 1 \
         "${DEFAULT_BOOT_DEVICE}"
-    permnote "Boot environment activated: ${NEW_BOOT_ENV}"
     ${BEADM_BIN} activate "${NEW_BOOT_ENV}"
+    permnote "Boot environment activated: ${NEW_BOOT_ENV}"
 
-    NEW_BOOT_ORIGIN="${ZPOOL}/ROOT/${NEW_BOOT_ENV}@${ORIGIN}-${VERSION}"
-    NEW_BOOT_ORIGIN_FILE="${ARCHIVE_SNAPSHOTS_DIR}/${SYSTEM_TYPE}-${VERSION}${ZFSX_EXT}"
-    ${ZFS_BIN} snapshot "${NEW_BOOT_ORIGIN}" && \
-        permnote "Origin snapshot: ${NEW_BOOT_ORIGIN}"
+    NEW_RELEASE="${ZPOOL}/ROOT/${NEW_BOOT_ENV}@v${VERSION}"
+    NEW_BOOT_ORIGIN_FILE="${ARCHIVE_SNAPSHOTS_DIR}/${SYSTEM_TYPE}-${ARCH}-v${VERSION}${ZFSX_EXT}"
+    ${ZFS_BIN} snapshot "${NEW_RELEASE}" && \
+        permnote "Origin snapshot: ${NEW_RELEASE}"
 
     ${MKDIR_BIN} \
         -p "${ARCHIVE_SNAPSHOTS_DIR}" \
         2>> "${LOG_OUTPUT}"
 
-    permnote "Sending origin snapshot: ${NEW_BOOT_ORIGIN}, to file: ${NEW_BOOT_ORIGIN_FILE}"
+    permnote "Sending origin snapshot: ${NEW_RELEASE}, to file: ${NEW_BOOT_ORIGIN_FILE}"
     ${ZFS_BIN} send ${DEFAULT_SNAPSHOT_SEND_OPTS} \
-        "${NEW_BOOT_ORIGIN}" | ${XZ_BIN} ${DEFAULT_XZ_OPTS} \
+        "${NEW_RELEASE}" | ${XZ_BIN} ${DEFAULT_XZ_OPTS} \
         > "${NEW_BOOT_ORIGIN_FILE}"
     ${CHMOD_BIN} a+r "${NEW_BOOT_ORIGIN_FILE}"
     ${CHMOD_BIN} 600 /User/.ssh/* >/dev/null 2>&1
