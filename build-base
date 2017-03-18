@@ -127,6 +127,8 @@ build_base () {
         ${MAKE_BIN} \
             -s buildworld \
             -j "${PARALLEL_JOBS}" \
+            TARGET="${ARCH}" \
+            TARGET_ARCH="${ARCH}" \
             DESTDIR="${DESTBASE}" \
             2>> "${LOG_OUTPUT}" || exit 119
     fi
@@ -135,12 +137,16 @@ build_base () {
     ${MAKE_BIN} \
         -s buildkernel \
         -j "${PARALLEL_JOBS}" \
+        TARGET="${ARCH}" \
+        TARGET_ARCH="${ARCH}" \
         DESTDIR="${DESTBASE}" \
         2>> "${LOG_OUTPUT}" || exit 120
 
     permnote "Installing kernel ${SYSTEM_KERNEL}"
     ${MAKE_BIN} \
         -s installkernel \
+        TARGET="${ARCH}" \
+        TARGET_ARCH="${ARCH}" \
         DESTDIR="${DESTBASE}" \
         2>> "${LOG_OUTPUT}" || exit 121
 
@@ -153,6 +159,8 @@ build_base () {
         permnote "Installing world to: ${DESTBASE}"
         ${MAKE_BIN} \
             -s installworld \
+            TARGET="${ARCH}" \
+            TARGET_ARCH="${ARCH}" \
             DESTDIR="${DESTBASE}" \
             2>> "${LOG_OUTPUT}"
 
