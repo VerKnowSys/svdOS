@@ -83,7 +83,7 @@ build_base () {
     test -n "${ARCH}" || exit 108
     test -n "${SYSTEM_TYPE}" || exit 109
 
-    NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}"
+    NEW_BOOT_ENV="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
 
     case "${ARCH}" in
         arm|arm64)
@@ -97,7 +97,7 @@ build_base () {
         x86_64|amd64)
             # NOTE: overriding x86_64 for architecture used by build system
             ARCH="amd64"
-            NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}"
+            NEW_BOOT_ENV="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
             test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}" || exit 110
 
             ${INSTALL_BIN} -v \
