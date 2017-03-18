@@ -196,7 +196,7 @@ build_base () {
     permnote "Boot environment activated: ${NEW_BOOT_ENV}"
 
     NEW_RELEASE="${ZPOOL}/ROOT/${NEW_BOOT_ENV}@v${VERSION}"
-    NEW_BOOT_ORIGIN_FILE="${ARCHIVE_SNAPSHOTS_DIR}/${SYSTEM_TYPE}-${ARCH}-v${VERSION}${ZFSX_EXT}"
+    NEW_BOOT_ORIGIN_FILE="${ARCHIVE_SNAPSHOTS_DIR}/${SYSTEM_TYPE}-v${VERSION}-${ARCH}${ZFSX_EXT}"
     ${ZFS_BIN} snapshot "${NEW_RELEASE}" && \
         permnote "Origin snapshot: ${NEW_RELEASE}"
 
