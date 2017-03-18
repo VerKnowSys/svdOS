@@ -179,7 +179,7 @@ build_base () {
     ${BEADM_BIN} activate "${NEW_BOOT_ENV}"
     permnote "Commited new boot environment: ${NEW_BOOT_ENV}"
 
-    gpart bootcode \
+    ${GPART_BIN} bootcode \
         -b "${DESTBASE}/boot/pmbr" \
         -p "${DESTBASE}/boot/gptzfsboot" \
         -i 1 \
