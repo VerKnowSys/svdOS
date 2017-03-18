@@ -78,11 +78,10 @@ build_base () {
         "/usr/${COMMON_BARE_REPO}" \
         "/usr/src/λ" 2>> "${LOG_OUTPUT}"
 
-    cd /usr/src/λ || exit 106
-
-    test ! -z "${VERSION}" || exit 107
-    test ! -z "${ARCH}" || exit 108
-    test ! -z "${SYSTEM_TYPE}" || exit 109
+    cd "/usr/src/λ" || exit 106
+    test -z "${VERSION}" || exit 107
+    test -z "${ARCH}" || exit 108
+    test -z "${SYSTEM_TYPE}" || exit 109
 
     NEW_BOOT_ENV="${SYSTEM_TYPE}-${ARCH}-v${VERSION}"
 
