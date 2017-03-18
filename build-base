@@ -40,22 +40,30 @@ build_base () {
         "${SERVED_REPO}/etc/src.conf" \
         "/etc/src.conf"
 
-    printf "# default svdOS fstab file:\n \
-tmpfs   /tmp        tmpfs   rw,mode=777     0 0\n \
-tmpfs   /usr/src    tmpfs   rw,mode=777     0 0\n \
-tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
-" > /etc/fstab.svd
-    ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab
+    if [ -z "${DONT_BUILD_WORLD}" ]; then
+        printf "# default svdOS fstab file:\n \
+    tmpfs   /tmp        tmpfs   rw,mode=777     0 0\n \
+    tmpfs   /usr/src    tmpfs   rw,mode=777     0 0\n \
+    tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
+    " > /etc/fstab.svd
+        ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab
 
-    permnote "(re)Mounting tmpfs under: /usr/src, /usr/obj and /tmp"
-    ${UMOUNT_BIN} -f /usr/src >/dev/null
-    ${UMOUNT_BIN} -f /usr/obj >/dev/null
-    ${UMOUNT_BIN} -f /tmp >/dev/null
-    ${MKDIR_BIN} -p /usr/src /usr/obj /tmp
+        permnote "(re)Mounting tmpfs under: /usr/src, /usr/obj and /tmp"
+        ${UMOUNT_BIN} -f /usr/src >/dev/null
+        ${UMOUNT_BIN} -f /usr/obj >/dev/null
+        ${UMOUNT_BIN} -f /tmp >/dev/null
+        ${MKDIR_BIN} -p /usr/src /usr/obj /tmp
 
-    ${MOUNT_BIN} /tmp && permnote "Mounted: /tmp"
-    ${MOUNT_BIN} /usr/src && permnote "Mounted: /usr/src"
-    ${MOUNT_BIN} /usr/obj && permnote "Mounted: /usr/obj"
+        ${MOUNT_BIN} /tmp && permnote "Mounted: /tmp"
+        ${MOUNT_BIN} /usr/src && permnote "Mounted: /usr/src"
+        ${MOUNT_BIN} /usr/obj && permnote "Mounted: /usr/obj"
+    else
+        echo
+        echo "NOTE:"
+        echo "  Leaving tmpfs mounts intact."
+        echo "Continuation-build detected (DONT_BUILD_WORLD is defined with value: ${DONT_BUILD_WORLD}). Continuing"
+        echo
+    fi
 
     permnote "Syncing sources to /usr/src"
     ${GIT_BIN} clone \
