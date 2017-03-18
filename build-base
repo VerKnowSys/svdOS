@@ -116,11 +116,11 @@ build_base () {
         permnote "Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}"
 
     # # export libucl:
-    permnote "Exporting UCL as regular OS library"
-    ${SED_BIN} -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile 2>> "${LOG_OUTPUT}"
-    ${PATCH_BIN} -p0 -f \
-        < "${SERVED_REPO}/src/patches/export_ucl.patch" \
-        2>> "${LOG_OUTPUT}"
+    # permnote "Exporting UCL as regular OS library"
+    # ${SED_BIN} -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile 2>> "${LOG_OUTPUT}"
+    # ${PATCH_BIN} -p0 -f \
+    #     < "${SERVED_REPO}/src/patches/export_ucl.patch" \
+    #     2>> "${LOG_OUTPUT}"
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         permnote "Building world v${VERSION}"
