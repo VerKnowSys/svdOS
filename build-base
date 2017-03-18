@@ -183,7 +183,7 @@ build_base () {
         -b "${DESTBASE}/boot/pmbr" \
         -p "${DESTBASE}/boot/gptzfsboot" \
         -i 1 \
-        "${DEFAULT_BOOT_DEVICE}"
+        "${DEFAULT_BOOT_DEVICE}" && \
     permnote "Boot code updated for: ${NEW_BOOT_ENV}"
 
     ${BEADM_BIN} umount -f "${NEW_BOOT_ENV}" && \
