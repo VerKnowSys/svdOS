@@ -46,12 +46,6 @@ case ${ARCH} in
         ;;
 esac
 
-echo "Cleaning /usr/src and /usr/obj"
-${MV_BIN} -f /usr/src /usr/src_rm 2>/dev/null
-${MV_BIN} -f /usr/obj /usr/obj_rm 2>/dev/null
-${RM_BIN} -fr /usr/src_rm 2>/dev/null &
-${RM_BIN} -fr /usr/obj_rm 2>/dev/null &
-
 set -e
 echo "Pedantic mode enabled!"
 
