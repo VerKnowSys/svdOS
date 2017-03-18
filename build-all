@@ -25,8 +25,8 @@ echo "${BUILD_NUMBER}" > "${BUILD_NUMBER_FILE}"
 echo "Updating current build number on workstation host…"
 ${SCP_BIN} "${BUILD_NUMBER_FILE}" "${WORKSTATION_USER}@${HOSTADDR_GW}:/Users/${WORKSTATION_USER}/${BUILD_NUM_NAME}"
 
-${INSTALL_BIN} -v etc/make.conf /etc/
-${INSTALL_BIN} -v etc/src.conf /etc/
+# ${INSTALL_BIN} -v etc/make.conf /etc/
+# ${INSTALL_BIN} -v etc/src.conf /etc/
 
 # test -z "${DEVEL}" && \
 #     git reset --hard
