@@ -159,14 +159,16 @@ build_base () {
             DOC_LANG="${LANG}" \
             NO_CLEAN=1 \
             NO_KERNELCLEAN=1 \
-            2>> "${LOG_OUTPUT}"
+            >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" && \
+            permnote "Installed"
 
         permnote "Merging configuration in: ${DESTBASE}"
         ${MERGEMASTER_BIN} -P -a \
             -D "${DESTBASE}" \
-            2>> "${LOG_OUTPUT}"
+            >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" && \
+            permnote "Merged"
 
-        permnote "Deleting old dirs, files and libs under: ${DESTBASE}"
+        permnote "Cleaning old dirs and files under: ${DESTBASE}"
         ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs \
             TARGET="${ARCH}" \
             TARGET_ARCH="${ARCH}" \
@@ -176,7 +178,8 @@ build_base () {
             DOC_LANG="${LANG}" \
             NO_CLEAN=1 \
             NO_KERNELCLEAN=1 \
-            2>> "${LOG_OUTPUT}" || true
+            >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" && \
+            permnote "Cleaned"
     fi
 
     permnote "Removing sources, debug and other cache files before ZFS send…"
