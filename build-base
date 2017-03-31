@@ -208,19 +208,6 @@ tmpfs   /${LAMBDA}/obj   tmpfs   rw,mode=777     0 0\n \
         "${NEW_BOOT_ORIGIN_FILE}" \
         "${DESTINATION}" \
         2>> "${LOG_OUTPUT}"
-    # if [ "$?" = "0" ]; then
-    #     permnote "Checking latest version on remote"
-    #     ${SSH_BIN} -4 -B \
-    #         -o UserKnownHostsFile=/dev/null \
-    #         -o StrictHostKeyChecking=no \
-    #         "${DEST_ACCOUNT}" \
-    #         "${MKDIR_BIN} -p ${DEST_PATH}; \
-    #         echo '${VERSION}' > ${DEST_PATH}/version-latest" \
-    #         2>> "${LOG_OUTPUT}" && \
-    #             permnote "Remote version updated to: ${VERSION}"
-    # else
-    #     error "Something went wrong while uploading base snapshot!"
-    # fi
 
-    permnote "Process: ${0} ${*}, finished @${TIMESTAMP}"
+    permnote "Process: '${0} ${*}', finished @${TIMESTAMP}"
 }
