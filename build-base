@@ -6,12 +6,12 @@ build_base () {
     ${TOUCH_BIN} "${LOG_OUTPUT}"
     permnote "Process started for OS version: ${SYSTEM_VERSION}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
 
-    _branch="$(echo "${CURRENT_BRANCH}" | ${TR_BIN} '/' '-' 2>/dev/null)"
+    # _branch="$(echo "${CURRENT_BRANCH}" | ${TR_BIN} '/' '-' 2>/dev/null)"
     _common_bare_repo="${WORKSTATION_USER}@${HOSTADDR_GW}:${WORKSTATION_REPO_CACHED}"
 
     permnote "${SYSTEM_TYPE} version: ${VERSION}"
     permnote "Build repository: ${_common_bare_repo}"
-    permnote "Build branch: ${_branch}"
+    # permnote "Build branch: ${_branch}"
 
     # if [ ! -d "/usr/${_common_bare_repo}" ]; then
     #     cd /usr
@@ -68,7 +68,7 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
         echo
     fi
 
-    permnote "Syncing sources to /usr/src"
+    permnote "Syncing os-branch: ${CURRENT_BRANCH} to /usr/src/λ"
     ${GIT_BIN} clone \
         --progress \
         --depth 1 \
@@ -76,7 +76,7 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
         --branch "${CURRENT_BRANCH}" \
         --jobs "${PARALLEL_JOBS}" \
         "${_common_bare_repo}" \
-        "/usr/src/λ" 2>> "${LOG_OUTPUT}"
+        "/usr/src/λ"
 
     cd "/usr/src/λ" || exit 106
     test -n "${VERSION}" || exit 107
