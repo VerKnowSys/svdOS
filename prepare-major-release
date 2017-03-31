@@ -221,6 +221,7 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
     ${ZFS_BIN} set checksum=off ${ZPOOL}/ROOT; \
     ${ZFS_BIN} set recordsize=16k ${ZPOOL}/ROOT; \
     ${ZFS_BIN} set sync=disabled ${ZPOOL}/ROOT; \
+    ${ZFS_BIN} set readonly=off ${ZPOOL}/ROOT; \
     echo 'Cleanup…'; \
     ${ZFS_BIN} destroy -r ${ZPOOL}/var/mail; \
     ${ZFS_BIN} destroy -r ${ZPOOL}/usr; \
