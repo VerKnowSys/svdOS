@@ -8,17 +8,21 @@ reset
 set -e
 . build.env
 
+wipe_xh_known_hosts () {
+    echo "Cleaning previous entries from ~/.ssh/known_hosts"
+    ${RM_BIN} -f "${HOME}/.ssh/known_hosts"
+    return
+}
 
 no_vks_auth () {
     echo "Local private SSH RSA key file is required: ${HOME}/.ssh/${SSH_IDENTITY_FILE}"
     echo "Generate it via 'ssh-keygen -b4096 && mv ~/.ssh/id_rsa ~/.ssh/${SSH_IDENTITY_FILE}' first!"
     exit 101
 }
+
+wipe_xh_known_hosts
 test -f "${HOME}/.ssh/${SSH_IDENTITY_FILE}" || no_vks_auth
 ${CHMOD_BIN} 600 "${HOME}/.ssh/${SSH_IDENTITY_FILE}"
-
-echo "Cleaning previous entries from ~/.ssh/known_hosts"
-${SED_BIN} -i '' -e "/^xhbh-.*,192.168.*$/ d" "${HOME}/.ssh/known_hosts" 2>/dev/null
 
 ${GREP_BIN} "${HOSTADDR_NAME}" "${HOME}/.ssh/config" >/dev/null 2>&1
 if [ "${?}" != "0" ]; then
