@@ -34,15 +34,10 @@ if [ "${?}" != "0" ]; then
         >> "${HOME}/.ssh/config"
 fi
 
-# Create /λ mountpoint
+# Create home dataset: ${ZPOOL}${HOME_DIR}, dataset and switch as new default
 ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
-    "${MKDIR_BIN} -p /${LAMBDA}"
-
-echo
-echo "Create home dataset: ${ZPOOL}${HOME_DIR}, dataset and switch as new default"
-${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
-    "${ZFS_BIN} list '${ZPOOL}${HOME_DIR}' >/dev/null 2>&1 || \
-        ${ZFS_BIN} create -o mountpoint=none \
+    "${ZFS_BIN} create \
+        -o mountpoint=none \
         -o casesensitivity=sensitive \
         -o readonly=on \
         -o utf8only=on \
@@ -53,33 +48,28 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
         -o aclmode=discard \
         -o exec=off \
         -o canmount=off \
-        -o compression=off \
-        ${ZPOOL}${HOME_DIR}; \
-    ${ZFS_BIN} list '${ZPOOL}${HOME_DIR}/root' >/dev/null 2>&1 || \
-        ${ZFS_BIN} create \
+        -o compression=off ${ZPOOL}${HOME_DIR}; \
+     ${ZFS_BIN} create \
         -o mountpoint=${HOME_DIR} \
         -o readonly=off \
         -o utf8only=on \
         -o devices=off \
         -o exec=on \
-        -o canmount=on \
-        ${ZPOOL}${HOME_DIR}/root; \
-    "
-    ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
-        "${PW_BIN} user mod root -d ${HOME_DIR}; \
-        ${ZFS_BIN} mount '${ZPOOL}${HOME_DIR}/root'; \
-        ${MKDIR_BIN} -p ${HOME_DIR}/.ssh ${CACHE_DIR}; \
-    " && echo "Created and switched home dir to: ${ZPOOL}${HOME_DIR}"
+        -o canmount=on ${ZPOOL}${HOME_DIR}/root; \
+     ${ZFS_BIN} mount '${HOME_DIR}'; \
+     ${MKDIR_BIN} -p ${HOME_DIR}/.ssh ${CACHE_DIR}; \
+     ${PW_BIN} user mod root -d '${HOME_DIR}'; \
+     " && echo "New home dir: ${HOME_DIR}, ZFS dataset: '${ZPOOL}${HOME_DIR}/root'"
 
-echo 'Installing local ED25519 SSH key…'
 ${SCP_BIN} \
     "${HOME}/.ssh/id_ed25519.pub" \
-    "${ADMIN_USER}@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/authorized_keys"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/authorized_keys" && \
+    echo 'Installed local ED25519 SSH key…'
 
-echo 'Installing remote ED25519 SSH access key…'
 ${SCP_BIN} \
     "${HOME}/.ssh/${SSH_IDENTITY_FILE}" \
-    "${ADMIN_USER}@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/${SSH_IDENTITY_FILE}"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:${HOME_DIR}/.ssh/${SSH_IDENTITY_FILE}" && \
+    echo 'Installed remote ED25519 SSH access key…'
 
 echo
 echo
@@ -88,7 +78,6 @@ for _dataset_origin in Software Services; do
 
     ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" "${ZFS_BIN} list '${ZPOOL}/${_dataset_origin}'" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
-        echo "Creating origin base: ${ZPOOL}/${_dataset_origin}"
         ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
             "${ZFS_BIN} create \
             -o mountpoint=none \
@@ -103,7 +92,8 @@ for _dataset_origin in Software Services; do
             -o exec=off \
             -o canmount=off \
             -o compression=off \
-            ${ZPOOL}/${_dataset_origin}"
+            ${ZPOOL}/${_dataset_origin}" && \
+            echo "Created origin base: ${ZPOOL}/${_dataset_origin}"
     fi
 
     ${SSH_BIN} \
@@ -130,7 +120,7 @@ for _dataset_origin in Software Services; do
             "${ZFS_BIN} send \
             -D -L -e -p -v \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN} \
-            | ${XZ_BIN} --threads=${DEFAULT_XZ_OPTS} > ${CACHE_DIR}/${_software_origin_file}"
+            | ${XZ_BIN} ${DEFAULT_XZ_OPTS} > ${CACHE_DIR}/${_software_origin_file}"
 
         # echo "Push origin to remote"
         ${MKDIR_BIN} -p "./Origins/${SYSTEM_VERSION}"
@@ -188,7 +178,8 @@ MC_VERSION="4.8.18-master"
 
 echo "Setting HOME to ${HOME_DIR}, Zsh as default shell, installing base software"
 ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
-    "${FETCH_BIN} --no-verify-peer ${CACERT_SOURCE} -o /etc/ssl/cert.pem; \
+    "${MKDIR_BIN} -p /${LAMBDA} ${CACHE_DIR} /etc/ssl; \
+    ${FETCH_BIN} --no-verify-peer ${CACERT_SOURCE} -o /etc/ssl/cert.pem; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp ${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
     ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
