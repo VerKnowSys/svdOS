@@ -23,13 +23,14 @@ build_base () {
 
     ${MKDIR_BIN} -p "/${LAMBDA}/src" "/${LAMBDA}/obj" "/tmp"
     if [ -z "${DONT_BUILD_WORLD}" ]; then
-        printf '%s' "#\n \
-# ServeD-build-host - Sofin ram-disk configuration:\n \
-tmpfs   /tmp        tmpfs   rw,mode=777     0 0\n \
-tmpfs   /${LAMBDA}/src   tmpfs   rw,mode=777     0 0\n \
-tmpfs   /${LAMBDA}/obj   tmpfs   rw,mode=777     0 0\n \
-\n" > /etc/fstab.svd
-        ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab
+        printf '%s\n%s\n%s\n%s\n' \
+            "# ServeD-build-host - Sofin ram-disk configuration:" \
+            "tmpfs   /tmp        tmpfs   rw,mode=777     0 0" \
+            "tmpfs   /${LAMBDA}/src   tmpfs   rw,mode=777     0 0" \
+            "tmpfs   /${LAMBDA}/obj   tmpfs   rw,mode=777     0 0" \
+             > /etc/fstab.svd && \
+            ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab && \
+            permnote "RAM-disk fstab setup complete."
 
         permnote "(re)Mounting tmpfs under: /${LAMBDA}/src, /${LAMBDA}/obj and /tmp"
         ${UMOUNT_BIN} -f "/${LAMBDA}/src" >/dev/null
