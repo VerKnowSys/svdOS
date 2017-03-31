@@ -130,7 +130,7 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
             TARGET="${ARCH}" \
             TARGET_ARCH="${ARCH}" \
             DESTDIR="${DESTBASE}" \
-            2>> "${LOG_OUTPUT}" || exit 119
+            >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 119
     fi
 
     permnote "Building kernel ${SYSTEM_KERNEL}"
