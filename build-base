@@ -48,10 +48,10 @@ build_base () {
     ${MKDIR_BIN} -p /usr/src /usr/obj /tmp
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         printf "# default svdOS fstab file:\n \
-    tmpfs   /tmp        tmpfs   rw,mode=777     0 0\n \
-    tmpfs   /usr/src    tmpfs   rw,mode=777     0 0\n \
-    tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
-    " > /etc/fstab.svd
+tmpfs   /tmp        tmpfs   rw,mode=777     0 0\n \
+tmpfs   /usr/src    tmpfs   rw,mode=777     0 0\n \
+tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
+\n" > /etc/fstab.svd
         ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab
 
         permnote "(re)Mounting tmpfs under: /usr/src, /usr/obj and /tmp"
