@@ -30,6 +30,10 @@ if [ "${?}" != "0" ]; then
         >> "${HOME}/.ssh/config"
 fi
 
+# Create /λ mountpoint
+${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
+    "${MKDIR_BIN} -p /${LAMBDA}"
+
 echo
 echo "Create home dataset: ${ZPOOL}${HOME_DIR}, dataset and switch as new default"
 ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
