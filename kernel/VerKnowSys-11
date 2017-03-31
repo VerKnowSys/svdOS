@@ -1,10 +1,15 @@
 # ServeD:
 
 cpu HAMMER
-ident VERKNOWSYS
+ident VerKnowSys
 makeoptions DEBUG=-g                        # Build kernel with gdb(1) debug symbols
 makeoptions WITH_CTF=1                      # Run ctfconvert(1) for DTrace support
+makeoptions "-funroll-loops"
+makeoptions "-ffast-math"
+makeoptions "-fno-omit-frame-pointer"
+makeoptions "-fno-strict-aliasing"
 
+options     HZ=60
 options     SCHED_ULE                       # ULE scheduler
 options     PREEMPTION                      # Enable kernel thread preemption
 options     INET                            # InterNETworking
@@ -23,11 +28,11 @@ options     SCTP                            # Stream Control Transmission Protoc
 # options    QUOTA                          # Enable disk quotas for UFS
 options     MD_ROOT                         # MD is a potential root device
 options     MAXFILES=32768
-options     SHMMAX=68719476736
-options     SEMMNU=4096
-options     SEMMNS=8194
-options     SEMMNI=4096
-options     HZ=100
+options     SHMMAXPGS=65536                 # PostgreSQL
+options     SEMMNI=40
+options     SEMMNS=240
+options     SEMUME=40
+options     SEMMNU=120
 options     DUMMYNET
 options     KTR
 options     VIMAGE
@@ -78,7 +83,7 @@ options     SYSVSHM                         # SYSV-style shared memory
 options     SYSVMSG                         # SYSV-style message queues
 options     SYSVSEM                         # SYSV-style semaphores
 options     _KPOSIX_PRIORITY_SCHEDULING     # POSIX P1003_1B real-time extensions
-options     PRINTF_BUFR_SIZE=128            # Prevent printf output being interspersed.
+options     PRINTF_BUFR_SIZE=256            # Prevent printf output being interspersed.
 options     KBD_INSTALL_CDEV                # install a CDEV entry in /dev
 options     HWPMC_HOOKS                     # Necessary kernel hooks for hwpmc(4)
 options     AUDIT                           # Security event auditing
@@ -254,7 +259,6 @@ device      uart                            # Generic UART driver
 device      bxe                             # Broadcom NetXtreme II BCM5771X/BCM578XX 10GbE
 device      de                              # DEC/Intel DC21x4x (``Tulip'')
 device      em                              # Intel PRO/1000 Gigabit Ethernet Family
-device      igb                             # Intel PRO/1000 PCIE Server Gigabit Family
 device      ix                              # Intel PRO/10GbE PCIE PF Ethernet
 device      ixv                             # Intel PRO/10GbE PCIE VF Ethernet
 device      ixl                             # Intel XL710 40Gbe PCIE Ethernet
@@ -302,32 +306,32 @@ device      wb                              # Winbond W89C840F
 device      xl                              # 3Com 3c90x (``Boomerang'', ``Cyclone'')
 
 # Wireless NIC cards
-device      wlan                            # 802.11 support
-#options     IEEE80211_DEBUG                # enable debug msgs
-options     IEEE80211_AMPDU_AGE             # age frames in AMPDU reorder q's
-options     IEEE80211_SUPPORT_MESH          # enable 802.11s draft support
-device      wlan_wep                        # 802.11 WEP support
-device      wlan_ccmp                       # 802.11 CCMP support
-device      wlan_tkip                       # 802.11 TKIP support
-device      wlan_amrr                       # AMRR transmit rate control algorithm
-device      an                              # Aironet 4500/4800 802.11 wireless NICs.
-device      ath                             # Atheros NICs
-device      ath_pci                         # Atheros pci/cardbus glue
-device      ath_hal                         # pci/cardbus chip support
-options     AH_SUPPORT_AR5416               # enable AR5416 tx/rx descriptors
-options     AH_AR5416_INTERRUPT_MITIGATION  # AR5416 interrupt mitigation
-options     ATH_ENABLE_11N                  # Enable 802.11n support for AR5416 and later
-device      ath_rate_sample                 # SampleRate tx rate control for ath
-#device     bwi                             # Broadcom BCM430x/BCM431x wireless NICs.
-#device     bwn                             # Broadcom BCM43xx wireless NICs.
-device      ipw                             # Intel 2100 wireless NICs.
-device      iwi                             # Intel 2200BG/2225BG/2915ABG wireless NICs.
-device      iwn                             # Intel 4965/1000/5000/6000 wireless NICs.
-device      malo                            # Marvell Libertas wireless NICs.
-device      mwl                             # Marvell 88W8363 802.11n wireless NICs.
-device      ral                             # Ralink Technology RT2500 wireless NICs.
-device      wi                              # WaveLAN/Intersil/Symbol 802.11 wireless NICs.
-device      wpi                             # Intel 3945ABG wireless NICs.
+# device      wlan                            # 802.11 support
+# options     IEEE80211_DEBUG                # enable debug msgs
+# options     IEEE80211_AMPDU_AGE             # age frames in AMPDU reorder q's
+# options     IEEE80211_SUPPORT_MESH          # enable 802.11s draft support
+# device      wlan_wep                        # 802.11 WEP support
+# device      wlan_ccmp                       # 802.11 CCMP support
+# device      wlan_tkip                       # 802.11 TKIP support
+# device      wlan_amrr                       # AMRR transmit rate control algorithm
+# device      an                              # Aironet 4500/4800 802.11 wireless NICs.
+# device      ath                             # Atheros NICs
+# device      ath_pci                         # Atheros pci/cardbus glue
+# device      ath_hal                         # pci/cardbus chip support
+# options     AH_SUPPORT_AR5416               # enable AR5416 tx/rx descriptors
+# options     AH_AR5416_INTERRUPT_MITIGATION  # AR5416 interrupt mitigation
+# options     ATH_ENABLE_11N                  # Enable 802.11n support for AR5416 and later
+# device      ath_rate_sample                 # SampleRate tx rate control for ath
+# #device     bwi                             # Broadcom BCM430x/BCM431x wireless NICs.
+# #device     bwn                             # Broadcom BCM43xx wireless NICs.
+# device      ipw                             # Intel 2100 wireless NICs.
+# device      iwi                             # Intel 2200BG/2225BG/2915ABG wireless NICs.
+# device      iwn                             # Intel 4965/1000/5000/6000 wireless NICs.
+# device      malo                            # Marvell Libertas wireless NICs.
+# device      mwl                             # Marvell 88W8363 802.11n wireless NICs.
+# device      ral                             # Ralink Technology RT2500 wireless NICs.
+# device      wi                              # WaveLAN/Intersil/Symbol 802.11 wireless # NICs.
+# device      wpi                             # Intel 3945ABG wireless NICs.
 
 # Pseudo devices.
 device      loop                            # Network loopback
@@ -357,14 +361,14 @@ device      ukbd                            # Keyboard
 device      umass                           # Disks/Mass storage - Requires scbus and da
 
 # Sound support
-device      sound                           # Generic sound driver (required)
-device      snd_cmi                         # CMedia CMI8338/CMI8738
-device      snd_csa                         # Crystal Semiconductor CS461x/428x
-device      snd_emu10kx                     # Creative SoundBlaster Live! and Audigy
-device      snd_es137x                      # Ensoniq AudioPCI ES137x
-device      snd_hda                         # Intel High Definition Audio
-device      snd_ich                         # Intel, NVidia and other ICH AC'97 Audio
-device      snd_via8233                     # VIA VT8233x Audio
+# device      sound                           # Generic sound driver (required)
+# device      snd_cmi                         # CMedia CMI8338/CMI8738
+# device      snd_csa                         # Crystal Semiconductor CS461x/428x
+# device      snd_emu10kx                     # Creative SoundBlaster Live! and Audigy
+# device      snd_es137x                      # Ensoniq AudioPCI ES137x
+# device      snd_hda                         # Intel High Definition Audio
+# device      snd_ich                         # Intel, NVidia and other ICH AC'97 Audio
+# device      snd_via8233                     # VIA VT8233x Audio
 
 # MMC/SD
 device      mmc                             # MMC/SD bus
@@ -380,7 +384,7 @@ device      virtio_scsi                     # VirtIO SCSI device
 device      virtio_balloon                      # VirtIO Memory Balloon device
 
 # VMware support
-device      vmx                             # VMware VMXNET3 Ethernet
+# device      vmx                             # VMware VMXNET3 Ethernet
 
 # Netmap provides direct access to TX/RX rings on supported NICs
 device      netmap                          # netmap(4) support

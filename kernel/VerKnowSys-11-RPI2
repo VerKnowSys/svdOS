@@ -18,7 +18,7 @@
 #
 # $FreeBSD$
 
-ident       VERKNOWSYS-RPI2
+ident       VerKnowSys-RPI2
 
 include     "std.armv6"
 include     "../broadcom/bcm2835/std.rpi"
