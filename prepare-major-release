@@ -233,8 +233,8 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
 setup_initial_build_number () {
     echo "Setting up initial build number counter on host OS in file: ${BUILD_NUMBER_FILE}"
     echo "1" > "${BUILD_NUMBER_FILE}"
-    ${SCP_BIN} \
-        "${BUILD_NUMBER_FILE}" \
-        "${ADMIN_USER}@${HOSTADDR_NAME}:${HOME_DIR}/.svd-os.build.number"
+    ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
+        "echo 1 > ${HOME_DIR}/${BUILD_NUM_NAME}" && \
+        echo "Build counter initialized."
 }
 test -f "${BUILD_NUMBER_FILE}" || setup_initial_build_number
