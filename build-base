@@ -11,30 +11,6 @@ build_base () {
 
     permnote "${SYSTEM_TYPE} version: ${VERSION}"
     permnote "Build repository: ${_common_bare_repo}"
-    # permnote "Build branch: ${_branch}"
-
-    # if [ ! -d "/usr/${_common_bare_repo}" ]; then
-    #     cd /usr
-    #     # svn co http://svn0.eu.FreeBSD.org/base/releng/${VERSION} ${VERSION}
-    #     ${GIT_BIN} clone \
-    #         --ipv4 \
-    #         --depth 1 \
-    #         --bare \
-    #         --progress \
-    #         --single-branch \
-    #         --branch "${CURRENT_BRANCH}" \
-    #         --jobs "${PARALLEL_JOBS}" \
-    #         "${MAIN_REPOSITORY}" \
-    #         "${_common_bare_repo}"
-    # fi
-
-
-    # cd "/usr/${_common_bare_repo}"
-    # permnote "Fetching changes for source bare repo: /usr/${_common_bare_repo}"
-    # ${GIT_BIN} fetch \
-    #     --depth 1 \
-    #     --jobs "${PARALLEL_JOBS}" \
-    #     --progress
 
     ${RM_BIN} -f /etc/src.conf /etc/make.conf
     ${INSTALL_BIN} -v \
