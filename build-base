@@ -69,8 +69,7 @@ build_base () {
             test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}-RPI2" || exit 110
             ${INSTALL_BIN} -v \
                 "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}-RPI2" \
-                "sys/${ARCH}/conf/${SYSTEM_KERNEL}" \
-                2>> "${LOG_OUTPUT}" || exit 111
+                "sys/${ARCH}/conf/${SYSTEM_KERNEL}" || exit 111
             ;;
 
         x86_64|amd64)
@@ -81,8 +80,7 @@ build_base () {
 
             ${INSTALL_BIN} -v \
                 "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}" \
-                "sys/${ARCH}/conf/${SYSTEM_KERNEL}" \
-                2>> "${LOG_OUTPUT}" || exit 111
+                "sys/${ARCH}/conf/${SYSTEM_KERNEL}" || exit 111
             ;;
 
     esac
@@ -109,6 +107,7 @@ build_base () {
             TARGET="${ARCH}" \
             TARGET_ARCH="${ARCH}" \
             DESTDIR="${DESTBASE}" \
+            MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
             NO_CLEAN=1 \
@@ -123,6 +122,7 @@ build_base () {
         TARGET="${ARCH}" \
         TARGET_ARCH="${ARCH}" \
         DESTDIR="${DESTBASE}" \
+        MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
         FORMATS="${DOC_FORMATS}" \
         DOC_LANG="${LANG}" \
         NO_CLEAN=1 \
@@ -135,6 +135,7 @@ build_base () {
         TARGET="${ARCH}" \
         TARGET_ARCH="${ARCH}" \
         DESTDIR="${DESTBASE}" \
+        MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
         FORMATS="${DOC_FORMATS}" \
         DOC_LANG="${LANG}" \
         NO_CLEAN=1 \
@@ -153,6 +154,7 @@ build_base () {
             TARGET="${ARCH}" \
             TARGET_ARCH="${ARCH}" \
             DESTDIR="${DESTBASE}" \
+            MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
             NO_CLEAN=1 \
@@ -169,6 +171,7 @@ build_base () {
             TARGET="${ARCH}" \
             TARGET_ARCH="${ARCH}" \
             DESTDIR="${DESTBASE}" \
+            MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
             NO_CLEAN=1 \
