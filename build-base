@@ -36,30 +36,31 @@ build_base () {
     #     --jobs "${PARALLEL_JOBS}" \
     #     --progress
 
-    permnote "Setting up src.conf and make.conf"
     ${RM_BIN} -f /etc/src.conf /etc/make.conf
     ${INSTALL_BIN} -v \
         "${SERVED_REPO}/etc/src.conf" \
-        "/etc/src.conf"
+        "/etc/src.conf" && \
     ${INSTALL_BIN} -v \
         "${SERVED_REPO}/etc/make.conf" \
-        "/etc/make.conf"
+        "/etc/make.conf" && \
+        permnote "Installed: /etc/src.conf, /etc/make.conf"
 
-    ${MKDIR_BIN} -p /usr/src /usr/obj /tmp
+    ${MKDIR_BIN} -p "/${LAMBDA}/src" "/${LAMBDA}/obj" "/tmp"
     if [ -z "${DONT_BUILD_WORLD}" ]; then
-        printf "# default svdOS fstab file:\n \
+        printf '%s' "#\n \
+# ServeD-build-host - Sofin ram-disk configuration:\n \
 tmpfs   /tmp        tmpfs   rw,mode=777     0 0\n \
-tmpfs   /usr/src    tmpfs   rw,mode=777     0 0\n \
-tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
+tmpfs   /${LAMBDA}/src   tmpfs   rw,mode=777     0 0\n \
+tmpfs   /${LAMBDA}/obj   tmpfs   rw,mode=777     0 0\n \
 \n" > /etc/fstab.svd
         ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab
 
-        permnote "(re)Mounting tmpfs under: /usr/src, /usr/obj and /tmp"
-        ${UMOUNT_BIN} -f /usr/src >/dev/null
-        ${UMOUNT_BIN} -f /usr/obj >/dev/null
+        permnote "(re)Mounting tmpfs under: /${LAMBDA}/src, /${LAMBDA}/obj and /tmp"
+        ${UMOUNT_BIN} -f "/${LAMBDA}/src" >/dev/null
+        ${UMOUNT_BIN} -f "/${LAMBDA}/obj" >/dev/null
 
-        ${MOUNT_BIN} /usr/src && permnote "Mounted: /usr/src"
-        ${MOUNT_BIN} /usr/obj && permnote "Mounted: /usr/obj"
+        ${MOUNT_BIN} "/${LAMBDA}/src" && permnote "Mounted: /${LAMBDA}/src"
+        ${MOUNT_BIN} "/${LAMBDA}/obj" && permnote "Mounted: /${LAMBDA}/obj"
     else
         echo
         echo "NOTE:"
@@ -68,7 +69,8 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
         echo
     fi
 
-    permnote "Syncing os-branch: ${CURRENT_BRANCH} to /usr/src/λ"
+    _build_dir="/${LAMBDA}/src/${SYSTEM_VERSION}"
+    permnote "Syncing os-branch: ${CURRENT_BRANCH} to: ${_build_dir}"
     ${GIT_BIN} clone \
         --progress \
         --depth 1 \
@@ -76,9 +78,9 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
         --branch "${CURRENT_BRANCH}" \
         --jobs "${PARALLEL_JOBS}" \
         "${_common_bare_repo}" \
-        "/usr/src/λ"
+        "${_build_dir}"
 
-    cd "/usr/src/λ" || exit 106
+    cd "${_build_dir}" || exit 106
     test -n "${VERSION}" || exit 107
     test -n "${ARCH}" || exit 108
     test -n "${SYSTEM_TYPE}" || exit 109
@@ -130,6 +132,8 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
             TARGET="${ARCH}" \
             TARGET_ARCH="${ARCH}" \
             DESTDIR="${DESTBASE}" \
+            FORMATS="${DOC_FORMATS}" \
+            DOC_LANG="${LANG}" \
             NO_CLEAN=1 \
             NO_KERNELCLEAN=1 \
             >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 119
@@ -142,6 +146,8 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
         TARGET="${ARCH}" \
         TARGET_ARCH="${ARCH}" \
         DESTDIR="${DESTBASE}" \
+        FORMATS="${DOC_FORMATS}" \
+        DOC_LANG="${LANG}" \
         NO_CLEAN=1 \
         NO_KERNELCLEAN=1 \
         2>> "${LOG_OUTPUT}" || exit 120
@@ -152,6 +158,8 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
         TARGET="${ARCH}" \
         TARGET_ARCH="${ARCH}" \
         DESTDIR="${DESTBASE}" \
+        FORMATS="${DOC_FORMATS}" \
+        DOC_LANG="${LANG}" \
         NO_CLEAN=1 \
         NO_KERNELCLEAN=1 \
         2>> "${LOG_OUTPUT}" || exit 121
@@ -168,6 +176,8 @@ tmpfs   /usr/obj    tmpfs   rw,mode=777     0 0\n \
             TARGET="${ARCH}" \
             TARGET_ARCH="${ARCH}" \
             DESTDIR="${DESTBASE}" \
+            FORMATS="${DOC_FORMATS}" \
+            DOC_LANG="${LANG}" \
             NO_CLEAN=1 \
             NO_KERNELCLEAN=1 \
             2>> "${LOG_OUTPUT}"
