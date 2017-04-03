@@ -59,6 +59,7 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
      ${ZFS_BIN} mount '${HOME_DIR}'; \
      ${MKDIR_BIN} -p ${HOME_DIR}/.ssh ${CACHE_DIR}; \
      ${PW_BIN} user mod root -d '${HOME_DIR}'; \
+     ${PW_BIN} user mod toor -d '${HOME_DIR}'; \
      " && echo "New home dir: ${HOME_DIR}, ZFS dataset: '${ZPOOL}${HOME_DIR}/root'"
 
 ${SCP_BIN} \
