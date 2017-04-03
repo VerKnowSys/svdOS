@@ -146,15 +146,15 @@ ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
 echo "Configuring base RC system"
 ${SCP_BIN} \
     "etc/rc.build.conf" \
-    "${ADMIN_USER}@${HOSTADDR_NAME}:/etc/rc.conf"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:/etc/rc.conf.local"
 
-echo "Setting up static TCP/IP configuration in /etc/rc.conf"
+echo "Setting up static TCP/IP configuration in /etc/rc.conf.local"
 ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
-    "${SED_BIN} -i '' -e 's|HOSTADDR_MASK|${HOSTADDR_MASK}|g; s|HOSTADDR_IP|${HOSTADDR_IP}|g; s|HOSTADDR_GW|${HOSTADDR_GW}|g; s|HOSTADDR_NAME|${HOSTADDR_NAME}|g;' /etc/rc.conf"
+    "${SED_BIN} -i '' -e 's|HOSTADDR_MASK|${HOSTADDR_MASK}|g; s|HOSTADDR_IP|${HOSTADDR_IP}|g; s|HOSTADDR_GW|${HOSTADDR_GW}|g; s|HOSTADDR_NAME|${HOSTADDR_NAME}|g;' /etc/rc.conf.local"
 
 ${SCP_BIN} \
     "etc/loader.build.conf" \
-    "${ADMIN_USER}@${HOSTADDR_NAME}:/boot/loader.conf"
+    "${ADMIN_USER}@${HOSTADDR_NAME}:/boot/loader.conf.local"
 
 echo "Creating projects archive…"
 ${TAR_BIN} -cf ".archive-base-projects.tar.gz" \
