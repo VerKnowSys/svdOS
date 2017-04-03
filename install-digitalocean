@@ -21,12 +21,14 @@ zfs list "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" >/dev/null 2>&1 || \
 echo "Setting production values for new ROOT device"
 zfs set sync=standard "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
 zfs set checksum=fletcher4 "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+zfs set readonly=off "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
 
 beadm mount "${NEW_BOOT_ENV}" "${DESTBASE}" && \
     echo "Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}"
 
 test -f "${DESTBASE}/boot/pmbr" || exit 177
 
+cp -v /etc/rc.conf ${DESTBASE}/etc/rc.conf
 gpart bootcode \
     -b "${DESTBASE}/boot/pmbr" \
     -p "${DESTBASE}/boot/gptzfsboot" \
