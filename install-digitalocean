@@ -1,0 +1,41 @@
+#!/bin/sh
+
+clear
+
+ZPOOL="zroot"
+DEFAULT_BOOT_DEVICE="vtbd0" # DO
+CACHE_DIR="/var/.cache"
+SHARED_DIR="/Shared"
+SOURCE="http://dmilith.verknowsys.com/Public/ServeD/"
+MOST_RECENT="ServeD-v2-11-b4-amd64.zfsx"
+NEW_BOOT_ENV="${MOST_RECENT%%.zfsx}"
+DESTBASE="${SHARED_DIR}/${NEW_BOOT_ENV}"
+
+mkdir -p "${CACHE_DIR}" "${DESTBASE}"
+test -f "${CACHE_DIR}/${MOST_RECENT}" || \
+    fetch "${SOURCE}/${MOST_RECENT}" -o "${CACHE_DIR}/${MOST_RECENT}"
+
+zfs list "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" >/dev/null 2>&1 || \
+    xzcat "${CACHE_DIR}/${MOST_RECENT}" 2>/dev/null | zfs receive -u "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+
+echo "Setting production values for new ROOT device"
+zfs set sync=standard "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+zfs set checksum=fletcher4 "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+
+beadm mount "${NEW_BOOT_ENV}" "${DESTBASE}" && \
+    echo "Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}"
+
+test -f "${DESTBASE}/boot/pmbr" || exit 177
+
+gpart bootcode \
+    -b "${DESTBASE}/boot/pmbr" \
+    -p "${DESTBASE}/boot/gptzfsboot" \
+    -i 1 \
+    "${DEFAULT_BOOT_DEVICE}" && \
+    echo "Boot code updated for: ${NEW_BOOT_ENV} device: ${DEFAULT_BOOT_DEVICE}"
+
+beadm umount "${NEW_BOOT_ENV}"
+    echo "Unmounted new environment: ${NEW_BOOT_ENV}"
+
+beadm activate "${NEW_BOOT_ENV}" && \
+    echo "Commited and activated new boot environment: ${NEW_BOOT_ENV}"
