@@ -2,7 +2,7 @@
 
 set -e
 
-. /usr/share/sofin/loader
+. /Software/Sofin/share/loader
 
 . ./setup-buildhost
 . ./update-ports

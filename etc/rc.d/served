@@ -25,7 +25,7 @@ served_prestart () {
     if [ -f "${BUILD_HOST_MARKER}" ]; then
         echo "${separator}"
         printf "\nBuild-host: $(hostname -f)\n"
-        . /usr/share/sofin/loader
+        . /Software/Sofin/share/loader
         . ${SERVED_REPO}/setup-buildhost
         setup_buildhost
     fi

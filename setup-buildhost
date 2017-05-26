@@ -3,7 +3,7 @@
 setup_buildhost () {
     . /usr/share/sofin/loader
     if [ "${SYSTEM_NAME}" = "FreeBSD" ]; then
-        ${UNAME_BIN} -a | ${GREP_BIN} "HBSD" >/dev/null 2>&1
+        ${UNAME_BIN} -a | ${EGREP_BIN} -i "HBSD" >/dev/null 2>&1
         if [ "$?" = "0" ]; then
             note "Setting some zfs options"
             ${ZFS_BIN} set primarycache=metadata ${DEFAULT_ZPOOL}
