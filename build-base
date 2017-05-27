@@ -62,7 +62,9 @@ build_base () {
     test -n "${ARCH}" || exit 108
     test -n "${SYSTEM_TYPE}" || exit 109
 
-    NEW_BOOT_ENV="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
+    _new_boot_env="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
+    _default_boot_dev="$(boot_device_name)"
+    test -n "${_default_boot_dev}" || exit 112
 
     case "${ARCH}" in
         arm|arm64)
@@ -75,7 +77,7 @@ build_base () {
         x86_64|amd64)
             # NOTE: overriding x86_64 for architecture used by build system
             ARCH="amd64"
-            NEW_BOOT_ENV="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
+            _new_boot_env="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
             test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}" || exit 110
 
             ${INSTALL_BIN} -v \
@@ -85,12 +87,12 @@ build_base () {
 
     esac
 
-    ${BEADM_BIN} create "${NEW_BOOT_ENV}" && \
-        permnote "Created new boot environment: ${NEW_BOOT_ENV}"
+    ${BEADM_BIN} create "${_new_boot_env}" && \
+        permnote "Created new boot environment: ${_new_boot_env}"
 
-    DESTBASE="${SHARED_DIR}/${NEW_BOOT_ENV}"
-    ${BEADM_BIN} mount "${NEW_BOOT_ENV}" "${DESTBASE}" && \
-        permnote "Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}"
+    DESTBASE="${SHARED_DIR}/${_new_boot_env}"
+    ${BEADM_BIN} mount "${_new_boot_env}" "${DESTBASE}" && \
+        permnote "Mounted new environment: ${_new_boot_env}, to destination base: ${DESTBASE}"
 
     # # export libucl:
     # permnote "Exporting UCL as regular OS library"
@@ -189,15 +191,15 @@ build_base () {
         -b "${DESTBASE}/boot/pmbr" \
         -p "${DESTBASE}/boot/gptzfsboot" \
         -i 1 \
-        "${DEFAULT_BOOT_DEVICE}" && \
-        permnote "Boot code updated for: ${NEW_BOOT_ENV}"
+        "${_default_boot_dev}" && \
+        permnote "Boot code updated for: ${_new_boot_env}"
 
-    ${BEADM_BIN} umount -f "${NEW_BOOT_ENV}" && \
-        permnote "Unmounted boot environment: ${NEW_BOOT_ENV}"
-    ${BEADM_BIN} activate "${NEW_BOOT_ENV}" && \
-        permnote "Commited and activated new boot environment: ${NEW_BOOT_ENV}"
+    ${BEADM_BIN} umount -f "${_new_boot_env}" && \
+        permnote "Unmounted boot environment: ${_new_boot_env}"
+    ${BEADM_BIN} activate "${_new_boot_env}" && \
+        permnote "Commited and activated new boot environment: ${_new_boot_env}"
 
-    NEW_RELEASE="${ZPOOL}/ROOT/${NEW_BOOT_ENV}@v${VERSION}"
+    NEW_RELEASE="${ZPOOL}/ROOT/${_new_boot_env}@v${VERSION}"
     NEW_BOOT_ORIGIN_FILE="${ARCHIVE_SNAPSHOTS_DIR}/${SYSTEM_TYPE}-v${VERSION}-${ARCH}${ZFSX_EXT}"
     ${ZFS_BIN} snapshot "${NEW_RELEASE}" && \
         permnote "Done release snapshot: ${NEW_RELEASE}"
@@ -213,6 +215,7 @@ build_base () {
     ${CHMOD_BIN} 600 "${HOME_DIR}/.ssh"
     ${CHMOD_BIN} a+r "${NEW_BOOT_ORIGIN_FILE}"
 
+    permnote "Uploading: $(distn "${SCP_BIN} -4 -B \"${NEW_BOOT_ORIGIN_FILE}\" \"${DESTINATION}\"")"
     ${SCP_BIN} -4 -B \
         "${NEW_BOOT_ORIGIN_FILE}" \
         "${DESTINATION}" && \
