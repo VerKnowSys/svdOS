@@ -1,0 +1,131 @@
+#!/bin/sh
+
+clear
+
+
+# Most recent ServeD-OS snapshot:
+MOST_RECENT="ServeD-v2-11-b9-amd64.zfsx"
+
+# Literals:
+CACHE_DIR="/var/.cache"
+SHARED_DIR="/Shared"
+SOURCE="http://software.verknowsys.com/binary/ServeD"
+
+# Dynamic:
+DATE_NOW="$(date +%F 2>/dev/null)"
+LOG_FILE="/var/log/svdOS-${DATE_NOW:-common}.log"
+export NEW_BOOT_ENV="${MOST_RECENT%%.zfsx}"
+export DESTBASE="${SHARED_DIR}/${NEW_BOOT_ENV}"
+export ZPOOL="${ZPOOL:-zroot}"
+
+
+determine_boot_disk_device () {
+    _disks="$(geom disk list 2>/dev/null | egrep -i "Geom name:" 2>/dev/null | sed 's/^.*\: //' 2>/dev/null)"
+    for _dsk in ${_disks}; do
+        zpool status "${ZPOOL}" 2>/dev/null | \
+            egrep -i "${_dsk}p[0-9]+" >/dev/null 2>&1 && \
+            printf '%s\n' "${_dsk}" && \
+            return 0
+    done
+
+    return 1
+}
+
+
+prepare_and_fetch_os_snapshot () {
+    mkdir -p "${CACHE_DIR}" "${DESTBASE}"
+    if [ -f "${CACHE_DIR}/${MOST_RECENT}" ]; then
+        return 0
+    else
+        fetch "${SOURCE}/${MOST_RECENT}" -o \
+            "${CACHE_DIR}/${MOST_RECENT}" \
+            >> "${LOG_FILE}" && \
+            return 0
+
+        sleep 1
+        prepare_and_fetch_os_snapshot
+        return 0
+    fi
+}
+
+
+validate_is_up_2_date () {
+    zfs list "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" >/dev/null 2>&1
+    if [ "0" = "${?}" ]; then
+        echo "Boot environment: ${NEW_BOOT_ENV} is already received! Redundant operation cancelled!"
+        return 6
+    else
+        xzcat "${CACHE_DIR}/${MOST_RECENT}" 2>/dev/null | zfs receive -u "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
+            echo "Snapshot file: ${MOST_RECENT%%.zfsx} was received as new boot environment: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}!" && \
+            return 0
+        return 1
+    fi
+}
+
+
+set_std_zfs_properties () {
+    zfs set sync=standard "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
+        zfs set checksum=fletcher4 "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
+        zfs set readonly=off "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
+        echo "Production params were set for ROOT dataset: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
+        return 0
+    return 1
+}
+
+
+mount_boot_env () {
+    beadm mount "${NEW_BOOT_ENV}" "${DESTBASE}" && \
+        echo "Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}" && \
+        return 0
+    return 1
+}
+
+
+configure_and_commit_boot_env () {
+    _boot_device="${1}"
+
+    mount_boot_env && \
+        test -f "${DESTBASE}/boot/pmbr" || exit 177
+
+    cp -fv "/etc/rc.conf" "${DESTBASE}/etc/rc.conf"
+
+    gpart bootcode \
+        -b "${DESTBASE}/boot/pmbr" \
+        -p "${DESTBASE}/boot/gptzfsboot" \
+        -i 1 \
+        "${_boot_device}" && \
+        echo "Gpart: Bootcode: Environment: ${NEW_BOOT_ENV}, boot device: ${_boot_device}"
+
+    beadm umount -f "${NEW_BOOT_ENV}" && \
+        echo "Unmounted new environment: ${NEW_BOOT_ENV}" && \
+            return 0
+
+    return 1
+}
+
+
+activate_new_boot_env () {
+    beadm activate "${NEW_BOOT_ENV}" && \
+        echo "Commited and activated new boot environment: ${NEW_BOOT_ENV}" && \
+        return 0
+    return 1
+}
+
+
+# main():
+_default_boot_device="$(determine_boot_disk_device)"
+if [ -z "${_default_boot_device}" ]; then
+    echo "Fatal: Error: main(): Got empty boot device!"
+    exit 6
+fi
+printf '%s\n\n' "Default boot device: ${_default_boot_device}"
+echo "Update tasks in progress…" && \
+    prepare_and_fetch_os_snapshot && \
+    validate_is_up_2_date && \
+    set_std_zfs_properties && \
+    configure_and_commit_boot_env "${_default_boot_device}" && \
+    activate_new_boot_env && \
+    echo "All tasks were completed successfully!" && \
+    exit 0
+
+exit 6
