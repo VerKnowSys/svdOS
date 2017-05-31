@@ -12,6 +12,10 @@ test -f "${SOFIN_DATA_DIR}/loader" && \
     . "${SOFIN_DATA_DIR}/loader" && \
     echo "Loaded ${SOFIN_DATA_DIR}/loader"
 
+sysctl hardening.pax.mprotect.status=1
+sysctl hardening.pax.pageexec.status=1
+sysctl hardening.pax.disallow_map32bit.status=1
+sysctl hardening.pax.aslr.status=1
 
 test -f "${BUILD_NUMBER_FILE}" || echo "1" > "${BUILD_NUMBER_FILE}"
 BUILD_NUMBER="$(echo "$(cat "${BUILD_NUMBER_FILE}" 2>/dev/null)+1" | bc 2>/dev/null)"
