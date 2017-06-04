@@ -4,7 +4,7 @@
 build_base () {
     ${RM_BIN} -f "${LOG_OUTPUT}"
     ${TOUCH_BIN} "${LOG_OUTPUT}"
-    permnote "Process started for OS version: ${SYSTEM_VERSION}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
+    permnote "Process started for OS version: ${SYSTEM_VERSION_MAJOR}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
 
     # _branch="$(echo "${CURRENT_BRANCH}" | ${TR_BIN} '/' '-' 2>/dev/null)"
     _common_bare_repo="${WORKSTATION_USER}@${HOSTADDR_GW}:${WORKSTATION_REPO_CACHED}"
@@ -46,7 +46,7 @@ build_base () {
         echo
     fi
 
-    _build_dir="/${LAMBDA}/src/${SYSTEM_VERSION}"
+    _build_dir="/${LAMBDA}/src/${SYSTEM_VERSION_MAJOR}"
     permnote "Syncing os-branch: ${CURRENT_BRANCH} to: ${_build_dir}"
     ${GIT_BIN} clone \
         --progress \
@@ -68,9 +68,9 @@ build_base () {
 
     case "${ARCH}" in
         arm|arm64)
-            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}-RPI2" || exit 110
+            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-RPI2" || exit 110
             ${INSTALL_BIN} -v \
-                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}-RPI2" \
+                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-RPI2" \
                 "sys/${ARCH}/conf/${SYSTEM_KERNEL}" || exit 111
             ;;
 
@@ -78,10 +78,10 @@ build_base () {
             # NOTE: overriding x86_64 for architecture used by build system
             ARCH="amd64"
             _new_boot_env="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
-            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}" || exit 110
+            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}" || exit 110
 
             ${INSTALL_BIN} -v \
-                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION}" \
+                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}" \
                 "sys/${ARCH}/conf/${SYSTEM_KERNEL}" || exit 111
             ;;
 

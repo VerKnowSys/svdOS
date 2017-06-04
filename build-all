@@ -12,6 +12,8 @@ test -f "${SOFIN_DATA_DIR}/loader" && \
     . "${SOFIN_DATA_DIR}/loader" && \
     echo "Loaded ${SOFIN_DATA_DIR}/loader"
 
+LANG=en_US.UTF-8
+export LANG
 sysctl hardening.pax.mprotect.status=1
 sysctl hardening.pax.pageexec.status=1
 sysctl hardening.pax.disallow_map32bit.status=1
