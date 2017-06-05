@@ -185,19 +185,20 @@ build_base () {
     fi
 
     permnote "Removing sources, debug and other cache files before ZFS send…"
-    ${RM_BIN} -rf "${DESTBASE}/COPYRIGHT" "${DESTBASE}/.profile" "${DESTBASE}/mnt" "${DESTBASE}/proc" "${DESTBASE}/media" "${DESTBASE}/sys" &
+    ${RM_BIN} -rf "${DESTBASE}/COPYRIGHT" "${DESTBASE}/.profile" "${DESTBASE}/mnt" "${DESTBASE}/proc" "${DESTBASE}/media" "${DESTBASE}/sys"
     cd /
-    ${GPART_BIN} bootcode \
-        -b "${DESTBASE}/boot/pmbr" \
-        -p "${DESTBASE}/boot/gptzfsboot" \
-        -i 1 \
-        "${_default_boot_dev}" && \
-        permnote "Boot code updated for: ${_new_boot_env}"
+    sync
+    # ${GPART_BIN} bootcode \
+    #     -b "${DESTBASE}/boot/pmbr" \
+    #     -p "${DESTBASE}/boot/gptzfsboot" \
+    #     -i 1 \
+    #     "${_default_boot_dev}" && \
+    #     permnote "Boot code updated for: ${_new_boot_env}"
 
     ${BEADM_BIN} umount -f "${_new_boot_env}" && \
         permnote "Unmounted boot environment: ${_new_boot_env}"
-    ${BEADM_BIN} activate "${_new_boot_env}" && \
-        permnote "Commited and activated new boot environment: ${_new_boot_env}"
+    # ${BEADM_BIN} activate "${_new_boot_env}" && \
+        # permnote "Commited and activated new boot environment: ${_new_boot_env}"
 
     NEW_RELEASE="${ZPOOL}/ROOT/${_new_boot_env}@v${VERSION}"
     NEW_BOOT_ORIGIN_FILE="${ARCHIVE_SNAPSHOTS_DIR}/${SYSTEM_TYPE}-v${VERSION}-${ARCH}${ZFSX_EXT}"
