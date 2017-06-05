@@ -1,22 +1,28 @@
 #!/bin/sh
 
-clear
-
-
-# Most recent ServeD-OS snapshot:
-MOST_RECENT="ServeD-v2-11-b9-amd64.zfsx"
 
 # Literals:
 CACHE_DIR="/var/.cache"
 SHARED_DIR="/Shared"
 SOURCE="http://software.verknowsys.com/binary/ServeD"
+PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 
-# Dynamic:
-DATE_NOW="$(date +%F 2>/dev/null)"
-LOG_FILE="/var/log/svdOS-${DATE_NOW:-common}.log"
-export NEW_BOOT_ENV="${MOST_RECENT%%.zfsx}"
-export DESTBASE="${SHARED_DIR}/${NEW_BOOT_ENV}"
-export ZPOOL="${ZPOOL:-zroot}"
+
+get_the_current () {
+    mkdir -p "${CACHE_DIR}" "${DESTBASE}" >/dev/null 2>&1
+    fetch "${SOURCE}/current" -o "${CACHE_DIR}/current" \
+        >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
+        cat "${CACHE_DIR}/current" 2>/dev/null && \
+        return 0
+    return 1
+}
+
+
+prepare_and_fetch_os_snapshot () {
+    fetch "${SOURCE}/${MOST_RECENT}" -o "${CACHE_DIR}/${MOST_RECENT}" \
+        >> "${LOG_FILE}" && return 0
+    return 1
+}
 
 
 determine_boot_disk_device () {
@@ -29,23 +35,6 @@ determine_boot_disk_device () {
     done
 
     return 1
-}
-
-
-prepare_and_fetch_os_snapshot () {
-    mkdir -p "${CACHE_DIR}" "${DESTBASE}"
-    if [ -f "${CACHE_DIR}/${MOST_RECENT}" ]; then
-        return 0
-    else
-        fetch "${SOURCE}/${MOST_RECENT}" -o \
-            "${CACHE_DIR}/${MOST_RECENT}" \
-            >> "${LOG_FILE}" && \
-            return 0
-
-        sleep 1
-        prepare_and_fetch_os_snapshot
-        return 0
-    fi
 }
 
 
@@ -111,6 +100,21 @@ activate_new_boot_env () {
     return 1
 }
 
+
+# Dynamic:
+DATE_NOW="$(date +%F 2>/dev/null)"
+LOG_FILE="/var/log/svdOS-${DATE_NOW:-common}.log"
+
+# Most recent ServeD-OS snapshot:
+MOST_RECENT="$(get_the_current)"
+if [ -z "${MOST_RECENT}" ]; then
+    echo "Fatal: Error: MOST_RECENT value is empty!"
+    exit 5
+fi
+
+export NEW_BOOT_ENV="${MOST_RECENT%%.zfsx}"
+export DESTBASE="${SHARED_DIR}/${NEW_BOOT_ENV}"
+export ZPOOL="${ZPOOL:-zroot}"
 
 # main():
 _default_boot_device="$(determine_boot_disk_device)"
