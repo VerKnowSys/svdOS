@@ -212,7 +212,10 @@ build_base () {
     ${ZFS_BIN} send ${DEFAULT_SNAPSHOT_SEND_OPTS} \
         "${NEW_RELEASE}" | ${XZ_BIN} ${DEFAULT_XZ_OPTS} \
         > "${NEW_BOOT_ORIGIN_FILE}" && \
-        permnote "Sent release snapshot: ${NEW_RELEASE}, to file: ${NEW_BOOT_ORIGIN_FILE}"
+        permnote "Sent release snapshot: ${NEW_RELEASE}, to file: ${NEW_BOOT_ORIGIN_FILE}" && \
+        ${BEADM_BIN} destroy -F "${NEW_BOOT_ORIGIN_FILE}" && \
+        permnote "Release wiped from local boot environments. Use installer script to install or perform the OS update."
+
     ${CHMOD_BIN} 600 "${HOME_DIR}/.ssh"
     ${CHMOD_BIN} a+r "${NEW_BOOT_ORIGIN_FILE}"
 
