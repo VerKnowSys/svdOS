@@ -54,7 +54,7 @@ determine_boot_disk_device () {
 }
 
 
-validate_is_up_2_date () {
+install_boot_environment () {
     zfs list "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" >/dev/null 2>&1
     if [ "0" = "${?}" ]; then
         echo "svdUP: Boot environment: ${NEW_BOOT_ENV} is already received! Redundant operation cancelled!"
@@ -69,12 +69,11 @@ validate_is_up_2_date () {
 
 
 set_std_zfs_properties () {
-    zfs set sync=standard "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
-        zfs set checksum=fletcher4 "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
-        zfs set readonly=off "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
-        echo "svdUP: Production params were set for ROOT dataset: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
-        return 0
-    return 1
+    zfs set sync=standard "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+    zfs set checksum=fletcher4 "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+    zfs set readonly=off "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+    echo "svdUP: Production params were set for ROOT dataset: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+    return 0
 }
 
 
@@ -109,6 +108,7 @@ configure_and_commit_boot_env () {
     cp -fv "/etc/master.passwd" "${DESTBASE}/etc/"
     cp -fv /etc/ssh/ssh_host_* "${DESTBASE}/etc/ssh/"
     mv -fv "${DESTBASE}/etc/fstab" "${DESTBASE}/etc/_fstab"
+    touch "${DESTBASE}/etc/fstab"
 
     gpart bootcode \
         -b "${DESTBASE}/boot/pmbr" \
@@ -252,13 +252,13 @@ postinstall_cleanup () {
     zfs set checksum=fletcher4 "${ZPOOL}/ROOT"
     zfs set sync=standard "${ZPOOL}/ROOT"
     zfs set readonly=off "${ZPOOL}/ROOT"
+    zfs set readonly=off "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
 
     rm -rf /.profile /.cshrc /mnt /media /proc /λ
 
     mkdir -p "${HOME_DIR}/.ssh"
     grep 'verknowsys.com' "${HOME_DIR}/.ssh/config" 2>/dev/null || \
         printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' >> "${HOME_DIR}/.ssh/config"
-    echo OK
 }
 
 
@@ -289,7 +289,7 @@ fi
 echo "svdUP: Default boot device: ${BOOT_DEVICE}"
 echo "svdUP: Tasks in progress…" && \
     prepare_and_fetch_os_snapshot && \
-    validate_is_up_2_date && \
+    install_boot_environment && \
     set_std_zfs_properties && \
     install_svd_goodies && \
     install_or_update_projects && \
