@@ -107,6 +107,8 @@ configure_and_commit_boot_env () {
     cp -fv "/etc/shells" "${DESTBASE}/etc/"
     cp -fv "/etc/ttys" "${DESTBASE}/etc/"
     cp -fv "/etc/master.passwd" "${DESTBASE}/etc/"
+    cp -fv "/etc/ssh/ssh_config" "${DESTBASE}/etc/ssh/"
+    cp -fv "/etc/ssh/sshd_config" "${DESTBASE}/etc/ssh/"
     cp -fv /etc/ssh/ssh_host_* "${DESTBASE}/etc/ssh/"
     mv -fv "${DESTBASE}/etc/fstab" "${DESTBASE}/etc/_fstab"
     touch "${DESTBASE}/etc/fstab"
