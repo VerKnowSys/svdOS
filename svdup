@@ -11,12 +11,11 @@ PATH="/Software/Git/exports:/Software/Zsh/exports:/bin:/usr/bin:/sbin:/usr/sbin"
 HOME_DIR="/User"
 SOFIN_BIN_REPO="http://software.verknowsys.com/binary"
 ZFSX_EXT=".zfsx"
+ZFSP_EXT=".zfsp"
 ORIGIN="origin"
 PROD_OS_BASE="FreeBSD-11.0-amd64"
 GIT_VERSION="2.12.3"
 ZSH_VERSION="5.3.1"
-CCACHE_VERSION="3.3.4"
-MC_VERSION="4.8.19"
 DATE_NOW="$(date +%F 2>/dev/null)"
 LOG_FILE="/var/log/svdOS-${DATE_NOW:-common}.log"
 
@@ -166,15 +165,15 @@ install_svd_goodies () {
 
             case "${_dataset_origin}" in
                 Software)
-                    fetch -o "${CACHE_DIR}/Zsh${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Zsh-${ZSH_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
+                    fetch -o "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Zsh-${ZSH_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
                     zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
-                    xzcat "${CACHE_DIR}/Zsh${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
-                    fetch -o "${CACHE_DIR}/Zsh-common.zfsp" "${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp" && xzcat "${CACHE_DIR}/Zsh-common.zfsp" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Zsh"
+                    xzcat "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
+                    fetch -o "${CACHE_DIR}/Zsh-common${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Zsh-common${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Zsh"
 
-                    fetch -o "${CACHE_DIR}/Git${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Git-${GIT_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
+                    fetch -o "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Git-${GIT_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
                     zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Git"
-                    xzcat "${CACHE_DIR}/Git${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Git"
-                    fetch -o "${CACHE_DIR}/Git-common.zfsp" "${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}.zfsp" && xzcat "${CACHE_DIR}/Git-common.zfsp" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Git"
+                    xzcat "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Git"
+                    fetch -o "${CACHE_DIR}/Git-common${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Git-common${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Git"
 
                     mkdir -p "${SERVICES_DIR}/Git/etc/ssl"
                     test -f "/etc/ssl/cert.pem" || cp -v /etc/ssl/cert.pem "${SERVICES_DIR}/Git/etc/ssl/cert.pem"
