@@ -184,12 +184,12 @@ install_svd_goodies () {
 
                 User)
                     _new_home_mounted="$(zfs get -H -o value mounted "${ZPOOL}/${_new_home_mounted}/root" 2>/dev/null)"
-                    if [ "yes" = "${_new_home_mounted}" ]; then
+                    if [ "yes" != "${_new_home_mounted}" ]; then
                         zfs mount "${ZPOOL}/${_dataset_origin}/root"
                         test -d "/root/.ssh" && cp -rf "/root/.ssh" "/${_dataset_origin}/"
-                        pwd_mkdb user mod root -d "/${_dataset_origin}"
-                        pwd_mkdb user mod toor -d "/${_dataset_origin}"
                     fi
+                    pw user mod root -d "/${_dataset_origin}"
+                    pw user mod toor -d "/${_dataset_origin}"
                     ;;
             esac
         fi
