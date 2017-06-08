@@ -95,6 +95,7 @@ configure_and_commit_boot_env () {
     cp -fv "/boot/loader.conf" "${DESTBASE}/boot/"
     cp -fv "/etc/hostid" "${DESTBASE}/etc/"
     cp -fv "/etc/rc.conf" "${DESTBASE}/etc/"
+    cp -fv "/etc/rc.conf.local" "${DESTBASE}/etc/"
     cp -fv "/etc/pf.conf" "${DESTBASE}/etc/"
     cp -fv /etc/*pwd.db "${DESTBASE}/etc/"
     cp -fv "/etc/hosts" "${DESTBASE}/etc/"
@@ -237,6 +238,7 @@ install_or_update_projects () {
     git reset --hard
     git pull origin master
 
+    test -f /etc/rc.conf.local || cp -f etc/rc.production.conf /etc/rc.conf.local
     cp -fr shell/ /etc/zsh
     ln -fvs /etc/zsh/zshenv /etc/zshenv
     ln -fvs /etc/zsh/zshrc /etc/zshrc
