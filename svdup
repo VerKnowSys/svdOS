@@ -10,6 +10,7 @@ SOURCE="http://software.verknowsys.com/binary/ServeD"
 PATH="/Software/Git/exports:/Software/Zsh/exports:/bin:/usr/bin:/sbin:/usr/sbin"
 HOME_DIR="/User"
 SOFIN_BIN_REPO="http://software.verknowsys.com/binary"
+ORIGINS_REPO="https://github.com/VerKnowSys/svdOS/raw/master/Origins/11"
 ZFSX_EXT=".zfsx"
 ZFSP_EXT=".zfsp"
 ORIGIN="origin"
@@ -17,7 +18,7 @@ PROD_OS_BASE="FreeBSD-11.0-amd64"
 GIT_VERSION="2.12.3"
 ZSH_VERSION="5.3.1"
 DATE_NOW="$(date +%F 2>/dev/null)"
-LOG_FILE="/var/log/svdOS-${DATE_NOW:-common}.log"
+LOG_FILE="/var/log/svdUP-${DATE_NOW:-common}.log"
 
 
 get_the_current () {
@@ -31,14 +32,12 @@ get_the_current () {
 
 
 prepare_and_fetch_os_snapshot () {
-    grep 'verknowsys.com' "${HOME_DIR}/.ssh/config" || \
-        printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' >> "${HOME_DIR}/.ssh/config"
-
     test -f /etc/ssl/cert.pem || \
         fetch --no-verify-peer http://software.verknowsys.com/source/cacert.pem -o /etc/ssl/cert.pem
 
-    fetch "${SOURCE}/${MOST_RECENT}" -o "${CACHE_DIR}/${MOST_RECENT}" \
-        >> "${LOG_FILE}" && return 0
+    test -f "${CACHE_DIR}/${MOST_RECENT}" || \
+        fetch "${SOURCE}/${MOST_RECENT}" -o "${CACHE_DIR}/${MOST_RECENT}" \
+            >> "${LOG_FILE}" && return 0
     return 1
 }
 
@@ -58,11 +57,11 @@ determine_boot_disk_device () {
 validate_is_up_2_date () {
     zfs list "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" >/dev/null 2>&1
     if [ "0" = "${?}" ]; then
-        echo "Boot environment: ${NEW_BOOT_ENV} is already received! Redundant operation cancelled!"
+        echo "svdUP: Boot environment: ${NEW_BOOT_ENV} is already received! Redundant operation cancelled!"
         return 6
     else
         xzcat "${CACHE_DIR}/${MOST_RECENT}" 2>/dev/null | zfs receive -u "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
-            echo "Snapshot file: ${MOST_RECENT%%.zfsx} was received as new boot environment: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}!" && \
+            echo "svdUP: Snapshot file: ${MOST_RECENT%%.zfsx} was received as new boot environment: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}!" && \
             return 0
         return 1
     fi
@@ -73,7 +72,7 @@ set_std_zfs_properties () {
     zfs set sync=standard "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
         zfs set checksum=fletcher4 "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
         zfs set readonly=off "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
-        echo "Production params were set for ROOT dataset: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
+        echo "svdUP: Production params were set for ROOT dataset: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
         return 0
     return 1
 }
@@ -81,7 +80,7 @@ set_std_zfs_properties () {
 
 mount_boot_env () {
     beadm mount "${NEW_BOOT_ENV}" "${DESTBASE}" && \
-        echo "Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}" && \
+        echo "svdUP: Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}" && \
         return 0
     return 1
 }
@@ -93,12 +92,12 @@ configure_and_commit_boot_env () {
     mount_boot_env && \
         test -f "${DESTBASE}/boot/pmbr" || exit 177
 
-    echo "Synchronising system configurations"
+    echo "svdUP: Synchronising system configurations"
     cp -fv "/boot/loader.conf" "${DESTBASE}/boot/"
     cp -fv "/etc/hostid" "${DESTBASE}/etc/"
     cp -fv "/etc/rc.conf" "${DESTBASE}/etc/"
     cp -fv "/etc/pf.conf" "${DESTBASE}/etc/"
-    cp -fv "/etc/*pwd.db" "${DESTBASE}/etc/"
+    cp -fv /etc/*pwd.db "${DESTBASE}/etc/"
     cp -fv "/etc/hosts" "${DESTBASE}/etc/"
     cp -fv "/etc/crontab" "${DESTBASE}/etc/"
     cp -fv "/etc/passwd" "${DESTBASE}/etc/"
@@ -108,18 +107,18 @@ configure_and_commit_boot_env () {
     cp -fv "/etc/shells" "${DESTBASE}/etc/"
     cp -fv "/etc/ttys" "${DESTBASE}/etc/"
     cp -fv "/etc/master.passwd" "${DESTBASE}/etc/"
-    cp -fv "/etc/ssh/ssh_*.conf" "${DESTBASE}/etc/ssh/"
-    mv -fv "${DESTBASE}/etc/fstab" "${DESTBASE}/etc/fstab.old"
+    cp -fv /etc/ssh/ssh_host_* "${DESTBASE}/etc/ssh/"
+    mv -fv "${DESTBASE}/etc/fstab" "${DESTBASE}/etc/_fstab"
 
     gpart bootcode \
         -b "${DESTBASE}/boot/pmbr" \
         -p "${DESTBASE}/boot/gptzfsboot" \
         -i 1 \
         "${_boot_device}" && \
-        echo "Gpart: Bootcode: Environment: ${NEW_BOOT_ENV}, boot device: ${_boot_device}"
+        echo "svdUP: Gpart: Bootcode: Environment: ${NEW_BOOT_ENV}, boot device: ${_boot_device}"
 
     beadm umount -f "${NEW_BOOT_ENV}" && \
-        echo "Unmounted new environment: ${NEW_BOOT_ENV}" && \
+        echo "svdUP: Unmounted new environment: ${NEW_BOOT_ENV}" && \
             return 0
 
     return 1
@@ -128,14 +127,14 @@ configure_and_commit_boot_env () {
 
 activate_new_boot_env () {
     beadm activate "${NEW_BOOT_ENV}" && \
-        echo "Commited and activated new boot environment: ${NEW_BOOT_ENV}" && \
+        echo "svdUP: Commited and activated new boot environment: ${NEW_BOOT_ENV}" && \
         return 0
     return 1
 }
 
 
 install_svd_goodies () {
-    echo "Configuring datasets, installing base software, setting HOME to ${HOME_DIR}, Zsh as default shell"
+    echo "svdUP: Configuring datasets, installing base software, setting HOME to ${HOME_DIR}, Zsh as default shell"
     for _dataset_origin in User Services Software; do
         zfs list "${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
         if [ "${?}" != "0" ]; then
@@ -151,7 +150,7 @@ install_svd_goodies () {
                 -o exec=on \
                 -o compression=lz4 \
                 "${ZPOOL}/${_dataset_origin}" && \
-                echo "Created origin base: ${ZPOOL}/${_dataset_origin}"
+                echo "svdUP: Created origin base: ${ZPOOL}/${_dataset_origin}"
         fi
 
         zfs list "${ZPOOL}/${_dataset_origin}/root" >/dev/null 2>&1
@@ -159,24 +158,24 @@ install_svd_goodies () {
             # fetch origin!
             fetch -o \
                 "${CACHE_DIR}/${_dataset_origin}-${ORIGIN}.zfsx" \
-                "https://github.com/VerKnowSys/svdOS/raw/master/Origins/11/${_dataset_origin}-${ORIGIN}.zfsx"
+                "${ORIGINS_REPO}/${_dataset_origin}-${ORIGIN}.zfsx"
             xzcat "${CACHE_DIR}/${_dataset_origin}-${ORIGIN}.zfsx" | zfs receive -v "${ZPOOL}/${_dataset_origin}/root@${ORIGIN}"
-            # zfs set mountpoint="/${_dataset_origin}" "${ZPOOL}/${_dataset_origin}/root"
+            zfs set mountpoint="/${_dataset_origin}" "${ZPOOL}/${_dataset_origin}/root"
 
             case "${_dataset_origin}" in
+                Services)
+                    fetch -o "${CACHE_DIR}/Zsh-common${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Zsh-common${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Zsh"
+                    fetch -o "${CACHE_DIR}/Git-common${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Git-common${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Git"
+                    ;;
+
                 Software)
                     fetch -o "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Zsh-${ZSH_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
                     zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
                     xzcat "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
-                    fetch -o "${CACHE_DIR}/Zsh-common${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Zsh-common${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Zsh"
 
                     fetch -o "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Git-${GIT_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
                     zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Git"
                     xzcat "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Git"
-                    fetch -o "${CACHE_DIR}/Git-common${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Git-common${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Git"
-
-                    mkdir -p "${SERVICES_DIR}/Git/etc/ssl"
-                    test -f "/etc/ssl/cert.pem" || cp -v /etc/ssl/cert.pem "${SERVICES_DIR}/Git/etc/ssl/cert.pem"
 
                     egrep "/Software/Zsh/exports/zsh" /etc/shells || \
                         echo "/Software/Zsh/exports/zsh" >> /etc/shells
@@ -187,7 +186,7 @@ install_svd_goodies () {
                     _new_home_mounted="$(zfs get -H -o value mounted "${ZPOOL}/${_new_home_mounted}/root" 2>/dev/null)"
                     if [ "yes" = "${_new_home_mounted}" ]; then
                         zfs mount "${ZPOOL}/${_dataset_origin}/root"
-                        cp -rf "/root/.ssh" "/${_dataset_origin}/"
+                        test -d "/root/.ssh" && cp -rf "/root/.ssh" "/${_dataset_origin}/"
                         pwd_mkdb user mod root -d "/${_dataset_origin}"
                         pwd_mkdb user mod toor -d "/${_dataset_origin}"
                     fi
@@ -212,30 +211,37 @@ install_or_update_projects () {
             -o exec=on \
             -o compression=lz4 \
             "${ZPOOL}/Projects" && \
-            echo "Created origin base: ${ZPOOL}/Projects"
+            echo "svdUP: Created origin base: ${ZPOOL}/Projects"
     fi
 
+    mkdir -p "${SERVICES_DIR}/Git/etc/ssl"
+    test -f "/etc/ssl/cert.pem" && cp -f /etc/ssl/cert.pem "${SERVICES_DIR}/Git/etc/ssl/cert.pem"
+
     cd /Projects
-    git clone https://github.com/VerKnowSys/sofin.git 2>/dev/null
-    git reset --hard 2>/dev/null
+    git clone https://github.com/VerKnowSys/sofin.git
     cd sofin
+    git reset --hard
     bin/upgrade
 
-    git clone https://github.com/vermaden/beadm.git 2>/dev/null
-    git reset --hard 2>/dev/null
+    cd /Projects
+    git clone https://github.com/vermaden/beadm.git
+    cd beadm
+    git reset --hard
     git pull origin master
-    gzip beadm/beadm.1
-    install -v beadm/beadm.1.gz /usr/share/man/man1/
-    install -v beadm/beadm /usr/sbin/beadm
+    gzip beadm.1
+    install -v beadm.1.gz /usr/share/man/man1/
+    install -v beadm /usr/sbin/beadm
 
-    git clone https://github.com/VerKnowSys/svdOS.git 2>/dev/null
+    cd /Projects
+    git clone https://github.com/VerKnowSys/svdOS.git
     cd svdOS
-    git reset --hard 2>/dev/null
+    git reset --hard
     git pull origin master
 
     cp -fr shell/ /etc/zsh
     ln -fvs /etc/zsh/zshenv /etc/zshenv
     ln -fvs /etc/zsh/zshrc /etc/zshrc
+
     cd /
 }
 
@@ -248,7 +254,11 @@ postinstall_cleanup () {
     zfs set sync=standard "${ZPOOL}/ROOT"
     zfs set readonly=off "${ZPOOL}/ROOT"
 
-    rm -rf /.profile /.cshrc /root /mnt /media /proc /root /λ
+    rm -rf /.profile /.cshrc /mnt /media /proc /λ
+
+    mkdir -p "${HOME_DIR}/.ssh"
+    grep 'verknowsys.com' "${HOME_DIR}/.ssh/config" 2>/dev/null || \
+        printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' >> "${HOME_DIR}/.ssh/config"
     echo OK
 }
 
@@ -261,7 +271,7 @@ postinstall_cleanup () {
 # Most recent ServeD-OS snapshot:
 MOST_RECENT="$(get_the_current)"
 if [ -z "${MOST_RECENT}" ]; then
-    echo "Fatal: Error: MOST_RECENT value is empty!"
+    echo "svdUP: svdUP: Fatal: Error: MOST_RECENT value is empty!"
     exit 5
 fi
 
@@ -272,22 +282,22 @@ ZPOOL="${ZPOOL:-zroot}"
 export PATH MOST_RECENT ZPOOL DESTBASE NEW_BOOT_ENV
 
 # main():
-_default_boot_device="$(determine_boot_disk_device)"
-if [ -z "${_default_boot_device}" ]; then
-    echo "Fatal: Error: main(): Got empty boot device!"
+BOOT_DEVICE="$(determine_boot_disk_device)"
+if [ -z "${BOOT_DEVICE}" ]; then
+    echo "svdUP: Fatal: Error: main(): Got empty boot device!"
     exit 6
 fi
-printf '%s\n\n' "Default boot device: ${_default_boot_device}"
-echo "Update tasks in progress…" && \
+echo "svdUP: Default boot device: ${BOOT_DEVICE}"
+echo "svdUP: Tasks in progress…" && \
     prepare_and_fetch_os_snapshot && \
     validate_is_up_2_date && \
     set_std_zfs_properties && \
-    configure_and_commit_boot_env "${_default_boot_device}" && \
-    activate_new_boot_env && \
     install_svd_goodies && \
     install_or_update_projects && \
+    configure_and_commit_boot_env "${BOOT_DEVICE}" && \
     postinstall_cleanup && \
-    echo "All tasks were completed successfully!" && \
+    activate_new_boot_env && \
+    echo "svdUP: All tasks were completed successfully!" && \
     exit 0
 
 exit 1
