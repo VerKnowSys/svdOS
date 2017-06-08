@@ -214,8 +214,7 @@ install_or_update_projects () {
             echo "svdUP: Created origin base: ${ZPOOL}/Projects"
     fi
 
-    mkdir -p "${SERVICES_DIR}/Git/etc/ssl"
-    test -f "/etc/ssl/cert.pem" && cp -f /etc/ssl/cert.pem "${SERVICES_DIR}/Git/etc/ssl/cert.pem"
+    test -f "${SERVICES_DIR}/Git/etc/ssl/cert.pem" || cp -f /etc/ssl/cert.pem "${SERVICES_DIR}/Git/etc/ssl/cert.pem"
 
     cd /Projects
     git clone https://github.com/VerKnowSys/sofin.git
