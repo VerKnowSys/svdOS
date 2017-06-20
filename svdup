@@ -93,25 +93,7 @@ configure_and_commit_boot_env () {
 
     echo "svdUP: Synchronising system configurations"
     cp -fv "/boot/loader.conf" "${DESTBASE}/boot/"
-    cp -fv "/etc/hostid" "${DESTBASE}/etc/"
-    cp -fv "/etc/rc.conf" "${DESTBASE}/etc/"
-    cp -fv "/etc/rc.conf.local" "${DESTBASE}/etc/"
-    cp -fv "/etc/pf.conf" "${DESTBASE}/etc/"
-    cp -fv /etc/*pwd.db "${DESTBASE}/etc/"
-    cp -fv "/etc/hosts" "${DESTBASE}/etc/"
-    cp -fv "/etc/crontab" "${DESTBASE}/etc/"
-    cp -fv "/etc/passwd" "${DESTBASE}/etc/"
-    cp -fv "/etc/group" "${DESTBASE}/etc/"
-    cp -fv "/etc/login.conf" "${DESTBASE}/etc/"
-    cp -fv "/etc/sysctl.conf" "${DESTBASE}/etc/"
-    cp -fv "/etc/shells" "${DESTBASE}/etc/"
-    cp -fv "/etc/ttys" "${DESTBASE}/etc/"
-    cp -fv "/etc/master.passwd" "${DESTBASE}/etc/"
-    cp -fv "/etc/ssh/ssh_config" "${DESTBASE}/etc/ssh/"
-    cp -fv "/etc/ssh/sshd_config" "${DESTBASE}/etc/ssh/"
-    cp -fv /etc/ssh/ssh_host_* "${DESTBASE}/etc/ssh/"
-    mv -fv "${DESTBASE}/etc/fstab" "${DESTBASE}/etc/_fstab"
-    touch "${DESTBASE}/etc/fstab"
+    cp -xpfvR "/etc" "${DESTBASE}"
 
     gpart bootcode \
         -b "${DESTBASE}/boot/pmbr" \
