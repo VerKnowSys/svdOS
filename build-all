@@ -4,6 +4,11 @@ clear
 
 . build.env
 
+if [ ! -f "/.build-host" ]; then
+    echo "Must be launched on build host :)"
+    exit 1
+fi
+
 test -x "${SOFIN_BIN}" && \
     ${SOFIN_BIN} disable && \
     echo "Sofin environment disabled"
