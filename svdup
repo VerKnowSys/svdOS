@@ -213,8 +213,8 @@ install_or_update_projects () {
     git reset --hard
     git pull origin master
     gzip beadm.1
-    install -v beadm.1.gz /usr/share/man/man1/
-    install -v beadm /usr/sbin/beadm
+    cp -vf beadm.1.gz /usr/share/man/man1/
+    cp -vf beadm /usr/sbin/beadm
 
     cd /Projects
     git clone https://github.com/VerKnowSys/svdOS.git
