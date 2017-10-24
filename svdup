@@ -212,6 +212,7 @@ install_or_update_projects () {
     cd beadm
     git reset --hard
     git pull origin master
+    rm -f beadm.1.gz
     gzip beadm.1
     cp -vf beadm.1.gz /usr/share/man/man1/
     cp -vf beadm /usr/sbin/beadm
