@@ -31,7 +31,22 @@ get_the_current () {
 }
 
 
+write_default_resolv_conf () {
+    { echo "nameserver 8.8.8.8" && echo "nameserver 8.8.4.4"; } > /etc/resolv.conf
+}
+
+
+fail_with_no_network () {
+    echo "Failed to connect with outside network!"
+    exit 1
+}
+
+
 prepare_and_fetch_os_snapshot () {
+    ping -c1 -t3 task.pl || \
+        write_default_resolv_conf
+    ping -c1 -t3 task.pl || \
+        fail_with_no_network
     test -f /etc/ssl/cert.pem || \
         fetch --no-verify-peer http://software.verknowsys.com/source/cacert.pem -o /etc/ssl/cert.pem
 
