@@ -29,6 +29,7 @@ grep -e 'rlimit memlock' /etc/ntp.conf >/dev/null 2>&1 || \
     echo "rlimit memlock" >> /etc/ntp.conf
 grep -e 'tinker panic 0' /etc/ntp.conf >/dev/null 2>&1 || \
     echo "tinker panic 0" >> /etc/ntp.conf
+service ntpd restart
 
 test -f "${BUILD_NUMBER_FILE}" || echo "1" > "${BUILD_NUMBER_FILE}"
 BUILD_NUMBER="$(echo "$(cat "${BUILD_NUMBER_FILE}" 2>/dev/null)+1" | bc 2>/dev/null)"
