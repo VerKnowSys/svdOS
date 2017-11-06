@@ -126,6 +126,7 @@ configure_and_commit_boot_env () {
 
 
 activate_new_boot_env () {
+    zfs rename "${ZPOOL}/ROOT/${NEW_BOOT_ENV}@--head--"  "@svdup-$(${DATE_BIN} +%F 2>/dev/null)"
     beadm activate "${NEW_BOOT_ENV}" && \
         echo "svdUP: Commited and activated new boot environment: ${NEW_BOOT_ENV}" && \
         return 0
