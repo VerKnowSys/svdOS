@@ -16,7 +16,7 @@ ZFSP_EXT=".zfsp"
 ORIGIN="origin"
 PROD_OS_BASE="FreeBSD-11.0-amd64"
 GIT_VERSION="2.12.3"
-ZSH_VERSION="5.3.1"
+ZSH_VERSION="5.4.2"
 DATE_NOW="$(date +%F 2>/dev/null)"
 LOG_FILE="/var/log/svdUP-${DATE_NOW:-common}.log"
 
