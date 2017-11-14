@@ -162,6 +162,7 @@ install_svd_goodies () {
                 "${ORIGINS_REPO}/${_dataset_origin}-${ORIGIN}.zfsx"
             xzcat "${CACHE_DIR}/${_dataset_origin}-${ORIGIN}.zfsx" | zfs receive -v "${ZPOOL}/${_dataset_origin}/root@${ORIGIN}"
             zfs set mountpoint="/${_dataset_origin}" "${ZPOOL}/${_dataset_origin}/root"
+            zfs set sharenfs=off "${ZPOOL}/${_dataset_origin}/root"
 
             case "${_dataset_origin}" in
                 Services)
