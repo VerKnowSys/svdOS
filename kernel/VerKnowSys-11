@@ -35,7 +35,9 @@ options     SEMUME=40
 options     SEMMNU=120
 options     DUMMYNET
 options     KTR
-options     VIMAGE
+
+# NOTE: Still too prone to cause KP on 11.1 x86_64:
+# options     VIMAGE
 
 device epair
 device pf
