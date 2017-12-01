@@ -276,6 +276,13 @@ postinstall_cleanup () {
 # main():
 #
 
+case "$(uname)" in
+    FreeBSD)
+        ;;
+    *)
+        echo "Currently only FreeBSD x86_64 hosts are supported by svdup!"
+        exit 1
+esac
 
 # Most recent ServeD-OS snapshot:
 MOST_RECENT="$(get_the_current)"
