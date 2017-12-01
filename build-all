@@ -10,7 +10,7 @@ if [ ! -f "/.build-host" ]; then
 fi
 
 test -x "${SOFIN_BIN}" && \
-    ${SOFIN_BIN} disable && \
+    ${SOFIN_BIN} env +Git +Make +Zsh && \
     echo "Sofin environment disabled"
 
 test -f "${SOFIN_DATA_DIR}/loader" && \
