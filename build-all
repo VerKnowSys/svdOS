@@ -7,7 +7,6 @@ if [ ! -f "/.build-host" ]; then
     exit 1
 fi
 
-s env +Git +Zsh
 . build.env
 
 test -f "${SOFIN_DATA_DIR}/loader" && \
@@ -20,6 +19,9 @@ sysctl hardening.pax.mprotect.status=1
 sysctl hardening.pax.pageexec.status=1
 sysctl hardening.pax.disallow_map32bit.status=1
 sysctl hardening.pax.aslr.status=1
+
+echo "Enabling Dtrace"
+kldload dtraceall >/dev/null
 
 echo "Setting up ntp.conf"
 grep -e 'rlimit memlock' /etc/ntp.conf >/dev/null 2>&1 || \
