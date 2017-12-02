@@ -4,7 +4,7 @@
 #
 # TODO: gvr copy-attrs sourcejailname destjailname
 
-. /usr/share/sofin/loader
+. /Software/Sofin/share/loader
 
 GVR_VERSION="0.20.1"
 GVR_LOG="/var/log/gvr.log"
