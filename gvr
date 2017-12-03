@@ -22,10 +22,11 @@ GMAKE_BIN="/Software/Make/bin/make"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="12"
 DEFAULT_SHELL="/Software/Zsh/exports/zsh"
-stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
-if [ "${stored_version}" != "-" ]; then
-    DEFAULT_VERSION="${stored_version}"
-fi
+LOG="${LOGS_DIR}gvr.log"
+# stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
+# if [ "${stored_version}" != "-" ]; then
+#     DEFAULT_VERSION="${stored_version}"
+# fi
 DEFAULT_JAIL_USER="worker"
 DEFAULT_QUOTA_LIMIT="3G"
 DEFAULT_ROOT_QUOTA_LIMIT="2G"
