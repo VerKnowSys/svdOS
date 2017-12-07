@@ -63,6 +63,13 @@ determine_boot_disk_device () {
             egrep -i "${_dsk}p[0-9]+" >/dev/null 2>&1 && \
             printf '%s\n' "${_dsk}" && \
             return 0
+
+        # Pick first disk listed:
+        _first="$(echo "${_dsk}" | head -n1 2>/dev/null)"
+        if [ -n "${_first}" ]; then
+            printf '%s\n' "${_first}" && \
+            return 0
+        fi
     done
 
     return 1
