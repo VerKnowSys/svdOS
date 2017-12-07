@@ -14,7 +14,8 @@ ORIGINS_REPO="https://github.com/VerKnowSys/svdOS/raw/master/Origins/11"
 ZFSX_EXT=".zfsx"
 ZFSP_EXT=".zfsp"
 ORIGIN="origin"
-PROD_OS_BASE="FreeBSD-11.0-amd64"
+SYSTEM_NAME="FreeBSD"
+PROD_OS_BASE="${SYSTEM_NAME}-11.0-amd64"
 GIT_VERSION="2.12.3"
 ZSH_VERSION="5.4.2"
 DATE_NOW="$(date +%F 2>/dev/null)"
@@ -173,8 +174,8 @@ install_svd_goodies () {
 
             case "${_dataset_origin}" in
                 Services)
-                    fetch -o "${CACHE_DIR}/Zsh-common${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Zsh-common${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Zsh"
-                    fetch -o "${CACHE_DIR}/Git-common${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Git-common${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Git"
+                    fetch -o "${CACHE_DIR}/Zsh-${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}-${SYSTEM_NAME}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Zsh-${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Zsh"
+                    fetch -o "${CACHE_DIR}/Git-${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}-${SYSTEM_NAME}${ZFSP_EXT}" && xzcat "${CACHE_DIR}/Git-${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Git"
                     ;;
 
                 Software)
@@ -284,10 +285,10 @@ postinstall_cleanup () {
 #
 
 case "$(uname)" in
-    FreeBSD)
+    ${SYSTEM_NAME})
         ;;
     *)
-        echo "Currently only FreeBSD x86_64 hosts are supported by svdup!"
+        echo "Currently only ${SYSTEM_NAME} x86_64 hosts are supported by svdup!"
         exit 1
 esac
 
