@@ -170,9 +170,6 @@ kern.ipc.shm_use_phys=1
 # Use ZFS prefetch feature.
 vfs.zfs.prefetch_disable=0
 
-# Use HTCP congestion control
-net.inet.tcp.cc.algorithm=htcp
-
 security.bsd.see_other_uids=0
 security.bsd.conservative_signals=1
 
@@ -206,5 +203,5 @@ security.mac.portacl.rules=uid:501:tcp:80,uid:501:tcp:443,uid:501:tcp:12
 # hardening.pax.disallow_map32bit.status=1
 
 # disable witnessing:
-debug.witness.trace=0
-debug.witness.watch=0
+#debug.witness.trace=0
+#debug.witness.watch=0
