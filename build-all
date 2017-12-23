@@ -24,8 +24,8 @@ echo "Enabling Dtrace"
 kldload dtraceall >/dev/null
 
 echo "Setting up ntp.conf"
-grep -e 'rlimit memlock' /etc/ntp.conf >/dev/null 2>&1 || \
-    echo "rlimit memlock" >> /etc/ntp.conf
+grep -e 'rlimit memlock 0' /etc/ntp.conf >/dev/null 2>&1 || \
+    echo "rlimit memlock 0" >> /etc/ntp.conf
 grep -e 'tinker panic 0' /etc/ntp.conf >/dev/null 2>&1 || \
     echo "tinker panic 0" >> /etc/ntp.conf
 service ntpd restart
