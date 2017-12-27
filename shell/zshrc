@@ -69,7 +69,9 @@ export LSCOLORS=cxfxcxdxbxegedabagacad
 command_oriented_history=1
 HISTCONTROL=ignoreboth
 umask 022
-mesg n
+if [ "root" = "${USER}" ]; then
+  mesg n
+fi
 
 ### Export everything so far
 export PS1 NLSPATH PAGER MAIL LS_COLORS LS_OPTIONS LIBRARY_PATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH EDITOR TERM XFILESEARCHPATH
