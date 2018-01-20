@@ -116,6 +116,7 @@ configure_and_commit_boot_env () {
 
     echo "svdUP: Synchronising system configurations"
     cp -fv "/boot/loader.conf" "${DESTBASE}/boot/"
+    cp -fv "/boot/loader.conf.local" "${DESTBASE}/boot/"
     cp -xpfvR "/etc" "${DESTBASE}"
 
     gpart bootcode \
