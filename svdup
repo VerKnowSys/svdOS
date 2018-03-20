@@ -23,6 +23,10 @@ LOG_FILE="/var/log/svdUP-${DATE_NOW:-common}.log"
 
 
 get_the_current () {
+    # make sure all ROOT datasets are not read only before proceeding:
+    for _mnt in $(zfs mount 2>/dev/null | grep ROOT 2>/dev/null | cut -f1 -d' ' 2>/dev/null); do
+        zfs set readonly=off "${_mnt}" >> "${LOG_FILE}" 2>> "${LOG_FILE}"
+    done
     mkdir -p "${CACHE_DIR}" "${DESTBASE}" >/dev/null 2>&1
     fetch "${SOURCE}/current" -o "${CACHE_DIR}/current" \
         >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
