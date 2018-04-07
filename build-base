@@ -97,6 +97,9 @@ build_base () {
     ${BEADM_BIN} mount "${_new_boot_env}" "${DESTBASE}" && \
         permnote "Mounted new environment: ${_new_boot_env}, to destination base: ${DESTBASE}"
 
+    echo "Cleaning ${DESTBASE}/etc/fstab from buildhost tmpfs mounts"
+    ${SED_BIN} -i '' -e '/λ/d' "${DESTBASE}/etc/fstab"
+
     # # export libucl:
     # permnote "Exporting UCL as regular OS library"
     # ${SED_BIN} -i '' -e 's/PRIVATELIB=.*$//' lib/libucl/Makefile 2>> "${LOG_OUTPUT}"
