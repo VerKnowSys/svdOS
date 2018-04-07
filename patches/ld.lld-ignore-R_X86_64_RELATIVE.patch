@@ -1,98 +1,13 @@
-diff --git a/lld/ELF/Driver.cpp b/lld/ELF/Driver.cpp
-index 67f0678..beaee4e 100644
---- a/lld/ELF/Driver.cpp
-+++ b/lld/ELF/Driver.cpp
-@@ -490,6 +490,7 @@ static void parseSymbolOrderingList(MemoryBufferRef MB) {
- void LinkerDriver::readConfigs(opt::InputArgList &Args) {
-   for (auto *Arg : Args.filtered(OPT_L))
-     Config->SearchPaths.push_back(Arg->getValue());
-+  Config->SearchPaths.push_back("/usr/lib");
-
-   std::vector<StringRef> RPaths;
-   for (auto *Arg : Args.filtered(OPT_rpath))
-diff --git a/lld/ELF/DriverUtils.cpp b/lld/ELF/DriverUtils.cpp
-index 179dfd3..be0ff26 100644
---- a/lld/ELF/DriverUtils.cpp
-+++ b/lld/ELF/DriverUtils.cpp
-@@ -93,6 +93,7 @@ opt::InputArgList ELFOptTable::parse(ArrayRef<const char *> Argv) {
- void elf::printHelp(const char *Argv0) {
-   ELFOptTable Table;
-   Table.PrintHelp(outs(), Argv0, "lld", false);
-+  outs() << Argv0 << ": supported targets: elf\n";
- }
-
- // Reconstructs command line arguments so that so that you can re-run
-diff --git a/lld/ELF/InputFiles.cpp b/lld/ELF/InputFiles.cpp
-index 37ebfa7..5bfa34d 100644
---- a/lld/ELF/InputFiles.cpp
-+++ b/lld/ELF/InputFiles.cpp
-@@ -174,12 +174,19 @@ void elf::ObjectFile<ELFT>::parse(DenseSet<CachedHashStringRef> &ComdatGroups) {
- template <class ELFT>
- StringRef
- elf::ObjectFile<ELFT>::getShtGroupSignature(ArrayRef<Elf_Shdr> Sections,
--                                            const Elf_Shdr &Sec) {
-+                                            const Elf_Shdr &Sec,
-+                                            StringRef SectionStringTable) {
-   if (this->Symbols.empty())
-     this->initSymtab(Sections,
-                      check(object::getSection<ELFT>(Sections, Sec.sh_link)));
-   const Elf_Sym *Sym =
-       check(object::getSymbol<ELFT>(this->Symbols, Sec.sh_info));
-+  if (Sym->getType() == STT_SECTION) {
-+    ELFFile<ELFT> Obj = this->getObj();
-+    return check(Obj.getSectionName(
-+        check(Obj.getSection(Sym, this->Symbols, this->SymtabSHNDX)),
-+        SectionStringTable));
-+  }
-   return check(Sym->getName(this->StringTable));
- }
-
-@@ -272,8 +279,9 @@ void elf::ObjectFile<ELFT>::initializeSections(
-     switch (Sec.sh_type) {
-     case SHT_GROUP:
-       Sections[I] = &InputSection<ELFT>::Discarded;
--      if (ComdatGroups.insert(CachedHashStringRef(
--                                  getShtGroupSignature(ObjSections, Sec)))
-+      if (ComdatGroups
-+              .insert(CachedHashStringRef(
-+                  getShtGroupSignature(ObjSections, Sec, SectionStringTable)))
-               .second)
-         continue;
-       for (uint32_t SecIndex : getShtGroupEntries(Sec)) {
-diff --git a/lld/ELF/InputFiles.h b/lld/ELF/InputFiles.h
-index aba1d71..de51d97 100644
---- a/lld/ELF/InputFiles.h
-+++ b/lld/ELF/InputFiles.h
-@@ -130,7 +130,8 @@ template <class ELFT> class ObjectFile : public ELFFileBase<ELFT> {
-   typedef typename ELFT::uint uintX_t;
-
-   StringRef getShtGroupSignature(ArrayRef<Elf_Shdr> Sections,
--                                 const Elf_Shdr &Sec);
-+                                 const Elf_Shdr &Sec,
-+                                 StringRef SectionStringTable);
-   ArrayRef<Elf_Word> getShtGroupEntries(const Elf_Shdr &Sec);
-
- public:
-diff --git a/lld/ELF/Target.cpp b/lld/ELF/Target.cpp
-index 5106051..ea7848c 100644
---- a/lld/ELF/Target.cpp
-+++ b/lld/ELF/Target.cpp
-@@ -619,6 +619,7 @@ RelExpr X86_64TargetInfo<ELFT>::getRelExpr(uint32_t Type,
-   case R_X86_64_GOTTPOFF:
+diff --git a/contrib/llvm/tools/lld/ELF/Arch/X86_64.cpp b/contrib/llvm/tools/lld/ELF/Arch/X86_64.cpp
+index 3db391e9f..802088c08 100644
+--- a/contrib/llvm/tools/lld/ELF/Arch/X86_64.cpp
++++ b/contrib/llvm/tools/lld/ELF/Arch/X86_64.cpp
+@@ -108,6 +108,8 @@ RelExpr X86_64<ELFT>::getRelExpr(RelType Type, const Symbol &S,
      return R_GOT_PC;
    case R_X86_64_NONE:
+     return R_NONE;
 +  case R_X86_64_RELATIVE:
-     return R_HINT;
++    return R_HINT;
+   default:
+     return R_INVALID;
    }
- }
-diff --git a/lld/lib/Config/Version.cpp b/lld/lib/Config/Version.cpp
-index 2554475..84ee7b0 100644
---- a/lld/lib/Config/Version.cpp
-+++ b/lld/lib/Config/Version.cpp
-@@ -39,5 +39,5 @@ static std::string getRepository() {
-
- // Returns a version string, e.g., "LLD 4.0 (lld/trunk 284614)".
- std::string lld::getLLDVersion() {
--  return "LLD " + std::string(LLD_VERSION_STRING) + getRepository();
-+  return "LLD (not GNU) " + std::string(LLD_VERSION_STRING) + getRepository();
- }

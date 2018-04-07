@@ -62,6 +62,9 @@ build_base () {
     test -n "${ARCH}" || exit 108
     test -n "${SYSTEM_TYPE}" || exit 109
 
+    echo "Applying linker patches"
+    patch -p1 < "${SERVED_REPO}/patches/ld.lld-ignore-R_X86_64_RELATIVE.patch"
+
     _new_boot_env="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
     _default_boot_dev="$(boot_device_name)"
     test -n "${_default_boot_dev}" || exit 112
