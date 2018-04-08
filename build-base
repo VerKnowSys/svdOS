@@ -225,7 +225,9 @@ build_base () {
     ${CHMOD_BIN} 600 "${HOME_DIR}/.ssh"
     ${CHMOD_BIN} a+r "${NEW_BOOT_ORIGIN_FILE}"
 
-    permnote "Uploading: $(distn "${SCP_BIN} -4 -B \"${NEW_BOOT_ORIGIN_FILE}\" \"${DESTINATION}\"")"
+    _zfsx_size="$(echo "$(${STAT_BIN} -f%z "${NEW_BOOT_ORIGIN_FILE}" 2>/dev/null) /1024.0/1024.0" | ${BC_BIN} 2>/dev/null)"
+
+    permnote "Uploading: $(distn "${SCP_BIN} -4 -B \"${NEW_BOOT_ORIGIN_FILE}\" \"${DESTINATION}\"") (${_zfsx_size} MiB)"
     ${SCP_BIN} -4 -B \
         "${NEW_BOOT_ORIGIN_FILE}" \
         "${DESTINATION}" && \
