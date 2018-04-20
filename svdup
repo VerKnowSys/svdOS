@@ -260,6 +260,10 @@ install_or_update_projects () {
     ln -fvs /etc/zsh/zshenv /etc/zshenv
     ln -fvs /etc/zsh/zshrc /etc/zshrc
 
+    cp -f usr/bin/lz4 /usr/bin/lz4
+    ln -s /usr/bin/lz4 /usr/bin/lz4cat
+    ln -s /usr/bin/lz4 /usr/bin/lz4c
+
     cd /
 }
 
