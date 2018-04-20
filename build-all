@@ -65,6 +65,8 @@ esac
 set -e
 echo "Pedantic mode enabled!"
 
+zfs set readonly=off zroot/ROOT/default
+
 . build.env
 . build-base
 
