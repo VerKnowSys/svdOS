@@ -121,7 +121,7 @@ for _dataset_origin in Software Services; do
             "${ZFS_BIN} send \
             -D -L -e -p -v \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN} \
-            | ${XZ_BIN} ${DEFAULT_XZ_OPTS} > ${CACHE_DIR}/${_software_origin_file}"
+            | ${LZ4_BIN} ${DEFAULT_LZ4_OPTS} > ${CACHE_DIR}/${_software_origin_file}"
 
         # echo "Push origin to remote"
         ${MKDIR_BIN} -p "./Origins/${SYSTEM_VERSION}"

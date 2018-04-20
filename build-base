@@ -216,7 +216,7 @@ build_base () {
         2>> "${LOG_OUTPUT}"
 
     ${ZFS_BIN} send ${DEFAULT_SNAPSHOT_SEND_OPTS} \
-        "${NEW_RELEASE}" | ${XZ_BIN} ${DEFAULT_XZ_OPTS} \
+        "${NEW_RELEASE}" | ${LZ4_BIN} ${DEFAULT_LZ4_OPTS} \
         > "${NEW_BOOT_ORIGIN_FILE}" && \
         permnote "Sent release snapshot: ${NEW_RELEASE}, to file: ${NEW_BOOT_ORIGIN_FILE}" && \
         ${BEADM_BIN} destroy -F "${NEW_BOOT_ORIGIN_FILE}" && \
