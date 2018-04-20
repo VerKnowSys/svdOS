@@ -254,6 +254,7 @@ install_or_update_projects () {
     git reset --hard
     git pull origin master
 
+    test -f /etc/rc.local || cp -f etc/rc.local /etc/rc.local
     test -f /etc/rc.conf.local || cp -f etc/rc.production.conf /etc/rc.conf.local
     cp -fr shell/ /etc/zsh
     ln -fvs /etc/zsh/zshenv /etc/zshenv

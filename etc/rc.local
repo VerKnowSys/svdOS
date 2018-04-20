@@ -1,0 +1,6 @@
+#!/bin/sh
+
+for pax in /Software/*/.pax; do
+    echo "Enforcing PAX features of software bundle: ${pax}"
+    . "${pax}"
+done
