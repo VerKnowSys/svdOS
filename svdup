@@ -11,6 +11,7 @@ PATH="/Software/Git/exports:/Software/Zsh/exports:/bin:/usr/bin:/sbin:/usr/sbin"
 HOME_DIR="/User"
 SOFIN_BIN_REPO="http://software.verknowsys.com/binary"
 ORIGINS_RESOURCE="https://raw.githubusercontent.com/VerKnowSys/sofin/master/share/sofin/origins"
+LZ4_BIN_RESOURCE="https://raw.githubusercontent.com/VerKnowSys/svdOS/master/usr/bin/lz4"
 ZFSX_EXT=".zfsx"
 ZFSP_EXT=".zfsp"
 ORIGIN="origin"
@@ -48,6 +49,13 @@ fail_with_no_network () {
 }
 
 
+fetch_and_install_lz4 () {
+    fetch --no-verify-peer "${LZ4_BIN_RESOURCE}" -o /usr/bin/lz4
+    chmod 755 /usr/bin/lz4
+    ln -fs /usr/bin/lz4 /usr/bin/lz4cat
+}
+
+
 prepare_and_fetch_os_snapshot () {
     ping -c1 -t3 task.pl >> "${LOG_FILE}" 2>> "${LOG_FILE}" || \
         write_default_resolv_conf
@@ -55,6 +63,8 @@ prepare_and_fetch_os_snapshot () {
         fail_with_no_network
     test -f /etc/ssl/cert.pem || \
         fetch --no-verify-peer http://software.verknowsys.com/source/cacert.pem -o /etc/ssl/cert.pem
+    test -x /usr/bin/lz4 || \
+        fetch_and_install_lz4
 
     test -f "${CACHE_DIR}/${MOST_RECENT}" || \
         fetch "${SOURCE}/${MOST_RECENT}" -o "${CACHE_DIR}/${MOST_RECENT}" \
@@ -152,7 +162,7 @@ activate_new_boot_env () {
 }
 
 
-install_svd_goodies () {
+configure_base_zfs_datasets () {
     echo "svdUP: Configuring datasets, installing base software, setting HOME to ${HOME_DIR}, Zsh as default shell"
     for _dataset_origin in User Services Software; do
         zfs list "${ZPOOL}/${_dataset_origin}" >/dev/null 2>&1
@@ -264,10 +274,6 @@ upgrade_projects_install_custom () {
     ln -fvs /etc/zsh/zshenv /etc/zshenv
     ln -fvs /etc/zsh/zshrc /etc/zshrc
 
-    # svdUP uses lz4/lz4cat:
-    cp -f usr/bin/lz4 /usr/bin/lz4
-    ln -fs /usr/bin/lz4 /usr/bin/lz4cat
-
     cd /
 }
 
@@ -329,10 +335,10 @@ fi
 echo "svdUP: Default boot device: ${BOOT_DEVICE}"
 echo "svdUP: Tasks in progress…" && \
     prepare_and_fetch_os_snapshot && \
+    configure_base_zfs_datasets && \
     upgrade_projects_install_custom && \
     install_boot_environment && \
     set_std_zfs_properties && \
-    install_svd_goodies && \
     configure_and_commit_boot_env "${BOOT_DEVICE}" && \
     postinstall_cleanup && \
     activate_new_boot_env && \
