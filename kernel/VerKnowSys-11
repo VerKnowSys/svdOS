@@ -408,8 +408,5 @@ options     NULLFS
 options     FDESCFS
 options     TMPFS
 
-# AIO
-options     VFS_AIO
-
 # routes setfib
 options     ROUTETABLES=8
