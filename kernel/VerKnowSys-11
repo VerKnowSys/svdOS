@@ -98,7 +98,6 @@ options     DDB_CTF                         # Kernel ELF linker loads CTF data
 options     INCLUDE_CONFIG_FILE             # Include this file in kernel
 options     RACCT                           # Resource accounting framework
 options     RCTL                            # Resource limits
-options     PROCDESC                        # Support for process descriptors
 
 
 # HardenedBSD hardening options
@@ -348,7 +347,6 @@ device      tun                             # Packet tunnel.
 device      md                              # Memory "disks"
 device      gif                             # IPv6 and IPv4 tunneling
 device      firmware                        # firmware assist module
-device      faith                           # IPv6-to-IPv4 relaying (translation)
 
 # The `bpf' device enables the Berkeley Packet Filter.
 # Be aware of the administrative consequences of enabling this!
