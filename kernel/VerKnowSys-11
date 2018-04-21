@@ -134,7 +134,6 @@ options     DDB                             # Support DDB.
 options     SMP                             # Symmetric MultiProcessor Kernel
 options     IMAGACT_BINMISC                 # enables app exec through emulators, such as QEMU via binmiscctl(8). [r266531]
 options     DEVICE_NUMA                     # I/O Device Affinity
-options     HYPERV                          # Hyper-V kernel infrastructure
 device      hyperv                          # HyperV drivers
 
 # enable features:
