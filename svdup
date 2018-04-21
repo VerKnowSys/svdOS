@@ -124,6 +124,10 @@ configure_and_commit_boot_env () {
     cp -fv "/boot/loader.conf.local" "${DESTBASE}/boot/"
     cp -xpfvR "/etc" "${DESTBASE}"
 
+    echo "svdUP: Installing Lz4 to destination base system"
+    cp -fv /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4"
+    ln -fs /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4cat"
+
     gpart bootcode \
         -b "${DESTBASE}/boot/pmbr" \
         -p "${DESTBASE}/boot/gptzfsboot" \
@@ -213,7 +217,7 @@ install_svd_goodies () {
 }
 
 
-install_or_update_projects () {
+upgrade_projects_install_custom () {
     zfs list "${ZPOOL}/Projects" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         zfs create \
@@ -260,9 +264,9 @@ install_or_update_projects () {
     ln -fvs /etc/zsh/zshenv /etc/zshenv
     ln -fvs /etc/zsh/zshrc /etc/zshrc
 
+    # svdUP uses lz4/lz4cat:
     cp -f usr/bin/lz4 /usr/bin/lz4
-    ln -s /usr/bin/lz4 /usr/bin/lz4cat
-    ln -s /usr/bin/lz4 /usr/bin/lz4c
+    ln -fs /usr/bin/lz4 /usr/bin/lz4cat
 
     cd /
 }
@@ -325,10 +329,10 @@ fi
 echo "svdUP: Default boot device: ${BOOT_DEVICE}"
 echo "svdUP: Tasks in progress…" && \
     prepare_and_fetch_os_snapshot && \
+    upgrade_projects_install_custom && \
     install_boot_environment && \
     set_std_zfs_properties && \
     install_svd_goodies && \
-    install_or_update_projects && \
     configure_and_commit_boot_env "${BOOT_DEVICE}" && \
     postinstall_cleanup && \
     activate_new_boot_env && \
