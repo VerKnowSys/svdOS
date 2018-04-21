@@ -9,7 +9,6 @@ makeoptions "-ffast-math"
 makeoptions "-fno-omit-frame-pointer"
 makeoptions "-fno-strict-aliasing"
 
-options     HZ=60
 options     SCHED_ULE                       # ULE scheduler
 options     PREEMPTION                      # Enable kernel thread preemption
 options     INET                            # InterNETworking
