@@ -38,19 +38,20 @@ options     KTR
 # NOTE: Still too prone to cause KP on 11.1 x86_64:
 # options     VIMAGE
 
-device epair
-device pf
-# device pflog
-# device pfsync                                 # Synchronization interface for PF
-device tap                                    # Virtual Ethernet driver
-device gre                                    # IP over IP tunneling
-device if_bridge                              # Bridge interface
-device carp                                   # Common Address Redundancy Protocol
-device enc                                    # IPsec interface
-device lagg                                   # Link aggregation interface
-device stf                                    # IPv4-IPv6 port
-device coretemp
-device cpuctl
+device      epair
+device      nmdm                            # Null modem
+device      pf
+# device      pflog
+# device      pfsync                          # Synchronization interface for PF
+device      tap                             # Virtual Ethernet driver
+device      gre                             # IP over IP tunneling
+device      if_bridge                       # Bridge interface
+device      carp                            # Common Address Redundancy Protocol
+device      enc                             # IPsec interface
+device      lagg                            # Link aggregation interface
+device      stf                             # IPv4-IPv6 port
+device      coretemp
+device      cpuctl
 
 
 # NFS support
@@ -97,6 +98,8 @@ options     DDB_CTF                         # Kernel ELF linker loads CTF data
 options     INCLUDE_CONFIG_FILE             # Include this file in kernel
 options     RACCT                           # Resource accounting framework
 options     RCTL                            # Resource limits
+options     PROCDESC                        # Support for process descriptors
+
 
 # HardenedBSD hardening options
 options     PAX                             # PaX framework
@@ -131,6 +134,8 @@ options     DDB                             # Support DDB.
 options     SMP                             # Symmetric MultiProcessor Kernel
 options     IMAGACT_BINMISC                 # enables app exec through emulators, such as QEMU via binmiscctl(8). [r266531]
 options     DEVICE_NUMA                     # I/O Device Affinity
+options     HYPERV                          # Hyper-V kernel infrastructure
+device      hyperv                          # HyperV drivers
 
 # enable features:
 options     MAC_BSDEXTENDED
@@ -227,7 +232,6 @@ device      psm                             # PS/2 mouse
 device      kbdmux                          # keyboard multiplexer
 
 device      vga                             # VGA video card driver
-#options     VESA                            # Add support for VESA BIOS Extensions (VBE)
 
 device      splash                          # Splash screen and screen saver support
 
@@ -345,6 +349,7 @@ device      tun                             # Packet tunnel.
 device      md                              # Memory "disks"
 device      gif                             # IPv6 and IPv4 tunneling
 device      firmware                        # firmware assist module
+device      faith                           # IPv6-to-IPv4 relaying (translation)
 
 # The `bpf' device enables the Berkeley Packet Filter.
 # Be aware of the administrative consequences of enabling this!
@@ -385,7 +390,7 @@ device      virtio_scsi                     # VirtIO SCSI device
 device      virtio_balloon                      # VirtIO Memory Balloon device
 
 # VMware support
-# device      vmx                             # VMware VMXNET3 Ethernet
+device      vmx                             # VMware VMXNET3 Ethernet
 
 # Netmap provides direct access to TX/RX rings on supported NICs
 device      netmap                          # netmap(4) support
@@ -394,3 +399,17 @@ device      netmap                          # netmap(4) support
 device      crypto                          # core crypto support
 device      cryptodev                       # /dev/crypto for access to h/w
 device      aesni
+
+# zpty
+device      pty
+
+# nullfs
+options     NULLFS
+options     FDESCFS
+options     TMPFS
+
+# AIO
+options     VFS_AIO
+
+# routes setfib
+options     ROUTETABLES=8
