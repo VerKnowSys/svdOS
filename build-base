@@ -190,8 +190,25 @@ build_base () {
             permnote "Cleaned"
     fi
 
+    permnote "Post patching modified files"
+    ${SED_BIN} -i '' -e '/src/ d' "${DESTBASE}/etc/fstab"
+    ${SED_BIN} -i '' -e '/obj/ d' "${DESTBASE}/etc/fstab"
+
     permnote "Removing sources, debug and other cache files before ZFS send…"
-    ${RM_BIN} -rf "${DESTBASE}/COPYRIGHT" "${DESTBASE}/.profile" "${DESTBASE}/mnt" "${DESTBASE}/proc" "${DESTBASE}/media" "${DESTBASE}/sys"
+    ${RM_BIN} -rf \
+        "${DESTBASE}/COPYRIGHT" \
+        "${DESTBASE}/.profile" \
+        "${DESTBASE}${BUILD_HOST_MARKER}" \
+        "${DESTBASE}/mnt" \
+        "${DESTBASE}/net" \
+        "${DESTBASE}/proc" \
+        "${DESTBASE}/media" \
+        "${DESTBASE}/sys" \
+        "${DESTBASE}/${LAMBDA}" \
+        "${DESTBASE}${CACHE_DIR}/*" \
+        "${DESTBASE}/usr/lib/debug" \
+        "${DESTBASE}/usr/obj"
+
     cd /
     sync
     # ${GPART_BIN} bootcode \
