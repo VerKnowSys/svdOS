@@ -25,7 +25,7 @@ build_base () {
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         printf '%s\n%s\n%s\n%s\n' \
             "# ServeD-build-host - Sofin ram-disk configuration:" \
-            "tmpfs   /tmp        tmpfs   rw,mode=777     0 0" \
+            "tmpfs   /tmp             tmpfs   rw,mode=777     0 0" \
             "tmpfs   /${LAMBDA}/src   tmpfs   rw,mode=777     0 0" \
             "tmpfs   /${LAMBDA}/obj   tmpfs   rw,mode=777     0 0" \
              > /etc/fstab.svd && \
@@ -96,9 +96,6 @@ build_base () {
     DESTBASE="${SHARED_DIR}/${_new_boot_env}"
     ${BEADM_BIN} mount "${_new_boot_env}" "${DESTBASE}" && \
         permnote "Mounted new environment: ${_new_boot_env}, to destination base: ${DESTBASE}"
-
-    echo "Cleaning ${DESTBASE}/etc/fstab from buildhost tmpfs mounts"
-    ${SED_BIN} -i '' -e '/λ/d' "${DESTBASE}/etc/fstab"
 
     # # export libucl:
     # permnote "Exporting UCL as regular OS library"
