@@ -94,11 +94,6 @@ options     DEVICE_NUMA                     # I/O Device Affinity
 
 options     DEVICE_POLLING
 
-#
-# Intel integrated Memory Controller (iMC) SMBus controller
-# Sandybridge-Xeon, Ivybridge-Xeon, Haswell-Xeon, Broadwell-Xeon
-device      imcsmb
-
 device      epair
 device      pf
 # device      pflog
@@ -114,6 +109,30 @@ device      coretemp
 device      cpuctl
 device      nvram
 device      nmdm                            # Null modem
+
+# BUSes:
+device      iicbus
+device      iicbb
+device      iic
+device      ic
+device      iicsmb
+device      smb
+device      smbus
+device      bktr
+
+#
+# Intel integrated Memory Controller (iMC) SMBus controller
+# Sandybridge-Xeon, Ivybridge-Xeon, Haswell-Xeon, Broadwell-Xeon
+device      imcsmb
+
+device      ipmi
+device      pbio
+device      smbios
+device      vpd
+device      asmc
+device      tpm
+device      aesni                           # AES-NI OpenCrypto module
+device      ioat                            # Intel I/OAT DMA engine
 
 
 # NFS support
@@ -152,17 +171,6 @@ options     MAC                             # TrustedBSD MAC Framework
 options     MAC_BSDEXTENDED
 options     MAC_PORTACL
 options     MAC_SEEOTHERUIDS
-
-device      ipmi
-device      pbio
-device      smbios
-device      vpd
-device      asmc
-device      tpm
-
-device      aesni                           # AES-NI OpenCrypto module
-device      ioat                            # Intel I/OAT DMA engine
-
 options     INCLUDE_CONFIG_FILE             # Include this file in kernel
 options     RACCT                           # Resource accounting framework
 options     RCTL                            # Resource limits
