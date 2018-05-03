@@ -42,12 +42,29 @@ options     SEMUME=256
 # NOTE: Still too prone to cause KP on 11.1 x86_64:
 # options     VIMAGE
 
+#
+# ABI Emulation
+
+options     MSDOSFS                         # MSDOS Filesystem
+options     CD9660                          # ISO 9660 Filesystem
+options     PROCFS                          # Process filesystem (requires PSEUDOFS)
+options     PSEUDOFS                        # Pseudo-filesystem framework
+
+#
+# Enable 64-bit runtime support for CloudABI binaries.
+options     COMPAT_CLOUDABI64
+
+
 # Debugging support.  Always need this:
 options     KDB                             # Enable kernel debugger support.
 options     KDB_TRACE                       # Print a stack trace for a panic.
 
 # For full debugger support use (turn off in stable branch):
 options     DDB                             # Support DDB.
+options     DDB_CTF                         # Kernel ELF linker loads CTF data
+options     KDTRACE_FRAME                   # Ensure frames are compiled in
+options     KDTRACE_HOOKS                   # Kernel DTrace hooks
+
 #options     GDB                            # Support remote GDB.
 #options     WITNESS                        # Enable checks to detect deadlocks and cycles
 #options     WITNESS_SKIPSPIN               # Don't run witness on spinlocks for speed
@@ -77,22 +94,10 @@ options     DEVICE_NUMA                     # I/O Device Affinity
 
 options     DEVICE_POLLING
 
-options     KDTRACE_FRAME                   # Ensure frames are compiled in
-options     KDTRACE_HOOKS                   # Kernel DTrace hooks
-options     DDB_CTF                         # Kernel ELF linker loads CTF data
-
-# DTrace modules
-device      dtrace
-device      dtrace_profile
-device      dtrace_sdt
-device      dtrace_fbt
-device      dtrace_systrace
-device      dtrace_prototype
-device      dtnfscl
-device      dtmalloc
-
-# Alternatively include all the DTrace modules
-device      dtraceall
+#
+# Intel integrated Memory Controller (iMC) SMBus controller
+# Sandybridge-Xeon, Ivybridge-Xeon, Haswell-Xeon, Broadwell-Xeon
+device      imcsmb
 
 device      epair
 device      pf
@@ -110,25 +115,12 @@ device      cpuctl
 device      nvram
 device      nmdm                            # Null modem
 
-# OpenFabrics Enterprise Distribution (Infiniband).
-options     OFED
-
-# IP over Infiniband
-options     IPOIB
-options     IPOIB_DEBUG
-options     IPOIB_CM
-
 
 # NFS support
 options     NFSCL                           # Network Filesystem Client
 options     NFSD                            # Network Filesystem Server
 options     NFSLOCKD                        # Network Lock Manager
 options     NFS_ROOT                        # NFS usable as /, requires NFSCL
-
-options     MSDOSFS                         # MSDOS Filesystem
-options     CD9660                          # ISO 9660 Filesystem
-options     PROCFS                          # Process filesystem (requires PSEUDOFS)
-options     PSEUDOFS                        # Pseudo-filesystem framework
 
 # GEOM support
 options     GEOM_PART_GPT                   # GUID Partition Tables.
