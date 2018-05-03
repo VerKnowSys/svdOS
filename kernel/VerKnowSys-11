@@ -202,6 +202,7 @@ options     DEVICE_NUMA                     # I/O Device Affinity
 device      acpi
 options     ACPI_DMAR
 device      pci
+options     PCI_HP                          # PCI-Express native HotPlug
 options     PCI_IOV                         # PCI SR-IOV support
 
 # CPU frequency control
