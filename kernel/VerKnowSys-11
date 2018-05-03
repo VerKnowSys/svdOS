@@ -9,6 +9,7 @@ makeoptions "-ffast-math"
 makeoptions "-fno-omit-frame-pointer"
 makeoptions "-fno-strict-aliasing"
 
+options     HZ=100
 options     SCHED_ULE                       # ULE scheduler
 options     PREEMPTION                      # Enable kernel thread preemption
 options     INET                            # InterNETworking
@@ -21,6 +22,7 @@ options     TCP_RFC7413                     # TCP Fast Open
 options     TCP_OFFLOAD                     # TCP offload
 options     TCP_SIGNATURE
 options     SCTP                            # Stream Control Transmission Protocol
+
 #options     FFS                            # Berkeley Fast Filesystem
 #options     SOFTUPDATES                    # Enable FFS soft updates support
 #options     UFS_ACL                        # Support for access control lists
@@ -28,7 +30,8 @@ options     SCTP                            # Stream Control Transmission Protoc
 #options     UFS_GJOURNAL                   # Enable gjournal-based UFS journaling
 #options     UFS_EXTATTR                    # Extended attributes
 #options     UFS_EXTATTR_AUTOSTART
-# options    QUOTA                          # Enable disk quotas for UFS
+#options     QUOTA                          # Enable disk quotas for UFS
+
 options     MD_ROOT                         # MD is a potential root device
 options     SYSVSHM                         # SYSV-style shared memory
 options     SYSVMSG                         # SYSV-style message queues
@@ -46,7 +49,6 @@ options     KTR
 # options     VIMAGE
 
 device      epair
-device      nmdm                            # Null modem
 device      pf
 # device      pflog
 # device      pfsync                          # Synchronization interface for PF
@@ -59,6 +61,29 @@ device      lagg                            # Link aggregation interface
 device      stf                             # IPv4-IPv6 port
 device      coretemp
 device      cpuctl
+device      nvram
+device      nmdm                            # Null modem
+
+# DTrace modules
+device      dtrace
+device      dtrace_profile
+device      dtrace_sdt
+device      dtrace_fbt
+device      dtrace_systrace
+device      dtrace_prototype
+device      dtnfscl
+device      dtmalloc
+
+# Alternatively include all the DTrace modules
+devices     dtraceall
+
+# OpenFabrics Enterprise Distribution (Infiniband).
+options     OFED
+
+# IP over Infiniband
+options     IPOIB
+options     IPOIB_DEBUG
+options     IPOIB_CM
 
 
 # NFS support
@@ -85,7 +110,7 @@ options     SCSI_DELAY=5000                 # Delay (in ms) before probing SCSI
 #options    COMPAT_FREEBSD6                 # Compatible with FreeBSD6
 #options    COMPAT_FREEBSD7                 # Compatible with FreeBSD7
 #options     COMPAT_FREEBSD9                # Compatible with FreeBSD9
-options     COMPAT_FREEBSD10                # Compatible with FreeBSD10
+#options     COMPAT_FREEBSD10                # Compatible with FreeBSD10
 #options     KTRACE                         # ktrace(1) support
 options     STACK                           # stack(9) support
 options     _KPOSIX_PRIORITY_SCHEDULING     # POSIX P1003_1B real-time extensions
@@ -140,6 +165,12 @@ options     PAX_ASLR                        # Address Space Layout Randomization
 options     PAX_NOEXEC                      # Remove WX pages from user-space and enforce W^X
 options     PAX_HARDENING                   # Various hardening options
 options     PAX_SEGVGUARD                   # prevent brute-force attacks
+options     PAX_CONTROL_EXTATTR             # FS-EA based control framework
+options     PAX_CONTROL_ACL                 # PaX MAC framework, required for secadm
+options     PAX_CONTROL_ACL_OVERRIDE_SUPPORT # Allow to override hbsdcontrol settings with ACLs
+options     PAX_CONTROL_EXTATTR             # extattr based control framework for hbsdcontrol
+options     PAX_JAIL_SUPPORT                # Allow to override PAX settings per jail
+
 #options    PAX_PTRACE_HARDENING
 #options    PAX_PTRACE_HARDENING_GRP=50000
 
@@ -166,21 +197,17 @@ options     DDB                             # Support DDB.
 options     SMP                             # Symmetric MultiProcessor Kernel
 options     IMAGACT_BINMISC                 # enables app exec through emulators, such as QEMU via binmiscctl(8). [r266531]
 options     DEVICE_NUMA                     # I/O Device Affinity
-device      hyperv                          # HyperV drivers
-
-# enable features:
-options     MAC_BSDEXTENDED
-options     MAC_PORTACL
-options     MAC_SEEOTHERUIDS
-
-# CPU frequency control
-device      cpufreq
 
 # Bus support.
 device      acpi
 options     ACPI_DMAR
 device      pci
 options     PCI_IOV                         # PCI SR-IOV support
+
+# CPU frequency control
+device      cpufreq
+
+device      hyperv                          # HyperV drivers
 
 # Floppy drives
 #device      fdc
@@ -428,7 +455,6 @@ device      netmap                          # netmap(4) support
 # Additonal devices
 device      crypto                          # core crypto support
 device      cryptodev                       # /dev/crypto for access to h/w
-device      aesni
 
 # zpty
 device      pty
