@@ -74,18 +74,10 @@ prepare_and_fetch_os_snapshot () {
 
 
 determine_boot_disk_device () {
-    for _dsk in $(geom disk list 2>/dev/null | egrep -i "Geom name:" 2>/dev/null | sed 's/^.*\: //' 2>/dev/null); do
-        zpool status "${ZPOOL}" 2>/dev/null | \
-            egrep -i "${_dsk}p[0-9]+" >/dev/null 2>&1 && \
+    for _dsk in $(gpart list -a 2>/dev/null | egrep -i "Geom name:" 2>/dev/null | sed 's/^.*\: //' 2>/dev/null); do
+        zpool status "${ZPOOL}" 2>/dev/null | egrep -i "${_dsk}p[0-9]+" >/dev/null 2>&1 && \
             printf '%s\n' "${_dsk}" && \
             return 0
-
-        # Pick first disk listed:
-        _first="$(echo "${_dsk}" | head -n1 2>/dev/null)"
-        if [ -n "${_first}" ]; then
-            printf '%s\n' "${_first}" && \
-            return 0
-        fi
     done
 
     return 1
