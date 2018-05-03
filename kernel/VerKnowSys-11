@@ -26,12 +26,15 @@ options     SCTP                            # Stream Control Transmission Protoc
 #options     UFS_EXTATTR_AUTOSTART
 # options    QUOTA                          # Enable disk quotas for UFS
 options     MD_ROOT                         # MD is a potential root device
-options     MAXFILES=32768
-options     SHMMAXPGS=65536                 # PostgreSQL
-options     SEMMNI=40
-options     SEMMNS=240
-options     SEMUME=40
-options     SEMMNU=120
+options     SYSVSHM                         # SYSV-style shared memory
+options     SYSVMSG                         # SYSV-style message queues
+options     SYSVSEM                         # SYSV-style semaphores
+
+options     SHMMAXPGS=262144                # PostgreSQL
+options     SEMMNI=256
+options     SEMMNS=512
+options     SEMMNU=256
+options     SEMUME=256
 options     DUMMYNET
 options     KTR
 
