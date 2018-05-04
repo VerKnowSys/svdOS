@@ -74,10 +74,18 @@ prepare_and_fetch_os_snapshot () {
 
 
 determine_boot_disk_device () {
+    # Regular disk - Native/ Vmware virtualisation defaults:
     for _dsk in $(gpart list -a 2>/dev/null | egrep -i "Geom name:" 2>/dev/null | sed 's/^.*\: //' 2>/dev/null); do
         zpool status "${ZPOOL}" 2>/dev/null | egrep -i "${_dsk}p[0-9]+" >/dev/null 2>&1 && \
             printf '%s\n' "${_dsk}" && \
             return 0
+
+        # gpt/diskN disk, match by label - DO hypervisor defaults:
+        for _dsk_label in $(gpart list "${_dsk}" 2>/dev/null | egrep -i "label:" 2>/dev/null | egrep -i "disk" | sed 's/^.*\: //' 2>/dev/null); do
+            zpool status "${ZPOOL}" 2>/dev/null | egrep -i "gpt/${_dsk_label}" >/dev/null 2>&1 && \
+                printf '%s\n' "${_dsk}" && \
+                return 0
+        done
     done
 
     return 1
