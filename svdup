@@ -138,6 +138,14 @@ configure_and_commit_boot_env () {
     cp -fv /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4"
     ln -fs /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4cat"
 
+    if [ -x "/usr/bin/rsync" ]; then
+        echo "svdUP: Installing Rsync to destination base system"
+        cp -fv /usr/bin/rsync "${DESTBASE}/usr/bin/rsync"
+    elif [ -x "/Software/Rsync/bin/rsync" ]; then
+        echo "svdUP: Installing Rsync to destination base system"
+        cp -fv /Software/Rsync/bin/rsync "${DESTBASE}/usr/bin/rsync"
+    fi
+
     echo "Making sure fstab has no build host mounts enabled"
     sed -i '' -e '/src/ d' "${DESTBASE}/etc/fstab"
     sed -i '' -e '/obj/ d' "${DESTBASE}/etc/fstab"
