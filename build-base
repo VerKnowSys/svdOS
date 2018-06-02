@@ -70,7 +70,18 @@ build_base () {
     test -n "${_default_boot_dev}" || exit 112
 
     case "${ARCH}" in
-        arm|arm64)
+        arm64)
+            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-RPI3" || exit 110
+            ${INSTALL_BIN} -v \
+                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-RPI3" \
+                "sys/${ARCH}/conf/${SYSTEM_KERNEL}" || exit 111
+
+            # NOTE: aarch64-binutils is required, so we have to switch linkers for arm64 by doing equivalent of:
+            # pkg install aarch64-binutils
+            # ln /usr/local/bin/aarch64-freebsd-ld /usr/bin/ld
+            ;;
+
+        arm)
             test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-RPI2" || exit 110
             ${INSTALL_BIN} -v \
                 "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-RPI2" \
@@ -109,8 +120,8 @@ build_base () {
         ${MAKE_BIN} \
             -s buildworld \
             -j "${PARALLEL_JOBS}" \
-            TARGET="${ARCH}" \
-            TARGET_ARCH="${ARCH}" \
+            TARGET="${TARGET:-${ARCH}}" \
+            TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
             DESTDIR="${DESTBASE}" \
             MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
@@ -124,8 +135,8 @@ build_base () {
     ${MAKE_BIN} \
         -s buildkernel \
         -j "${PARALLEL_JOBS}" \
-        TARGET="${ARCH}" \
-        TARGET_ARCH="${ARCH}" \
+        TARGET="${TARGET:-${ARCH}}" \
+        TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
         DESTDIR="${DESTBASE}" \
         MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
         FORMATS="${DOC_FORMATS}" \
@@ -137,8 +148,8 @@ build_base () {
     permnote "Installing kernel ${SYSTEM_KERNEL}"
     ${MAKE_BIN} \
         -s installkernel \
-        TARGET="${ARCH}" \
-        TARGET_ARCH="${ARCH}" \
+        TARGET="${TARGET:-${ARCH}}" \
+        TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
         DESTDIR="${DESTBASE}" \
         MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
         FORMATS="${DOC_FORMATS}" \
@@ -156,8 +167,8 @@ build_base () {
         permnote "Installing world to: ${DESTBASE}"
         ${MAKE_BIN} \
             -s installworld \
-            TARGET="${ARCH}" \
-            TARGET_ARCH="${ARCH}" \
+            TARGET="${TARGET:-${ARCH}}" \
+            TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
             DESTDIR="${DESTBASE}" \
             MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
@@ -175,8 +186,8 @@ build_base () {
 
         permnote "Cleaning old dirs and files under: ${DESTBASE}"
         ${YES_BIN} | ${MAKE_BIN} delete-old delete-old-libs \
-            TARGET="${ARCH}" \
-            TARGET_ARCH="${ARCH}" \
+            TARGET="${TARGET:-${ARCH}}" \
+            TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
             DESTDIR="${DESTBASE}" \
             MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \

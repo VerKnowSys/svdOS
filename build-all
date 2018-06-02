@@ -53,6 +53,12 @@ case ${ARCH} in
         sed -i '' -e 's/^CFLAGS.*$/CFLAGS=-O2 -pipe -fno-omit-frame-pointer -fno-strict-aliasing -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
         ;;
 
+    arm64)
+        sed -i '' -e 's/^COPTFLAGS.*$/COPTFLAGS=-O2 -pipe -fno-strict-aliasing -mcpu=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
+        sed -i '' -e 's/^CPUTYPE.*$/CPUTYPE?=cortex-a53/' etc/make.conf
+        sed -i '' -e 's/^CFLAGS.*$/CFLAGS=-O2 -pipe -fno-omit-frame-pointer -fno-strict-aliasing -mcpu=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard/' etc/make.conf
+        ;;
+
     amd64|x86_64)
         ;;
 
