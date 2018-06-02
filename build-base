@@ -79,6 +79,16 @@ build_base () {
             # NOTE: aarch64-binutils is required, so we have to switch linkers for arm64 by doing equivalent of:
             # pkg install aarch64-binutils
             # ln /usr/local/bin/aarch64-freebsd-ld /usr/bin/ld
+            #
+            fetch -o /var/tmp/ http://software.verknowsys.com/binary/FreeBSD-11.2-arm64/aarch64-unknown-freebsd11.2.tar.bz2
+            tar xf /var/tmp/aarch64-unknown-freebsd11.2.tar.bz2 --directory /usr
+            rm -rf /usr/local
+            mkdir -p /usr/local
+            ln -s /usr/aarch64-unknown-freebsd11.2 /usr/local/aarch64-unknown-freebsd11.2
+            ln -s /usr/aarch64-unknown-freebsd11.2/bin /usr/local/bin
+            test -f /usr/bin/ld.original || mv /usr/bin/ld /usr/bin/ld.original
+            rm -f /usr/bin/ld
+            ln /usr/local/bin/aarch64-unknown-freebsd11.2-ld /usr/bin/ld
             ;;
 
         arm)
@@ -220,6 +230,17 @@ build_base () {
 
     cd /
     sync
+
+    # bring back non arm64 linker back!
+    case "${ARCH}" in
+        arm64)
+            if [ -f "/usr/bin/ld.original" ]; then
+                rm -rf /usr/aarch64-unknown-freebsd11.2
+                rm -f /usr/bin/ld
+                cp -f /usr/bin/ld.original /usr/bin/ld
+            fi
+            ;;
+    esac
     # ${GPART_BIN} bootcode \
     #     -b "${DESTBASE}/boot/pmbr" \
     #     -p "${DESTBASE}/boot/gptzfsboot" \
