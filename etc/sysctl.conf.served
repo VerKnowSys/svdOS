@@ -1,9 +1,9 @@
 # Enable all hardening features by default:
-hardening.pax.aslr.status=3
-hardening.pax.pageexec.status=3
-hardening.pax.mprotect.status=3
-hardening.pax.segvguard.status=3
-hardening.pax.disallow_map32bit.status=3
+hardening.pax.aslr.status=2
+hardening.pax.pageexec.status=2
+hardening.pax.mprotect.status=2
+hardening.pax.segvguard.status=2
+hardening.pax.disallow_map32bit.status=2
 
 # Security defaults:
 security.bsd.see_other_uids=0
