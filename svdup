@@ -30,7 +30,7 @@ get_the_current () {
     done
     mkdir -p "${SHARED_DIR}/cache" "${DESTBASE}" >/dev/null 2>&1
     ln -fs "${SHARED_DIR}/cache" "${CACHE_DIR}"
-    fetch "${SOURCE}/current" -o "${CACHE_DIR}/current" \
+    fetch "${SOURCE}/current-stable" -o "${CACHE_DIR}/current" \
         >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
         cat "${CACHE_DIR}/current" 2>/dev/null && \
         return 0
