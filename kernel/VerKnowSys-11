@@ -39,8 +39,8 @@ options     SEMMNS=512
 options     SEMMNU=256
 options     SEMUME=256
 
-# NOTE: Still too prone to cause KP on 11.1 x86_64:
-# options     VIMAGE
+# Enable virtual network for jails:
+options     VIMAGE
 
 #
 # ABI Emulation
