@@ -692,9 +692,6 @@ jail_start () {
         ${JEXEC_BIN} "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
             permnote "Jailed worker user ID: ${cyan}${EPAIR_NUMBER}"
 
-        # XXX: HACK: add JAIL_NAME to /etc/hosts
-        run "${JEXEC_BIN} ${JAIL_NAME} echo '${JAIL_ADDRESSES} ${JAIL_NAME}' >> /etc/hosts"
-
         # alow users creating / in their tree. why not.
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} 777 /tmp" && \
