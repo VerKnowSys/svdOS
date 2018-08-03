@@ -210,7 +210,7 @@ apply_attributes () {
         case "${attribute}" in
             key)
                 a_key="ssh-ed25519 ${value} ${JAIL_NAME}\n"
-                ${JEXEC_BIN} "${JAIL_NAME}" "${DEFAULT_SHELL}" -c "${MKDIR_BIN} -p /User/.ssh; printf '${a_key}' >> /User/.ssh/authorized_keys"
+                ${JEXEC_BIN} "${JAIL_NAME}" "${DEFAULT_SHELL}" -c "${MKDIR_BIN} -p /User/.ssh; printf \"%s\n\" '${a_key}' >> /User/.ssh/authorized_keys"
                 ${JEXEC_BIN} "${JAIL_NAME}" "${DEFAULT_SHELL}" -c "${CHOWN_BIN} -R ${DEFAULT_JAIL_USER} /User/.ssh"
                 ;;
 
