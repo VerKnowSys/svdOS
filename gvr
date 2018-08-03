@@ -456,8 +456,12 @@ ${JAIL_NAME} {
     else
         note "Found an origin snapshot of: ${cyan}${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}"
     fi
-    note "Cloning: ${cyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${green}from most recent snapshot: ${cyan}${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}"
-    run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+    {
+        note "Cloning: ${cyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${green}from most recent snapshot: ${cyan}${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}";
+        run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}";
+        run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Git@origin ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Git";
+        run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Zsh@origin ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Zsh";
+    }
 
     for dset in Software Services User Shared; do
         ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" >/dev/null 2>&1 || \
