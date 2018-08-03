@@ -10,6 +10,8 @@ GVR_VERSION="0.22.0"
 GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
+# XXX: hardcoded:
+JAIL_ROUTER_ADDRESS="100.64.1.1"
 BRIDGE_DEVICE="bridge0"
 EPAIR_DEVICE="epair"
 SERVED_REPO="/Projects/svdOS"
@@ -21,6 +23,7 @@ SH_BIN="/bin/sh"
 JOT_BIN="/usr/bin/jot"
 IFCONFIG_BIN="/sbin/ifconfig"
 JEXEC_BIN="/usr/sbin/jexec"
+ROUTE_BIN="/sbin/route"
 RCTL_BIN="/usr/bin/rctl"
 GMAKE_BIN="/Software/Make/bin/make"
 DEFAULT_ZPOOL="zroot"
@@ -105,7 +108,7 @@ if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
             note "ServeD stable already fetched."
         fi
 
-        zfs list "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}" || \
+        zfs list "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}" >/dev/null || \
             {
                 lz4cat "${JAIL_CACHE_DIR}/${CURRENT_VERSION}" 2>/dev/null | zfs receive -u "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}";
                 zfs snapshot "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}@origin";
@@ -394,22 +397,20 @@ jail_create () {
         #         warn "Failed to alias to IP: ${ip} on dev: ${EPAIR}"
         #     done
         # fi
-        run "${IFCONFIG_BIN} ${BRIDGE_DEVICE} || ${IFCONFIG_BIN} ${BRIDGE_DEVICE} create"
-        # && \
-        # run "${IFCONFIG_BIN} ${BRIDGE_DEVICE} | ${GREP_BIN} '${DEFAULT_INTERFACE}' 2>/dev/null || ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${DEFAULT_INTERFACE} stp ${DEFAULT_INTERFACE} sticky ${DEFAULT_INTERFACE}" && \
-        # run "${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${EPAIR} sticky ${EPAIR}" && \
+
         printf "
 ${JAIL_NAME} {
     # name = \"${JAIL_NAME}\";
-    # ip4.addr = ${JAIL_ADDRESSES};
-    # interface = ${EPAIR};
-
     exec.fib = ${DEFAULT_JAILS_FIB};
-    exec.prestart += \"${IFCONFIG_BIN} ${EPAIR} create; ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${EPAIR}a\";
-    exec.start = \"${SH_BIN} /etc/rc\";
-    exec.poststart += \"${IFCONFIG_BIN} ${EPAIR}b vnet ${EPAIR}; ${IFCONFIG_BIN} ${EPAIR}a up\";
+    exec.prestart += \"${IFCONFIG_BIN} ${EPAIR} create up; ${IFCONFIG_BIN} ${EPAIR}a up; ${IFCONFIG_BIN} ${BRIDGE_DEVICE} addm ${EPAIR}a up;\";
+    exec.start  = \"${IFCONFIG_BIN} lo0 127.0.0.1 up\";
+    exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b up\";
+    exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b inet ${JAIL_ADDRESSES} up\";
+    exec.start  += \"${ROUTE_BIN} add default ${JAIL_ROUTER_ADDRESS}\";
+    exec.start  += \"${SH_BIN} /etc/rc\";
     exec.stop = \"${SH_BIN} /etc/rc.shutdown\";
-    exec.poststop += \"${IFCONFIG_BIN} ${EPAIR}a destroy\";
+    exec.poststop  = \"${IFCONFIG_BIN} ${BRIDGE_DEVICE} deletem ${EPAIR}a\";
+    exec.poststop  += \"${IFCONFIG_BIN} ${EPAIR}a destroy\";
     exec.clean;
 
     host.hostname = \"${JAIL_NAME}\";
@@ -426,6 +427,7 @@ ${JAIL_NAME} {
 
     persist;
     vnet;
+    vnet.interface  = \"${EPAIR}b\";
 }
 " >> "${JAIL_CONF_FILE}"
     fi
