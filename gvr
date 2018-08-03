@@ -35,7 +35,7 @@ LOG="${LOGS_DIR}gvr.log"
 # if [ "${stored_version}" != "-" ]; then
 #     DEFAULT_VERSION="${stored_version}"
 # fi
-DEFAULT_JAIL_USER="www"
+DEFAULT_JAIL_USER="worker"
 DEFAULT_QUOTA_LIMIT="10G"
 DEFAULT_ROOT_QUOTA_LIMIT="2G"
 DEFAULT_SENTRY_LIMIT="128M"
