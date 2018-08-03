@@ -597,7 +597,7 @@ jail_status () {
     printf "Status: ${JAIL_STATUS}\n"
     echo "${JAIL_STATUS}" | ${GREP_BIN} '\*on\*' > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        JAIL_NUM_ID="$(${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}.home" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
+        JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
         debug "JAIL_NUM_ID: ${JAIL_NUM_ID}"
         printf "JID: ${green}${JAIL_NUM_ID}${reset}\n"
     fi
@@ -654,7 +654,7 @@ jail_start () {
     fi
     set_values "${GIVEN_NAME}"
 
-    ${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${GIVEN_NAME}.home" > /dev/null 2>&1
+    ${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${GIVEN_NAME}" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
         note "Jail with name: ${cyan}${GIVEN_NAME}${green} is already running"
         exit 0
@@ -684,17 +684,20 @@ jail_start () {
         # note "Launching Service Spawner daemon"
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${GVR_LOG} 2>&1
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
-        ${JEXEC_BIN} -U root "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
+        ${JEXEC_BIN} "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
             permnote "Jailed worker user ID: ${cyan}${EPAIR_NUMBER}"
 
-        # alow users creating / in their tree. why not.
-        run "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
-        run "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 777 /tmp" && \
-            debug "Permissions of jailed / set to 771, /tmp to 777"
-        # ${JEXEC_BIN} -U root ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${GVR_LOG} 2>&1
+        # XXX: HACK: add JAIL_NAME to /etc/hosts
+        run "${JEXEC_BIN} ${JAIL_NAME} echo '${JAIL_ADDRESSES} ${JAIL_NAME}' >> /etc/hosts"
 
-        # ${JEXEC_BIN} -U root ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${GVR_LOG} 2>&1
-        # ${JEXEC_BIN} -U root ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
+        # alow users creating / in their tree. why not.
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} 777 /tmp" && \
+            debug "Permissions of jailed / set to 771, /tmp to 777"
+        # ${JEXEC_BIN} ${JAIL_NAME} secadm -c /etc/secadm.rules set >> ${GVR_LOG} 2>&1
+
+        # ${JEXEC_BIN} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${GVR_LOG} 2>&1
+        # ${JEXEC_BIN} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         apply_attributes
 
         if [ -z "${JAIL_NUM_ID}" ]; then
@@ -707,15 +710,16 @@ jail_start () {
                 permnote "Filesystem jailed: ${cyan}${dset}"
         done
 
-        run "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}" && \
-        run "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} ${EPAIR_NUMBER} /Services /User /Software /Shared /SystemUsers"
-        run "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}" && \
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${EPAIR_NUMBER} /Services /User /Software /Shared /SystemUsers"
+        run "${JEXEC_BIN} ${JAIL_NAME} mount -a" && \
+            permnote "All mounted"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && \
+            permnote "Securelevel set to: ${cyan}${KERN_SECURELEVEL}"
+        # run "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c '${SOFIN_BIN} reload'" && \
+        run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
             permnote "Zfs datasets mounted"
-        run "${JEXEC_BIN} -U root ${JAIL_NAME} mount -a"
-        run "${JEXEC_BIN} -U root ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && \
-            note "Securelevel set to: ${cyan}${KERN_SECURELEVEL}"
-        run "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c '${SOFIN_BIN} reload'" && \
-            note "Reloaded shell environment. Marking jail running" && \
+        note "Reloaded shell environment. Marking jail running" && \
             mark_running
     else
         ${IFCONFIG_BIN} "${EPAIR}b" destroy 2>/dev/null
@@ -735,7 +739,7 @@ jail_stop () {
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    JAIL_NUM_ID="$(${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}.home" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
+    JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
     for dir in /dev; do
         ${MOUNT_BIN} >/dev/null 2>&1 | ${GREP_BIN} "${CELL}${dir}" >/dev/null 2>&1 && \
         run "${UMOUNT_BIN} -f ${CELL}${dir}" && \
