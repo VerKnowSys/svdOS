@@ -110,7 +110,6 @@ AllowTcpForwarding yes
 PrintMotd yes
 #PrintLastLog yes
 #TCPKeepAlive yes
-UseLogin yes
 #UsePrivilegeSeparation sandbox
 #PermitUserEnvironment no
 #Compression delayed
