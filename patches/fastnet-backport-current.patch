@@ -1,21 +1,3 @@
-From acbbc549618ac96dd2dd461429558f6cf135e31a Mon Sep 17 00:00:00 2001
-From: pkelsey <pkelsey@FreeBSD.org>
-Date: Mon, 26 Feb 2018 02:43:26 +0000
-Subject: [PATCH] Fix harmless locking bug in tfp_fastopen_check_cookie().
-
-The keylist lock was not being acquired early enough.  The only side
-effect of this bug is that the effective add time of a new key could
-be slightly later than it would have been otherwise, as seen by a TFO
-client.
-
-Reviewed by:    tuexen
-MFC after:  1 month
-Sponsored by:   Limelight Networks
-Differential Revision:  https://reviews.freebsd.org/D14046
----
- sys/netinet/tcp_fastopen.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
-
 diff --git a/sys/netinet/tcp_fastopen.c b/sys/netinet/tcp_fastopen.c
 index 561f127c07651..d0bed094ec12c 100644
 --- a/sys/netinet/tcp_fastopen.c
