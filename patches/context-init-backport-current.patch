@@ -1,9 +1,0 @@
---- sys/netinet/tcp_fastopen.c.orig 2018-08-03 13:57:17.027012000 +0200
-+++ sys/netinet/tcp_fastopen.c  2018-08-03 13:55:26.381642000 +0200
-@@ -209,6 +209,7 @@
-    rm_init(&V_tcp_fastopen_keylock, "tfo_keylock");
-    callout_init_rm(&V_tcp_fastopen_autokey_ctx.c,
-        &V_tcp_fastopen_keylock, 0);
-+   V_tcp_fastopen_autokey_ctx.v = curvnet;
-    V_tcp_fastopen_keys.newest = TCP_FASTOPEN_MAX_KEYS - 1;
- }
