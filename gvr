@@ -479,6 +479,10 @@ ${JAIL_NAME} {
     done
     run "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
     run "${ZFS_BIN} set mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL}"
+    {
+        run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Services/root/Git@origin ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}/Git";
+        run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Services/root/Zsh@origin ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}/Zsh";
+    }
 
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
