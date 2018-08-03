@@ -206,8 +206,8 @@ options     PAX_JAIL_SUPPORT                # Allow to override PAX settings per
 
 # Additional security options:
 options     DEADLKRES                       # Enable the deadlock resolver
-options     INVARIANTS                      # Enable calls of extra sanity checking
-options     INVARIANT_SUPPORT               # Extra sanity checks of internal structures,
+#options     INVARIANTS                      # Enable calls of extra sanity checking
+#options     INVARIANT_SUPPORT               # Extra sanity checks of internal structures,
                                             # required by INVARIANTS
 #options     PAX_INSECURE_MODE              # it's required if disabled INVARIANTS
 
