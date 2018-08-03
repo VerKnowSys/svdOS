@@ -19,6 +19,9 @@ DEFAULT_SOFIN_REPO="https://github.com/VerKnowSys/sofin.git"
 # IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 SH_BIN="/bin/sh"
 JOT_BIN="/usr/bin/jot"
+IFCONFIG_BIN="/sbin/ifconfig"
+JEXEC_BIN="/usr/sbin/jexec"
+RCTL_BIN="/usr/bin/rctl"
 GMAKE_BIN="/Software/Make/bin/make"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="11.2"
@@ -102,8 +105,11 @@ if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
             note "ServeD stable already fetched."
         fi
 
-        lz4cat "${JAIL_CACHE_DIR}/${CURRENT_VERSION}" 2>/dev/null | zfs receive -u "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}"
-        # zfs rename "${DEFAULT_ZPOOL}/${DEFAULT_JAIL_SYSTEM_PATH}@--head--" "origin"
+        zfs list "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}" || \
+            {
+                lz4cat "${JAIL_CACHE_DIR}/${CURRENT_VERSION}" 2>/dev/null | zfs receive -u "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}";
+                zfs snapshot "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}@origin";
+            }
     fi
 fi
 
@@ -439,7 +445,7 @@ ${JAIL_NAME} {
     fi
 
     run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}" && \
-    note "Cloned last jail system base: ${cyan}${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}${green} to: ${cyan}${CELL}"
+        permnote "Cloned last jail system base: ${cyan}${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}${green} to: ${cyan}${CELL}"
 
     mst_recent_soft="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/Software/root@[Pa-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
     ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}" > /dev/null 2>&1
@@ -466,6 +472,7 @@ ${JAIL_NAME} {
         note "Dataset configured: ${cyan}${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
     done
     run "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
+    run "${ZFS_BIN} set mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL}"
 
     note "Making required jail directories and user dir"
     ${MKDIR_BIN} -p "${JAIL_WEBSERVER_CONF_DIR}" \
@@ -476,6 +483,7 @@ ${JAIL_NAME} {
                     "${CELL}/dev" \
                     "${CELL}/var/log" \
                     "${CELL}/var/tmp" \
+                    "${CELL}/SystemUsers" \
                     "${CELL}/Software" \
                     "${CELL}/Services" \
                     "${CELL}/Shared" \
@@ -663,15 +671,15 @@ jail_start () {
 
     ${DEBUG_COMMAND} "${JAIL_BIN}" -c -J "${JAIL_ID_FILE}" -f "${JAIL_CONF_FILE}" >> "${GVR_LOG}" 2>> "${GVR_LOG}"
     if [ "$?" = "0" ]; then
-        JAIL_NUM_ID="$(${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}.home" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
-        note "Deployed jail: ${cyan}${JAIL_NAME} ${green}(JID: ${JAIL_NUM_ID})"
+        JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
+        permnote "Deployed jail: ${cyan}${JAIL_NAME} ${green}(JID: ${JAIL_NUM_ID})"
 
         printf "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         # note "Launching Service Spawner daemon"
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${IGNITER_INSTALL_BIN} >> ${GVR_LOG} 2>&1
         # ${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} daemon ${SERVICE_SPAWNER_BIN}
         ${JEXEC_BIN} -U root "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
-            note "Jailed worker user ID: ${cyan}${EPAIR_NUMBER}"
+            permnote "Jailed worker user ID: ${cyan}${EPAIR_NUMBER}"
 
         # alow users creating / in their tree. why not.
         run "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
@@ -690,21 +698,21 @@ jail_start () {
             run "${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set canmount=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
-                note "Filesystem jailed: ${cyan}${dset}"
+                permnote "Filesystem jailed: ${cyan}${dset}"
         done
 
         run "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}" && \
+        run "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} ${EPAIR_NUMBER} /Services /User /Software /Shared /SystemUsers"
         run "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
-            note "Zfs datasets mounted"
-        run "${JEXEC_BIN} -U root ${JAIL_NAME} ${CHOWN_BIN} ${EPAIR_NUMBER} /Services /User /Software /Shared"
+            permnote "Zfs datasets mounted"
+        run "${JEXEC_BIN} -U root ${JAIL_NAME} mount -a"
         run "${JEXEC_BIN} -U root ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && \
             note "Securelevel set to: ${cyan}${KERN_SECURELEVEL}"
         run "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c '${SOFIN_BIN} reload'" && \
             note "Reloaded shell environment. Marking jail running" && \
             mark_running
     else
-        ${IFCONFIG_BIN} "${EPAIR}" 2>/dev/null && \
-        ${IFCONFIG_BIN} "${EPAIR}" destroy 2>/dev/null
+        ${IFCONFIG_BIN} "${EPAIR}b" destroy 2>/dev/null
         error "Jail launch failed. Look into log file: ${cyan}${GVR_LOG}"
     fi
 }
