@@ -64,8 +64,26 @@ build_base () {
 
     echo "Applying linker patches"
     patch -p1 < "${SERVED_REPO}/patches/ld.lld-ignore-R_X86_64_RELATIVE.patch"
-    patch -p1 < "${SERVED_REPO}/patches/fastnet-backport-current.patch"
-    patch -p0 < "${SERVED_REPO}/patches/context-init-backport-current.patch"
+
+    echo "Preconfiguring git"
+    git config --global user.email "svd@verknowsys.com"
+    git config --global user.name "ServeD"
+
+    echo "Fetching HBSD current tree"
+    git remote add current "ssh://${WORKSTATION_USER}@${HOSTADDR_GW}:${WORKSTATION_REPO_CACHED}"
+    git fetch --jobs 6 current
+
+    echo "Cherry picking patches from HBSD current"
+
+    # Fix harmless locking bug in tfp_fastopen_check_cookie():
+    git cherry-pick --ff acbbc549618ac96dd2dd461429558f6cf135e31a || exit 110
+
+    # Fix VIMAGE-related bugs in TFO. The autokey callout vnet context was:
+    git cherry-pick --ff 6c91473476ff712b71b6a9b25afa162fa15a5d23 || exit 111
+
+    # ctf dwarf: don't report "no dwarf entry" as if it were an error:
+    git cherry-pick --ff 3895dd38ecf4dc422d3e1656844a051e0aa5d06c || exit 112
+
 
     _new_boot_env="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
     _default_boot_dev="$(boot_device_name)"
