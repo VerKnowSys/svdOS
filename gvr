@@ -407,7 +407,8 @@ ${JAIL_NAME} {
     exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b up\";
     exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b inet ${JAIL_ADDRESSES} up\";
     exec.start  += \"${ROUTE_BIN} add default ${JAIL_ROUTER_ADDRESS}\";
-    exec.start  += \"${SH_BIN} /etc/rc\";
+    exec.start  += \"service sshd restart; service cron restart\";
+    # NOTE: not actually required if we don't want any additional subsystems: exec.start  += \"${SH_BIN} /etc/rc\";
     exec.stop = \"${SH_BIN} /etc/rc.shutdown\";
     exec.poststop  = \"${IFCONFIG_BIN} ${BRIDGE_DEVICE} deletem ${EPAIR}a\";
     exec.poststop  += \"${IFCONFIG_BIN} ${EPAIR}a destroy\";
@@ -709,7 +710,7 @@ jail_start () {
             run "${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set canmount=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
-                permnote "Filesystem jailed: ${cyan}${dset}"
+                note "Filesystem jailed: ${cyan}${dset}"
         done
 
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}" && \
