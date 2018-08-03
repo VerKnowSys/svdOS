@@ -510,6 +510,7 @@ ${JAIL_NAME} {
 
     run "${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc" && \
     run "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.home:\" ${CELL}/etc/rc.conf" && \
+    run "${RM_BIN} -f ${CELL}/etc/rc.conf.local" && \
     run "${SED_BIN} -i '' -e \"s:__HOST_IP:${JAIL_ROUTER_ADDRESS}:\" ${CELL}/etc/resolv.conf" && \
         note "Built initial jail environment"
 
