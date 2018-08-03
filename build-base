@@ -64,6 +64,8 @@ build_base () {
 
     echo "Applying linker patches"
     patch -p1 < "${SERVED_REPO}/patches/ld.lld-ignore-R_X86_64_RELATIVE.patch"
+    patch -p1 < "${SERVED_REPO}/patches/fastnet-backport-current.patch"
+    patch -p1 < "${SERVED_REPO}/patches/context-init-backport-current.patch"
 
     _new_boot_env="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
     _default_boot_dev="$(boot_device_name)"

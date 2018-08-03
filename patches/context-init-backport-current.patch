@@ -1,0 +1,53 @@
+From 6c91473476ff712b71b6a9b25afa162fa15a5d23 Mon Sep 17 00:00:00 2001
+From: pkelsey <pkelsey@FreeBSD.org>
+Date: Fri, 3 Feb 2017 17:02:57 +0000
+Subject: [PATCH] Fix VIMAGE-related bugs in TFO.  The autokey callout vnet
+ context was not being initialized, and the per-vnet fastopen context was only
+ being initialized for the default vnet.
+
+PR:     216613
+Reported by:    Alex Deiter <alex dot deiter at gmail dot com>
+MFC after:  1 week
+---
+ sys/netinet/tcp_fastopen.c | 1 +
+ sys/netinet/tcp_subr.c     | 8 ++++----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/sys/netinet/tcp_fastopen.c b/sys/netinet/tcp_fastopen.c
+index e2b3b8637f602..561f127c07651 100644
+--- a/sys/netinet/tcp_fastopen.c
++++ b/sys/netinet/tcp_fastopen.c
+@@ -209,6 +209,7 @@ tcp_fastopen_init(void)
+    rm_init(&V_tcp_fastopen_keylock, "tfo_keylock");
+    callout_init_rm(&V_tcp_fastopen_autokey_ctx.c,
+        &V_tcp_fastopen_keylock, 0);
++   V_tcp_fastopen_autokey_ctx.v = curvnet;
+    V_tcp_fastopen_keys.newest = TCP_FASTOPEN_MAX_KEYS - 1;
+ }
+
+diff --git a/sys/netinet/tcp_subr.c b/sys/netinet/tcp_subr.c
+index 80d3b7909aab2..5e86ed537190c 100644
+--- a/sys/netinet/tcp_subr.c
++++ b/sys/netinet/tcp_subr.c
+@@ -679,6 +679,10 @@ tcp_init(void)
+    V_sack_hole_zone = uma_zcreate("sackhole", sizeof(struct sackhole),
+        NULL, NULL, NULL, NULL, UMA_ALIGN_PTR, 0);
+
++#ifdef TCP_RFC7413
++   tcp_fastopen_init();
++#endif
++
+    /* Skip initialization of globals for non-default instances. */
+    if (!IS_DEFAULT_VNET(curvnet))
+        return;
+@@ -732,10 +736,6 @@ tcp_init(void)
+ #ifdef TCPPCAP
+    tcp_pcap_init();
+ #endif
+-
+-#ifdef TCP_RFC7413
+-   tcp_fastopen_init();
+-#endif
+ }
+
+ #ifdef VIMAGE
