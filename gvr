@@ -98,7 +98,7 @@ if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
     SOURCE="http://software.verknowsys.com/binary/ServeD"
     JAIL_CACHE_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/Cache"
     mkdir -p "${JAIL_CACHE_DIR}"
-    fetch "${SOURCE}/current-stable" -o "${JAIL_CACHE_DIR}/current-stable"
+    fetch "${SOURCE}/current-stable" -o "${JAIL_CACHE_DIR}/current-stable" >/dev/null 2>&1
     CURRENT_VERSION="$(cat "${JAIL_CACHE_DIR}/current-stable" 2>/dev/null)"
     if [ -n "${CURRENT_VERSION}" ]; then
         if [ ! -f "${JAIL_CACHE_DIR}/${CURRENT_VERSION}" ]; then
@@ -113,6 +113,8 @@ if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
                 lz4cat "${JAIL_CACHE_DIR}/${CURRENT_VERSION}" 2>/dev/null | zfs receive -u "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}";
                 zfs snapshot "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}@origin";
             }
+    else
+        error "Failed to fetch file with current stable. Network issues?"
     fi
 fi
 
@@ -607,7 +609,7 @@ jail_status () {
         debug "JAIL_NUM_ID: ${JAIL_NUM_ID}"
         printf "JID: ${green}${JAIL_NUM_ID}${reset}\n"
     fi
-    EPAIR="${EPAIR_DEVICE}$(cat ${SENTRY}/jail.vlan.number)"
+    EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/jail.vlan.number" 2>/dev/null)"
     printf "Name: ${green}${JAIL_NAME}${reset}\n"
     printf "IPv4s: ${green}${JAIL_IPS}${reset}\n"
     printf "Interface: ${green}${EPAIR}${reset}\n"
@@ -742,7 +744,7 @@ jail_stop () {
         error "No jail to stop"
     fi
     SENTRY="${DEFAULT_SENTRY_LOCATION}/${GIVEN_NAME}"
-    EPAIR="${EPAIR_DEVICE}$(cat ${SENTRY}/jail.vlan.number)"
+    EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/jail.vlan.number" 2>/dev/null)"
     try "${IFCONFIG_BIN} ${EPAIR}a down; ${IFCONFIG_BIN} ${EPAIR}a destroy"
 
     set_values "${GIVEN_NAME}"
