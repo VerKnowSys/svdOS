@@ -750,9 +750,8 @@ jail_stop () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
     JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} -F "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
-    for dir in /dev; do
-        ${MOUNT_BIN} >/dev/null 2>&1 | ${GREP_BIN} "${CELL}${dir}" >/dev/null 2>&1 && \
-        run "${UMOUNT_BIN} -f ${CELL}${dir}" && \
+    for dir in /dev /tmp; do
+        try "${UMOUNT_BIN} -f ${CELL}${dir}" && \
             note "Unmounted: ${cyan}${dir}"
     done
     for dset in User Services Software; do
