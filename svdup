@@ -4,10 +4,11 @@ PICKED_VERSION="${1:-current-stable}"
 
 
 # Literals:
-CACHE_DIR="/var/.cache"
+ZPOOL="${ZPOOL:-zroot}"
 SOFTWARE_DIR="/Software"
 SERVICES_DIR="/Services"
 SHARED_DIR="/Shared"
+CACHE_DIR="${SHARED_DIR}/Cache"
 SOURCE="http://software.verknowsys.com/binary/ServeD"
 PATH="/Software/Git/exports:/Software/Zsh/exports:/bin:/usr/bin:/sbin:/usr/sbin"
 HOME_DIR="/User"
@@ -30,12 +31,14 @@ get_the_current () {
     for _mnt in $(zfs mount 2>/dev/null | grep ROOT 2>/dev/null | cut -f1 -d' ' 2>/dev/null); do
         zfs set readonly=off "${_mnt}" >> "${LOG_FILE}" 2>> "${LOG_FILE}"
     done
-    mkdir -p "${SHARED_DIR}/cache" "${DESTBASE}" >/dev/null 2>&1
-    ln -fs "${SHARED_DIR}/cache" "${CACHE_DIR}"
-    fetch "${SOURCE}/${PICKED_VERSION}" -o "${CACHE_DIR}/current" \
-        >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
-        cat "${CACHE_DIR}/current" 2>/dev/null && \
-        return 0
+    zfs list "${ZPOOL}${SHARED_DIR}" || \
+    {
+        zfs create -o mountpoint=none "${ZPOOL}${SHARED_DIR}";
+    }
+    mkdir -p "${SHARED_DIR}/Cache" "${DESTBASE}" >/dev/null 2>&1
+    fetch "${SOURCE}/${PICKED_VERSION}" -o "${CACHE_DIR}/current-version-snapshot" >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
+        cat "${CACHE_DIR}/current-version-snapshot" 2>/dev/null && \
+            return 0
     return 1
 }
 
@@ -338,7 +341,6 @@ fi
 
 NEW_BOOT_ENV="${MOST_RECENT%%.zfsx}"
 DESTBASE="${SHARED_DIR}/${NEW_BOOT_ENV}"
-ZPOOL="${ZPOOL:-zroot}"
 
 export PATH MOST_RECENT ZPOOL DESTBASE NEW_BOOT_ENV
 
