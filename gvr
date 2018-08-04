@@ -636,6 +636,9 @@ jail_status () {
 
 
 jail_list () {
+    if [ ! -d "${DEFAULT_CELLS_LOCATION}" ]; then
+        mkdir -p "${DEFAULT_CELLS_LOCATION}"
+    fi
     cd ${DEFAULT_CELLS_LOCATION}
     for cell in $(${LS_BIN} 2>/dev/null); do
         cellname="$(printf "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}' 2>/dev/null)" # first 29 chars visible in jls output
