@@ -62,9 +62,6 @@ build_base () {
     test -n "${ARCH}" || exit 108
     test -n "${SYSTEM_TYPE}" || exit 109
 
-    echo "Applying linker patches"
-    patch -p1 < "${SERVED_REPO}/patches/ld.lld-ignore-R_X86_64_RELATIVE.patch"
-
     echo "Preconfiguring git"
     git config --global user.email "svd@verknowsys.com"
     git config --global user.name "ServeD"
@@ -84,6 +81,8 @@ build_base () {
     # ctf dwarf: don't report "no dwarf entry" as if it were an error:
     git cherry-pick --ff 3895dd38ecf4dc422d3e1656844a051e0aa5d06c || exit 112
 
+    echo "Applying linker patches"
+    patch -p1 < "${SERVED_REPO}/patches/ld.lld-ignore-R_X86_64_RELATIVE.patch"
 
     _new_boot_env="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
     _default_boot_dev="$(boot_device_name)"
@@ -287,7 +286,7 @@ build_base () {
         "${NEW_BOOT_ORIGIN_FILE}" \
         "${DESTINATION}" && \
         permnote "Uploaded release snapshot file: ${NEW_BOOT_ORIGIN_FILE} to: ${DESTINATION}." && \
-        ${SSH_BIN} ${DEST_ACCOUNT} "echo ${NEW_BOOT_ORIGIN_FILE##*/} > ${DEST_PATH}/current" && \
+        ${SSH_BIN} "${DEST_ACCOUNT}" "echo ${NEW_BOOT_ORIGIN_FILE##*/} > ${DEST_PATH}/current" && \
         permnote "Build-Base is now complete." && \
         return 0
 
