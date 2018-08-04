@@ -611,25 +611,25 @@ jail_status () {
     if [ "$?" = "0" ]; then
         JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
         debug "JAIL_NUM_ID: ${JAIL_NUM_ID}"
-        printf "JID: ${ColorGreen}${JAIL_NUM_ID}${ColorReset}\n"
+        printf "%b\n" "${ColorGreen}JID: ${ColorCyan}${JAIL_NUM_ID}${ColorReset}"
     fi
     EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/jail.vlan.number" 2>/dev/null)"
-    printf "Name: ${ColorGreen}${JAIL_NAME}${ColorReset}\n"
-    printf "IPv4s: ${ColorGreen}${JAIL_IPS}${ColorReset}\n"
-    printf "Interface: ${ColorGreen}${EPAIR}${ColorReset}\n"
-    printf "Hostnames: ${ColorGreen}${HOSTNAMES}${ColorReset}\n"
-    printf "OS version: ${ColorGreen}${JAIL_VERSION}${ColorReset}\n\n"
+    printf "%b\n" "${ColorGreen}Name: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+    printf "%b\n" "${ColorGreen}IPv4s: ${ColorCyan}${JAIL_IPS}${ColorReset}"
+    printf "%b\n" "${ColorGreen}Interface: ${ColorCyan}${EPAIR}${ColorReset}"
+    printf "%b\n" "${ColorGreen}Hostnames: ${ColorCyan}${HOSTNAMES}${ColorReset}"
+    printf "%b\n\n" "${ColorGreen}OS version: ${ColorCyan}${JAIL_VERSION}${ColorReset}"
     if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
-        printf "Overriden attributes:\n"
+        printf "%b\n" "${ColorGreen}Overriden attributes:"
         for attr in $(${FIND_BIN} "${JAIL_ATTRIBUTES_DIR}" -type f 2>/dev/null); do
-            printf "${ColorCyan}${attr##*/}: $(${CAT_BIN} "${attr}" 2>/dev/null)${ColorReset}\n"
+            printf "%b\n" "${ColorCyan}${attr##*/}: $(${CAT_BIN} "${attr}" 2>/dev/null)"
         done
         printf "\n"
     fi
-    printf "Live attributes:\n${ColorCyan}$(${RCTL_BIN} -h "jail:${JAIL_NAME}" 2>/dev/null | ${SED_BIN} 's/jail:n1://g' 2>/dev/null | ${SED_BIN} 's/:deny=/: /g' 2>/dev/null)${ColorReset}\n"
+    printf "%b\n" "${ColorGreen}Live attributes:\n${ColorCyan}$(${RCTL_BIN} -h "jail:${JAIL_NAME}" 2>/dev/null | ${SED_BIN} 's/jail:n1://g' 2>/dev/null | ${SED_BIN} 's/:deny=/: /g' 2>/dev/null)${ColorReset}"
     case ${VERBOSE} in
         v|-v|-verbose|verbose|more)
-            printf "\nFull configuration:\n%s\n" "${ColorCyan}$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)"
+            printf "\nFull configuration:\n%b\n" "${ColorCyan}$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)"
             ;;
     esac
 }
@@ -641,7 +641,7 @@ jail_list () {
     fi
     cd ${DEFAULT_CELLS_LOCATION}
     for cell in $(${LS_BIN} 2>/dev/null); do
-        cellname="$(printf "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}' 2>/dev/null)" # first 29 chars visible in jls output
+        cellname="$(printf "%s" "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}' 2>/dev/null)" # first 29 chars visible in jls output
         printf "%s" "${cell}"
         if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
             JAIL_IPS="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -e 's/,$//' 2>/dev/null)"
@@ -745,7 +745,7 @@ jail_stop () {
     JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} -F "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
     for dir in /dev /tmp; do
         try "${UMOUNT_BIN} -f ${CELL}${dir}" && \
-            printf "%b\n" "${ColorGreen}Unmounted: ${ColorCyan}${dir}"
+            debug "Unmounted: $(distd "${dir}")"
     done
     for dset in User Services Software; do
         if [ ! -z "${JAIL_NUM_ID}" ]; then
@@ -762,7 +762,7 @@ jail_stop () {
     printf "%s\n" "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
     run "${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}" && \
-        printf "%b\n" "${ColorGreen}Removed jail running indicator: ${ColorCyan}${SENTRY}/${JAIL_RUNNING_INDICATOR}"
+        debug "Removed jail running indicator: $(distd "${SENTRY}/${JAIL_RUNNING_INDICATOR}")"
 }
 
 
@@ -957,7 +957,7 @@ case $1 in
                 printf "%b\n" "${ColorGreen}Initializing boot of jail: ${ColorCyan}${jail}"
                 nohup "${0}" start "${jail}" > /dev/null 2>&1 &
             else
-                warn "Boot skipped: ${ColorCyan}${jail}"
+                warn "Boot skipped for: $(distw "${jail}")"
             fi
         done
         ;;
