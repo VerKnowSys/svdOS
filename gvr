@@ -970,24 +970,24 @@ case $1 in
 
     *)
         CMD="${GVR_SCRIPT_NAME}"
-        note "Usage:"
-        note "  ${CMD} command arg1 arg2 [...]"
-        note
-        note "List of commands:"
-        note "  ${cyan}ver${reset}: ${green}prints Governor and svdOS versions${reset}"
-        note "  ${cyan}boot${reset}: ${green}launches all previously running jails${reset}"
-        note "  ${cyan}create${reset}: ${green}creates new jail${reset}"
-        note "  ${cyan}list${reset} | ${cyan}lst${reset} | ${cyan}l${reset}: ${green}lists created jails${reset}"
-        note "  ${cyan}set${reset}: ${green}set attributes for jails${reset}"
-        note "  ${cyan}attributes${reset} | ${cyan}attrs${reset}: ${green}shows attributes list modifiable by '${CMD} set …' ${reset}"
-        note "  ${cyan}login${reset}: ${green}logins to jail${reset}"
-        note "  ${cyan}start${reset}: ${green}starts created, non running jail${reset}"
-        note "  ${cyan}stop${reset}: ${green}stops running jail${reset}"
-        note "  ${cyan}restart${reset}: ${green}restarts a jail${reset}"
-        note "  ${cyan}status${reset}: ${green}shows detailed configuration of a jail${reset}"
-        note "  ${cyan}destroy${reset}: ${green}destroys a jail${reset}"
-        note
-        note "Run '${CMD} [command]' without arguments to see detailed help about command params."
+        permnote "Usage:"
+        permnote "  ${CMD} command arg1 arg2 [...]"
+        permnote
+        permnote "List of commands:"
+        permnote "  ${cyan}ver${reset}: ${green}prints Governor and svdOS versions${reset}"
+        permnote "  ${cyan}boot${reset}: ${green}launches all previously running jails${reset}"
+        permnote "  ${cyan}create${reset}: ${green}creates new jail${reset}"
+        permnote "  ${cyan}list${reset} | ${cyan}lst${reset} | ${cyan}l${reset}: ${green}lists created jails${reset}"
+        permnote "  ${cyan}set${reset}: ${green}set attributes for jails${reset}"
+        permnote "  ${cyan}attributes${reset} | ${cyan}attrs${reset}: ${green}shows attributes list modifiable by '${CMD} set …' ${reset}"
+        permnote "  ${cyan}login${reset}: ${green}logins to jail${reset}"
+        permnote "  ${cyan}start${reset}: ${green}starts created, non running jail${reset}"
+        permnote "  ${cyan}stop${reset}: ${green}stops running jail${reset}"
+        permnote "  ${cyan}restart${reset}: ${green}restarts a jail${reset}"
+        permnote "  ${cyan}status${reset}: ${green}shows detailed configuration of a jail${reset}"
+        permnote "  ${cyan}destroy${reset}: ${green}destroys a jail${reset}"
+        permnote
+        permnote "Run '${CMD} [command]' without arguments to see detailed help about command params."
         ;;
 esac
 
