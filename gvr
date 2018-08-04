@@ -625,8 +625,7 @@ jail_status () {
     printf "Live attributes:\n${cyan}$(${RCTL_BIN} -h "jail:${JAIL_NAME}" 2>/dev/null | ${SED_BIN} 's/jail:n1://g' 2>/dev/null | ${SED_BIN} 's/:deny=/: /g' 2>/dev/null)${reset}\n"
     case ${VERBOSE} in
         v|-v|-verbose|verbose|more)
-            printf "\nFull configuration:"
-            printf "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)\n"
+            printf "\nFull configuration:\n%s\n" "${cyan}$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)"
             ;;
     esac
 }
@@ -636,11 +635,11 @@ jail_list () {
     cd ${DEFAULT_CELLS_LOCATION}
     for cell in $(${LS_BIN} 2>/dev/null); do
         cellname="$(printf "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}' 2>/dev/null)" # first 29 chars visible in jls output
-        printf "${cell}"
+        printf "%s" "${cell}"
         if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
             JAIL_IPS="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -e 's/,$//' 2>/dev/null)"
         fi
-        ${JLS_BIN} -v | ${EGREP_BIN} "${cellname} .*ACTIVE" >> ${GVR_LOG} 2>&1
+        ${JLS_BIN} -v | ${EGREP_BIN} "${cellname} .*ACTIVE" >> "${GVR_LOG}" 2>&1
         if [ "$?" = "0" ]; then
             printf " ${cyan}${JAIL_IPS}${reset} ${green}*on*${reset}"
         else
