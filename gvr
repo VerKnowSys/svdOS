@@ -311,35 +311,35 @@ check_jail_name () {
 attributes_show () {
     # NOTE: resources, taken from FreeBSD "rctl" man page:
     printf "%b\n" "${ColorGreen}Attributes with description:"
-    printf "   ${ColorCyan}pcpu${ColorGray}: ${ColorGreen}CPU percentage${ColorReset}\n"
-    printf "   ${ColorCyan}cputime${ColorGray}: ${ColorGreen}CPU time, in seconds${ColorReset}\n"
-    printf "   ${ColorCyan}datasize${ColorGray}: ${ColorGreen}data size, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}stacksize${ColorGray}: ${ColorGreen}stack size, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}coredumpsize${ColorGray}: ${ColorGreen}core dump size, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}memoryuse${ColorGray}: ${ColorGreen}resident set size, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}memorylocked${ColorGray}: ${ColorGreen}locked memory, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}maxproc${ColorGray}: ${ColorGreen}number of processes${ColorReset}\n"
-    printf "   ${ColorCyan}openfiles${ColorGray}: ${ColorGreen}file descriptor table size${ColorReset}\n"
-    printf "   ${ColorCyan}vmemoryuse${ColorGray}: ${ColorGreen}address space limit, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}pseudoterminals${ColorGray}: ${ColorGreen}number of PTYs${ColorReset}\n"
-    printf "   ${ColorCyan}swapuse${ColorGray}: ${ColorGreen}swap usage, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}nthr${ColorGray}: ${ColorGreen}number of threads${ColorReset}\n"
-    printf "   ${ColorCyan}msgqqueued${ColorGray}: ${ColorGreen}number of queued SysV messages${ColorReset}\n"
-    printf "   ${ColorCyan}msgqsize${ColorGray}: ${ColorGreen}SysV message queue size, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}nmsgq${ColorGray}: ${ColorGreen}number of SysV message queues${ColorReset}\n"
-    printf "   ${ColorCyan}nsem${ColorGray}: ${ColorGreen}number of SysV semaphores${ColorReset}\n"
-    printf "   ${ColorCyan}nsemop${ColorGray}: ${ColorGreen}number of SysV semaphores modified in a single semop(2) call${ColorReset}\n"
-    printf "   ${ColorCyan}nshm${ColorGray}: ${ColorGreen}number of SysV shared memory segments${ColorReset}\n"
-    printf "   ${ColorCyan}shmsize${ColorGray}: ${ColorGreen}SysV shared memory size, in bytes${ColorReset}\n"
-    printf "   ${ColorCyan}wallclock${ColorGray}: ${ColorGreen}wallclock time, in seconds${ColorReset}\n"
-    printf "   ${ColorCyan}quota${ColorGray}: ${ColorGreen}quota value for /Services, /User and /Software datasets (fmt: 1G 512M 128K). ${ColorReset}\n"
-    printf "   ${ColorCyan}quota-services${ColorGray}: ${ColorGreen}quota value for /Services dataset only (fmt: 1G 512M 128K). ${ColorReset}\n"
-    printf "   ${ColorCyan}quota-user${ColorGray}: ${ColorGreen}quota value for /User dataset only (fmt: 1G 512M 128K). ${ColorReset}\n"
-    printf "   ${ColorCyan}quota-software${ColorGray}: ${ColorGreen}quota value for /Software dataset only (fmt: 1G 512M 128K). ${ColorReset}\n"
-    printf "   ${ColorCyan}quota-root${ColorGray}: ${ColorGreen}quota value for jail base (/) system dataset only (fmt: 1G 512M 128K)${ColorReset}\n"
-    printf "   ${ColorCyan}key${ColorGray}: ${ColorGreen}SSH public key (Skip public key header and comment parts) to be added to authorized keys of jail${ColorReset}\n"
-    printf "   ${ColorCyan}ip${ColorGray}: ${ColorGreen}change jail IP addresses (comma separated) [requires jail restart]${ColorReset}\n"
-    printf "   ${ColorCyan}+ip${ColorGray}: ${ColorGreen}adds specified (comma separated) IP addresses to jail [requires jail restart]${ColorReset}\n"
+    printf "%b\n" "   ${ColorCyan}pcpu${ColorGray}: ${ColorGreen}CPU percentage${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}cputime${ColorGray}: ${ColorGreen}CPU time, in seconds${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}datasize${ColorGray}: ${ColorGreen}data size, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}stacksize${ColorGray}: ${ColorGreen}stack size, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}coredumpsize${ColorGray}: ${ColorGreen}core dump size, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}memoryuse${ColorGray}: ${ColorGreen}resident set size, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}memorylocked${ColorGray}: ${ColorGreen}locked memory, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}maxproc${ColorGray}: ${ColorGreen}number of processes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}openfiles${ColorGray}: ${ColorGreen}file descriptor table size${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}vmemoryuse${ColorGray}: ${ColorGreen}address space limit, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}pseudoterminals${ColorGray}: ${ColorGreen}number of PTYs${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}swapuse${ColorGray}: ${ColorGreen}swap usage, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}nthr${ColorGray}: ${ColorGreen}number of threads${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}msgqqueued${ColorGray}: ${ColorGreen}number of queued SysV messages${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}msgqsize${ColorGray}: ${ColorGreen}SysV message queue size, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}nmsgq${ColorGray}: ${ColorGreen}number of SysV message queues${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}nsem${ColorGray}: ${ColorGreen}number of SysV semaphores${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}nsemop${ColorGray}: ${ColorGreen}number of SysV semaphores modified in a single semop(2) call${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}nshm${ColorGray}: ${ColorGreen}number of SysV shared memory segments${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}shmsize${ColorGray}: ${ColorGreen}SysV shared memory size, in bytes${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}wallclock${ColorGray}: ${ColorGreen}wallclock time, in seconds${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}quota${ColorGray}: ${ColorGreen}quota value for /Services, /User and /Software datasets (fmt: 1G 512M 128K). ${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}quota-services${ColorGray}: ${ColorGreen}quota value for /Services dataset only (fmt: 1G 512M 128K). ${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}quota-user${ColorGray}: ${ColorGreen}quota value for /User dataset only (fmt: 1G 512M 128K). ${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}quota-software${ColorGray}: ${ColorGreen}quota value for /Software dataset only (fmt: 1G 512M 128K). ${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}quota-root${ColorGray}: ${ColorGreen}quota value for jail base (/) system dataset only (fmt: 1G 512M 128K)${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}key${ColorGray}: ${ColorGreen}SSH public key (Skip public key header and comment parts) to be added to authorized keys of jail${ColorRes}\n"
+    printf "%b\n" "   ${ColorCyan}ip${ColorGray}: ${ColorGreen}change jail IP addresses (comma separated) [requires jail restart]${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}+ip${ColorGray}: ${ColorGreen}adds specified (comma separated) IP addresses to jail [requires jail restart]${ColorReset}"
 }
 
 
@@ -710,15 +710,10 @@ jail_start () {
                 debug "Filesystem jailed: $(distd "${dset}")"
         done
 
-        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}" && \
-        run "${JEXEC_BIN} ${JAIL_NAME} mount -a" && \
-            debug "Mounted /dev and /tmp"
-        run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && \
-            debug "Securelevel: ${ColorCyan}${KERN_SECURELEVEL}"
-        # run "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c '${SOFIN_BIN} reload'" && \
-        run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
-            debug "Zfs datasets mounted"
-
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}"
+        run "${JEXEC_BIN} ${JAIL_NAME} mount -a" && debug "Mounted /dev and /tmp"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && debug "Zfs datasets mounted"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${ColorCyan}${KERN_SECURELEVEL}"
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /Services /User /Software /Shared"
 
         mark_running && \
