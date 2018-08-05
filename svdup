@@ -271,7 +271,7 @@ upgrade_projects_install_custom () {
     bin/upgrade
 
     cd /Projects
-    git clone https://github.com/VerKnowSys/beadm.git
+    git clone https://github.com/vermaden/beadm.git
     cd beadm
     git reset --hard
     git pull origin master
