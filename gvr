@@ -158,7 +158,7 @@ set_values () {
     if [ "$?" = "0" ]; then
         JAIL_STATUS="${ColorGreen}*on*${ColorGray} ${JAIL_STATUS_DETAIL}${ColorReset}"
     fi
-    debug "Got jail status: ${JAIL_STATUS}"
+    debug "Jail status: $(printf "%b\n" "${JAIL_STATUS}")"
     JAIL_VERSION="${DEFAULT_VERSION}"
     if [ -f "${JAIL_VERSION_FILE}" ]; then
         JAIL_VERSION="$(${CAT_BIN} "${JAIL_VERSION_FILE}" 2>/dev/null)"
@@ -685,7 +685,6 @@ jail_start () {
     if [ "$?" = "0" ]; then
         JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
 
-        GVR_START_TIMESTAMP_S
         GVR_AFTER_START_TIMESTAMP_S="$(${DATE_BIN} +%s 2>/dev/null)"
         GVR_ELAPSED_S="$(( "${GVR_AFTER_START_TIMESTAMP_S}" - "${GVR_START_TIMESTAMP_S}" ))"
 
@@ -711,7 +710,6 @@ jail_start () {
         done
 
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}" && \
-        run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${EPAIR_NUMBER} /Services /User /Software /Shared /SystemUsers"
         run "${JEXEC_BIN} ${JAIL_NAME} mount -a" && \
             debug "Mounted /dev and /tmp"
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && \
@@ -719,6 +717,9 @@ jail_start () {
         # run "${JEXEC_BIN} -U ${DEFAULT_JAIL_USER} ${JAIL_NAME} ${DEFAULT_SHELL} -c '${SOFIN_BIN} reload'" && \
         run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && \
             debug "Zfs datasets mounted"
+
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /Services /User /Software /Shared"
+
         mark_running && \
             debug "Jail is running"
     else
