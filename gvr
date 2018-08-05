@@ -446,7 +446,7 @@ ${JAIL_NAME} {
     ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
         LAST="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
-        printf "%b\n" "${ColorGreen}Last snapshot of: ${ColorCyan}${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH} ${ColorGreen}is: ${ColorCyan}${LAST}"
+        debug "Last snapshot of: $(distd "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}")is: $(distd "${LAST}")"
     fi
     if [ -z "${LAST}" ]; then
         LAST="origin"
