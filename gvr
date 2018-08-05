@@ -466,6 +466,7 @@ ${JAIL_NAME} {
         printf "%b\n" "${ColorGreen}Cloning: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${ColorGreen}from most recent snapshot: ${ColorCyan}${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}";
         debug "Installing default software"
+        run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Sofin@origin ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Sofin";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Git@origin ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Git";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Zsh@origin ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Zsh";
     }
