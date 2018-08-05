@@ -103,6 +103,7 @@ install_boot_environment () {
         echo "svdUP: Boot environment: ${NEW_BOOT_ENV} is already received! Redundant operation cancelled!"
         return 6
     else
+        echo "svdUP: Receiving new boot env: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
         lz4cat "${CACHE_DIR}/${MOST_RECENT}" 2>/dev/null | zfs receive -u "${ZPOOL}/ROOT/${NEW_BOOT_ENV}" && \
             echo "svdUP: Snapshot file: ${MOST_RECENT%%.zfsx} was received as new boot environment: ${ZPOOL}/ROOT/${NEW_BOOT_ENV}!" && \
             return 0
