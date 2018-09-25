@@ -272,7 +272,7 @@ upgrade_projects_install_custom () {
     # Create "root" Sofin dataset:
     zfs create \
         -o mountpoint="${SOFTWARE_DIR}/Sofin" \
-        "${ZPOOL}${SOFTWARE_DIR}/root/Sofin"
+        "${ZPOOL}${SOFTWARE_DIR}/root/Sofin" 2>/dev/null
 
     bin/upgrade
     zfs destroy "${ZPOOL}${SOFTWARE_DIR}/root/Sofin@origin" 2>/dev/null
