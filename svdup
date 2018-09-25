@@ -225,6 +225,11 @@ configure_base_zfs_datasets () {
                     zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Git"
                     lz4cat "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Git"
 
+                    # Create "root" Sofin dataset:
+                    zfs create \
+                        -o mountpoint="${SOFTWARE_DIR}/Sofin" \
+                        "${ZPOOL}${SOFTWARE_DIR}/root/Sofin"
+
                     egrep "/Software/Zsh/exports/zsh" /etc/shells || \
                         echo "/Software/Zsh/exports/zsh" >> /etc/shells
                     chsh -s /Software/Zsh/exports/zsh root
