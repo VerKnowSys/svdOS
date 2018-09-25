@@ -45,6 +45,6 @@ svdOS
 
 5. Clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`,
 
-6. Do: `cd Shable && echo "myhostname ip=1.2.3.4 ip_internal=172.16.3.123" >> inventory`.
+6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 remote_vpn_server=22.33.44.55" >> inventory`.
 
 7. Do `./setup-dedicated-system myhostname` to complete system installation.
