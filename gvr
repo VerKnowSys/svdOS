@@ -10,8 +10,10 @@ GVR_VERSION="0.24.0"
 GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
-# XXX: hardcoded:
-JAIL_ROUTER_ADDRESS="100.64.1.1"
+
+JAIL_ROUTER_NETWORK="__JAIL_ROUTER_NETWORK" # NOTE: this has to be replaced with default local network. For example: "100.64.1" or "172.16.3".
+JAIL_ROUTER_ADDRESS="${JAIL_ROUTER_NETWORK}.1"
+
 BRIDGE_DEVICE="bridge0"
 EPAIR_DEVICE="epair"
 SERVED_REPO="/Projects/svdOS"
