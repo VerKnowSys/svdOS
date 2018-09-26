@@ -43,7 +43,7 @@ svdOS
 
 4. Reboot to the new vanilla `FreeBSD-11.2` system.
 
-5. Clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`,
+5. On your local workstation - clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`,
 
 6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 remote_vpn_server=22.33.44.55" >> inventory`. You can also override default internal network which is: `172.16.3` to own one, by passing additional argument: `vpn_network=172.16.123`.
 
