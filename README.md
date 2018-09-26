@@ -6,7 +6,7 @@ svdOS
 
 ## Manual installation:
 
-0. Install HardenedBSD 64bit 11.0+. If you wish to install svdOS on local vm created with ZFS and xHyve, you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
+0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `11.0+`. If you wish to install svdOS on local vm created with ZFS and xHyve, you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
 
 1. `fetch -o - https://raw.githubusercontent.com/VerKnowSys/svdOS/master/svdup | sh` to install ServeD release/update.
 
