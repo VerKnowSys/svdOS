@@ -6,11 +6,12 @@
 
 . /Software/Sofin/share/loader
 
-GVR_VERSION="0.24.0"
+GVR_VERSION="0.26.0"
 GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
 
+SHARED_DOMAIN_NAME="__JAIL_SHARED_DOMAIN" # for home zones it can simply be: "home"
 JAIL_ROUTER_NETWORK="__JAIL_ROUTER_NETWORK" # NOTE: this has to be replaced with default local network. For example: "100.64.1" or "172.16.3".
 JAIL_ROUTER_ADDRESS="${JAIL_ROUTER_NETWORK}.1"
 
@@ -525,7 +526,7 @@ ${JAIL_NAME} {
     printf "%s\n" "${JAIL_ADDRESSES}" >> "${JAIL_ADDRESSES_FILE}"
 
     run "${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc" && \
-    run "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.home:\" ${CELL}/etc/rc.conf" && \
+    run "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.${SHARED_DOMAIN_NAME}:\" ${CELL}/etc/rc.conf" && \
     run "${RM_BIN} -f ${CELL}/etc/rc.conf.local" && \
     run "${SED_BIN} -i '' -e \"s:__HOST_IP:${JAIL_ROUTER_ADDRESS}:\" ${CELL}/etc/resolv.conf" && \
         run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf" && \
@@ -582,25 +583,25 @@ log {
 
     printf "
 # Default home zone template:
-local-zone: \"${JAIL_NAME}.home.\" redirect
+local-zone: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\" redirect
 
-local-data: \"${JAIL_NAME}.home. 10800 IN NS ns1.${JAIL_NAME}.home.\"
-local-data: \"${JAIL_NAME}.home. 10800 IN NS ns2.${JAIL_NAME}.home.\"
-local-data: \"${JAIL_NAME}.home. 1800  IN SRV 10 10 22 ${JAIL_NAME}.home.\"
-local-data: \"${JAIL_NAME}.home. 10800 IN SOA ns1.${JAIL_NAME}.home. ns2.${JAIL_NAME}.home. $(${DATE_BIN} +%s 2>/dev/null) 3600 600 86400 3600\"
-local-data: \"${JAIL_NAME}.home. 10800 IN A ${MAIN_JAIL_ADDRESS}\"
+local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN NS ns1.${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\"
+local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN NS ns2.${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\"
+local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 1800  IN SRV 10 10 22 ${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\"
+local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN SOA ns1.${JAIL_NAME}.${SHARED_DOMAIN_NAME}. ns2.${JAIL_NAME}.${SHARED_DOMAIN_NAME}. $(${DATE_BIN} +%s 2>/dev/null) 3600 600 86400 3600\"
+local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN A ${MAIN_JAIL_ADDRESS}\"
 
-local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.home\"
+local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.${SHARED_DOMAIN_NAME}\"
 
 " >> "${JAIL_LOCAL_DOMAIN_CONF}"
 
     run "service local_unbound configtest" && \
     run "service local_unbound restart" && \
     jail_start "${JAIL_NAME}" && \
-        debug "Zone: $(distd "${JAIL_NAME}.home") is now locally resolvable. Owned by: $(distd "${JAIL_NAME}")" && \
+        debug "Zone: $(distd "${JAIL_NAME}.${SHARED_DOMAIN_NAME}") is now locally resolvable. Owned by: $(distd "${JAIL_NAME}")" && \
         return 0
 
-    error "Failed to successfully reload zone: ${ColorCyan}${JAIL_NAME}.home"
+    error "Failed to successfully reload zone: ${ColorCyan}${JAIL_NAME}.${SHARED_DOMAIN_NAME}"
 }
 
 
@@ -701,7 +702,7 @@ jail_start () {
 
         printf "%s\n" "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         ${JEXEC_BIN} "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
-            note "Took: $(distn "${GVR_ELAPSED_S}s") to deploy jail: $(distn "${JAIL_NAME}") (JID: $(distn "${JAIL_NUM_ID}"); UID: $(distn "${EPAIR_NUMBER}"), Zone: $(distn "${JAIL_NAME}.home"))"
+            note "Took: $(distn "${GVR_ELAPSED_S}s") to deploy jail: $(distn "${JAIL_NAME}") (JID: $(distn "${JAIL_NUM_ID}"); UID: $(distn "${EPAIR_NUMBER}"), Zone: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"))"
 
         # alow users creating / in their tree. why not.
         # run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
