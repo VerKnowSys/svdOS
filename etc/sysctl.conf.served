@@ -194,8 +194,8 @@ security.jail.sysvipc_allowed=1
 
 # MAC PortACL:
 net.inet.ip.portrange.reservedlow=0
-net.inet.ip.portrange.reservedhigh=9
-security.mac.portacl.rules=uid:501:tcp:80,uid:501:tcp:443,uid:501:tcp:12
+net.inet.ip.portrange.reservedhigh=79
+security.mac.portacl.rules=gid:0:tcp:80,gid:0:tcp:443,gid:0:tcp:12
 
 # IPSEC tunnels setup:
 #net.inet.ipsec.filtertunnel=1
