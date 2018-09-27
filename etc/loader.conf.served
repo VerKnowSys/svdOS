@@ -57,6 +57,8 @@ virtio_pci_load="YES"
 if_vtnet_load="YES"
 
 # 512MiB RAM conditions:
+# ARC cache max size set to 512MiB:
+vfs.zfs.arc_min="128M"
 vfs.zfs.arc_max="128M"
 vfs.zfs.vdev.cache.size="5M"
 console="vidconsole,comconsole"
