@@ -136,7 +136,7 @@ which cargo
 
 
 ![Pic 2](http://s.verknowsys.com/c0e1a6c260f73da19fb1bfa28ed895a6.png)
-> Pic 2. Private ZFS datasets organization, full network stack.
+> Pic 2. Private ZFS datasets organization, full network stack in action - loopback is there (yay).
 
 
 ![Pic 3](http://s.verknowsys.com/04d32334ef8f3b55a969c7db820c5507.png)
