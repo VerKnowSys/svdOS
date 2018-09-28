@@ -89,13 +89,14 @@ svdOS
 ## A few pictures are better than thousand words!
 
 ![Pic 1](http://s.verknowsys.com/6d9fc9ef40f539d28f25710a094e3b4f.png)
-> Pic 1:
-
+> Pic 1.
 ```
 
 #
 # This part is invoked on host system (red "λ" = superuser):
 #
+
+# NOTE: for this example I've set: `default_jails_domain='myhost.my-shiny.com'` when invoking `setup-dedicated-system` script.
 
 # Create new jail with given local IP address:
 gvr create myhost 172.16.3.31
@@ -135,11 +136,11 @@ which cargo
 
 
 ![Pic 2](http://s.verknowsys.com/c0e1a6c260f73da19fb1bfa28ed895a6.png)
-> Private ZFS datasets organization, full network stack.
+> Pic 2. Private ZFS datasets organization, full network stack.
 
 
 ![Pic 3](http://s.verknowsys.com/04d32334ef8f3b55a969c7db820c5507.png)
-> Set my SSH public key as SSH access key for myhost (only ED25519 keys are supported at the moment) and login to jail over SSH.
+> Pic 3. Set my SSH public key as SSH access key for myhost (only ED25519 keys are supported at the moment) and login to jail over SSH.
 
 
 ## My other projects that are part of the system:
