@@ -146,8 +146,6 @@ which cargo
 ![Pic 3](http://s.verknowsys.com/04d32334ef8f3b55a969c7db820c5507.png)
 > Pic 3. Set my SSH public key as SSH access key for myhost (only ED25519 keys are supported at the moment) and login to jail over SSH (using my local OpenVPN connection with my private OpenVPN server).
 
----
-
 
 ## My other projects that are part of the system:
 
