@@ -76,6 +76,11 @@ svdOS
 
 * DTrace hooks built in (when supported by software) - provided by Sofin. Note, that there's an issue related to this feature at the moment: https://github.com/HardenedBSD/hardenedBSD/issues/305.
 
+* [Unbound](https://www.nlnetlabs.nl/projects/unbound/about/) DNS server is installed by default - configured as caching nameserver - used by all jails.
+
+* Nginx proxy is installed by default - used to proxy external domains to local ones (by name, using local caching DNS).
+
+
 
 
 ## My other projects that are part of the system:
