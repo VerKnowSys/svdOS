@@ -47,7 +47,9 @@ svdOS
 
 6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 remote_vpn_server=22.33.44.55 default_jails_domain='mydomain.com'" >> inventory`. You can also override default internal network which is: `172.16.3` to own one, by passing additional argument: `vpn_network=172.16.123`.
 
-7. Do `./setup-dedicated-system myhostname` to complete system installation.
+7. Generate new passwordless OpenVPN key and certificate for your new dedicated server. Put `ca.crt` (from "your OpenVPN server") + `your-inventory-host-name.crt` + `your-inventory-host-name.key` files under `templates/vpn/` directory.
+
+8. Do `./setup-dedicated-system myhostname` to complete system installation.
 
 
 ## Built in features:
