@@ -88,6 +88,8 @@ svdOS
 
 ## A few pictures are better than thousand words!
 
+---
+
 ![Pic 1](http://s.verknowsys.com/6d9fc9ef40f539d28f25710a094e3b4f.png)
 > Pic 1.
 ```
@@ -134,13 +136,17 @@ which cargo
 
 ```
 
+---
 
 ![Pic 2](http://s.verknowsys.com/c0e1a6c260f73da19fb1bfa28ed895a6.png)
 > Pic 2. Private ZFS datasets organization, full network stack in action - loopback is there (yay).
 
+---
 
 ![Pic 3](http://s.verknowsys.com/04d32334ef8f3b55a969c7db820c5507.png)
 > Pic 3. Set my SSH public key as SSH access key for myhost (only ED25519 keys are supported at the moment) and login to jail over SSH.
+
+---
 
 
 ## My other projects that are part of the system:
