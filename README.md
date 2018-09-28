@@ -78,6 +78,17 @@ svdOS
 
 
 
+## My other projects that are part of the system:
+
+* [Shable](https://github.com/VerKnowSys/Shable) - "Ansible" compliant software written in pure `sh`.
+
+* [Sofin](https://github.com/VerKnowSys/sofin) - "Software Installer" also written in pure `sh`.
+
+* [Sofin-definitions](https://github.com/VerKnowSys/sofin-definitions/) - Sofin software definitions - all pure `sh`.
+
+* [svdOS](https://github.com/VerKnowSys/svdOS) - this repo, with: [system build script](https://github.com/VerKnowSys/svdOS/blob/master/build-all), [production kernel configuration](https://github.com/VerKnowSys/svdOS/blob/master/kernel/VerKnowSys-11), other [configuration files](https://github.com/VerKnowSys/svdOS/tree/master/etc) and [system installer and updater script](https://github.com/VerKnowSys/svdOS/blob/master/svdup).
+
+
 ## But… why?
 
 * I've learned a lot about systems, software hardening and security.
