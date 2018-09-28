@@ -60,6 +60,8 @@ svdOS
 
 * Support for full network stack under jails (VIMAGE).
 
+* Preconfigured [PF](https://www.freebsd.org/doc/handbook/firewalls-pf.html) to NAT external network for jails.
+
 * Root filesystem (`/`) mounted read-only by default (overrideable).
 
 * Software datasets read-only by default (overrideable).
