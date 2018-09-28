@@ -91,14 +91,12 @@ svdOS
 ---
 
 ![Pic 1](http://s.verknowsys.com/6d9fc9ef40f539d28f25710a094e3b4f.png)
-> Pic 1.
+> Pic 1. For this example I've set: `default_jails_domain='myhost.my-shiny.com'` when invoking `setup-dedicated-system` script, below is list of invoked commands with commentary:
 ```
 
 #
 # This part is invoked on host system (red "λ" = superuser):
 #
-
-# NOTE: for this example I've set: `default_jails_domain='myhost.my-shiny.com'` when invoking `setup-dedicated-system` script.
 
 # Create new jail with given local IP address:
 gvr create myhost 172.16.3.31
