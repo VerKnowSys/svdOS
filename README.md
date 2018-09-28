@@ -13,7 +13,7 @@ svdOS
 
 ## Dedicated machine preparation
 
-> NOTE: I use: [EX-LINE](https://www.hetzner.com/dedicated-rootserver/matrix-ex) server type, (Ryzen doesn't work with FreeBSD 11-STABLE)
+> NOTE: I use: [EX-LINE](https://www.hetzner.com/dedicated-rootserver/matrix-ex) server type, (Ryzen doesn't work with FreeBSD 11-STABLE).
 
 0. Login to: [Hetzner Robot](https://robot.your-server.de/),
 
@@ -43,7 +43,7 @@ svdOS
 
 4. Reboot to the new vanilla `FreeBSD-11.2` system.
 
-5. On your local workstation - clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`,
+5. On your local workstation - clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`.
 
 6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 remote_vpn_server=22.33.44.55 default_jails_domain='mydomain.com'" >> inventory`. You can also override default internal network which is: `172.16.3` to own one, by passing additional argument: `vpn_network=172.16.123`.
 
@@ -142,7 +142,7 @@ which cargo
 ---
 
 ![Pic 3](http://s.verknowsys.com/04d32334ef8f3b55a969c7db820c5507.png)
-> Pic 3. NOTE: My host system is called "cb2"
+> Pic 3. NOTE: My host system is called "cb2".
 >        Set SSH public key as SSH access key for `myhost` jail (only ED25519 keys are supported at the moment)
 >        and login to jail over SSH (using my local OpenVPN connection with my private OpenVPN server).
 
