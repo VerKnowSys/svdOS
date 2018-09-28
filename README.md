@@ -54,6 +54,8 @@ svdOS
 
 ## Built in features:
 
+* ServeD system implies, that a single dedicated machine is part of a "distributted infrastructure". By default, [OpenVPN](https://openvpn.net/) is used to provide internal network access for all jails automatically. NOTE: It's necessary to provide your private VPN keys. Without them installation will not be possible at the moment (overridable - maybe even supported one day).
+
 * Hardened kernel and base system (prebuilt with support for all [HardenedBSD features](https://hardenedbsd.org/content/easy-feature-comparison)).
 
 * Support for full network stack under jails (VIMAGE).
