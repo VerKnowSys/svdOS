@@ -155,7 +155,7 @@ which cargo
 
 * [Sofin-definitions](https://github.com/VerKnowSys/sofin-definitions/) - Sofin software definitions - all pure `sh`.
 
-* [svdOS](https://github.com/VerKnowSys/svdOS) - this repo, with: [system build script](https://github.com/VerKnowSys/svdOS/blob/master/build-all), [production kernel configuration](https://github.com/VerKnowSys/svdOS/blob/master/kernel/VerKnowSys-11), other [configuration files](https://github.com/VerKnowSys/svdOS/tree/master/etc) and [system installer and updater script](https://github.com/VerKnowSys/svdOS/blob/master/svdup).
+* [svdOS](https://github.com/VerKnowSys/svdOS) - this repo, with: [system build script](https://github.com/VerKnowSys/svdOS/blob/master/build-all), [production kernel configuration](https://github.com/VerKnowSys/svdOS/blob/master/kernel/VerKnowSys-11), other [configuration files](https://github.com/VerKnowSys/svdOS/tree/master/etc) and [system installer and updater script](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - majority in pure `sh` as well.
 
 
 ## But… why?
