@@ -1,7 +1,7 @@
 svdOS
 =========
 
-"Because you deserve to be ServeD!"
+"Because you deserve to be ServeD!" - an open source server-system designed on top of [HardenedBSD](https://hardenedbsd.org/).
 
 
 ## Authors:
@@ -16,11 +16,11 @@ svdOS
 1. `fetch -o - https://raw.githubusercontent.com/VerKnowSys/svdOS/master/svdup | sh` to install ServeD release/update.
 
 
-## Dedicated machine preparation
+## Dedicated machine installation:
 
 > NOTE: I use: [EX-LINE](https://www.hetzner.com/dedicated-rootserver/matrix-ex) server type, (Ryzen doesn't work with FreeBSD 11-STABLE).
 
-0. Login to: [Hetzner Robot](https://robot.your-server.de/),
+0. Login to: [Hetzner Robot](https://robot.your-server.de/), select your server on servers list.
 
 1. Activate rescue system with version `FreeBSD 11.1`. Reboot system from web panel: `CB2->Reset->Execute an automatic hardware reset`. Confirm, wait ~48s (default boot time 30s + ~18s for kernel).
 
@@ -44,9 +44,9 @@ svdOS
     - Select all system-hardening options but "Disable process debugging facilities for unprivileged users",
     - Don't add any system users,
     - Hit Enter on "Exit" from menu, confirm that you wish to open shell to make additional modification of the system,
-    - Run `sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config` in console, and hit Ctrl-d (or type `exit`).
+    - Run `sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config` in terminal, hit `Enter` followed by `Ctrl-d` (or type `exit`).
 
-4. Reboot to the new vanilla `FreeBSD-11.2` system.
+4. Reboot to the new vanilla `FreeBSD-11.2` system. This system is used once - to bootstrap [svdup](https://github.com/VerKnowSys/svdOS/blob/master/svdup) installation.
 
 5. On your local workstation - clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`.
 
@@ -54,7 +54,7 @@ svdOS
 
 7. Generate new passwordless OpenVPN key and certificate for your new dedicated server. Put `ca.crt` (from "your OpenVPN server") + `your-inventory-host-name.crt` + `your-inventory-host-name.key` files under `templates/vpn/` directory.
 
-8. Do `./setup-dedicated-system myhostname` to complete system installation.
+8. Do `./setup-dedicated-system myhostname` to complete system installation. NOTE: Default SSH config file (`~/.ssh/config` ) will be updated with `myhostname` entry after installation.
 
 
 ## Built in features:
