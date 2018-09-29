@@ -1,6 +1,12 @@
 #!/bin/sh
 
+echo "Initializing PAX for installed Software"
 for pax in /Software/*/.pax; do
     echo "Enforcing PAX features of software bundle: ${pax}"
     . "${pax}"
 done
+
+echo "Booting previously started jails"
+sh -c "gvr boot"
+
+return 0
