@@ -162,6 +162,11 @@ which cargo
 ![Pic 5](http://s.verknowsys.com/ed6bfaa75afe3048acbbeeee3b01b72a.png)
 > Pic 5. Governor (`gvr`) commands and jail attributes listed.
 
+---
+
+![Pic 6](http://s.verknowsys.com/5a0caff1a8403d29af591181d952d5f4.png)
+> Pic 6. List boot environments. NOTE: `default` is our vanilla FreeBSD-11.2.
+
 
 ## My other projects that are part of the system:
 
