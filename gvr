@@ -23,8 +23,6 @@ SOFIN_REPO="/Projects/Sofin"
 DEFAULT_SOFIN_REPO="https://github.com/VerKnowSys/sofin.git"
 GVR_START_TIMESTAMP_S="$(${DATE_BIN} +%s 2>/dev/null)"
 
-# SERVICE_SPAWNER_BIN="/Software/Thess/exports/svdss"
-# IGNITER_INSTALL_BIN="/Software/Thess/exports/ignitersinstall"
 SH_BIN="/bin/sh"
 JOT_BIN="/usr/bin/jot"
 IFCONFIG_BIN="/sbin/ifconfig"
@@ -37,10 +35,6 @@ DEFAULT_VERSION="11.2"
 DEFAULT_ARCH="amd64"
 DEFAULT_SHELL="/Software/Zsh/exports/zsh"
 LOG="${LOGS_DIR}gvr.log"
-# stored_version="$(${ZFS_BIN} get -H -o value com.svd:os_version ${DEFAULT_ZPOOL}/ROOT)"
-# if [ "${stored_version}" != "-" ]; then
-#     DEFAULT_VERSION="${stored_version}"
-# fi
 DEFAULT_JAIL_USER="worker"
 DEFAULT_QUOTA_LIMIT="10G"
 DEFAULT_ROOT_QUOTA_LIMIT="2G"
@@ -228,7 +222,7 @@ apply_attributes () {
             ip)
                 printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}"
                 debug "conf: ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
-                printf "${value}" > "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+                printf "%s" "${value}" > "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
                 ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${value};#" "${JAIL_CONF_FILE}"
                 ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${attribute}"
                 ;;
@@ -236,7 +230,7 @@ apply_attributes () {
             +ip)
                 file_size="$(${STAT_BIN} -f%z "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null)"
                 if [ "${file_size}" -gt "0" ]; then
-                    printf ",${value}" >> "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+                    printf "%s" ",${value}" >> "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
                     current_value="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -E 's/[,]{2,}/,/g;s/,$//;s/^[,]{1,}//g' 2>/dev/null)"
                     debug "Current value: ${current_value}"
                     ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${current_value};#" "${JAIL_CONF_FILE}"
@@ -704,11 +698,6 @@ jail_start () {
         printf "%s\n" "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         ${JEXEC_BIN} "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
             note "Took: $(distn "${GVR_ELAPSED_S}s") to deploy jail: $(distn "${JAIL_NAME}") (JID: $(distn "${JAIL_NUM_ID}"); UID: $(distn "${EPAIR_NUMBER}"), Zone: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"))"
-
-        # alow users creating / in their tree. why not.
-        # run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} 771 /" && \
-        # run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} 777 /tmp" && \
-        #     debug "Permissions of jailed / set to 771, /tmp to 777"
 
         apply_attributes
 
