@@ -49,12 +49,21 @@ svdOS
     - Pick: "sshd", "ntpd", and "dumpdev" system services,
     - Select all system-hardening options but "Disable process debugging facilities for unprivileged users",
     - Don't add any system users,
-    - Hit Enter on "Exit" from menu, confirm that you wish to open shell to make additional modification of the system,
-    - Run `sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config` in terminal,
-    - Run `mkdir -p ~/.ssh; cat > ~/.ssh/authorized_keys`. Paste your SSH key(s), followed by `Enter` and `Ctrl-d`,
-    - Hit `Ctrl-d` (or type `exit`) to quit shell. Installation is now complete!.
+    - Hit Enter on "Exit" from menu, confirm that you wish to open terminal - we need to do few additional modifications of the system,
+    - Paste these commands in terminal followed by `Enter`:
 
-4. After installation, type `reboot`, to boot fresly installed `FreeBSD-11.2` "vanilla" system. NOTE: This system is used only once - to bootstrap [svdup installer](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - but it's required (as system configuration resource).
+```
+sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config
+
+mkdir -p ~/.ssh
+cat > ~/.ssh/authorized_keys
+```
+
+    - Paste your SSH key(s) there, followed by `Enter` and `Ctrl-d`,
+    - That's all. Now hit `Ctrl-d` (or type `exit`) to quit Shell.
+    - Installation is now complete!
+
+4. When `bsdinstallimage` is done, type `reboot`, to reboot to freshly installed `FreeBSD-11.2` (vanilla) system. NOTE: This system is used only once - to bootstrap [svdup installer](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - but it's required (as system configuration resource).
 
 
 ### Post installation - Shable tasks:
@@ -91,7 +100,7 @@ svdOS
 
 * Jailed user (`worker`), has full control over owned ZFS-datasets. Features allowed by default: `xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation,readonly`.
 
-* Preconfigured ZSH shell with cherry picked modules from [Oh My ZSH](https://github.com/robbyrussell/oh-my-zsh).
+* Preconfigured ZSH Shell with cherry picked modules from [Oh My ZSH](https://github.com/robbyrussell/oh-my-zsh).
 
 * [Sofin](https://github.com/VerKnowSys/sofin) hardened software is default, but you can still use `pkg` utility or you can even use ports (not supported!).
 
