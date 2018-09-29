@@ -322,7 +322,7 @@ postinstall_cleanup () {
     zfs set readonly=off "${ZPOOL}/ROOT"
     zfs set readonly=off "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
 
-    rm -rf /.profile /.cshrc /mnt /media /proc
+    rm -rf "/.profile" "/.cshrc" "/proc"
 
     mkdir -p "${HOME_DIR}/.ssh"
     grep 'verknowsys.com' "${HOME_DIR}/.ssh/config" 2>/dev/null || \
