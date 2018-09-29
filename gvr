@@ -11,6 +11,7 @@ GVR_LOG="/var/log/gvr.log"
 ORIGIN="origin"
 KERN_SECURELEVEL="0"
 
+# TODO: XXX: replace hardcodes by some kind of global config file:
 SHARED_DOMAIN_NAME="__JAIL_SHARED_DOMAIN" # for home zones it can simply be: "home"
 JAIL_ROUTER_NETWORK="__JAIL_ROUTER_NETWORK" # NOTE: this has to be replaced with default local network. For example: "100.64.1" or "172.16.3".
 JAIL_ROUTER_ADDRESS="${JAIL_ROUTER_NETWORK}.1"
