@@ -82,7 +82,7 @@ svdOS
 
 * [Unbound](https://www.nlnetlabs.nl/projects/unbound/about/) DNS server is installed by default - configured as caching nameserver - used by all jails.
 
-* Nginx proxy is installed by default - used to proxy external domains to local ones (by name, using local caching DNS).
+* [Nginx](http://nginx.org/) proxy is installed by default - used to proxy external domains to local ones (by name, using local caching DNS).
 
 
 
