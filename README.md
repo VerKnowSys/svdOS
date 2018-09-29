@@ -58,9 +58,9 @@ svdOS
 
 * Hardened kernel and base system (prebuilt with support for all [HardenedBSD features](https://hardenedbsd.org/content/easy-feature-comparison)).
 
-* Support for full network stack under jails (VIMAGE).
+* Support for full network stack under jails ([VIMAGE](https://wiki.freebsd.org/VIMAGE)).
 
-* Preconfigured [PF](https://www.freebsd.org/doc/handbook/firewalls-pf.html) to NAT external network for jails.
+* Preconfigured [PF](https://www.freebsd.org/doc/handbook/firewalls-pf.html) to [NAT](https://en.wikipedia.org/wiki/Network_address_translation) external network for jails.
 
 * Root filesystem (`/`) mounted read-only by default (overrideable).
 
