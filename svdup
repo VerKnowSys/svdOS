@@ -12,7 +12,10 @@ CACHE_DIR="${SHARED_DIR}/Cache"
 SOURCE="http://software.verknowsys.com/binary/ServeD"
 PATH="/Software/Git/exports:/Software/Zsh/exports:/bin:/usr/bin:/sbin:/usr/sbin"
 HOME_DIR="/User"
+SERVED_REPOSITORY="https://github.com/VerKnowSys/svdOS.git"
+SOFIN_REPOSITORY="https://github.com/VerKnowSys/sofin.git"
 SOFIN_BIN_REPO="http://software.verknowsys.com/binary"
+BEADM_REPOSITORY="https://github.com/vermaden/beadm.git"
 ORIGINS_RESOURCE="https://raw.githubusercontent.com/VerKnowSys/sofin/master/share/sofin/origins"
 LZ4_BIN_RESOURCE="https://raw.githubusercontent.com/VerKnowSys/svdOS/master/usr/bin/lz4"
 ZFSX_EXT=".zfsx"
@@ -265,7 +268,7 @@ upgrade_projects_install_custom () {
     test -f "${SERVICES_DIR}/Git/etc/ssl/cert.pem" || cp -f /etc/ssl/cert.pem "${SERVICES_DIR}/Git/etc/ssl/cert.pem"
 
     cd /Projects
-    git clone https://github.com/VerKnowSys/sofin.git
+    git clone "${SOFIN_REPOSITORY}"
     cd sofin
     git reset --hard
 
@@ -279,7 +282,7 @@ upgrade_projects_install_custom () {
     zfs snapshot "${ZPOOL}${SOFTWARE_DIR}/root/Sofin@origin" 2>/dev/null
 
     cd /Projects
-    git clone https://github.com/vermaden/beadm.git
+    git clone "${BEADM_REPOSITORY}"
     cd beadm
     git reset --hard
     git pull origin master
@@ -289,15 +292,17 @@ upgrade_projects_install_custom () {
     cp -vf beadm /usr/sbin/beadm
 
     cd /Projects
-    git clone https://github.com/VerKnowSys/svdOS.git
+    git clone "${SERVED_REPOSITORY}"
     cd svdOS
     git reset --hard
     git pull origin master
 
     cp -f etc/sysctl.conf.served /etc/sysctl.conf.served
 
-    test -f /etc/rc.local || cp -f etc/rc.local /etc/rc.local
-    test -f /etc/rc.conf.local || cp -f etc/rc.production.conf /etc/rc.conf.local
+    test -f /etc/rc.local || \
+        cp -f etc/rc.local /etc/rc.local
+    test -f /etc/rc.conf.local || \
+        cp -f etc/rc.production.conf /etc/rc.conf.local
     cp -fr shell/ /etc/zsh
     ln -fvs /etc/zsh/zshenv /etc/zshenv
     ln -fvs /etc/zsh/zshrc /etc/zshrc
