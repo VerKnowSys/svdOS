@@ -44,7 +44,7 @@ svdOS
     - Select all system-hardening options but "Disable process debugging facilities for unprivileged users",
     - Don't add any system users,
     - Hit Enter on "Exit" from menu, confirm that you wish to open shell to make additional modification of the system,
-    - Run `sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|; s|#Port 22|Port 60022|' /etc/ssh/sshd_config` in console, and hit Ctrl-d (or type `exit`).
+    - Run `sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config` in console, and hit Ctrl-d (or type `exit`).
 
 4. Reboot to the new vanilla `FreeBSD-11.2` system.
 
