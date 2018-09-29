@@ -44,7 +44,9 @@ svdOS
     - Select all system-hardening options but "Disable process debugging facilities for unprivileged users",
     - Don't add any system users,
     - Hit Enter on "Exit" from menu, confirm that you wish to open shell to make additional modification of the system,
-    - Run `sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config` in terminal, hit `Enter` followed by `Ctrl-d` (or type `exit`).
+    - Run `sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config` in terminal,
+    - Run `mkdir -p ~/.ssh; cat > ~/.ssh/authorized_keys`. Paste your SSH key(s), followed by `Enter` and `Ctrl-d`,
+    - Hit `Ctrl-d` (or type `exit`) to quit shell. Installation is now complete!.
 
 4. Reboot to the new vanilla `FreeBSD-11.2` system. This system is used once - to bootstrap [svdup](https://github.com/VerKnowSys/svdOS/blob/master/svdup) installation.
 
