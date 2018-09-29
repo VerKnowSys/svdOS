@@ -157,6 +157,12 @@ which cargo
 ![Pic 4](http://s.verknowsys.com/95f121eeb3143b6aaf5c9e1fd2dd320f.png)
 > Pic 4. Sofin-installer - help() invoked from my macOS workstation.
 
+---
+
+![Pic 5](http://s.verknowsys.com/ed6bfaa75afe3048acbbeeee3b01b72a.png)
+> Pic 5. Governor (`gvr`) commands and jail attributes listed.
+
+
 ## My other projects that are part of the system:
 
 * [Shable](https://github.com/VerKnowSys/Shable) - "Ansible" compliant software written in pure `sh`.
