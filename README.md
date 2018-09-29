@@ -33,23 +33,22 @@ svdOS
 2. Login to rescue system via SSH using provided root password: `ssh root@YOUR-SRV-IP`.
 
 3. Run `bsdinstallimage` (script provided by Hetzner). Follow steps:
-    - Pick FreeBSD 11.2, 64bit,
-    - Continue with default keymap,
-    - Enter desired "myhostname",
+    - Pick `FreeBSD 11.2`, `64bit`,
+    - Continue with default `keymap`,
+    - Enter desired `myhostname`,
     - Unselect all system components on list,
-    - Pick "Auto (ZFS)" option:
-        - Pool disk - use "mirror", with both disks,
+    - Pick `Auto (ZFS)` option:
+        - Pool disk - use `mirror`, with both disks (`ada0` + `ada1`),
         - Use defaults for other ZFS settings,
-        - Hit "Install", confirm that we wish to create new pool,
-    - Installation shouldn't take more than a minute, after that type new root password,
-    - Select default network card (em0), use DHCP over IPv4, disable IPv6,
-    - Wipe out value of the first "Search" field,
-    - Select "NO" when asked about UTC, pick "Europe", "Sweden", confirm it's "CEST",
-    - Skip date/time set up,
-    - Pick: "sshd", "ntpd", and "dumpdev" system services,
-    - Select all system-hardening options but "Disable process debugging facilities for unprivileged users",
+        - Hit `Install`, confirm that we wish to create new pool,
+    - Installation shouldn't take more than a minute. After that type new root password,
+    - Select default network card (`em0`), use `DHCP` for `IPv4`,
+    - Select "NO" when asked about `UTC`, pick "Europe", "Poland", confirm it's "CEST",
+    - Skip date/time settings,
+    - Enable only: `sshd`, `ntpd`, and `dumpdev` system services,
+    - Select all system-hardening options on list, but "Disable process debugging facilities for unprivileged users",
     - Don't add any system users,
-    - Hit Enter on "Exit" from menu, confirm that you wish to open terminal - we need to do few additional modifications of the system,
+    - Hit `Exit` from menu, confirm that you wish to open terminal - we need to do few additional modifications of base system configuration,
     - Paste these commands in terminal followed by `Enter`:
 
     ```
@@ -58,7 +57,7 @@ svdOS
     cat > ~/.ssh/authorized_keys
     ```
 
-    - Paste your SSH key(s) there, followed by `Enter` and `Ctrl-d`,
+    - Paste your SSH public key(s), followed by `Enter`. Hit `Ctrl-d` to save `authorized_keys` file,
     - That's all. Now hit `Ctrl-d` (or type `exit`) to quit Shell.
     - Installation is now complete!
 
