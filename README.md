@@ -77,6 +77,8 @@ svdOS
 
 * Limited superuser access to base system only. Listening to ports <1024 is allowed for jail default user (`worker`).
 
+* Jailed user (`worker`), has full control over owned ZFS-datasets. Features allowed by default: `xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation,readonly`.
+
 * Preconfigured ZSH shell with cherry picked modules from [Oh My ZSH](https://github.com/robbyrussell/oh-my-zsh).
 
 * [Sofin](https://github.com/VerKnowSys/sofin) hardened software is default, but you can still use `pkg` utility or you can even use ports (not supported!).
