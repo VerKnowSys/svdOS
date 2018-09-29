@@ -329,7 +329,6 @@ postinstall_cleanup () {
         printf "\n%s" "rlimit memlock" >> "/etc/ntp.conf"
     grep -E 'tinker panic 0' "/etc/ntp.conf" 2>/dev/null || \
         printf "\n%s" "tinker panic 0" >> "/etc/ntp.conf"
-    service ntpd restart
 }
 
 
