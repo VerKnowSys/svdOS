@@ -163,7 +163,7 @@ which cargo
 
 * I've learned a lot about systems, software hardening and security.
 
-* It's a challenge and I this is my PoC of how to provide modern, concise and clean server system.
+* It's a challenge and this is my PoC of "how to provide modern, concise and clean open-source server-system".
 
 * I wish to do a server system, which will get as close in quality as macOS is for workstation systems.
 
