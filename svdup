@@ -138,10 +138,12 @@ configure_and_commit_boot_env () {
     mount_boot_env && \
         test -f "${DESTBASE}/boot/pmbr" || exit 177
 
-    echo "svdUP: Synchronising system configurations"
-    cp -fv "/boot/loader.conf" "${DESTBASE}/boot/"
-    cp -fv "/boot/loader.conf.local" "${DESTBASE}/boot/"
-    cp -xpfvR "/etc" "${DESTBASE}"
+    echo "svdUP: Synchronizing system configuration"
+    echo "svdUP: Syncing: /boot/*.conf"
+    cp -f "/boot/loader.conf" "${DESTBASE}/boot/"
+    cp -f "/boot/loader.conf.local" "${DESTBASE}/boot/"
+    echo "svdUP: Syncing: /etc/*"
+    cp -xpfR "/etc" "${DESTBASE}"
 
     echo "svdUP: Installing Lz4 to destination base system"
     cp -fv /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4"
