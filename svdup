@@ -221,11 +221,11 @@ configure_base_zfs_datasets () {
 
                 Software)
                     fetch -o "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Zsh-${ZSH_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
-                    zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
+                    zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Zsh" 2>/dev/null
                     lz4cat "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
 
                     fetch -o "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Git-${GIT_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
-                    zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Git"
+                    zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Git" 2>/dev/null
                     lz4cat "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Git"
 
                     egrep "/Software/Zsh/exports/zsh" /etc/shells || \
@@ -312,7 +312,7 @@ upgrade_projects_sync_configuration () {
 
 
 postinstall_cleanup () {
-    zfs destroy -r "${ZPOOL}/var/mail"
+    zfs destroy -r "${ZPOOL}/var/mail" 2>/dev/null
     zfs set primarycache=all "${ZPOOL}/ROOT"
     zfs set secondarycache=all "${ZPOOL}/ROOT"
     zfs set checksum=fletcher4 "${ZPOOL}/ROOT"
