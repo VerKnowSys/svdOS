@@ -6,7 +6,7 @@ svdOS
 
 ## Authors:
 
-* Daniel (dmilith) Dettlaff (2011-…)
+* Daniel ([dmilith](https://twitter.com/dmilith)) Dettlaff (2011-…)
 
 
 ## Manual installation:
