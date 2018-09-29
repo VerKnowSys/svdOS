@@ -213,6 +213,11 @@ which cargo
 ![Pic 8](http://s.verknowsys.com/a9c8cae6d6363333ae8e804c00b01263.png)
 > Pic 8. Limit CPU per jail example: `myhost` to `40%` of a single CPU core. NOTE: `pcpu` can be grater than `100`. For example: `pcpu=200` means that software will be limited to use `2x100%` CPU cores max.
 
+---
+
+![Pic 9](http://s.verknowsys.com/d924a95e38a833f19411dbc5b4e75acf.png)
+> Pic 9. There are several quota attributes - here we're setting three of them, each with immediate effect. Attributes are immediately applied on working jails. NOTE: Try `gvr avail` - to list all attributes currently supported.
+
 
 
 ## Known issues/ problems:
