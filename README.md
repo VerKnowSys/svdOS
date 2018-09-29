@@ -211,7 +211,7 @@ which cargo
 ---
 
 ![Pic 8](http://s.verknowsys.com/a9c8cae6d6363333ae8e804c00b01263.png)
-> Pic 8. Limit CPU per jail example: `myhost` to 40% of single CPU core. NOTE: `pcpu` can be number grater than `100`. For example: `pcpu=200` means that software will be limited to use `2x100%` CPU cores max.
+> Pic 8. Limit CPU per jail example: `myhost` to `40%` of a single CPU core. NOTE: `pcpu` can be grater than `100`. For example: `pcpu=200` means that software will be limited to use `2x100%` CPU cores max.
 
 
 
@@ -221,6 +221,7 @@ which cargo
 
 * `setup-dedicated-system` manages `~/.ssh/config` entries automatically - in case of interruption or crash caused by an error - it doesn't invoke any cleanup, hence config has to be fixed manually.
 
+* SSH RSA keys are not supported at the moment.
 
 
 ## My other projects that are part of the system:
