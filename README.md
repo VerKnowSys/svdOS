@@ -54,7 +54,6 @@ svdOS
 
 ```
 sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config
-
 mkdir -p ~/.ssh
 cat > ~/.ssh/authorized_keys
 ```
