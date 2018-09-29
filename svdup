@@ -145,6 +145,11 @@ configure_and_commit_boot_env () {
     echo "svdUP: Syncing: /etc/*"
     cp -xpfR "/etc" "${DESTBASE}"
 
+    if [ -x "/usr/bin/gvr" ]; then
+        echo "svdUP: Syncing: Jail governor (gvr)"
+        cp -f "/usr/bin/gvr" "${DESTBASE}/usr/bin/"
+    fi
+
     echo "svdUP: Installing Lz4 to destination base system"
     cp -fv /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4"
     ln -fs /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4cat"
