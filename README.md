@@ -1,4 +1,4 @@
-svdOS
+ServeD-OS
 =========
 
 "Because you deserve to be ServeD!" - an open source server-system designed on top of [HardenedBSD](https://hardenedbsd.org/) and [ZFS](http://www.open-zfs.org/wiki/Main_Page).
@@ -11,11 +11,13 @@ svdOS
 
 
 
-## Manual installation:
+## Custom/ manual installation:
 
 0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `11.0+`. If you wish to install svdOS on local vm created with [ZFS](http://www.open-zfs.org/wiki/Main_Page) and [xHyve](https://github.com/mist64/xhyve), you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
 
-1. `fetch -o - https://raw.githubusercontent.com/VerKnowSys/svdOS/master/svdup | sh` to install ServeD release/update.
+1. Run: `fetch -o - https://raw.githubusercontent.com/VerKnowSys/svdOS/master/svdup | sh` - to install ServeD release/update on vanilla system, or update older system version, to current stable build.
+
+2. After `reboot` new system will be booted automatically (`beadm list` to list all available boot environments).
 
 
 
