@@ -215,18 +215,18 @@ configure_base_zfs_datasets () {
 
             case "${_dataset_origin}" in
                 Services)
-                    fetch -o "${CACHE_DIR}/Zsh-${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}-${SYSTEM_NAME}${ZFSP_EXT}" && lz4cat "${CACHE_DIR}/Zsh-${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Zsh"
-                    fetch -o "${CACHE_DIR}/Git-${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}-${SYSTEM_NAME}${ZFSP_EXT}" && lz4cat "${CACHE_DIR}/Git-${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Git"
+                    fetch -o "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}-${SYSTEM_NAME}${ZFSP_EXT}" && lz4cat "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Zsh"
+                    fetch -o "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSP_EXT}" "${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}-${SYSTEM_NAME}${ZFSP_EXT}" && lz4cat "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSP_EXT}" | zfs receive -v "${ZPOOL}${SERVICES_DIR}/root/Git"
                     ;;
 
                 Software)
-                    fetch -o "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Zsh-${ZSH_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
+                    fetch -o "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZSH_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Zsh-${ZSH_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
                     zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
-                    lz4cat "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
+                    lz4cat "${CACHE_DIR}/Zsh-${ZSH_VERSION}${ZSH_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Zsh"
 
-                    fetch -o "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Git-${GIT_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
+                    fetch -o "${CACHE_DIR}/Git-${GIT_VERSION}${GIT_VERSION}${ZFSX_EXT}" "${SOFIN_BIN_REPO}/${PROD_OS_BASE}/Git-${GIT_VERSION}-${PROD_OS_BASE}${ZFSX_EXT}"
                     zfs destroy -r "${ZPOOL}${SOFTWARE_DIR}/root/Git"
-                    lz4cat "${CACHE_DIR}/Git-${GIT_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Git"
+                    lz4cat "${CACHE_DIR}/Git-${GIT_VERSION}${GIT_VERSION}${ZFSX_EXT}" | zfs receive -v "${ZPOOL}${SOFTWARE_DIR}/root/Git"
 
                     egrep "/Software/Zsh/exports/zsh" /etc/shells || \
                         echo "/Software/Zsh/exports/zsh" >> /etc/shells
