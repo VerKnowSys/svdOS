@@ -723,6 +723,7 @@ jail_start () {
         done
 
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} -f /etc/sysctl.conf || :" && debug "Jail sysctl.conf loaded"
         run "${JEXEC_BIN} ${JAIL_NAME} mount -a" && debug "Mounted /dev and /tmp"
         run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && debug "Zfs datasets mounted"
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${ColorCyan}${KERN_SECURELEVEL}"
