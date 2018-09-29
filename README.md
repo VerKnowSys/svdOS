@@ -200,6 +200,14 @@ which cargo
 
 
 
+## Known issues/ problems:
+
+* After installation default SSH port (22) is switched to ServeD SSH port (60022).
+
+* `setup-dedicated-system` manages `~/.ssh/config` entries automatically - in case of interruption or crash caused by an error - it doesn't invoke any cleanup, hence config has to be fixed manually.
+
+
+
 ## My other projects that are part of the system:
 
 * [Shable](https://github.com/VerKnowSys/Shable) - "Ansible" compliant software written in pure `sh`.
