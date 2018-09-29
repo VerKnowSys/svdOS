@@ -248,7 +248,7 @@ configure_base_zfs_datasets () {
 }
 
 
-upgrade_projects_install_custom () {
+upgrade_projects_sync_configuration () {
     zfs list "${ZPOOL}/Projects" >/dev/null 2>&1
     if [ "${?}" != "0" ]; then
         zfs create \
@@ -368,7 +368,7 @@ echo "svdUP: Default boot device: ${BOOT_DEVICE}"
 echo "svdUP: Tasks in progress…" && \
     prepare_and_fetch_os_snapshot && \
     configure_base_zfs_datasets && \
-    upgrade_projects_install_custom && \
+    upgrade_projects_sync_configuration && \
     install_boot_environment && \
     set_std_zfs_properties && \
     configure_and_commit_boot_env "${BOOT_DEVICE}" && \
