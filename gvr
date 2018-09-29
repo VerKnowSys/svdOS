@@ -270,7 +270,7 @@ apply_attributes () {
                 if [ "$?" = "0" ]; then
                     printf "%b\n" "${ColorGreen}Overriden attribute: ${ColorCyan}${attribute}${ColorGreen} with value: ${ColorCyan}${value}"
                 else
-                    warn "Wrong attribute: ${ColorRed}${attribute}"
+                    warn "Wrong attribute: $(distw "${attribute}")"
                 fi
                 ;;
 
