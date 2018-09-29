@@ -11,7 +11,7 @@ svdOS
 
 ## Manual installation:
 
-0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `11.0+`. If you wish to install svdOS on local vm created with ZFS and xHyve, you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
+0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `11.0+`. If you wish to install svdOS on local vm created with [ZFS](http://www.open-zfs.org/wiki/Main_Page) and [xHyve](https://github.com/mist64/xhyve), you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
 
 1. `fetch -o - https://raw.githubusercontent.com/VerKnowSys/svdOS/master/svdup | sh` to install ServeD release/update.
 
@@ -83,7 +83,7 @@ svdOS
 
 * ZFS driven software and configuration management (very fast, block level software installation - thx to Sofin).
 
-* DTrace hooks built in (when supported by software) - provided by Sofin. Note, that there's an issue related to this feature at the moment: https://github.com/HardenedBSD/hardenedBSD/issues/305.
+* [DTrace](https://github.com/opendtrace) hooks built in (when supported by software) - provided by Sofin. Note, that there's an issue related to this feature at the moment: https://github.com/HardenedBSD/hardenedBSD/issues/305.
 
 * [Unbound](https://www.nlnetlabs.nl/projects/unbound/about/) DNS server is installed by default - configured as caching nameserver - used by all jails.
 
