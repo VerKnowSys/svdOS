@@ -54,7 +54,7 @@ svdOS
     - Run `mkdir -p ~/.ssh; cat > ~/.ssh/authorized_keys`. Paste your SSH key(s), followed by `Enter` and `Ctrl-d`,
     - Hit `Ctrl-d` (or type `exit`) to quit shell. Installation is now complete!.
 
-4. Reboot to the new vanilla `FreeBSD-11.2` system. This system is used once - to bootstrap [svdup](https://github.com/VerKnowSys/svdOS/blob/master/svdup) installation.
+4. After installation, type `reboot`, to boot fresly installed `FreeBSD-11.2` "vanilla" system. NOTE: This system is used only once - to bootstrap [svdup installer](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - but it's required (as system configuration resource).
 
 
 ### Post installation - Shable tasks:
