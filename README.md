@@ -152,6 +152,7 @@ which cargo
 >        Set SSH public key as SSH access key for `myhost` jail (only [ED25519](https://ed25519.cr.yp.to/) keys are supported at the moment)
 >        and login to jail over SSH (using my local OpenVPN connection with my private OpenVPN server).
 
+---
 
 ![Pic 4](http://s.verknowsys.com/54d032a7b619392fa7ff29b170b59e93.png)
 > Pic 4. Sofin-installer - help() invoked from my macOS workstation.
