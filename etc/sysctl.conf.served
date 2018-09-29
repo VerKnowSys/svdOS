@@ -12,6 +12,9 @@ security.bsd.unprivileged_read_msgbuf=0
 security.bsd.unprivileged_proc_debug=0
 security.bsd.stack_guard_page=1
 
+# Set random pid modulus:
+kern.randompid=1908
+
 # net.inet.tcp.blackhole defines what happens when a TCP packet is received on a closed port. When set to '1', SYN packets arriving on a closed port will be dropped without a RST packet being sent back. When set to '2', all packets arriving on a closed port are dropped without an RST being sent back.
 net.inet.udp.blackhole=2
 net.inet.tcp.blackhole=2
