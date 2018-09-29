@@ -138,6 +138,7 @@ which cargo
 
 ![Pic 2](http://s.verknowsys.com/c0e1a6c260f73da19fb1bfa28ed895a6.png)
 > Pic 2. Private ZFS datasets organization, full network stack in action - loopback is there (yay).
+>        NOTE: newly created jails allocate no disk space since they're clones on deduplicated ZFS filesystem.
 
 ---
 
