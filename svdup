@@ -270,7 +270,7 @@ upgrade_projects_sync_configuration () {
     cd /Projects
     git clone "${SOFIN_REPOSITORY}" >/dev/null
     cd sofin
-    git reset --hard
+    git reset --hard >/dev/null 2>&1
 
     # Create "root" Sofin dataset:
     zfs create \
@@ -284,7 +284,7 @@ upgrade_projects_sync_configuration () {
     cd /Projects
     git clone "${BEADM_REPOSITORY}" >/dev/null
     cd beadm
-    git reset --hard
+    git reset --hard >/dev/null 2>&1
     git pull origin master
     rm -f beadm.1.gz
     gzip beadm.1
@@ -294,7 +294,7 @@ upgrade_projects_sync_configuration () {
     cd /Projects
     git clone "${SERVED_REPOSITORY}" >/dev/null
     cd svdOS
-    git reset --hard
+    git reset --hard >/dev/null 2>&1
     git pull origin master
 
     cp -f etc/sysctl.conf.served /etc/sysctl.conf.served
