@@ -4,9 +4,11 @@ svdOS
 "Because you deserve to be ServeD!" - an open source server-system designed on top of [HardenedBSD](https://hardenedbsd.org/).
 
 
+
 ## Authors:
 
 * Daniel ([dmilith](https://twitter.com/dmilith)) Dettlaff (2011-…)
+
 
 
 ## Manual installation:
@@ -16,7 +18,11 @@ svdOS
 1. `fetch -o - https://raw.githubusercontent.com/VerKnowSys/svdOS/master/svdup | sh` to install ServeD release/update.
 
 
+
 ## Dedicated machine installation:
+
+
+### System preparation:
 
 > NOTE: I use: [EX-LINE](https://www.hetzner.com/dedicated-rootserver/matrix-ex) server type, (Ryzen doesn't work with FreeBSD 11-STABLE).
 
@@ -50,6 +56,9 @@ svdOS
 
 4. Reboot to the new vanilla `FreeBSD-11.2` system. This system is used once - to bootstrap [svdup](https://github.com/VerKnowSys/svdOS/blob/master/svdup) installation.
 
+
+### Post installation - Shable tasks:
+
 5. On your local workstation - clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`.
 
 6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 remote_vpn_server=22.33.44.55 default_jails_domain='mydomain.com'" >> inventory`. You can also override default internal network which is: `172.16.3` to own one, by passing additional argument: `vpn_network=172.16.123`. NOTE: Currently only `172.16.0.0/16` subnet is supported for VPN networks (65535 hosts max).
@@ -61,6 +70,7 @@ svdOS
 9. After about a minute, type: `ssh myhostname` to login as superuser to remote system.
 
 10. Use `gvr` (Governor) to maintain your jails. Use `s` (Sofin) to install server software.
+
 
 
 ## Built in features:
@@ -181,6 +191,7 @@ which cargo
 > Pic 7. Each Sofin bundle has own immutable list of dependencies.
 
 
+
 ## My other projects that are part of the system:
 
 * [Shable](https://github.com/VerKnowSys/Shable) - "Ansible" compliant software written in pure `sh`.
@@ -192,6 +203,7 @@ which cargo
 * [svdOS](https://github.com/VerKnowSys/svdOS) - this repo, with: [system build script](https://github.com/VerKnowSys/svdOS/blob/master/build-all), [production kernel configuration](https://github.com/VerKnowSys/svdOS/blob/master/kernel/VerKnowSys-11), other [configuration files](https://github.com/VerKnowSys/svdOS/tree/master/etc) and [system installer and updater script](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - majority in pure `sh` as well.
 
 
+
 ## But… why?
 
 * I've learned a lot about systems, software hardening and security.
@@ -201,6 +213,7 @@ which cargo
 * I wish to do a server system, which will get as close in quality as macOS is for workstation systems.
 
 * It took me 7 years to implement all the stuff, so I guess it's a lot of fun too ;)
+
 
 
 ## License
