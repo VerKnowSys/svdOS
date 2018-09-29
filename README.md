@@ -68,15 +68,15 @@ svdOS
 
 5. On your local workstation - clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`.
 
-6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 remote_vpn_server=22.33.44.55 default_jails_domain='mydomain.com'" >> inventory`. You can also override default internal network which is: `172.16.3` to own one, by passing additional argument: `vpn_network=172.16.123`. NOTE: Currently only `172.16.0.0/16` subnet is supported for VPN networks (65535 hosts max).
+6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 remote_vpn_server=22.33.44.55 vpn_network=172.16.123 default_jails_domain='mydomain.com'" >> inventory`. NOTE: Currently only `172.16.0.0/16` subnet is supported for VPN networks (65535 hosts max).
 
-    * `ip` -> External IP address of the dedicated machine,
+    * `ip` -> External IP address of the dedicated machine (mandatory),
 
-    * `remote_vpn_server` -> External IP address of OpenVPN service,
+    * `remote_vpn_server` -> External IP address of OpenVPN service (mandatory),
 
-    * `default_jails_domain` -> Domain used as default one for jails,
+    * `default_jails_domain` -> Domain used as default one for jails (mandatory),
 
-    * `vpn_network` -> Override default VPN network (default is: `172.16.3`),
+    * `vpn_network` -> Override default VPN network (default is: `172.16.3`) (optional),
 
 
 7. Generate new passwordless OpenVPN key and certificate for your new dedicated server. Put `ca.crt` (generated for "your OpenVPN server") + `your-inventory-host-name.crt` + `your-inventory-host-name.key` files under `templates/vpn/` directory.
