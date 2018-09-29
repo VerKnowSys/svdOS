@@ -208,6 +208,11 @@ which cargo
 ![Pic 7](http://s.verknowsys.com/661aa7fd4393313296458b30a5dac682.png)
 > Pic 7. Each Sofin bundle has own immutable list of dependencies.
 
+---
+
+![Pic 8](http://s.verknowsys.com/a9c8cae6d6363333ae8e804c00b01263.png)
+> Pic 8. Limit CPU per jail example: `myhost` to 40% of single CPU core. NOTE: `pcpu` can be number grater than `100`. For example: `pcpu=200` means that software will be limited to use `2x100%` CPU cores max.
+
 
 
 ## Known issues/ problems:
