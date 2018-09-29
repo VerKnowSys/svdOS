@@ -154,7 +154,7 @@ which cargo
 
 ---
 
-![Pic 4](http://s.verknowsys.com/54d032a7b619392fa7ff29b170b59e93.png)
+![Pic 4](http://s.verknowsys.com/95f121eeb3143b6aaf5c9e1fd2dd320f.png)
 > Pic 4. Sofin-installer - help() invoked from my macOS workstation.
 
 ## My other projects that are part of the system:
