@@ -171,6 +171,11 @@ which cargo
 ![Pic 6](http://s.verknowsys.com/5a0caff1a8403d29af591181d952d5f4.png)
 > Pic 6. List boot environments. NOTE: `default` is our vanilla FreeBSD-11.2.
 
+---
+
+![Pic 7](http://s.verknowsys.com/661aa7fd4393313296458b30a5dac682.png)
+> Pic 7. Each Sofin bundle has own immutable list of dependencies.
+
 
 ## My other projects that are part of the system:
 
