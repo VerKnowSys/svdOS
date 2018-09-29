@@ -805,7 +805,7 @@ jail_unset () {
     check_cell_name "${CELL}"
     for jail_attribute in ${*}; do
         run "${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${jail_attribute}" && \
-        run "${RCTL_BIN} -r jail:${JAIL_NAME}:${jail_attribute}" && \
+        try "${RCTL_BIN} -r jail:${JAIL_NAME}:${jail_attribute}" && \
             printf "%b\n" "${ColorGreen}Unset attribute: ${ColorCyan}${jail_attribute}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}"
     done
     apply_attributes
