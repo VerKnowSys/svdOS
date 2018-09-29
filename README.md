@@ -4,6 +4,11 @@ svdOS
 "Because you deserve to be ServeD!"
 
 
+## Authors:
+
+* Daniel (dmilith) Dettlaff (2011-…)
+
+
 ## Manual installation:
 
 0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `11.0+`. If you wish to install svdOS on local vm created with ZFS and xHyve, you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
