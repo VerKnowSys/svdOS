@@ -1,7 +1,7 @@
 svdOS
 =========
 
-"Because you deserve to be ServeD!" - an open source server-system designed on top of [HardenedBSD](https://hardenedbsd.org/).
+"Because you deserve to be ServeD!" - an open source server-system designed on top of [HardenedBSD](https://hardenedbsd.org/) and [ZFS](http://www.open-zfs.org/wiki/Main_Page).
 
 
 
