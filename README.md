@@ -52,11 +52,11 @@ svdOS
     - Hit Enter on "Exit" from menu, confirm that you wish to open terminal - we need to do few additional modifications of the system,
     - Paste these commands in terminal followed by `Enter`:
 
-```
-sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config
-mkdir -p ~/.ssh
-cat > ~/.ssh/authorized_keys
-```
+    ```
+    sed -i '' -e 's|#PermitRootLogin no|PermitRootLogin yes|' /etc/ssh/sshd_config
+    mkdir -p ~/.ssh
+    cat > ~/.ssh/authorized_keys
+    ```
 
     - Paste your SSH key(s) there, followed by `Enter` and `Ctrl-d`,
     - That's all. Now hit `Ctrl-d` (or type `exit`) to quit Shell.
