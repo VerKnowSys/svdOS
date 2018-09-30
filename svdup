@@ -13,6 +13,7 @@ SOFTWARE_DIR="/Software"
 SERVICES_DIR="/Services"
 SHARED_DIR="/Shared"
 CACHE_DIR="${SHARED_DIR}/Cache"
+SYSTEM_IGNITERS_DIR="${SHARED_DIR}/Igniters"
 SOURCE="http://software.verknowsys.com/binary/ServeD"
 PATH="/Software/Git/exports:/Software/Zsh/exports:/bin:/usr/bin:/sbin:/usr/sbin"
 HOME_DIR="/User"
@@ -39,11 +40,16 @@ get_the_current () {
     for _mnt in $(zfs mount 2>/dev/null | grep ROOT 2>/dev/null | cut -f1 -d' ' 2>/dev/null); do
         zfs set readonly=off "${_mnt}" >> "${LOG_FILE}" 2>> "${LOG_FILE}"
     done
-    zfs list "${ZPOOL}${SHARED_DIR}" >/dev/null 2>&1 || \
+    zfs list "${ZPOOL}${SHARED_DIR}/Igniters" >/dev/null 2>&1 || \
     {
-        zfs create -o mountpoint=none "${ZPOOL}${SHARED_DIR}" >> "${LOG_FILE}" 2>> "${LOG_FILE}";
-    }
-    mkdir -p "${SHARED_DIR}/Cache" "${DESTBASE}" >/dev/null 2>&1
+        zfs create -o mountpoint=none "${ZPOOL}${SHARED_DIR}";
+        zfs create -o mountpoint="${SHARED_DIR}/Igniters" "${ZPOOL}${SHARED_DIR}/Igniters";
+        zfs create -o compression=lz4 -o checksum=fletcher4 \
+            -o primarycache=metadata -o secondarycache=metadata \
+            -o mountpoint="${SHARED_DIR}/Cache" "${ZPOOL}${SHARED_DIR}/Cache";
+    } >> "${LOG_FILE}" 2>> "${LOG_FILE}"
+
+    mkdir -p "${DESTBASE}" >/dev/null 2>&1
     fetch "${SOURCE}/${PICKED_BUILD_VERSION}" -o "${CACHE_DIR}/current-version-snapshot" >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
         cat "${CACHE_DIR}/current-version-snapshot" 2>/dev/null && \
             return 0
@@ -281,19 +287,22 @@ upgrade_projects_sync_configuration () {
     fi
 
     test -f "${SERVICES_DIR}/Git/etc/ssl/cert.pem" || cp -f /etc/ssl/cert.pem "${SERVICES_DIR}/Git/etc/ssl/cert.pem"
+    _timestamp_now="$(date +%F-%H%M-%s 2>/dev/null)"
 
     cd /Projects
     git clone "${SOFIN_REPOSITORY}" 2>/dev/null
     cd sofin
     git reset --hard >/dev/null 2>&1
-
     # Create "root" Sofin dataset:
-    zfs create \
-        -o mountpoint="${SOFTWARE_DIR}/Sofin" \
-        "${ZPOOL}${SOFTWARE_DIR}/root/Sofin" 2>/dev/null
-
+    zfs list "${ZPOOL}${SOFTWARE_DIR}/root/Sofin" >/dev/null 2>&1 || \
+        zfs create -o \
+            mountpoint="${SOFTWARE_DIR}/Sofin" \
+            "${ZPOOL}${SOFTWARE_DIR}/root/Sofin"
+    # Install new version:
     bin/upgrade
-    zfs destroy "${ZPOOL}${SOFTWARE_DIR}/root/Sofin@origin" 2>/dev/null
+    # Rename old @origin:
+    zfs rename "${ZPOOL}${SOFTWARE_DIR}/root/Sofin@origin" "@origin-${_timestamp_now}" 2>/dev/null
+    # Create new @origin for Sofin software dataset:
     zfs snapshot "${ZPOOL}${SOFTWARE_DIR}/root/Sofin@origin" 2>/dev/null
 
     cd /Projects
