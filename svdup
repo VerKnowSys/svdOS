@@ -311,18 +311,11 @@ upgrade_projects_sync_configuration () {
         cp -f etc/rc.local /etc/rc.local
     test -f /etc/rc.conf.local || \
         cp -f etc/rc.production.conf /etc/rc.conf.local
+
+    # Installing Zsh configuration:
     cp -fr shell/ /etc/zsh
     ln -fs /etc/zsh/zshenv /etc/zshenv
     ln -fs /etc/zsh/zshrc /etc/zshrc
-
-    if [ -f "/etc/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
-        cd "/etc/zsh/zsh-autosuggestions"
-        git pull --jobs 2 >/dev/null
-    else
-        git clone --jobs 2 --depth 1 \
-            "${ZSH_AUTOSUGGESTIONS_REPO}" \
-            "/etc/zsh/zsh-autosuggestions" >/dev/null
-    fi
 
     cd /
 }
