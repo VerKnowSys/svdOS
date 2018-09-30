@@ -593,7 +593,7 @@ local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.${SHARED_DOMAIN_NAME}\"
 
 " >> "${JAIL_LOCAL_DOMAIN_CONF}"
 
-    run "${DNS_RESTART_COMMAND}" && \
+    try "${DNS_RESTART_COMMAND}"
     jail_start "${JAIL_NAME}" && \
         debug "Zone: $(distd "${JAIL_NAME}.${SHARED_DOMAIN_NAME}") is now locally resolvable. Owned by: $(distd "${JAIL_NAME}")" && \
         return 0
