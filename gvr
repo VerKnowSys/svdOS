@@ -530,11 +530,6 @@ ${JAIL_NAME} {
         run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf" && \
         debug "Built initial jail environment"
 
-    # run "${INSTALL_BIN} -v /etc/sofin.conf.sh ${CELL}/etc/" && \
-    # run "${INSTALL_BIN} -v /usr/bin/sofin-version-utility ${CELL}/usr/bin" && \
-    # run "${INSTALL_BIN} -v /usr/bin/sofin-microseconds ${CELL}/usr/bin" && \
-        # printf "%b\n" "${ColorGreen}Instaled local Sofin to: ${ColorCyan}${CELL}"
-
     if [ ! -f "${CELL}/etc/sysctl.conf" ]; then
         run "${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf" && \
         debug "Created sysctl.conf from svdOS repository"
@@ -547,10 +542,7 @@ ${JAIL_NAME} {
     run "${MV_BIN} -v ${CELL}/etc/zsh/zshenv ${CELL}/etc/zshenv" && \
         debug "Jail system shell configured"
 
-    # run "${MV_BIN} ${CELL}/usr/bin/make ${CELL}/usr/bin/bsdmake" && \
-    # run "${CP_BIN} ${GMAKE_BIN} ${CELL}/usr/bin/make" && \
-    #     printf "%b\n" "${ColorGreen}Replaced default BSD make with GNU make (which is expected when Gold LD is installed)"
-
+    # XXX: TODO: complete versionning (consider if necessary)
     svd_version="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
     run "${ZFS_BIN} set com.svd:version=${svd_version} ${DEFAULT_ZPOOL}${CELL}" && \
         debug "Updated client ServeD version property from base system"
