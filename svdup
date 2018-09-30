@@ -1,6 +1,10 @@
 #!/bin/sh
 
+
+# Default base software versions:
 PICKED_BUILD_VERSION="${1:-current-stable}"
+GIT_VERSION="2.12.3"
+ZSH_VERSION="5.6.2"
 
 
 # Literals:
@@ -23,10 +27,10 @@ ZFSX_EXT=".zfsx"
 ZFSP_EXT=".zfsp"
 ORIGIN="origin"
 SYSTEM_NAME="FreeBSD"
-PROD_OS_BASE="${SYSTEM_NAME}-11.0-amd64" # 11.*
-GIT_VERSION="2.12.3"
-ZSH_VERSION="5.4.2"
-DATE_NOW="$(date +%F 2>/dev/null)"
+PROD_OS_ARCH="amd64"
+PROD_OS_BRANCH="11.0"
+PROD_OS_BASE="${SYSTEM_NAME}-${PROD_OS_BRANCH}-${PROD_OS_ARCH}"
+DATE_NOW="$(date +%F-%H%M 2>/dev/null)"
 LOG_FILE="/var/log/svdUP-${DATE_NOW:-common}.log"
 
 
