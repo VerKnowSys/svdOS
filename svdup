@@ -16,6 +16,7 @@ SERVED_REPOSITORY="https://github.com/VerKnowSys/svdOS.git"
 SOFIN_REPOSITORY="https://github.com/VerKnowSys/sofin.git"
 SOFIN_BIN_REPO="http://software.verknowsys.com/binary"
 BEADM_REPOSITORY="https://github.com/vermaden/beadm.git"
+ZSH_AUTOSUGGESTIONS_REPO="https://github.com/zsh-users/zsh-autosuggestions"
 ORIGINS_RESOURCE="https://raw.githubusercontent.com/VerKnowSys/sofin/master/share/sofin/origins"
 LZ4_BIN_RESOURCE="https://raw.githubusercontent.com/VerKnowSys/svdOS/master/usr/bin/lz4"
 ZFSX_EXT=".zfsx"
@@ -313,6 +314,15 @@ upgrade_projects_sync_configuration () {
     cp -fr shell/ /etc/zsh
     ln -fs /etc/zsh/zshenv /etc/zshenv
     ln -fs /etc/zsh/zshrc /etc/zshrc
+
+    if [ -f "/etc/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+        cd "/etc/zsh/zsh-autosuggestions"
+        git pull --jobs 2 >/dev/null
+    else
+        git clone --jobs 2 --depth 1 \
+            "${ZSH_AUTOSUGGESTIONS_REPO}" \
+            "/etc/zsh/zsh-autosuggestions" >/dev/null
+    fi
 
     cd /
 }
