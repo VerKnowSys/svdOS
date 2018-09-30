@@ -295,8 +295,8 @@ upgrade_projects_sync_configuration () {
     git pull origin master
     rm -f beadm.1.gz
     gzip beadm.1
-    cp -vf beadm.1.gz /usr/share/man/man1/
-    cp -vf beadm /usr/sbin/beadm
+    cp -f beadm.1.gz /usr/share/man/man1/
+    cp -f beadm /usr/sbin/beadm
 
     cd /Projects
     git clone "${SERVED_REPOSITORY}" >/dev/null
@@ -311,8 +311,8 @@ upgrade_projects_sync_configuration () {
     test -f /etc/rc.conf.local || \
         cp -f etc/rc.production.conf /etc/rc.conf.local
     cp -fr shell/ /etc/zsh
-    ln -fvs /etc/zsh/zshenv /etc/zshenv
-    ln -fvs /etc/zsh/zshrc /etc/zshrc
+    ln -fs /etc/zsh/zshenv /etc/zshenv
+    ln -fs /etc/zsh/zshrc /etc/zshrc
 
     cd /
 }
