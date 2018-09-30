@@ -216,7 +216,7 @@ which cargo
 ---
 
 ![Pic 9](http://s.verknowsys.com/d924a95e38a833f19411dbc5b4e75acf.png)
-> Pic 9. There are several quota attributes - here we're setting three of them, each with immediate effect. Attributes are immediately applied on working jails. NOTE: Try `gvr avail` - to list all attributes currently supported.
+> Pic 9. There are several quota attributes - here we're setting three of them, each with immediate effect. Attributes are immediately applied on working jails. NOTE: Try: `gvr available` - to get list of all supported attributes.
 
 
 
