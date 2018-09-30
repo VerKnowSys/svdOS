@@ -50,9 +50,10 @@ get_the_current () {
             "${ZPOOL}${SYSTEM_IGNITERS_DIR}";
         zfs create -o compression=lz4 -o checksum=fletcher4 \
             -o primarycache=metadata -o secondarycache=metadata \
-            -o mountpoint="${SHARED_DIR}/Cache" \
+            -o mountpoint="${CACHE_DIR}" \
             "${ZPOOL}${CACHE_DIR}";
-    } >> "${LOG_FILE}" 2>> "${LOG_FILE}"
+    } \
+        >> "${LOG_FILE}" 2>> "${LOG_FILE}"
 
     mkdir -p "${DESTBASE}" >/dev/null 2>&1
     fetch "${SOURCE}/${PICKED_BUILD_VERSION}" -o "${CACHE_DIR}/current-version-snapshot" >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
