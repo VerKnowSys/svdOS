@@ -593,8 +593,11 @@ local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.${SHARED_DOMAIN_NAME}\"
 " >> "${JAIL_LOCAL_DOMAIN_CONF}"
 
     # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
+    note "Reloading DNS and Web proxy configuration."
     try "${DNS_IGNITER} restart"
     try "${NGINX_IGNITER} reload"
+
+    note "Starting jail: $(distd "${JAIL_NAME}")"
     jail_start "${JAIL_NAME}" && \
         debug "Zone: $(distd "${JAIL_NAME}.${SHARED_DOMAIN_NAME}") is now locally resolvable. Owned by: $(distd "${JAIL_NAME}")" && \
         return 0
