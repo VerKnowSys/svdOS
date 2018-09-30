@@ -158,9 +158,19 @@ unset JAVA_OPTS
 
 zstyle ':completion:*' menu select
 
+
 # source $HOME/.profile
-source /etc/zsh/zsh-syntax-highlighting.zsh
-source /etc/zsh/zsh-history-substring-search.zsh
+if [ -f "/etc/zsh/zsh-syntax-highlighting.zsh" ]; then
+    source /etc/zsh/zsh-syntax-highlighting.zsh
+fi
+
+if [ -f "/etc/zsh/zsh-history-substring-search.zsh" ]; then
+    source /etc/zsh/zsh-history-substring-search.zsh
+fi
+
+if [ -f "/etc/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+    source /etc/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
 
 
 function greps () {
