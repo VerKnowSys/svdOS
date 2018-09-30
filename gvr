@@ -550,9 +550,9 @@ ${JAIL_NAME} {
         debug "Jail system shell configured"
 
     # XXX: TODO: complete versionning (consider if necessary)
-    svd_version="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
-    run "${ZFS_BIN} set com.svd:version=${svd_version} ${DEFAULT_ZPOOL}${CELL}" && \
-        debug "Updated client ServeD version property from base system"
+    # svd_version="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
+    # run "${ZFS_BIN} set com.svd:version=${svd_version} ${DEFAULT_ZPOOL}${CELL}" && \
+    #     debug "Updated client ServeD version property from base system"
 
     for logger in messages production staging development; do
         run "${MKFIFO_BIN} -m \"a=-rwx,u=rw\" \"${CELL}/var/log/${logger}\"" && \
