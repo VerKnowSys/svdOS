@@ -40,13 +40,18 @@ get_the_current () {
     for _mnt in $(zfs mount 2>/dev/null | grep ROOT 2>/dev/null | cut -f1 -d' ' 2>/dev/null); do
         zfs set readonly=off "${_mnt}" >> "${LOG_FILE}" 2>> "${LOG_FILE}"
     done
-    zfs list "${ZPOOL}${SHARED_DIR}/Igniters" >/dev/null 2>&1 || \
+    zfs list "${ZPOOL}${SYSTEM_IGNITERS_DIR}" >/dev/null 2>&1 || \
     {
-        zfs create -o mountpoint=none "${ZPOOL}${SHARED_DIR}";
-        zfs create -o mountpoint="${SHARED_DIR}/Igniters" "${ZPOOL}${SHARED_DIR}/Igniters";
+        zfs create -o \
+            mountpoint=none \
+            "${ZPOOL}${SHARED_DIR}";
+        zfs create -o \
+            mountpoint="${SYSTEM_IGNITERS_DIR}" \
+            "${ZPOOL}${SYSTEM_IGNITERS_DIR}";
         zfs create -o compression=lz4 -o checksum=fletcher4 \
             -o primarycache=metadata -o secondarycache=metadata \
-            -o mountpoint="${SHARED_DIR}/Cache" "${ZPOOL}${SHARED_DIR}/Cache";
+            -o mountpoint="${SHARED_DIR}/Cache" \
+            "${ZPOOL}${CACHE_DIR}";
     } >> "${LOG_FILE}" 2>> "${LOG_FILE}"
 
     mkdir -p "${DESTBASE}" >/dev/null 2>&1
