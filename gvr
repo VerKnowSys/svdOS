@@ -16,6 +16,9 @@ SHARED_DOMAIN_NAME="__JAIL_SHARED_DOMAIN" # for home zones it can simply be: "ho
 JAIL_ROUTER_NETWORK="__JAIL_ROUTER_NETWORK" # NOTE: this has to be replaced with default local network. For example: "100.64.1" or "172.16.3".
 JAIL_ROUTER_ADDRESS="${JAIL_ROUTER_NETWORK}.1"
 
+# TODO: XXX: hardcoded and bounded with Shable dedicated setup directly (but works):
+DNS_RESTART_COMMAND="/usr/local/bin/startdns"
+
 BRIDGE_DEVICE="bridge0"
 EPAIR_DEVICE="epair"
 SERVED_REPO="/Projects/svdOS"
