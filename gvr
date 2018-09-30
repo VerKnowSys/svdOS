@@ -18,6 +18,7 @@ JAIL_ROUTER_ADDRESS="${JAIL_ROUTER_NETWORK}.1"
 
 # TODO: XXX: hardcoded and bounded with Shable dedicated setup directly (but works):
 DNS_IGNITER="/usr/local/bin/dns.igni"
+NGINX_IGNITER="/usr/local/bin/nginx.igni"
 
 BRIDGE_DEVICE="bridge0"
 EPAIR_DEVICE="epair"
@@ -587,6 +588,7 @@ local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.${SHARED_DOMAIN_NAME}\"
 
     # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
     try "${DNS_IGNITER} restart"
+    try "${NGINX_IGNITER} reload"
     jail_start "${JAIL_NAME}" && \
         debug "Zone: $(distd "${JAIL_NAME}.${SHARED_DOMAIN_NAME}") is now locally resolvable. Owned by: $(distd "${JAIL_NAME}")" && \
         return 0
