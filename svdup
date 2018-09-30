@@ -283,7 +283,7 @@ upgrade_projects_sync_configuration () {
     test -f "${SERVICES_DIR}/Git/etc/ssl/cert.pem" || cp -f /etc/ssl/cert.pem "${SERVICES_DIR}/Git/etc/ssl/cert.pem"
 
     cd /Projects
-    git clone "${SOFIN_REPOSITORY}" >/dev/null
+    git clone "${SOFIN_REPOSITORY}" 2>/dev/null
     cd sofin
     git reset --hard >/dev/null 2>&1
 
@@ -297,7 +297,7 @@ upgrade_projects_sync_configuration () {
     zfs snapshot "${ZPOOL}${SOFTWARE_DIR}/root/Sofin@origin" 2>/dev/null
 
     cd /Projects
-    git clone "${BEADM_REPOSITORY}" >/dev/null
+    git clone "${BEADM_REPOSITORY}" 2>/dev/null
     cd beadm
     git reset --hard >/dev/null 2>&1
     git pull origin master
@@ -307,7 +307,7 @@ upgrade_projects_sync_configuration () {
     cp -f beadm /usr/sbin/beadm
 
     cd /Projects
-    git clone "${SERVED_REPOSITORY}" >/dev/null
+    git clone "${SERVED_REPOSITORY}" 2>/dev/null
     cd svdOS
     git reset --hard >/dev/null 2>&1
     git pull origin master
