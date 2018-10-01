@@ -221,7 +221,7 @@ which cargo
 --
 
 ![Pic 10](http://s.verknowsys.com/d503421c433336e6a65502bbc34c0cc3.png)
-> Pic 10. Software version switching for an example of Php (and environment management).
+> Pic 10. Software version switching (and environment management) for an example of Php.
 
 
 
