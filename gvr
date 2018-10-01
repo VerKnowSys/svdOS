@@ -12,7 +12,7 @@ ORIGIN="origin"
 KERN_SECURELEVEL="0"
 
 # TODO: XXX: replace hardcodes by some kind of global config file:
-SHARED_DOMAIN_NAME="__JAIL_SHARED_DOMAIN" # for home zones it can simply be: "home"
+SHARED_DOMAIN_NAME="__JAIL_SHARED_DOMAIN" # for local zones it can simply be: "local"
 JAIL_ROUTER_NETWORK="__JAIL_ROUTER_NETWORK" # NOTE: this has to be replaced with default local network. For example: "100.64.1" or "172.16.3".
 JAIL_ROUTER_ADDRESS="${JAIL_ROUTER_NETWORK}.1"
 
@@ -575,22 +575,21 @@ log {
     debug "Reloading syslog"
     service syslog-ng reload >/dev/null || service syslog-ng restart >/dev/null
 
-    debug "Setting up home domains from main IPs: $(distd "${JAIL_ADDRESSES}")"
+    debug "Setting up local domains from main IPs: $(distd "${JAIL_ADDRESSES}")"
     MAIN_JAIL_ADDRESS="$(echo "${JAIL_ADDRESSES}" | ${SED_BIN} -e 's#/.*# #g' 2>/dev/null)"
 
-    printf "
-# Default home zone template:
-local-zone: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\" redirect
+    printf "\n%b\n\n%b\n%b\n%b\n\n" \
+        "# DNS record template" \
+        "local-zone: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\" redirect" \
+        "local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 360 IN A ${MAIN_JAIL_ADDRESS}\"" \
+        "local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.${SHARED_DOMAIN_NAME}\"" >> "${JAIL_LOCAL_DOMAIN_CONF}"
 
-local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN NS ns1.${SHARED_DOMAIN_NAME}.\"
-local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN NS ns2.${SHARED_DOMAIN_NAME}.\"
-local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 1800  IN SRV 10 10 22 ${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\"
-local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN SOA ns1.${SHARED_DOMAIN_NAME}. ns2.${SHARED_DOMAIN_NAME}. $(${DATE_BIN} +%s 2>/dev/null) 3600 600 86400 3600\"
-local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN A ${MAIN_JAIL_ADDRESS}\"
-
-local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.${SHARED_DOMAIN_NAME}\"
-
-" >> "${JAIL_LOCAL_DOMAIN_CONF}"
+    # NOTE: old template, just in case:
+    # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN NS ns1.${SHARED_DOMAIN_NAME}.\"
+    # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN NS ns2.${SHARED_DOMAIN_NAME}.\"
+    # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 1800  IN SRV 10 10 22 ${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\"
+    # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN SOA ns1.${SHARED_DOMAIN_NAME}. ns2.${SHARED_DOMAIN_NAME}. $(${DATE_BIN} +%s 2>/dev/null) 3600 600 86400 3600\"
+    # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN A ${MAIN_JAIL_ADDRESS}\"
 
     # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
     note "Reloading DNS and Web proxy configuration."
