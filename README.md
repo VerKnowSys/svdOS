@@ -218,6 +218,11 @@ which cargo
 ![Pic 9](http://s.verknowsys.com/d924a95e38a833f19411dbc5b4e75acf.png)
 > Pic 9. There are several quota attributes - here we're setting three of them, each with immediate effect. Attributes are immediately applied on working jails. NOTE: Try: `gvr available` - to get list of all supported attributes.
 
+--
+
+![Pic 10](http://s.verknowsys.com/d503421c433336e6a65502bbc34c0cc3.png)
+> Pic 10. Software version switching for an example of Php (and environment management).
+
 
 
 ## Known issues/ problems:
