@@ -593,7 +593,7 @@ log {
 
     # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
     note "Reloading DNS and Web proxy configuration."
-    try "${DNS_IGNITER} restart"
+    try "${DNS_IGNITER} reload"
     try "${NGINX_IGNITER} reload"
 
     note "Starting jail: $(distd "${JAIL_NAME}")"
