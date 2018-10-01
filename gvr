@@ -94,6 +94,9 @@ fi
 if [ ! -d "${DEFAULT_IGNITERS_LOCATION}" ]; then
     try "${ZFS_BIN} create -o dedup=off -o mountpoint=${DEFAULT_IGNITERS_LOCATION} ${DEFAULT_ZPOOL}${DEFAULT_IGNITERS_LOCATION}"
 fi
+if [ ! -d "${DEFAULT_JAIL_SHARED_LOCATION}/DNS" ]; then
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${DEFAULT_JAIL_SHARED_LOCATION}/DNS ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/DNS"
+fi
 if [ ! -d "${DEFAULT_JAIL_SHARED_LOCATION}/Prison" ]; then
     # No deduplication on /Shared/Prison
     try "${ZFS_BIN} create -o dedup=off -o mountpoint=none ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/Prison"

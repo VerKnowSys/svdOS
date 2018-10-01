@@ -14,7 +14,8 @@ SERVICES_DIR="/Services"
 SHARED_DIR="/Shared"
 CACHE_DIR="${SHARED_DIR}/Cache"
 SYSTEM_IGNITERS_DIR="${SHARED_DIR}/Igniters"
-SOURCE="http://software.verknowsys.com/binary/ServeD"
+SYSTEM_DNS_DIR="${SHARED_DIR}/DNS"
+SERVED_BINARY_RESOURCE="http://software.verknowsys.com/binary/ServeD"
 PATH="/Software/Git/exports:/Software/Zsh/exports:/bin:/usr/bin:/sbin:/usr/sbin"
 HOME_DIR="/User"
 SERVED_REPOSITORY="https://github.com/VerKnowSys/svdOS.git"
@@ -48,6 +49,9 @@ get_the_current () {
         zfs create -o \
             mountpoint="${SYSTEM_IGNITERS_DIR}" \
             "${ZPOOL}${SYSTEM_IGNITERS_DIR}";
+        zfs create -o \
+            mountpoint="${SYSTEM_DNS_DIR}" \
+            "${ZPOOL}${SYSTEM_DNS_DIR}";
         zfs create -o compression=lz4 -o checksum=fletcher4 \
             -o primarycache=metadata -o secondarycache=metadata \
             -o mountpoint="${CACHE_DIR}" \
@@ -56,7 +60,7 @@ get_the_current () {
         >> "${LOG_FILE}" 2>> "${LOG_FILE}"
 
     mkdir -p "${DESTBASE}" >/dev/null 2>&1
-    fetch "${SOURCE}/${PICKED_BUILD_VERSION}" -o "${CACHE_DIR}/current-version-snapshot" >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
+    fetch "${SERVED_BINARY_RESOURCE}/${PICKED_BUILD_VERSION}" -o "${CACHE_DIR}/current-version-snapshot" >> "${LOG_FILE}" 2>> "${LOG_FILE}" && \
         cat "${CACHE_DIR}/current-version-snapshot" 2>/dev/null && \
             return 0
     return 1
@@ -92,7 +96,7 @@ prepare_and_fetch_os_snapshot () {
         fetch_and_install_lz4
 
     test -f "${CACHE_DIR}/${MOST_RECENT}" || \
-        fetch "${SOURCE}/${MOST_RECENT}" -o "${CACHE_DIR}/${MOST_RECENT}" \
+        fetch "${SERVED_BINARY_RESOURCE}/${MOST_RECENT}" -o "${CACHE_DIR}/${MOST_RECENT}" \
             >> "${LOG_FILE}" && return 0
     return 1
 }
