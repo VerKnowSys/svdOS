@@ -146,7 +146,7 @@ set_values () {
     JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
     JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
     JAIL_ATTRIBUTES_DIR="${SENTRY}/${CELL_ATTRIBUTES_DIR}"
-    JAIL_NAME="$(printf "${ENTERED_NAME}\n" | ${SED_BIN} 's/\./-/g' 2>/dev/null)"
+    JAIL_NAME="$(printf "%s\n" "${ENTERED_NAME}" | ${SED_BIN} 's/\./-/g' 2>/dev/null)"
     JAIL_ID_FILE="${SENTRY}/${JAIL_ID_NAME}"
     JAIL_TRACE_LOG="${SENTRY}/${JAIL_TRUSS_NAME}"
     JAIL_EXEC_LOG="${SENTRY}/${JAIL_TRUSS_EXEC_NAME}"
@@ -299,7 +299,7 @@ check_jail_address () {
         IP_FILE="${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
         if [ -f "${IP_FILE}" ]; then
             for ip in $(${CAT_BIN} "${IP_FILE}" 2>/dev/null | ${TR_BIN} ',' '\n' 2>/dev/null); do
-                JAIL_ADDRESS_CHECK=$(printf "${JAIL_ADDRESS_CHECK}" | ${TR_BIN} ',' '\n' 2>/dev/null)
+                JAIL_ADDRESS_CHECK=$(printf "%s" "${JAIL_ADDRESS_CHECK}" | ${TR_BIN} ',' '\n' 2>/dev/null)
                 for addrchk in ${JAIL_ADDRESS_CHECK}; do
                     echo "${ip}" | ${GREP_BIN} "${addrchk}" > /dev/null 2>&1
                     if [ "$?" = "0" ]; then
@@ -783,11 +783,11 @@ jail_set () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
     for argument_pair in ${*}; do
-        ATTRIBUTE="$(printf "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' 2>/dev/null)"
-        JAIL_VALUE="$(printf "${argument_pair}\n" | ${AWK_BIN} '{split($0, a, "="); print a[2];}' 2>/dev/null)"
+        ATTRIBUTE="$(printf "%s\n" "${argument_pair}" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' 2>/dev/null)"
+        JAIL_VALUE="$(printf "%s\n" "${argument_pair}" | ${AWK_BIN} '{split($0, a, "="); print a[2];}' 2>/dev/null)"
         debug "arg: ${ATTRIBUTE}, val: ${JAIL_VALUE} "
         printf "%b\n" "${ColorGreen}Setting attribute: ${ColorCyan}${ATTRIBUTE}${ColorGreen}, value: ${ColorCyan}${JAIL_VALUE}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}"
-        printf "${JAIL_VALUE}\n" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
+        printf "%s\n" "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
     done
     apply_attributes
 }
