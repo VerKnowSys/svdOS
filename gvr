@@ -49,6 +49,7 @@ DEFAULT_LIMIT_MAXPTS="16"
 DEFAULT_JAIL_SHARED_LOCATION="/Shared"
 DEFAULT_CELLS_LOCATION="${DEFAULT_JAIL_SHARED_LOCATION}/Prison/Cells"
 DEFAULT_SENTRY_LOCATION="${DEFAULT_JAIL_SHARED_LOCATION}/Prison/Sentry"
+DEFAULT_IGNITERS_LOCATION="${DEFAULT_JAIL_SHARED_LOCATION}/Igniters"
 CELL_IP_ADDRESSES_ATTRIBUTE="jail.ip.addresses"
 CELL_OS_VERSION_ATTRIBUTE="jail.os.version"
 CELL_EPAIR_NUMBER_ATTRIBUTE="jail.vlan.number"
@@ -68,12 +69,6 @@ DEFAULT_UNAME="FreeBSD"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} "${0}" 2>/dev/null)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 2>/dev/null | ${TAIL_BIN} -n 4 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
 GVR_HOST_IP_ADDR="$(${IFCONFIG_BIN} "${DEFAULT_INTERFACE}" 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
-
-# TODO: XXX: hardcoded and bounded with Shable dedicated setup directly (but works):
-DEFAULT_IGNITERS_LOCATION="${DEFAULT_JAIL_SHARED_LOCATION}/Igniters"
-DNS_IGNITER="${DEFAULT_IGNITERS_LOCATION}/dns.igni"
-NGINX_IGNITER="${DEFAULT_IGNITERS_LOCATION}/nginx.igni"
-
 
 #
 # Sanity checks start here:
@@ -596,8 +591,8 @@ log {
 
     # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
     note "Reloading DNS and Web proxy configuration."
-    try "${DNS_IGNITER} reload"
-    try "${NGINX_IGNITER} reload"
+    try "igni dns reload"
+    try "igni proxy reload"
 
     note "Starting jail: $(distd "${JAIL_NAME}")"
     jail_start "${JAIL_NAME}" && \
