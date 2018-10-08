@@ -478,7 +478,7 @@ ${JAIL_NAME} {
     if [ "$?" != "0" ]; then
         error "Something went wrong. Missing ${ORIGIN} snapshot: '$(diste "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}")'. Aborting"
     else
-        debug "${ColorGreen}Found an software root ${ORIGIN} of snapshot: $(distd "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}")"
+        debug "Found an software root ${ORIGIN} of snapshot: $(distd "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}")"
     fi
     {
         printf "%b\n" "${ColorGreen}Cloning: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${ColorGreen}from most recent snapshot: ${ColorCyan}${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}";
