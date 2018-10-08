@@ -590,7 +590,7 @@ log {
     # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN A ${MAIN_JAIL_ADDRESS}\"
 
     # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
-    note "Reloading DNS and Web proxy configuration."
+    note "Reloading $(distn "DNS") and $(distn "Web-proxy") configuration."
     try "igni dns reload"
     try "igni proxy reload"
 
