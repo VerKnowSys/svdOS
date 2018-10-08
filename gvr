@@ -511,7 +511,7 @@ ${JAIL_NAME} {
                     "${CELL}/tmp" \
                     "${CELL}/dev" \
                     "${CELL}/var/log" \
-                    "${CELL}/var/www"
+                    "${CELL}/var/www" \
                     "${CELL}/var/tmp" \
                     "${CELL}/SystemUsers" \
                     "${CELL}/Software" \
