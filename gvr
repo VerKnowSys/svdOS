@@ -700,7 +700,7 @@ jail_start () {
         JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
 
         GVR_AFTER_START_TIMESTAMP_S="$(${DATE_BIN} +%s 2>/dev/null)"
-        GVR_ELAPSED_S="$(( "${GVR_AFTER_START_TIMESTAMP_S}" - "${GVR_START_TIMESTAMP_S}" ))"
+        GVR_ELAPSED_S="$(( ${GVR_AFTER_START_TIMESTAMP_S} - ${GVR_START_TIMESTAMP_S} ))"
 
         printf "%s\n" "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         ${JEXEC_BIN} "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
