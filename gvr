@@ -553,6 +553,7 @@ ${JAIL_NAME} {
         debug "Created sysctl.conf from svdOS repository"
     fi
 
+    run "${CP_BIN} -f /usr/bin/rsync ${CELL}/usr/bin/rsync" && \
     run "${RM_BIN} -f ${CELL}/etc/zshenv ${CELL}/etc/zshrc" && \
     run "${MKDIR_BIN} -p ${CELL}/etc/zsh" && \
     run "${CP_BIN} -R ${SERVED_REPO}/shell/ ${CELL}/etc/zsh" && \
