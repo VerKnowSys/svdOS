@@ -430,6 +430,7 @@ ${JAIL_NAME} {
     exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b inet ${JAIL_ADDRESSES} up\";
     exec.start  += \"${ROUTE_BIN} add default ${JAIL_ROUTER_ADDRESS}\";
     exec.start  += \"service sshd restart; service cron restart\";
+    exec.start  += \"test -f /etc/rc.local && ${SH_BIN} /etc/rc.local\";
     # NOTE: not actually required if we don't want any additional subsystems: exec.start  += \"${SH_BIN} /etc/rc\";
     exec.stop = \"${SH_BIN} /etc/rc.shutdown\";
     exec.poststop  = \"${IFCONFIG_BIN} ${BRIDGE_DEVICE} deletem ${EPAIR}a\";
@@ -535,7 +536,7 @@ ${JAIL_NAME} {
     run "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.${SHARED_DOMAIN_NAME}:\" ${CELL}/etc/rc.conf" && \
     run "${RM_BIN} -f ${CELL}/etc/rc.conf.local" && \
     run "${SED_BIN} -i '' -e \"s:__HOST_IP:${JAIL_ROUTER_ADDRESS}:\" ${CELL}/etc/resolv.conf" && \
-        run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf" && \
+        run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf /etc/rc.local /etc/rc.shutdown" && \
         debug "Built initial jail environment"
 
     if [ ! -f "${CELL}/etc/sysctl.conf" ]; then
