@@ -723,6 +723,7 @@ jail_start () {
         run "${JEXEC_BIN} ${JAIL_NAME} mount -a" && debug "Mounted /dev and /tmp"
         run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && debug "Zfs datasets mounted"
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${ColorCyan}${KERN_SECURELEVEL}"
+        run "${JEXEC_BIN} ${JAIL_NAME} touch /User/.zshrc" # Avoid Zsh welcome bullshit
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /Services /User /Software /Shared"
 
         mark_running && \
