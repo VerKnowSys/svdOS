@@ -511,6 +511,7 @@ ${JAIL_NAME} {
                     "${CELL}/tmp" \
                     "${CELL}/dev" \
                     "${CELL}/var/log" \
+                    "${CELL}/var/www"
                     "${CELL}/var/tmp" \
                     "${CELL}/SystemUsers" \
                     "${CELL}/Software" \
@@ -530,7 +531,7 @@ ${JAIL_NAME} {
     run "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.${SHARED_DOMAIN_NAME}:\" ${CELL}/etc/rc.conf" && \
     run "${RM_BIN} -f ${CELL}/etc/rc.conf.local" && \
     run "${SED_BIN} -i '' -e \"s:__HOST_IP:${JAIL_ROUTER_ADDRESS}:\" ${CELL}/etc/resolv.conf" && \
-        run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf /etc/rc.local /etc/rc.shutdown /var/log" && \
+        run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf /etc/rc.local /etc/rc.shutdown" && \
         debug "Built initial jail environment"
 
     if [ ! -f "${CELL}/etc/sysctl.conf" ]; then
@@ -719,7 +720,7 @@ jail_start () {
         run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && debug "Zfs datasets mounted"
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${ColorCyan}${KERN_SECURELEVEL}"
         run "${JEXEC_BIN} ${JAIL_NAME} touch /User/.zshrc" # Avoid Zsh welcome bullshit
-        run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /Services /User /Software /Shared"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /Services /User /Software /Shared /var/log /var/www"
 
         mark_running && \
             debug "Jail is running"
