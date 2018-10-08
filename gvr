@@ -21,9 +21,10 @@ EPAIR_DEVICE="epair"
 SERVED_REPO="/Projects/svdOS"
 SOFIN_REPO="/Projects/Sofin"
 DEFAULT_SOFIN_REPO="https://github.com/VerKnowSys/sofin.git"
-GVR_START_TIMESTAMP_S="$(${DATE_BIN} +%s 2>/dev/null)"
 SERVED_SYSTEM_SNAPSHOT_RESOURCE="http://software.verknowsys.com/binary/ServeD"
 
+CAT_BIN="/bin/cat"
+DATE_BIN="/bin/date"
 SH_BIN="/bin/sh"
 JOT_BIN="/usr/bin/jot"
 IFCONFIG_BIN="/sbin/ifconfig"
@@ -69,6 +70,8 @@ DEFAULT_UNAME="FreeBSD"
 GVR_SCRIPT_NAME="$(${BASENAME_BIN} "${0}" 2>/dev/null)"
 DEFAULT_INTERFACE="$(${ROUTE_BIN} show -net 0 2>/dev/null | ${TAIL_BIN} -n 4 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
 GVR_HOST_IP_ADDR="$(${IFCONFIG_BIN} "${DEFAULT_INTERFACE}" 2>/dev/null | ${GREP_BIN} -v grep 2>/dev/null | ${GREP_BIN} inet 2>/dev/null | ${AWK_BIN} '{print $2;}' 2>/dev/null)"
+GVR_START_TIMESTAMP_S="$(${DATE_BIN} +%s 2>/dev/null)"
+
 
 #
 # Sanity checks start here:
