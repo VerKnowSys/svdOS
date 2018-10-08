@@ -15,6 +15,7 @@ SHARED_DIR="/Shared"
 CACHE_DIR="${SHARED_DIR}/Cache"
 SYSTEM_IGNITERS_DIR="${SHARED_DIR}/Igniters"
 SYSTEM_DNS_DIR="${SHARED_DIR}/DNS"
+SYSTEM_CUSTODY_DIR="${SHARED_DIR}/Custody"
 SERVED_BINARY_RESOURCE="http://software.verknowsys.com/binary/ServeD"
 PATH="/Software/Git/exports:/Software/Zsh/exports:/bin:/usr/bin:/sbin:/usr/sbin"
 HOME_DIR="/User"
@@ -52,6 +53,9 @@ get_the_current () {
         zfs create -o \
             mountpoint="${SYSTEM_DNS_DIR}" \
             "${ZPOOL}${SYSTEM_DNS_DIR}";
+        zfs create -o \
+            mountpoint="${SYSTEM_CUSTODY_DIR}" \
+            "${ZPOOL}${SYSTEM_CUSTODY_DIR}";
         zfs create -o compression=lz4 -o checksum=fletcher4 \
             -o primarycache=metadata -o secondarycache=metadata \
             -o mountpoint="${CACHE_DIR}" \
