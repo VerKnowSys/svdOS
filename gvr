@@ -505,7 +505,7 @@ ${JAIL_NAME} {
         run "${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}" && \
         run "${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         run "${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
-        run "${ZFS_BIN} allow -u ${DEFAULT_JAIL_USER} xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation,readonly ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+        run "${ZFS_BIN} allow -u ${DEFAULT_JAIL_USER} xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation,readonly ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME} 2>/dev/null" && \
             debug "Dataset configured: $(distd "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}")"
     done
     run "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
