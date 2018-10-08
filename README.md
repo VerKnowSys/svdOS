@@ -224,6 +224,23 @@ which cargo
 > Pic 10. Software version switching (and environment management) for an example of Php.
 
 
+## Few words about /Shared/ mounts:
+
+* `/Shared/Cache/*` - Dataset used as a system cache dir. Usually contains file snapshots from ServeD release process.
+
+* `/Shared/Custody/*` - Dataset monitored by `custody` script which works as superuser on dedicated backend to create new jails. Each file named `jailname` should contain unique IPv4 address of the local network. Each successfull jail creation will be followed by file deletion.
+
+* `/Shared/DNS/*.conf` - DNS dataset with custom Unbound `*.conf` (file per zone) DNS configurations.
+
+* `/Shared/Igniters/*.igni` - Dataset contains service igniters, f.e. `vpn.igni` will be invoked later with `igni vpn some-command` (for both regular and super user).
+
+* `/Shared/Prison/*` - Dataset contains two datasets:
+
+    * `/Shared/Prison/Cells/*` - Dataset with jail cells.
+
+    * `/Shared/Prison/Sentry/*` - Dataset with metadata and configuration of each jail cell.
+
+
 
 ## Known issues/ problems:
 
