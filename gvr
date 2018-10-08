@@ -530,7 +530,7 @@ ${JAIL_NAME} {
     run "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.${SHARED_DOMAIN_NAME}:\" ${CELL}/etc/rc.conf" && \
     run "${RM_BIN} -f ${CELL}/etc/rc.conf.local" && \
     run "${SED_BIN} -i '' -e \"s:__HOST_IP:${JAIL_ROUTER_ADDRESS}:\" ${CELL}/etc/resolv.conf" && \
-        run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf /etc/rc.local /etc/rc.shutdown" && \
+        run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf /etc/rc.local /etc/rc.shutdown /var/log" && \
         debug "Built initial jail environment"
 
     if [ ! -f "${CELL}/etc/sysctl.conf" ]; then
