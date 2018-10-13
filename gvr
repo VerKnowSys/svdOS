@@ -464,7 +464,7 @@ ${JAIL_NAME} {
     ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
         LAST="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
-        debug "Last snapshot of: $(distd "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}")is: $(distd "${LAST}")"
+        debug "Last snapshot of: $(distd "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}") is: $(distd "${LAST}")"
     fi
     if [ -z "${LAST}" ]; then
         LAST="${ORIGIN}"
@@ -473,7 +473,7 @@ ${JAIL_NAME} {
     fi
 
     run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}" && \
-        debug "Cloned last jail system base: $(distd "${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}") to: $(distd "${CELL}${ColorReset}")"
+        debug "Cloned last jail system base: $(distd "${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}") to: $(distd "${CELL}")"
 
     mst_recent_soft="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/Software/root@[Pa-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
     ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}" > /dev/null 2>&1
@@ -504,6 +504,7 @@ ${JAIL_NAME} {
             run "${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
 
     done
+
     run "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
     run "${ZFS_BIN} set mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL}"
     {
@@ -736,7 +737,7 @@ jail_start () {
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} -f /etc/sysctl.conf || :" && debug "Jail sysctl.conf loaded"
         run "${JEXEC_BIN} ${JAIL_NAME} ${MOUNT_BIN} -a" && debug "All filesystems mounted"
         run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && debug "All datasets mounted"
-        run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${ColorCyan}${KERN_SECURELEVEL}"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${KERN_SECURELEVEL}"
         run "${JEXEC_BIN} ${JAIL_NAME} ${TOUCH_BIN} /User/.zshrc" # Avoid Zsh welcome bullshit
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /User/.zshrc /Services /User /Software /Software/Git /Software/Zsh /Software/Sofin /Shared /var/log /var/www"
 
