@@ -326,10 +326,6 @@ upgrade_projects_sync_configuration () {
             "${ZPOOL}${SOFTWARE_DIR}/root/Sofin"
     # Install new version:
     bin/upgrade
-    # Rename old @origin:
-    zfs rename "${ZPOOL}${SOFTWARE_DIR}/root/Sofin@origin" "@origin-${_timestamp_now}" 2>/dev/null
-    # Create new @origin for Sofin software dataset:
-    zfs snapshot "${ZPOOL}${SOFTWARE_DIR}/root/Sofin@origin" 2>/dev/null
 
     cd /Projects
     git clone "${BEADM_REPOSITORY}" 2>/dev/null
