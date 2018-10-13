@@ -38,10 +38,14 @@ DEFAULT_LIMIT_MAX_VMEMORY="32G"
 DEFAULT_LIMIT_MAXPROC="512"
 DEFAULT_LIMIT_OPENFILES="16384" # this is required f.e. for Postgresql to work properly
 DEFAULT_LIMIT_MAXPTS="16"
-DEFAULT_JAIL_SHARED_LOCATION="/Shared"
-DEFAULT_CELLS_LOCATION="${DEFAULT_JAIL_SHARED_LOCATION}/Prison/Cells"
-DEFAULT_SENTRY_LOCATION="${DEFAULT_JAIL_SHARED_LOCATION}/Prison/Sentry"
-DEFAULT_IGNITERS_LOCATION="${DEFAULT_JAIL_SHARED_LOCATION}/Igniters"
+SHARED_DIR="/Shared"
+PRISON_DIR="${SHARED_DIR}/Prison"
+CELLS_DIR="${PRISON_DIR}/Cells"
+SENTRY_DIR="${PRISON_DIR}/Sentry"
+IGNITERS_DIR="${SHARED_DIR}/Igniters"
+SYSTEM_NETIDS_DIR="${SHARED_DIR}/NetIDs"
+SYSTEM_IPS_DIR="${SHARED_DIR}/IPs"
+SYSTEM_DNS_DIR="${SHARED_DIR}/DNS"
 CELL_IP_ADDRESSES_ATTRIBUTE="jail.ip.addresses"
 CELL_OS_VERSION_ATTRIBUTE="jail.os.version"
 CELL_EPAIR_NUMBER_ATTRIBUTE="jail.vlan.number"
@@ -76,46 +80,44 @@ if [ ! -d "${DEFAULT_JAIL_ETC_SOURCE}" ]; then
 fi
 
 # Create default jail sentry and cells location
-if [ ! -d "${DEFAULT_JAIL_SHARED_LOCATION}" ]; then
+if [ ! -d "${SHARED_DIR}" ]; then
     # No deduplication on /Shared
-    try "${ZFS_BIN} create -o dedup=off -o mountpoint=none ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}"
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=none ${DEFAULT_ZPOOL}${SHARED_DIR}"
 fi
-if [ ! -d "${DEFAULT_IGNITERS_LOCATION}" ]; then
-    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${DEFAULT_IGNITERS_LOCATION} ${DEFAULT_ZPOOL}${DEFAULT_IGNITERS_LOCATION}"
+if [ ! -d "${IGNITERS_DIR}" ]; then
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${IGNITERS_DIR} ${DEFAULT_ZPOOL}${IGNITERS_DIR}"
 fi
-if [ ! -d "${DEFAULT_JAIL_SHARED_LOCATION}/DNS" ]; then
-    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${DEFAULT_JAIL_SHARED_LOCATION}/DNS ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/DNS"
+if [ ! -d "${SHARED_DIR}/Custody" ]; then
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${SHARED_DIR}/Custody ${DEFAULT_ZPOOL}${SHARED_DIR}/Custody"
 fi
-if [ ! -d "${DEFAULT_JAIL_SHARED_LOCATION}/Custody" ]; then
-    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${DEFAULT_JAIL_SHARED_LOCATION}/Custody ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/Custody"
+if [ ! -d "${PRISON_DIR}" ]; then
+    try "${ZFS_BIN} create -o dedup=on -o mountpoint=none ${DEFAULT_ZPOOL}${PRISON_DIR}"
 fi
-if [ ! -d "${DEFAULT_JAIL_SHARED_LOCATION}/NetIDs" ]; then
-    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${DEFAULT_JAIL_SHARED_LOCATION}/NetIDs ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/NetIDs"
+if [ ! -d "${SYSTEM_DNS_DIR}" ]; then
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${SYSTEM_DNS_DIR} ${DEFAULT_ZPOOL}${SYSTEM_DNS_DIR}"
 fi
-
-if [ ! -d "${DEFAULT_JAIL_SHARED_LOCATION}/IPs" ]; then
-    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${DEFAULT_JAIL_SHARED_LOCATION}/IPs ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/IPs"
+if [ ! -d "${SYSTEM_NETIDS_DIR}" ]; then
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${SHARED_DIR}/NetIDs ${DEFAULT_ZPOOL}${SYSTEM_NETIDS_DIR}"
 fi
-if [ ! -d "${DEFAULT_JAIL_SHARED_LOCATION}/Prison" ]; then
-    # No deduplication on /Shared/Prison
-    try "${ZFS_BIN} create -o dedup=off -o mountpoint=none ${DEFAULT_ZPOOL}${DEFAULT_JAIL_SHARED_LOCATION}/Prison"
+if [ ! -d "${SYSTEM_IPS_DIR}" ]; then
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${SYSTEM_IPS_DIR} ${DEFAULT_ZPOOL}${SYSTEM_IPS_DIR}"
 fi
 
-if [ ! -d "${DEFAULT_SENTRY_LOCATION}" ]; then
+if [ ! -d "${SENTRY_DIR}" ]; then
     # Deduplication on /Sentry
-    try "${ZFS_BIN} create -o dedup=on -o mountpoint=none ${DEFAULT_ZPOOL}${DEFAULT_SENTRY_LOCATION}"
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=none ${DEFAULT_ZPOOL}${SENTRY_DIR}"
 fi
-if [ ! -d "${DEFAULT_CELLS_LOCATION}" ]; then
+if [ ! -d "${CELLS_DIR}" ]; then
     # Deduplication on /Cells
-    try "${ZFS_BIN} create -o dedup=on -o mountpoint=none ${DEFAULT_ZPOOL}${DEFAULT_CELLS_LOCATION}"
+    try "${ZFS_BIN} create -o dedup=on -o mountpoint=none ${DEFAULT_ZPOOL}${CELLS_DIR}"
 fi
 
-JAIL_CACHE_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/Cache"
+JAIL_CACHE_DIR="${SHARED_DIR}/Cache"
 if [ ! -d "${JAIL_CACHE_DIR}" ]; then
     try "${ZFS_BIN} create -o compression=lz4 -o checksum=fletcher4 -o primarycache=metadata -o secondarycache=metadata -o mountpoint=${JAIL_CACHE_DIR} ${DEFAULT_ZPOOL}${JAIL_CACHE_DIR}"
 fi
 
-DEFAULT_JAIL_SYSTEM_PATH="${DEFAULT_JAIL_SHARED_LOCATION}/${DEFAULT_UNAME}-${DEFAULT_VERSION}-${DEFAULT_ARCH}"
+DEFAULT_JAIL_SYSTEM_PATH="${SHARED_DIR}/${DEFAULT_UNAME}-${DEFAULT_VERSION}-${DEFAULT_ARCH}"
 if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
     fetch "${SERVED_SYSTEM_SNAPSHOT_RESOURCE}/current-stable" -o "${JAIL_CACHE_DIR}/current-stable" >/dev/null 2>&1
     CURRENT_VERSION="$(cat "${JAIL_CACHE_DIR}/current-stable" 2>/dev/null)"
@@ -144,8 +146,8 @@ set_values () {
     if [ -z "${ENTERED_NAME}" ]; then
         error "Empty cell name!"
     fi
-    CELL="${DEFAULT_CELLS_LOCATION}/${ENTERED_NAME}"
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${ENTERED_NAME}"
+    CELL="${CELLS_DIR}/${ENTERED_NAME}"
+    SENTRY="${SENTRY_DIR}/${ENTERED_NAME}"
     debug "Processing CELL: ${CELL}, Sentry: ${SENTRY}"
     JAIL_DOMAINS_DIR="${SENTRY}/${CELL_DOMAINS_DIR}"
     JAIL_CONF_FILE="${SENTRY}/${JAIL_CONF_NAME}"
@@ -184,7 +186,7 @@ set_values () {
         EPAIR_NUMBER="$(${CAT_BIN} "${JAIL_EPAIR_NUMBER_FILE}" 2>/dev/null)"
     fi
     debug "Got jail os version: ${JAIL_VERSION}"
-    JAIL_SOURCE="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
+    JAIL_SOURCE="${SHARED_DIR}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
     debug "Got jail source: ${JAIL_SOURCE}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
         JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" 2>/dev/null)"
@@ -239,17 +241,17 @@ apply_attributes () {
 
             ip)
                 printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}"
-                debug "conf: ${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
-                printf "%s" "${value}" > "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+                debug "conf: ${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+                printf "%s" "${value}" > "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
                 ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${value};#" "${JAIL_CONF_FILE}"
                 ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${attribute}"
                 ;;
 
             +ip)
-                file_size="$(${STAT_BIN} -f%z "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null)"
+                file_size="$(${STAT_BIN} -f%z "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null)"
                 if [ "${file_size}" -gt "0" ]; then
-                    printf "%s" ",${value}" >> "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
-                    current_value="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -E 's/[,]{2,}/,/g;s/,$//;s/^[,]{1,}//g' 2>/dev/null)"
+                    printf "%s" ",${value}" >> "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+                    current_value="$(${CAT_BIN} "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -E 's/[,]{2,}/,/g;s/,$//;s/^[,]{1,}//g' 2>/dev/null)"
                     debug "Current value: ${current_value}"
                     ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${current_value};#" "${JAIL_CONF_FILE}"
                 fi
@@ -299,8 +301,8 @@ apply_attributes () {
 
 check_jail_address () {
     JAIL_ADDRESS_CHECK="${1}"
-    for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION} 2>/dev/null); do
-        IP_FILE="${DEFAULT_SENTRY_LOCATION}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+    for jail in $(${LS_BIN} ${SENTRY_DIR} 2>/dev/null); do
+        IP_FILE="${SENTRY_DIR}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
         if [ -f "${IP_FILE}" ]; then
             for ip in $(${CAT_BIN} "${IP_FILE}" 2>/dev/null | ${TR_BIN} ',' '\n' 2>/dev/null); do
                 JAIL_ADDRESS_CHECK=$(printf "%s" "${JAIL_ADDRESS_CHECK}" | ${TR_BIN} ',' '\n' 2>/dev/null)
@@ -318,7 +320,7 @@ check_jail_address () {
 
 check_jail_name () {
     GIVEN_NAME="${1}"
-    for jail in $(${LS_BIN} ${DEFAULT_SENTRY_LOCATION} 2>/dev/null); do
+    for jail in $(${LS_BIN} ${SENTRY_DIR} 2>/dev/null); do
         if [ "${jail}" = "${GIVEN_NAME}" ]; then
             error "Name: ${GIVEN_NAME} is already used"
         fi
@@ -392,6 +394,12 @@ jail_create () {
     # if [ -z "${JOT_BIN}" ]; then
     #     JOT_BIN=""
     # fi
+
+    borrow_netid () {
+        _first_id="$(${FIND_BIN} "NetIDs")"
+    }
+    EPAIR_NUMBER="$(borrow_netid)" # pick Random vlan Number between 10 and 4090
+
     EPAIR_NUMBER="$(${JOT_BIN} -r 1 10 4090 2>/dev/null)" # pick Random vlan Number between 10 and 4090
     EPAIR="${EPAIR_DEVICE}${EPAIR_NUMBER}"
     ${IFCONFIG_BIN} "${EPAIR}" > /dev/null 2>&1
@@ -461,7 +469,7 @@ ${JAIL_NAME} {
     fi
 
     LAST=""
-    DEFAULT_JAILS_ROOT_DIR="${DEFAULT_JAIL_SHARED_LOCATION}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
+    DEFAULT_JAILS_ROOT_DIR="${SHARED_DIR}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
     debug "Looking for snapshots of: $(distd "${DEFAULT_JAILS_ROOT_DIR}")"
     ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
@@ -658,15 +666,15 @@ jail_status () {
 
 
 jail_list () {
-    if [ ! -d "${DEFAULT_CELLS_LOCATION}" ]; then
-        mkdir -p "${DEFAULT_CELLS_LOCATION}"
+    if [ ! -d "${CELLS_DIR}" ]; then
+        mkdir -p "${CELLS_DIR}"
     fi
-    cd ${DEFAULT_CELLS_LOCATION}
+    cd ${CELLS_DIR}
     for cell in $(${LS_BIN} 2>/dev/null); do
         cellname="$(printf "%s" "${cell}" | ${AWK_BIN} '{print substr($1,0,29);}' 2>/dev/null)" # first 29 chars visible in jls output
         printf "%s" "${cell}"
-        if [ -f "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
-            JAIL_IPS="$(${CAT_BIN} "${DEFAULT_SENTRY_LOCATION}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -e 's/,$//' 2>/dev/null)"
+        if [ -f "${SENTRY_DIR}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
+            JAIL_IPS="$(${CAT_BIN} "${SENTRY_DIR}/${cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -e 's/,$//' 2>/dev/null)"
         fi
         ${JLS_BIN} -v | ${EGREP_BIN} "${cellname} .*ACTIVE" >> "${GVR_LOG}" 2>&1
         if [ "$?" = "0" ]; then
@@ -755,7 +763,7 @@ jail_stop () {
         usage
         error "No jail to stop"
     fi
-    SENTRY="${DEFAULT_SENTRY_LOCATION}/${GIVEN_NAME}"
+    SENTRY="${SENTRY_DIR}/${GIVEN_NAME}"
     EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/jail.vlan.number" 2>/dev/null)"
     try "${IFCONFIG_BIN} ${EPAIR}a down; ${IFCONFIG_BIN} ${EPAIR}a destroy"
 
@@ -970,9 +978,9 @@ case $1 in
         ;;
 
     boot)
-        cd ${DEFAULT_SENTRY_LOCATION}
+        cd ${SENTRY_DIR}
         for jail in *; do
-            if [ -f "${DEFAULT_SENTRY_LOCATION}/${jail}/${JAIL_RUNNING_INDICATOR}" ]; then
+            if [ -f "${SENTRY_DIR}/${jail}/${JAIL_RUNNING_INDICATOR}" ]; then
                 printf "%b\n" "${ColorGreen}Initializing boot of jail: ${ColorCyan}${jail}"
                 nohup "${0}" start "${jail}" > /dev/null 2>&1 &
             else
