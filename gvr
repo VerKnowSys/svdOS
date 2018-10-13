@@ -391,11 +391,12 @@ jail_create () {
         JAIL_VERSION="${DEFAULT_VERSION}"
     fi
 
-    _first_id="$(${FIND_BIN} "${SYSTEM_NETIDS_DIR}" -type f -name 'id-*' -maxdepth 1 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
-    if [ -z "${_first_id}" ]; then
-        error "No available $(diste "/Shared/NetIDs/id-*") entries found under: $(diste "${SYSTEM_NETIDS_DIR}")!"
+    _1st_id="$(${FIND_BIN} "${SYSTEM_NETIDS_DIR}" -type f -name 'id-*' -maxdepth 1 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
+    if [ -z "${_1st_id##*/}" ]; then
+        error "No available NetID entries found under: $(diste "${SYSTEM_NETIDS_DIR}/id-*")!"
     fi
-    EPAIR_NUMBER="${_first_id}"
+    _1st_id_file="${_1st_id##*/}" # basename()
+    EPAIR_NUMBER="${_1st_id_file#id-}" # cut out the "id-" file prefix
     EPAIR="${EPAIR_DEVICE}${EPAIR_NUMBER}"
 
     set_values "${GIVEN_NAME}"
