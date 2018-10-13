@@ -391,23 +391,12 @@ jail_create () {
         JAIL_VERSION="${DEFAULT_VERSION}"
     fi
 
-    # if [ -z "${JOT_BIN}" ]; then
-    #     JOT_BIN=""
-    # fi
-
-    borrow_netid () {
-        _first_id="$(${FIND_BIN} "NetIDs")"
-    }
-    EPAIR_NUMBER="$(borrow_netid)" # pick Random vlan Number between 10 and 4090
-
-    EPAIR_NUMBER="$(${JOT_BIN} -r 1 10 4090 2>/dev/null)" # pick Random vlan Number between 10 and 4090
+    _first_id="$(${FIND_BIN} "${SYSTEM_NETIDS_DIR}" -type f -name 'id-*' -maxdepth 1 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
+    if [ -z "${_first_id}" ]; then
+        error "No available $(diste "/Shared/NetIDs/id-*") entries found under: $(diste "${SYSTEM_NETIDS_DIR}")!"
+    fi
+    EPAIR_NUMBER="${_first_id}"
     EPAIR="${EPAIR_DEVICE}${EPAIR_NUMBER}"
-    ${IFCONFIG_BIN} "${EPAIR}" > /dev/null 2>&1
-    while [ "$?" = "0" ]; do
-        EPAIR_NUMBER="$(${JOT_BIN} -r 1 10 4090 2>/dev/null)"
-        run "${IFCONFIG_BIN} ${EPAIR}" && \
-            printf "%b\n" "${ColorGreen}Picked network vlan: ${EPAIR}"
-    done
 
     set_values "${GIVEN_NAME}"
 
@@ -607,6 +596,10 @@ log {
     # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 1800  IN SRV 10 10 22 ${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\"
     # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN SOA ns1.${SHARED_DOMAIN_NAME}. ns2.${SHARED_DOMAIN_NAME}. $(${DATE_BIN} +%s 2>/dev/null) 3600 600 86400 3600\"
     # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN A ${MAIN_JAIL_ADDRESS}\"
+
+    _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
+    try "${RM_BIN} -f \"${_used_id_file}\"" && \
+        note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is now marked as used by jail: $(distn "${JAIL_NAME}")."
 
     # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
     note "Reloading $(distn "DNS") and $(distn "Web-proxy") configuration."
@@ -905,8 +898,11 @@ jail_destroy () {
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${SENTRY}"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}"
-        try "${RM_BIN} -rf ${CELL}"
-        try "${RM_BIN} -rf ${SENTRY}"
+        try "${RM_BIN} -rf ${CELL} ${SENTRY}"
+
+        _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
+        try "${TOUCH_BIN} ${_used_id_file}" && \
+            note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) was released by jail: $(distn "${JAIL_NAME}")"
 
         printf "%b\n" "${ColorGreen}Destroyed datasets of jail: ${ColorCyan}${JAIL_NAME}" && \
             igni dns test >/dev/null && \
