@@ -491,8 +491,6 @@ ${JAIL_NAME} {
     }
 
     for dset in Software Services User Shared; do
-        ${ZFS_BIN} list 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" >/dev/null 2>&1 || \
-        run "${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
         run "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         run "${ZFS_BIN} set checksum=fletcher4 ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         run "${ZFS_BIN} set aclinherit=passthrough ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
@@ -502,6 +500,9 @@ ${JAIL_NAME} {
         run "${ZFS_BIN} set mountpoint=/${dset} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
         run "${ZFS_BIN} set quota=${DEFAULT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             debug "Dataset configured: $(distd "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}")"
+        ${ZFS_BIN} list "${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" >/dev/null 2>&1 || \
+            run "${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
+
     done
     run "${ZFS_BIN} set quota=${DEFAULT_ROOT_QUOTA_LIMIT} ${DEFAULT_ZPOOL}${CELL}"
     run "${ZFS_BIN} set mountpoint=${CELL} ${DEFAULT_ZPOOL}${CELL}"
