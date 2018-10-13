@@ -186,6 +186,10 @@ configure_and_commit_boot_env () {
         echo "svdUP: Syncing: Service igniter (igni)"
         cp -f "/usr/bin/igni" "${DESTBASE}/usr/bin/"
     fi
+    if [ -x "/usr/bin/custody" ]; then
+        echo "svdUP: Syncing: Service igniter (custody)"
+        cp -f "/usr/bin/custody" "${DESTBASE}/usr/bin/"
+    fi
 
     echo "svdUP: Installing Lz4 to destination base system"
     cp -f /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4"
