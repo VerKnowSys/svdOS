@@ -878,18 +878,18 @@ jail_destroy () {
         if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
             jail_stop ${*}
         fi
-        run "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" && \
-        run "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" && \
-        run "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}" && \
-        run "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/User/${JAIL_NAME}" && \
-        run "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${SENTRY}" && \
-        run "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}" && \
-        run "${RM_BIN} -rf ${CELL}" && \
-        run "${RM_BIN} -rf ${SENTRY}" && \
-            printf "%b\n" "${ColorGreen}Destroyed datasets of jail: ${ColorCyan}${JAIL_NAME}" && \
-            service local_unbound configtest >> ${GVR_LOG} 2>&1 && \
-            service local_unbound restart >> ${GVR_LOG} 2>&1 && \
-                printf "%b\n" "${ColorGreen}Unbound resolver restarted"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${SENTRY}"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}"
+        try "${RM_BIN} -rf ${CELL}"
+        try "${RM_BIN} -rf ${SENTRY}"
+
+        printf "%b\n" "${ColorGreen}Destroyed datasets of jail: ${ColorCyan}${JAIL_NAME}" && \
+            igni dns test >/dev/null && \
+            igni dns reload
     else
         printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}$(${BASENAME_BIN} "${GIVEN_NAME}" 2>/dev/null) left intact"
     fi
