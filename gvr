@@ -458,18 +458,17 @@ ${JAIL_NAME} {
 " >> "${JAIL_CONF_FILE}"
     fi
 
-    LAST=""
+    # debug "Looking for snapshots of: $(distd "${DEFAULT_JAILS_ROOT_DIR}")"
+    # ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" > /dev/null 2>&1
+    # if [ "$?" = "0" ]; then
+    #     LAST="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
+    #     debug "Last snapshot of: $(distd "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}") is: $(distd "${LAST}")"
+    # fi
     DEFAULT_JAILS_ROOT_DIR="${SHARED_DIR}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
-    debug "Looking for snapshots of: $(distd "${DEFAULT_JAILS_ROOT_DIR}")"
-    ${ZFS_BIN} list -t snap 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" > /dev/null 2>&1
-    if [ "$?" = "0" ]; then
-        LAST="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}@[a-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
-        debug "Last snapshot of: $(distd "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}") is: $(distd "${LAST}")"
-    fi
+    LAST="${ORIGIN}"
     if [ -z "${LAST}" ]; then
-        LAST="${ORIGIN}"
         run "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}" && \
-        warn "No snapshots found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Created ${ORIGIN} snapshot"
+        warn "No origin snapshot found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Created ${ORIGIN} snapshot"
     fi
 
     run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}" && \
