@@ -716,13 +716,15 @@ jail_start () {
                 debug "Filesystem jailed: $(distd "${dset}")"
         done
 
-        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${ZFS_BIN} ${CHOWN_BIN}"
+        # TODO: XXX: this feels like a hack to set any SUID bits:
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${CHOWN_BIN} ${ZFS_BIN}"
+
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} -f /etc/sysctl.conf || :" && debug "Jail sysctl.conf loaded"
-        run "${JEXEC_BIN} ${JAIL_NAME} mount -a" && debug "Mounted /dev and /tmp"
-        run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && debug "Zfs datasets mounted"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${MOUNT_BIN} -a" && debug "All filesystems mounted"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && debug "All datasets mounted"
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${ColorCyan}${KERN_SECURELEVEL}"
-        run "${JEXEC_BIN} ${JAIL_NAME} touch /User/.zshrc" # Avoid Zsh welcome bullshit
-        run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /Services /User /Software /Shared /var/log /var/www"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${TOUCH_BIN} /User/.zshrc" # Avoid Zsh welcome bullshit
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /User/.zshrc /Services /User /Software /Software/Git /Software/Zsh /Software/Sofin /Shared /var/log /var/www"
 
         mark_running && \
             debug "Jail is running"
