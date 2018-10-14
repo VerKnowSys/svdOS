@@ -320,9 +320,9 @@ check_jail_address () {
 
 check_jail_name () {
     GIVEN_NAME="${1}"
-    for jail in $(${LS_BIN} ${SENTRY_DIR} 2>/dev/null); do
-        if [ "${jail}" = "${GIVEN_NAME}" ]; then
-            error "Name: ${GIVEN_NAME} is already used"
+    for _jail in $(${LS_BIN} "${SENTRY_DIR}" 2>/dev/null); do
+        if [ "${_jail}" = "${GIVEN_NAME}" ]; then
+            error "Name: $(diste "${GIVEN_NAME}") is already in use!"
         fi
     done
 }
@@ -465,25 +465,21 @@ ${JAIL_NAME} {
     #     debug "Last snapshot of: $(distd "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}") is: $(distd "${LAST}")"
     # fi
     DEFAULT_JAILS_ROOT_DIR="${SHARED_DIR}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
-    LAST="${ORIGIN}"
-    if [ -z "${LAST}" ]; then
-        run "${ZFS_BIN} snapshot ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}" && \
-        warn "No origin snapshot found of base: '${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}'. Created ${ORIGIN} snapshot"
-    fi
 
-    run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST} ${DEFAULT_ZPOOL}${CELL}" && \
-        debug "Cloned last jail system base: $(distd "${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${LAST}") to: $(distd "${CELL}")"
+    run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${ORIGIN} ${DEFAULT_ZPOOL}${CELL}" && \
+        debug "Cloned base system dataset: $(distd "${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${ORIGIN}") to: $(distd "${CELL}")"
 
-    mst_recent_soft="$(${ZFS_BIN} list -H -S creation -t snap -o name 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/Software/root@[Pa-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)"
-    ${ZFS_BIN} list -t snap | ${GREP_BIN} "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}" > /dev/null 2>&1
-    if [ "$?" != "0" ]; then
-        error "Something went wrong. Missing ${ORIGIN} snapshot: '$(diste "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}")'. Aborting"
+    # NOTE: this thing's getting really heavy when a lot of filesystems is mounted:
+    # $(${ZFS_BIN} list -H -S creation -t snapshot -o name 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/Software/root@[Pa-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)
+    ${ZFS_BIN} list -H -r -t snapshot -o name "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}" > /dev/null 2>&1
+    if [ "${?}" != "0" ]; then
+        error "Something went wrong. Missing ${ORIGIN} snapshot: '$(diste "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}")'. Aborting"
     else
-        debug "Found an software root ${ORIGIN} of snapshot: $(distd "${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}")"
+        debug "Found an software root ${ORIGIN} of snapshot: $(distd "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}")"
     fi
     {
-        printf "%b\n" "${ColorGreen}Cloning: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${ColorGreen}from most recent snapshot: ${ColorCyan}${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft}";
-        run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${mst_recent_soft} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}";
+        printf "%b\n" "${ColorGreen}Cloning: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${ColorGreen}from most recent snapshot: ${ColorCyan}${DEFAULT_ZPOOL}/Software/root@${ORIGIN}";
+        run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Sofin@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Sofin";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Git@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Git";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Zsh@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Zsh";
@@ -725,7 +721,7 @@ jail_start () {
             run "${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set canmount=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
-                debug "Filesystem jailed: $(distd "${dset}")"
+                debug "Jailed dataset: $(distd "${dset}")"
             run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} allow -u ${DEFAULT_JAIL_USER} xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation,readonly ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
                 debug "Allowed user: $(distd "${DEFAULT_JAIL_USER}") to control ZFS datasets under his jail: $(distd "${JAIL_NAME}")."
         done
