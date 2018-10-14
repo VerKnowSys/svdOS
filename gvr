@@ -672,7 +672,7 @@ jail_list () {
         _cellname="$(printf "%s" "${_cell}" | ${AWK_BIN} '{print substr($1,0,29);}' 2>/dev/null)" # first 29 chars visible in jls output
         printf "%s" "${_cell}"
         if [ -f "${SENTRY_DIR}/${_cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" ]; then
-            JAIL_IPS="$(${CAT_BIN} "${SENTRY_DIR}/${_cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -e 's/,$//' 2>/dev/null)"
+            JAIL_IPS="$(${CAT_BIN} "${SENTRY_DIR}/${_cellname}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null)"
         fi
         echo "${_out}" | ${EGREP_BIN} "${_cellname} .*ACTIVE" >> "${GVR_LOG}" 2>&1
         if [ "$?" = "0" ]; then
@@ -705,7 +705,7 @@ jail_start () {
 
     check_cell_name "${CELL}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
-        JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" 2>/dev/null | ${TR_BIN} ',' '\n' 2>/dev/null)"
+        JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" 2>/dev/null)"
     fi
 
     ${DEBUG_COMMAND} "${JAIL_BIN}" -c -J "${JAIL_ID_FILE}" -f "${JAIL_CONF_FILE}" >> "${GVR_LOG}" 2>> "${GVR_LOG}"
@@ -734,7 +734,8 @@ jail_start () {
         done
 
         # TODO: XXX: this feels like a hack to set any SUID bits:
-        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${CHOWN_BIN} ${ZFS_BIN}"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${CHOWN_BIN} ${ZFS_BIN}" && \
+            note "Setting up 'the magic three' - the only commands in jail with SETUID bit enabled: ($(distn "chown, sysctl, zfs"))."
 
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} -f /etc/sysctl.conf || :" && debug "Jail sysctl.conf loaded"
         run "${JEXEC_BIN} ${JAIL_NAME} ${MOUNT_BIN} -a" && debug "All filesystems mounted"
