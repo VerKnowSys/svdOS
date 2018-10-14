@@ -329,7 +329,7 @@ upgrade_projects_sync_configuration () {
             mountpoint="${SOFTWARE_DIR}/Sofin" \
             "${ZPOOL}${SOFTWARE_DIR}/root/Sofin"
     # Install new version:
-    bin/upgrade
+    ${SHELL} -c "bin/upgrade"
 
     cd /Projects
     git clone "${BEADM_REPOSITORY}" 2>/dev/null
