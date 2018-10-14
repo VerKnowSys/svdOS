@@ -380,11 +380,20 @@ jail_create () {
     fi
     check_jail_name "${GIVEN_NAME}"
     JAIL_ADDRESSES="${2}"
-    if [ "${JAIL_ADDRESSES}" = "" ]; then
-        usage
-        error "No ip given"
+    if [ -z "${JAIL_ADDRESSES}" ]; then
+        _1st_ip="$(${FIND_BIN} "${SYSTEM_IPS_DIR}" -type f -name 'ip-*' -maxdepth 1 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
+        if [ -z "${_1st_ip##*/}" ]; then
+            error "No more $(diste "IPv4") slots available under: $(diste "${SYSTEM_IPS_DIR}/ip-*")!"
+        fi
+        _1st_ip_file="${_1st_ip##*/}" # basename()
+        JAIL_ADDRESSES="${_1st_ip_file#ip-}" # cut out the "ip-" file prefix
+        note "Using first available IPv4: ($(distd "${JAIL_ADDRESSES}")) from local pool: $(distd "${SYSTEM_IPS_DIR}")."
+        try "${RM_BIN} -f \"${_1st_ip}\"" && \
+            note "IPv4: $(distn "${JAIL_ADDRESSES}") was assigned to jail: $(distn "${JAIL_NAME}")."
+    else
+        note "Validating given IPv4 address: $(distn "${JAIL_ADDRESSES}")"
+        check_jail_address "${JAIL_ADDRESSES}"
     fi
-    check_jail_address "${JAIL_ADDRESSES}"
 
     JAIL_VERSION="${3}"
     if [ "${JAIL_VERSION}" = "" ]; then
@@ -393,7 +402,7 @@ jail_create () {
 
     _1st_id="$(${FIND_BIN} "${SYSTEM_NETIDS_DIR}" -type f -name 'id-*' -maxdepth 1 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
     if [ -z "${_1st_id##*/}" ]; then
-        error "No available NetID entries found under: $(diste "${SYSTEM_NETIDS_DIR}/id-*")!"
+        error "No available $(diste "NetID") slots available under: $(diste "${SYSTEM_NETIDS_DIR}/id-*")!"
     fi
     _1st_id_file="${_1st_id##*/}" # basename()
     EPAIR_NUMBER="${_1st_id_file#id-}" # cut out the "id-" file prefix
@@ -897,6 +906,10 @@ jail_destroy () {
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${SENTRY}"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}"
         try "${RM_BIN} -rf ${CELL} ${SENTRY}"
+
+        _used_ip_file="${SYSTEM_IPS_DIR}/ip-${JAIL_ADDRESSES}"
+        try "${TOUCH_BIN} ${_used_ip_file}" && \
+            note "IPv4: $(distn "${JAIL_ADDRESSES}") ($(distn "${_used_ip_file}")) was released by jail: $(distn "${JAIL_NAME}")"
 
         _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
         try "${TOUCH_BIN} ${_used_id_file}" && \
