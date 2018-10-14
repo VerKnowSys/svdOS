@@ -735,7 +735,7 @@ jail_start () {
 
         # TODO: XXX: this feels like a hack to set any SUID bits:
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${CHOWN_BIN} ${ZFS_BIN}" && \
-            note "NOTE: By default, SETUID bit is set only for a few system utilities: $(distn "chown, sysctl, zfs, crontab")."
+            debug "NOTE: By default, SETUID bit is set only for a few system utilities: $(distd "chown, sysctl, zfs, crontab")."
 
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} -f /etc/sysctl.conf || :" && debug "Jail sysctl.conf loaded"
         run "${JEXEC_BIN} ${JAIL_NAME} ${MOUNT_BIN} -a" && debug "All filesystems mounted"
