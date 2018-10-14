@@ -91,7 +91,7 @@ if [ ! -d "${SHARED_DIR}/Custody" ]; then
     try "${ZFS_BIN} create -o dedup=off -o mountpoint=${SHARED_DIR}/Custody ${DEFAULT_ZPOOL}${SHARED_DIR}/Custody"
 fi
 if [ ! -d "${PRISON_DIR}" ]; then
-    try "${ZFS_BIN} create -o dedup=on -o mountpoint=none ${DEFAULT_ZPOOL}${PRISON_DIR}"
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=none ${DEFAULT_ZPOOL}${PRISON_DIR}"
 fi
 if [ ! -d "${SYSTEM_DNS_DIR}" ]; then
     try "${ZFS_BIN} create -o dedup=off -o mountpoint=${SYSTEM_DNS_DIR} ${DEFAULT_ZPOOL}${SYSTEM_DNS_DIR}"
@@ -109,7 +109,7 @@ if [ ! -d "${SENTRY_DIR}" ]; then
 fi
 if [ ! -d "${CELLS_DIR}" ]; then
     # Deduplication on /Cells
-    try "${ZFS_BIN} create -o dedup=on -o mountpoint=none ${DEFAULT_ZPOOL}${CELLS_DIR}"
+    try "${ZFS_BIN} create -o dedup=off -o mountpoint=none ${DEFAULT_ZPOOL}${CELLS_DIR}"
 fi
 
 JAIL_CACHE_DIR="${SHARED_DIR}/Cache"
@@ -494,7 +494,7 @@ ${JAIL_NAME} {
             run "${ZFS_BIN} create -p ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
 
         try "${ZFS_BIN} set mountpoint=none ${DEFAULT_ZPOOL}/${dset}"
-        run "${ZFS_BIN} set dedup=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
+        run "${ZFS_BIN} set dedup=off ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
         run "${ZFS_BIN} set checksum=fletcher4 ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
         run "${ZFS_BIN} set aclinherit=passthrough ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
         run "${ZFS_BIN} set aclmode=passthrough ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
