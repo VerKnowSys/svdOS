@@ -667,7 +667,7 @@ jail_status () {
 jail_list () {
     mkdir -p "${CELLS_DIR}"
     cd "${CELLS_DIR}"
-    _out="$(${JLS_BIN} -v)"
+    _out="$(${JLS_BIN} -v 2>/dev/null)"
     for _cell in $(${LS_BIN} 2>/dev/null); do
         _cellname="$(printf "%s" "${_cell}" | ${AWK_BIN} '{print substr($1,0,29);}' 2>/dev/null)" # first 29 chars visible in jls output
         printf "%s" "${_cell}"
@@ -768,17 +768,17 @@ jail_stop () {
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
     JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} -F "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
-    for dir in /dev /tmp; do
-        try "${UMOUNT_BIN} -f ${CELL}${dir}" && \
-            debug "Unmounted: $(distd "${dir}")"
+    for _dir in /dev /tmp; do
+        try "${UMOUNT_BIN} -f ${CELL}${_dir}" && \
+            debug "Unmounted: $(distd "${CELL}${_dir}")"
     done
-    for dset in User Services Software; do
+    for _dset in User Services Software; do
         if [ ! -z "${JAIL_NUM_ID}" ]; then
-            run "${ZFS_BIN} unjail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}"
+            run "${ZFS_BIN} unjail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}"
         fi
-        # run "${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" || \
-        run "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" || \
-            printf "%b\n" "${ColorGreen}Unjailed and unmounted: ${ColorCyan}${dset}"
+        # run "${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" || \
+        run "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" || \
+            printf "%b\n" "${ColorGreen}Unjailed and unmounted: ${ColorCyan}${_dset}"
     done
 
     run "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
