@@ -854,13 +854,13 @@ jail_login () {
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    ${JLS_BIN} -v 2>/dev/null | ${GREP_BIN} "$(${BASENAME_BIN} "${CELL}" 2>/dev/null) .*ACTIVE" >> ${GVR_LOG} 2>> ${GVR_LOG}
+    ${JLS_BIN} -v 2>/dev/null | ${GREP_BIN} "${JAIL_NAME} .*ACTIVE" >/dev/null 2>&1
     if [ "$?" = "0" ]; then
         debug "Logging in as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}" && \
         ${DEBUG_EXEC_COMMAND} "${JEXEC_BIN}" "${JAIL_NAME}" "su" "${DEFAULT_JAIL_USER}" && \
             printf "%b\n" "${ColorGreen}Logged out from jail: ${ColorCyan}${JAIL_NAME}"
     else
-        error "Start jail first!"
+        error "Start the jail first!"
     fi
 }
 
