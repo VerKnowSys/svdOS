@@ -323,13 +323,8 @@ upgrade_projects_sync_configuration () {
     git clone "${SOFIN_REPOSITORY}" 2>/dev/null
     cd sofin
     git reset --hard >/dev/null 2>&1
-    # Create "root" Sofin dataset:
-    zfs list "${ZPOOL}${SOFTWARE_DIR}/root/Sofin" >/dev/null 2>&1 || \
-        zfs create -o \
-            mountpoint="${SOFTWARE_DIR}/Sofin" \
-            "${ZPOOL}${SOFTWARE_DIR}/root/Sofin"
-    # Install new version:
-    ${SHELL} -c "bin/upgrade"
+    # Install Sofin - software installer:
+    ${SHELL} -c "bin/install"
 
     cd /Projects
     git clone "${BEADM_REPOSITORY}" 2>/dev/null
