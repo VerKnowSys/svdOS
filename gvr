@@ -575,8 +575,8 @@ log {
         debug "Created logger: $(distd "${logger}")"
     done
 
-    debug "Reloading syslog"
-    service syslog-ng reload >/dev/null || service syslog-ng restart >/dev/null
+    # debug "Reloading syslog"
+    # service syslog-ng reload >/dev/null || service syslog-ng restart >/dev/null
 
     debug "Setting up local domains from main IPs: $(distd "${JAIL_ADDRESSES}")"
     MAIN_JAIL_ADDRESS="$(echo "${JAIL_ADDRESSES}" | ${SED_BIN} -e 's#/.*# #g' 2>/dev/null)"
