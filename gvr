@@ -735,7 +735,7 @@ jail_start () {
 
         # TODO: XXX: this feels like a hack to set any SUID bits:
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${CHOWN_BIN} ${ZFS_BIN}" && \
-            note "Setting up 'the magic three' - the only commands in jail with SETUID bit enabled: ($(distn "chown, sysctl, zfs"))."
+            note "NOTE: By default, SETUID bit is set only for a few system utilities: $(distn "chown, sysctl, zfs, crontab")."
 
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} -f /etc/sysctl.conf || :" && debug "Jail sysctl.conf loaded"
         run "${JEXEC_BIN} ${JAIL_NAME} ${MOUNT_BIN} -a" && debug "All filesystems mounted"
@@ -744,8 +744,7 @@ jail_start () {
         run "${JEXEC_BIN} ${JAIL_NAME} ${TOUCH_BIN} /User/.zshrc" # Avoid Zsh welcome bullshit
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /User/.zshrc /Services /User /Software /Software/Git /Software/Zsh /Software/Sofin /Shared /var/log /var/www"
 
-        mark_running && \
-            debug "Jail is running"
+        mark_running
     else
         try "${IFCONFIG_BIN} ${EPAIR}b destroy 2>/dev/null"
         error "Jail launch failed. Look into log file: ${ColorCyan}${GVR_LOG}"
