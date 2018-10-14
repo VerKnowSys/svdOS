@@ -578,7 +578,7 @@ log {
     # debug "Reloading syslog"
     # service syslog-ng reload >/dev/null || service syslog-ng restart >/dev/null
 
-    debug "Setting up local domains from main IPs: $(distd "${JAIL_ADDRESSES}")"
+    note "Setting up local domains from main IPs: $(distd "${JAIL_ADDRESSES}")"
     MAIN_JAIL_ADDRESS="$(echo "${JAIL_ADDRESSES}" | ${SED_BIN} -e 's#/.*# #g' 2>/dev/null)"
 
     printf "\n%b\n\n%b\n%b\n%b\n\n" \
@@ -885,8 +885,8 @@ jail_destroy () {
 
     printf "%b\n" "${ColorGreen}Are you sure you want to destroy jail: ${ColorCyan}$(${BASENAME_BIN} "${GIVEN_NAME}")${ColorGreen} with ${ColorRed}ALL SERVICES DATA?"
     printf "%b\n" "${ColorGreen}Type ${ColorCyan}YES${ColorGreen} to confirm"
-    read -r ans
-    if [ "${ans}" = "YES" ]; then
+    read -r _ans
+    if [ "${_ans}" = "YES" ]; then
         if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
             jail_stop ${*}
         fi
@@ -906,7 +906,7 @@ jail_destroy () {
             igni dns test >/dev/null && \
             igni dns reload
     else
-        printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}$(${BASENAME_BIN} "${GIVEN_NAME}" 2>/dev/null) left intact"
+        printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}${GIVEN_NAME##*/} ${ColorGreen}left intact"
     fi
 }
 
