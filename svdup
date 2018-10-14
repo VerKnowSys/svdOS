@@ -187,7 +187,7 @@ configure_and_commit_boot_env () {
         cp -f "/usr/bin/igni" "${DESTBASE}/usr/bin/"
     fi
     if [ -x "/usr/bin/custody" ]; then
-        echo "svdUP: Syncing: Service igniter (custody)"
+        echo "svdUP: Syncing: Service manager (custody)"
         cp -f "/usr/bin/custody" "${DESTBASE}/usr/bin/"
     fi
 

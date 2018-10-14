@@ -6,7 +6,9 @@ for pax in /Software/*/.pax; do
     . "${pax}"
 done
 
-echo "Booting previously started jails"
-sh -c "gvr boot"
+if [ -x "/usr/bin/gvr" ]; then
+    echo "Boot previously started jails"
+    sh -c "gvr boot"
+fi
 
 return 0
