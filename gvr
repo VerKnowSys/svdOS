@@ -387,9 +387,8 @@ jail_create () {
         fi
         _1st_ip_file="${_1st_ip##*/}" # basename()
         JAIL_ADDRESSES="${_1st_ip_file#ip-}" # cut out the "ip-" file prefix
-        note "Using first available IPv4: ($(distd "${JAIL_ADDRESSES}")) from local pool: $(distd "${SYSTEM_IPS_DIR}")."
         try "${RM_BIN} -f \"${_1st_ip}\"" && \
-            note "IPv4: $(distn "${JAIL_ADDRESSES}") was assigned to jail: $(distn "${JAIL_NAME}")."
+            note "IPv4: $(distn "${JAIL_ADDRESSES}") is now assigned to jail: $(distn "${GIVEN_NAME}")."
     else
         note "Validating given IPv4 address: $(distn "${JAIL_ADDRESSES}")"
         check_jail_address "${JAIL_ADDRESSES}"
@@ -587,7 +586,7 @@ log {
     # debug "Reloading syslog"
     # service syslog-ng reload >/dev/null || service syslog-ng restart >/dev/null
 
-    note "Setting up local domains from main IPs: $(distd "${JAIL_ADDRESSES}")"
+    note "Setting up local domains for IPv4: $(distd "${JAIL_ADDRESSES}")"
     MAIN_JAIL_ADDRESS="$(echo "${JAIL_ADDRESSES}" | ${SED_BIN} -e 's#/.*# #g' 2>/dev/null)"
 
     printf "\n%b\n\n%b\n%b\n%b\n\n" \
@@ -931,6 +930,7 @@ case $1 in
 
     create|c)
         shift
+        echo
         jail_create ${*}
         ;;
 
@@ -946,6 +946,7 @@ case $1 in
 
     start)
         shift
+        echo
         jail_start ${*}
         ;;
 
@@ -966,11 +967,13 @@ case $1 in
 
     set)
         shift
+        echo
         jail_set ${*}
         ;;
 
     unset)
         shift
+        echo
         jail_unset ${*}
         ;;
 
@@ -984,7 +987,7 @@ case $1 in
         ;;
 
     boot)
-        cd ${SENTRY_DIR}
+        cd "${SENTRY_DIR}"
         for jail in *; do
             if [ -f "${SENTRY_DIR}/${jail}/${JAIL_RUNNING_INDICATOR}" ]; then
                 printf "%b\n" "${ColorGreen}Initializing boot of jail: ${ColorCyan}${jail}"
