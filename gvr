@@ -767,7 +767,10 @@ jail_stop () {
 
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} -F "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
+    # JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} -F "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
+    # if [ -z "${JAIL_NUM_ID}" ]; then
+    #     error "NO jail ID?!"
+    # fi
     for _dir in /dev /tmp; do
         try "${UMOUNT_BIN} -f ${CELL}${_dir}" && \
             debug "Unmounted: $(distd "${CELL}${_dir}")"
