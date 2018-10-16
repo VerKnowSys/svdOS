@@ -26,7 +26,7 @@ SERVED_SYSTEM_SNAPSHOT_RESOURCE="http://software.verknowsys.com/binary/ServeD"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="11.2"
 DEFAULT_ARCH="amd64"
-DEFAULT_SHELL="/Software/Zsh/exports/zsh"
+# DEFAULT_SHELL="/Software/Zsh/exports/zsh"
 LOG="${LOGS_DIR}gvr.log"
 DEFAULT_JAIL_USER="worker"
 DEFAULT_QUOTA_LIMIT="10G"
@@ -235,8 +235,8 @@ apply_attributes () {
         case "${attribute}" in
             key)
                 a_key="ssh-ed25519 ${value} ${JAIL_NAME}"
-                ${JEXEC_BIN} "${JAIL_NAME}" "${DEFAULT_SHELL}" -c "${MKDIR_BIN} -p /User/.ssh; printf \"%s\n\" '${a_key}' >> /User/.ssh/authorized_keys"
-                ${JEXEC_BIN} "${JAIL_NAME}" "${DEFAULT_SHELL}" -c "${CHOWN_BIN} -R ${DEFAULT_JAIL_USER} /User/.ssh"
+                ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${MKDIR_BIN} -p /User/.ssh; printf \"%s\n\" '${a_key}' >> /User/.ssh/authorized_keys"
+                ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${CHOWN_BIN} -R ${DEFAULT_JAIL_USER} /User/.ssh"
                 ;;
 
             ip)
