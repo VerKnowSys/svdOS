@@ -138,6 +138,9 @@ if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
         error "Failed to fetch file with current stable. Network issues?"
     fi
 fi
+# Make sure Sofin dataset has at least origin snapshot present::
+zfs list -H -r -t snap -o name "${DEFAULT_ZPOOL}/Software/root/Sofin@${ORIGIN}" >/dev/null 2>&1 || \
+    zfs snapshot "${DEFAULT_ZPOOL}/Software/root/Sofin@${ORIGIN}"
 
 
 # This is where all jail settings are put into global scope of script:
