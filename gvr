@@ -370,7 +370,7 @@ mark_running () {
 
 jail_create () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} create myname IP/Netmask,IP2/Netmask(, … )"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} create myname"
         note
     }
     GIVEN_NAME="${1}"
@@ -379,24 +379,24 @@ jail_create () {
         error "No jail name given"
     fi
     check_jail_name "${GIVEN_NAME}"
-    JAIL_ADDRESSES="${2}"
-    if [ -z "${JAIL_ADDRESSES}" ]; then
-        _1st_ip="$(${FIND_BIN} "${SYSTEM_IPS_DIR}" -type f -name 'ip-*' -maxdepth 1 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
-        if [ -z "${_1st_ip##*/}" ]; then
-            error "No more $(diste "IPv4") slots available under: $(diste "${SYSTEM_IPS_DIR}/ip-*")!"
-        fi
-        _1st_ip_file="${_1st_ip##*/}" # basename()
-        JAIL_ADDRESSES="${_1st_ip_file#ip-}" # cut out the "ip-" file prefix
-        try "${RM_BIN} -f \"${_1st_ip}\"" && \
-            note "IPv4: $(distn "${JAIL_ADDRESSES}") is now assigned to jail: $(distn "${GIVEN_NAME}")."
-    else
-        note "Validating given IPv4 address: $(distn "${JAIL_ADDRESSES}")"
-    fi
 
-    JAIL_VERSION="${3}"
-    if [ "${JAIL_VERSION}" = "" ]; then
-        JAIL_VERSION="${DEFAULT_VERSION}"
+    _1st_ip="$(${FIND_BIN} "${SYSTEM_IPS_DIR}" -type f -maxdepth 1 -name 'ip-*' 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
+    _1st_ip_file="${_1st_ip##*/}" # basename()
+    JAIL_ADDRESSES="${_1st_ip_file#ip-}" # cut out the "ip-" file prefix
+    if [ -z "${JAIL_ADDRESSES}" ]; then
+        error "No $(diste "IPv4: JAIL_ADDRESSES") assigned from: $(diste "${SYSTEM_IPS_DIR}/ip-*")!"
     fi
+    try "${RM_BIN} -f \"${_1st_ip}\"" && \
+        note "IPv4: $(distn "${JAIL_ADDRESSES}") is now assigned to jail: $(distn "${GIVEN_NAME}")."
+
+    # else
+    #     note "Validating given IPv4 address: $(distn "${JAIL_ADDRESSES}")"
+    #     check_jail_address "${JAIL_ADDRESSES}"
+    # fi
+    # JAIL_VERSION="${3}"
+    # if [ "${JAIL_VERSION}" = "" ]; then
+    JAIL_VERSION="${DEFAULT_VERSION}"
+    # fi
 
     _1st_id="$(${FIND_BIN} "${SYSTEM_NETIDS_DIR}" -type f -name 'id-*' -maxdepth 1 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
     if [ -z "${_1st_id##*/}" ]; then
