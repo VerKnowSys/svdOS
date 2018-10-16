@@ -191,7 +191,7 @@ set_values () {
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
         JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" 2>/dev/null)"
     fi
-    debug "Got jail IP(s): ${JAIL_IPS}"
+    # debug "Got jail IP(s): ${JAIL_IPS}"
     HOSTNAMES=""
     for hostnfile in $(${FIND_BIN} "${JAIL_DOMAINS_DIR}" -type f 2>> "${GVR_LOG}"); do
         hostn="$(${CAT_BIN} "${hostnfile}" 2>/dev/null | ${GREP_BIN} "local-zone:" 2>/dev/null | ${SED_BIN} 's/^.* "//;s/.".*//' 2>/dev/null)"
@@ -480,7 +480,7 @@ ${JAIL_NAME} {
     # $(${ZFS_BIN} list -H -S creation -t snapshot -o name 2>/dev/null | ${EGREP_BIN} "${DEFAULT_ZPOOL}/Software/root@[Pa-z0-9_-]" 2>/dev/null | ${SED_BIN} 's/.*@//;s/ .*//' | ${HEAD_BIN} -n 1 2>/dev/null)
     ${ZFS_BIN} list -H -r -t snapshot -o name "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}" > /dev/null 2>&1
     if [ "${?}" != "0" ]; then
-        error "Something went wrong. Missing ${ORIGIN} snapshot: '$(diste "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}")'. Aborting"
+        error "Something went wrong. Missing ${ORIGIN} snapshot: '$(diste "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}")'. Aborted!"
     else
         debug "Found an software root ${ORIGIN} of snapshot: $(distd "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}")"
     fi
