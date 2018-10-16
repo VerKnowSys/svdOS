@@ -707,6 +707,7 @@ jail_start () {
         JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" 2>/dev/null)"
     fi
 
+    echo "Jail start command: ${DEBUG_COMMAND} \"${JAIL_BIN}\" -c -J \"${JAIL_ID_FILE}\" -f \"${JAIL_CONF_FILE}\"" >> "${GVR_LOG}"
     ${DEBUG_COMMAND} "${JAIL_BIN}" -c -J "${JAIL_ID_FILE}" -f "${JAIL_CONF_FILE}" >> "${GVR_LOG}" 2>> "${GVR_LOG}"
     if [ "$?" = "0" ]; then
         JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
@@ -720,11 +721,11 @@ jail_start () {
 
         apply_attributes
 
-        if [ -z "${JAIL_NUM_ID}" ]; then
-            error "Jail ID is empty!"
-        fi
+        # if [ -z "${JAIL_NUM_ID}" ]; then
+        #     error "Jail ID is empty!"
+        # fi
         for dset in Services Software Shared User; do
-            run "${ZFS_BIN} jail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+            run "${ZFS_BIN} jail ${JAIL_NAME} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set canmount=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
                 debug "Jailed dataset: $(distd "${dset}")"
