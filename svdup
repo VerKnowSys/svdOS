@@ -324,7 +324,7 @@ upgrade_projects_sync_configuration () {
     cd sofin
     git reset --hard >/dev/null 2>&1
     # Install Sofin - software installer:
-    ${SHELL} -c "bin/upgrade"
+    bin/upgrade
 
     cd /Projects
     git clone "${BEADM_REPOSITORY}" 2>/dev/null
