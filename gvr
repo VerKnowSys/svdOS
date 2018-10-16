@@ -908,9 +908,10 @@ jail_destroy () {
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}"
         try "${RM_BIN} -rf ${CELL} ${SENTRY}"
 
-        _used_ip_file="${SYSTEM_IPS_DIR}/ip-${JAIL_ADDRESSES}"
+        _used_ip_file="${SYSTEM_IPS_DIR}/ip-${JAIL_IPS}"
+        debug "Used IPv4 address: $(distd "${JAIL_IPS}"). IPs dir: $(distn "${_used_ip_file}")"
         try "${TOUCH_BIN} ${_used_ip_file}" && \
-            note "IPv4: $(distn "${JAIL_ADDRESSES}") ($(distn "${_used_ip_file}")) was released by jail: $(distn "${JAIL_NAME}")"
+            note "IPv4: $(distn "${JAIL_IPS}") ($(distn "${_used_ip_file}")) was released by jail: $(distn "${JAIL_NAME}")"
 
         _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
         try "${TOUCH_BIN} ${_used_id_file}" && \
