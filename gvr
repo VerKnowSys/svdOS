@@ -775,14 +775,14 @@ jail_stop () {
         try "${UMOUNT_BIN} -f ${CELL}${_dir}" && \
             debug "Unmounted: $(distd "${CELL}${_dir}")"
     done
-    for _dset in User Services Software; do
-        if [ ! -z "${JAIL_NUM_ID}" ]; then
-            run "${ZFS_BIN} unjail ${JAIL_NUM_ID} ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}"
-        fi
-        # run "${ZFS_BIN} umount -f ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" || \
-        run "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" || \
-            printf "%b\n" "${ColorGreen}Unjailed and unmounted: ${ColorCyan}${_dset}"
+    # NOTE: make sure that /Software/Zsh and /Software/Git are not mountable (main system override possibility)
+    for _dset in Services Software; do
+        run "${ZFS_BIN} unjail ${GIVEN_NAME} ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
+        run "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
+            debug "Unjailed and unmounted dataset: $(distd "${_dset}")"
     done
+    try "${UMOUNT_BIN} -f ${CELL}/Software" && debug "Unmounted ${CELL}/Software"
+    try "${UMOUNT_BIN} -f ${CELL}/Software/Zsh" && debug "Unmounted ${CELL}/Software/Zsh"
 
     run "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
         printf "%b\n" "${ColorGreen}Terminated jail: ${ColorCyan}${JAIL_NAME}"
