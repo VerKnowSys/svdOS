@@ -299,23 +299,23 @@ apply_attributes () {
 }
 
 
-check_jail_address () {
-    JAIL_ADDRESS_CHECK="${1}"
-    for jail in $(${LS_BIN} ${SENTRY_DIR} 2>/dev/null); do
-        IP_FILE="${SENTRY_DIR}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
-        if [ -f "${IP_FILE}" ]; then
-            for ip in $(${CAT_BIN} "${IP_FILE}" 2>/dev/null | ${TR_BIN} ',' '\n' 2>/dev/null); do
-                JAIL_ADDRESS_CHECK=$(printf "%s" "${JAIL_ADDRESS_CHECK}" | ${TR_BIN} ',' '\n' 2>/dev/null)
-                for addrchk in ${JAIL_ADDRESS_CHECK}; do
-                    echo "${ip}" | ${GREP_BIN} "${addrchk}" > /dev/null 2>&1
-                    if [ "$?" = "0" ]; then
-                        error "Address: ${addrchk} is already assigned to jail: ${jail}"
-                    fi
-                done
-            done
-        fi
-    done
-}
+# check_jail_address () {
+#     JAIL_ADDRESS_CHECK="${1}"
+#     for jail in $(${LS_BIN} ${SENTRY_DIR} 2>/dev/null); do
+#         IP_FILE="${SENTRY_DIR}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+#         if [ -f "${IP_FILE}" ]; then
+#             for ip in $(${CAT_BIN} "${IP_FILE}" 2>/dev/null | ${TR_BIN} ',' '\n' 2>/dev/null); do
+#                 JAIL_ADDRESS_CHECK=$(printf "%s" "${JAIL_ADDRESS_CHECK}" | ${TR_BIN} ',' '\n' 2>/dev/null)
+#                 for addrchk in ${JAIL_ADDRESS_CHECK}; do
+#                     echo "${ip}" | ${GREP_BIN} "${addrchk}" > /dev/null 2>&1
+#                     if [ "$?" = "0" ]; then
+#                         error "Address: ${addrchk} is already assigned to jail: ${jail}"
+#                     fi
+#                 done
+#             done
+#         fi
+#     done
+# }
 
 
 check_jail_name () {
@@ -391,7 +391,6 @@ jail_create () {
             note "IPv4: $(distn "${JAIL_ADDRESSES}") is now assigned to jail: $(distn "${GIVEN_NAME}")."
     else
         note "Validating given IPv4 address: $(distn "${JAIL_ADDRESSES}")"
-        check_jail_address "${JAIL_ADDRESSES}"
     fi
 
     JAIL_VERSION="${3}"
