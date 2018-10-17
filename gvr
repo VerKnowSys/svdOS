@@ -622,7 +622,7 @@ log {
         debug "Zone: $(distd "${JAIL_NAME}.${SHARED_DOMAIN_NAME}") is now locally resolvable. Owned by: $(distd "${JAIL_NAME}")" && \
         return 0
 
-    error "Failed to successfully reload zone: ${ColorCyan}${JAIL_NAME}.${SHARED_DOMAIN_NAME}"
+    error "Failed to start jail with zone: $(diste "${JAIL_NAME}.${SHARED_DOMAIN_NAME}")"
 }
 
 
