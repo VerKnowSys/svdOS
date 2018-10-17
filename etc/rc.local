@@ -19,4 +19,13 @@ if [ -x "/usr/bin/custody" ]; then
         "/usr/bin/custody" >/dev/null
 fi
 
+if [ -x "/usr/bin/sysapi" ]; then
+    echo "Start sysapi daemon…"
+    # XXX: NOTE: right now it's using LISTEN_ADDRESS="172.16.3.1:80" by default:
+    nohup daemon \
+        -o "/var/log/gvr-sysapi.log" \
+        -R1 -P "/var/run/sysapi.pid" \
+        "/usr/bin/sysapi" >/dev/null
+fi
+
 return 0
