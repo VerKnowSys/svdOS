@@ -617,11 +617,6 @@ log {
     try "${RM_BIN} -f \"${_used_id_file}\"" && \
         note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is now marked as used by jail: $(distn "${JAIL_NAME}")."
 
-    # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
-    note "Reloading $(distn "DNS") and $(distn "Web-proxy") configuration."
-    try "igni dns reload"
-    try "igni proxy reload"
-
     note "Starting jail: $(distd "${JAIL_NAME}")"
     jail_start "${JAIL_NAME}" && \
         debug "Zone: $(distd "${JAIL_NAME}.${SHARED_DOMAIN_NAME}") is now locally resolvable. Owned by: $(distd "${JAIL_NAME}")" && \
@@ -754,6 +749,11 @@ jail_start () {
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${KERN_SECURELEVEL}"
         run "${JEXEC_BIN} ${JAIL_NAME} ${TOUCH_BIN} /User/.zshrc" # Avoid Zsh welcome bullshit
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /User/.zshrc /Services /User /Software /Software/Git /Software/Zsh /Software/Sofin /Shared /var/log /var/www"
+
+        # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
+        note "Reloading $(distn "DNS") and $(distn "Web-proxy") configuration."
+        try "igni dns restart"
+        try "igni proxy reload"
 
         mark_running
     else
