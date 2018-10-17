@@ -929,8 +929,8 @@ jail_destroy () {
             note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) was released by jail: $(distn "${JAIL_NAME}")"
 
         printf "%b\n" "${ColorGreen}Destroyed datasets of jail: ${ColorCyan}${JAIL_NAME}" && \
-            igni dns test >/dev/null && \
-            igni dns reload
+            try "igni dns test" >/dev/null && \
+            try "igni dns restart"
     else
         printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}${GIVEN_NAME##*/} ${ColorGreen}left intact"
     fi
