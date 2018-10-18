@@ -204,12 +204,18 @@ set_values () {
     fi
     # debug "Got jail IP(s): ${JAIL_IPS}"
     HOSTNAMES=""
-    for hostnfile in $(${FIND_BIN} "${JAIL_DOMAINS_DIR}" -type f 2>> "${GVR_LOG}"); do
-        hostn="$(${CAT_BIN} "${hostnfile}" 2>/dev/null | ${GREP_BIN} "local-zone:" 2>/dev/null | ${SED_BIN} 's/^.* "//;s/.".*//' 2>/dev/null)"
-        debug "hostn: ${hostn}"
-        HOSTNAMES="*.${hostn} ${HOSTNAMES}"
-    done
-    debug "Got jail hostnames: ${HOSTNAMES}"
+    if [ -d "${JAIL_DOMAINS_DIR}" ]; then
+        debug "Jail domains dir is present: $(distd "${JAIL_DOMAINS_DIR}")"
+        for hostnfile in $(${FIND_BIN} "${JAIL_DOMAINS_DIR}" -type f 2>> "${GVR_LOG}"); do
+            hostn="$(${CAT_BIN} "${hostnfile}" 2>/dev/null | ${GREP_BIN} "local-zone:" 2>/dev/null | ${SED_BIN} 's/^.* "//;s/.".*//' 2>/dev/null)"
+            debug "hostn: ${hostn}"
+            HOSTNAMES="*.${hostn} ${HOSTNAMES}"
+        done
+        debug "Got jail hostnames: ${HOSTNAMES}"
+    else
+        debug "Jail domains dir is absent: $(distd "${JAIL_DOMAINS_DIR}")"
+    fi
+
     JAIL_LOCAL_DOMAIN_CONF="${JAIL_DOMAINS_DIR}/local.conf"
 }
 
