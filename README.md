@@ -139,8 +139,8 @@ ServeD-OS
 # This part is invoked on host system (red "λ" = superuser):
 #
 
-# Create new jail with given local IP address:
-gvr create myhost 172.16.3.31
+# Create new jail. Local IP address will be auto-picked from pool of local addresses:
+gvr create myhost
 
 # Show detailed info about newly created jail:
 gvr status myhost
@@ -155,8 +155,6 @@ gvr login myhost
 
 # Install Php72 software bundle with default configuration.
 s i Php72
-# Enable Php72 in environment.
-s env +Php72
 
 # Use it:
 php --version
@@ -165,8 +163,6 @@ which php-fpm
 
 # Install latest Rust stable
 s i Rust
-# Enable Rust in environment.
-s env +Rust
 
 # Use it:
 rustc --version
