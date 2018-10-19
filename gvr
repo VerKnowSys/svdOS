@@ -254,7 +254,7 @@ apply_attributes () {
                 ;;
 
             ip)
-                printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}"
+                printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
                 debug "conf: ${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
                 printf "%s" "${value}" > "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
                 ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${value};#" "${JAIL_CONF_FILE}"
@@ -273,36 +273,36 @@ apply_attributes () {
                 ;;
 
             quota-root)
-                printf "%b\n" "${ColorGreen}Setting root dir quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}${CELL}"
+                printf "%b\n" "${ColorGreen}Setting root dir quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}${CELL}${ColorReset}"
                 run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}${CELL}"
                 ;;
 
             quota)
-                printf "%b\n" "${ColorGreen}Setting quota of: ${value} to ${DEFAULT_ZPOOL}/*/${JAIL_NAME}"
+                printf "%b\n" "${ColorGreen}Setting quota of: ${value} to ${DEFAULT_ZPOOL}/*/${JAIL_NAME}${ColorReset}"
                 for dest in Software Services User; do
                     run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/${dest}/${JAIL_NAME}"
                 done
                 ;;
 
             quota-software)
-                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
+                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME}${ColorReset}"
                 run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
                 ;;
 
             quota-services)
-                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
+                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/Services/${JAIL_NAME}${ColorReset}"
                 run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
                 ;;
 
             quota-user)
-                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
+                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/User/${JAIL_NAME}${ColorReset}"
                 run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
                 ;;
 
             *)
                 ${RCTL_BIN} -a "jail:${JAIL_NAME}:${attribute}:deny=${value}" >> "${GVR_LOG}" 2>&1
                 if [ "$?" = "0" ]; then
-                    printf "%b\n" "${ColorGreen}Overriden attribute: ${ColorCyan}${attribute}${ColorGreen} with value: ${ColorCyan}${value}"
+                    printf "%b\n" "${ColorGreen}Overriden attribute: ${ColorCyan}${attribute}${ColorGreen} with value: ${ColorCyan}${value}${ColorReset}"
                 else
                     warn "Wrong attribute: $(distw "${attribute}")"
                 fi
@@ -384,7 +384,7 @@ mark_running () {
 
 jail_create () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} create myname"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} create myname${ColorReset}"
         note
     }
     GIVEN_NAME="${1}"
@@ -499,7 +499,7 @@ ${JAIL_NAME} {
         debug "Found an software root ${ORIGIN} of snapshot: $(distd "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}")"
     fi
     {
-        printf "%b\n" "${ColorGreen}Cloning: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${ColorGreen}from most recent snapshot: ${ColorCyan}${DEFAULT_ZPOOL}/Software/root@${ORIGIN}";
+        printf "%b\n" "${ColorGreen}Cloning: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${ColorGreen}from most recent snapshot: ${ColorCyan}${DEFAULT_ZPOOL}/Software/root@${ORIGIN}${ColorReset}";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Sofin@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Sofin";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Git@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Git";
@@ -657,7 +657,7 @@ jail_status () {
     printf "%b\n" "${ColorGreen}Hostnames: ${ColorCyan}${HOSTNAMES}${ColorReset}"
     printf "%b\n\n" "${ColorGreen}OS version: ${ColorCyan}${JAIL_VERSION}${ColorReset}"
     if [ -d "${JAIL_ATTRIBUTES_DIR}" ]; then
-        printf "%b\n" "${ColorGreen}Overriden attributes:"
+        printf "%b\n" "${ColorGreen}Overriden attributes:${ColorReset}"
         for attr in $(${FIND_BIN} "${JAIL_ATTRIBUTES_DIR}" -type f 2>/dev/null); do
             printf "%b\n" "${ColorCyan}${attr##*/}: $(${CAT_BIN} "${attr}" 2>/dev/null)"
         done
@@ -666,7 +666,7 @@ jail_status () {
     printf "%b\n" "${ColorGreen}Live attributes:\n${ColorCyan}$(${RCTL_BIN} -h "jail:${JAIL_NAME}" 2>/dev/null | ${SED_BIN} 's/jail:n1://g' 2>/dev/null | ${SED_BIN} 's/:deny=/: /g' 2>/dev/null)${ColorReset}"
     case ${VERBOSE} in
         v|-v|-verbose|verbose|more)
-            printf "\nFull configuration:\n%b\n" "${ColorCyan}$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)"
+            printf "\nFull configuration:\n%b\n" "${ColorCyan}$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)${ColorReset}"
             ;;
     esac
 }
@@ -696,7 +696,7 @@ jail_list () {
 # Apply settings and start jail
 jail_start () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} start jail-name"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} start jail-name${ColorReset}"
     }
     GIVEN_NAME="${1}" # hostname?
     if [ -z "${GIVEN_NAME}" ]; then
@@ -707,7 +707,7 @@ jail_start () {
 
     ${JLS_BIN} 2>/dev/null | ${EGREP_BIN} "${GIVEN_NAME}[\.\ ]" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        printf "%b\n" "${ColorGreen}Jail with name: ${ColorCyan}${GIVEN_NAME}${ColorGreen} is already running"
+        printf "%b\n" "${ColorGreen}Jail with name: ${ColorCyan}${GIVEN_NAME}${ColorGreen} is already running${ColorReset}"
         exit 0
     fi
 
@@ -798,7 +798,7 @@ jail_stop () {
     try "${UMOUNT_BIN} -f ${CELL}/Software/Zsh" && debug "Unmounted ${CELL}/Software/Zsh"
 
     run "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
-        printf "%b\n" "${ColorGreen}Terminated jail: ${ColorCyan}${JAIL_NAME}"
+        printf "%b\n" "${ColorGreen}Terminated jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
 
     printf "%s\n" "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
@@ -809,7 +809,7 @@ jail_stop () {
 
 jail_set () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} set jail-name attribute=value attr2=val2 (...)"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} set jail-name attribute=value attr2=val2 (...)${ColorReset}"
     }
     GIVEN_NAME="${1}"
     shift
@@ -824,7 +824,7 @@ jail_set () {
         ATTRIBUTE="$(printf "%s\n" "${argument_pair}" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' 2>/dev/null)"
         JAIL_VALUE="$(printf "%s\n" "${argument_pair}" | ${AWK_BIN} '{split($0, a, "="); print a[2];}' 2>/dev/null)"
         debug "arg: ${ATTRIBUTE}, val: ${JAIL_VALUE} "
-        printf "%b\n" "${ColorGreen}Setting attribute: ${ColorCyan}${ATTRIBUTE}${ColorGreen}, value: ${ColorCyan}${JAIL_VALUE}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}"
+        printf "%b\n" "${ColorGreen}Setting attribute: ${ColorCyan}${ATTRIBUTE}${ColorGreen}, value: ${ColorCyan}${JAIL_VALUE}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
         printf "%s\n" "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
     done
     apply_attributes
@@ -833,7 +833,7 @@ jail_set () {
 
 jail_unset () {
     usage () {
-        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} unset jail-name attribute value"
+        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} unset jail-name attribute value${ColorReset}"
     }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
@@ -847,7 +847,7 @@ jail_unset () {
     for jail_attribute in ${*}; do
         run "${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${jail_attribute}" && \
         try "${RCTL_BIN} -r jail:${JAIL_NAME}:${jail_attribute}" && \
-            printf "%b\n" "${ColorGreen}Unset attribute: ${ColorCyan}${jail_attribute}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}"
+            printf "%b\n" "${ColorGreen}Unset attribute: ${ColorCyan}${jail_attribute}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
     done
     apply_attributes
 }
@@ -855,7 +855,7 @@ jail_unset () {
 
 jail_login () {
     usage () {
-        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} login jail-name"
+        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} login jail-name${ColorReset}"
     }
     GIVEN_NAME="${1}" # hostname?
     if [ -z "${GIVEN_NAME}" ]; then
@@ -873,7 +873,7 @@ jail_login () {
     if [ "$?" = "0" ]; then
         debug "Logging in as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}" && \
         ${DEBUG_EXEC_COMMAND} "${JEXEC_BIN}" "${JAIL_NAME}" "su" "${DEFAULT_JAIL_USER}" && \
-            printf "%b\n" "${ColorGreen}Logged out from jail: ${ColorCyan}${JAIL_NAME}"
+            printf "%b\n" "${ColorGreen}Logged out from jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
     else
         error "Start the jail first!"
     fi
@@ -930,11 +930,11 @@ jail_destroy () {
         try "${TOUCH_BIN} ${_used_id_file}" && \
             note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) was released by jail: $(distn "${JAIL_NAME}")"
 
-        printf "%b\n" "${ColorGreen}Destroyed datasets of jail: ${ColorCyan}${JAIL_NAME}" && \
+        printf "%b\n" "${ColorGreen}Destroyed datasets of jail: ${ColorCyan}${JAIL_NAME}${ColorReset}" && \
             try "igni dns test" && \
             try "igni dns reload"
     else
-        printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}${GIVEN_NAME##*/} ${ColorGreen}left intact"
+        printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}${GIVEN_NAME##*/} ${ColorGreen}left intact${ColorReset}"
     fi
 }
 
@@ -1007,7 +1007,7 @@ case $1 in
         cd "${SENTRY_DIR}"
         for jail in *; do
             if [ -f "${SENTRY_DIR}/${jail}/${JAIL_RUNNING_INDICATOR}" ]; then
-                printf "%b\n" "${ColorGreen}Initializing boot of jail: ${ColorCyan}${jail}"
+                printf "%b\n" "${ColorGreen}Initializing boot of jail: ${ColorCyan}${jail}${ColorReset}"
                 nohup "${0}" start "${jail}" > /dev/null 2>&1 &
             else
                 warn "Boot skipped for: $(distw "${jail}")"
