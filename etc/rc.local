@@ -11,14 +11,6 @@ if [ -x "/usr/bin/gvr" ]; then
     sh -c "gvr boot"
 fi
 
-if [ -x "/usr/bin/custody" ]; then
-    echo "Start custody daemon…"
-    nohup daemon \
-        -o "/var/log/gvr-custody.log" \
-        -R1 -P "/var/run/custody.pid" \
-        "/usr/bin/custody" >/dev/null
-fi
-
 if [ -x "/usr/bin/sysapi" ]; then
     echo "Start sysapi daemon…"
     # XXX: NOTE: right now it's using LISTEN_ADDRESS="172.16.3.1:80" by default:
