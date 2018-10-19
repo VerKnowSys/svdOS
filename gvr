@@ -753,9 +753,8 @@ jail_start () {
         run "${JEXEC_BIN} ${JAIL_NAME} ${TOUCH_BIN} /User/.zshrc" # Avoid Zsh welcome bullshit
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /User/.zshrc /Services /User /Software /Software/Git /Software/Zsh /Software/Sofin /Shared /var/log /var/www"
 
-        # NOTE: DNS_IGNITER has to do restarting since Unbound is not loading new zone configurations on SIGHUP
         note "Reloading $(distn "DNS") and $(distn "Web-proxy") configuration."
-        try "igni dns restart"
+        try "igni dns reload"
         try "igni proxy reload"
 
         mark_running
@@ -932,8 +931,8 @@ jail_destroy () {
             note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) was released by jail: $(distn "${JAIL_NAME}")"
 
         printf "%b\n" "${ColorGreen}Destroyed datasets of jail: ${ColorCyan}${JAIL_NAME}" && \
-            try "igni dns test" >/dev/null && \
-            try "igni dns restart"
+            try "igni dns test" && \
+            try "igni dns reload"
     else
         printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}${GIVEN_NAME##*/} ${ColorGreen}left intact"
     fi
