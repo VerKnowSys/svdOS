@@ -903,12 +903,17 @@ jail_destroy () {
         usage
         error "No jail to destroy"
     fi
+    ASK_CONFIRM="${2}"
+    if [ "I_KNOW_EXACTLY_WHAT_I_AM_DOING" = "${ASK_CONFIRM}" ]; then
+        _ans="YES"
+    else
+        printf "%b\n" "${ColorGreen}Are you sure you want to destroy jail: ${ColorCyan}${GIVEN_NAME##*/}${ColorGreen} with ${ColorRed}ALL DATA?${ColorReset}"
+        printf "%b\n" "${ColorGreen}Type ${ColorCyan}YES${ColorGreen} followed by [Enter], to confirm.${ColorReset}"
+        read -r _ans
+    fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
 
-    printf "%b\n" "${ColorGreen}Are you sure you want to destroy jail: ${ColorCyan}$(${BASENAME_BIN} "${GIVEN_NAME}")${ColorGreen} with ${ColorRed}ALL SERVICES DATA?"
-    printf "%b\n" "${ColorGreen}Type ${ColorCyan}YES${ColorGreen} to confirm"
-    read -r _ans
     if [ "${_ans}" = "YES" ]; then
         if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
             jail_stop ${*}
