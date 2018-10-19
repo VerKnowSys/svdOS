@@ -87,9 +87,6 @@ fi
 if [ ! -d "${IGNITERS_DIR}" ]; then
     try "${ZFS_BIN} create -o dedup=off -o mountpoint=${IGNITERS_DIR} ${DEFAULT_ZPOOL}${IGNITERS_DIR}"
 fi
-if [ ! -d "${SHARED_DIR}/Custody" ]; then
-    try "${ZFS_BIN} create -o dedup=off -o mountpoint=${SHARED_DIR}/Custody ${DEFAULT_ZPOOL}${SHARED_DIR}/Custody"
-fi
 if [ ! -d "${PRISON_DIR}" ]; then
     try "${ZFS_BIN} create -o dedup=off -o mountpoint=none ${DEFAULT_ZPOOL}${PRISON_DIR}"
 fi

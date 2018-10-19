@@ -15,7 +15,6 @@ SHARED_DIR="/Shared"
 CACHE_DIR="${SHARED_DIR}/Cache"
 SYSTEM_IGNITERS_DIR="${SHARED_DIR}/Igniters"
 SYSTEM_DNS_DIR="${SHARED_DIR}/DNS"
-SYSTEM_CUSTODY_DIR="${SHARED_DIR}/Custody"
 SYSTEM_NETIDS_DIR="${SHARED_DIR}/NetIDs"
 SYSTEM_IPS_DIR="${SHARED_DIR}/IPs"
 SERVED_BINARY_RESOURCE="http://software.verknowsys.com/binary/ServeD"
@@ -55,9 +54,6 @@ get_the_current () {
         zfs create -o \
             mountpoint="${SYSTEM_DNS_DIR}" \
             "${ZPOOL}${SYSTEM_DNS_DIR}";
-        zfs create -o \
-            mountpoint="${SYSTEM_CUSTODY_DIR}" \
-            "${ZPOOL}${SYSTEM_CUSTODY_DIR}";
         zfs create -o \
             mountpoint="${SYSTEM_NETIDS_DIR}" \
             "${ZPOOL}${SYSTEM_NETIDS_DIR}";
@@ -186,9 +182,9 @@ configure_and_commit_boot_env () {
         echo "svdUP: Syncing: Service igniter (igni)"
         cp -f "/usr/bin/igni" "${DESTBASE}/usr/bin/"
     fi
-    if [ -x "/usr/bin/custody" ]; then
-        echo "svdUP: Syncing: Service manager (custody)"
-        cp -f "/usr/bin/custody" "${DESTBASE}/usr/bin/"
+    if [ -x "/usr/bin/sysapi" ]; then
+        echo "svdUP: Syncing: SysAPI daemon (sysapi)"
+        cp -f "/usr/bin/sysapi" "${DESTBASE}/usr/bin/"
     fi
 
     echo "svdUP: Installing Lz4 to destination base system"
