@@ -6,7 +6,7 @@
 
 . /Software/Sofin/share/loader
 
-GVR_VERSION="0.34.4"
+GVR_VERSION="0.36.0"
 GVR_LOG="/var/log/gvr.log"
 GVR_LOCK="/var/run/gvr.lock"
 
