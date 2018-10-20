@@ -8,8 +8,9 @@
 
 GVR_VERSION="0.34.4"
 GVR_LOG="/var/log/gvr.log"
-ORIGIN="origin"
-KERN_SECURELEVEL="0"
+GVR_LOCK="/var/run/gvr.lock"
+
+GVR_PID="${$}"
 
 # TODO: XXX: replace hardcodes by some kind of global config file:
 SHARED_DOMAIN_NAME="__JAIL_SHARED_DOMAIN" # for local zones it can simply be: "local"
@@ -23,9 +24,11 @@ SOFIN_REPO="/Projects/sofin"
 DEFAULT_SOFIN_REPO="https://github.com/VerKnowSys/sofin.git"
 SERVED_SYSTEM_SNAPSHOT_RESOURCE="http://software.verknowsys.com/binary/ServeD"
 
+ORIGIN="origin"
 DEFAULT_ZPOOL="zroot"
 DEFAULT_VERSION="11.2"
 DEFAULT_ARCH="amd64"
+KERN_SECURELEVEL="0"
 # DEFAULT_SHELL="/Software/Zsh/exports/zsh"
 LOG="${LOGS_DIR}gvr.log"
 DEFAULT_JAIL_USER="worker"
