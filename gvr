@@ -690,7 +690,7 @@ jail_status () {
         debug "JAIL_NUM_ID: ${JAIL_NUM_ID}"
         printf "%b\n" "${ColorGreen}JID: ${ColorCyan}${JAIL_NUM_ID}${ColorReset}"
     fi
-    EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/jail.vlan.number" 2>/dev/null)"
+    EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/${CELL_EPAIR_NUMBER_ATTRIBUTE}" 2>/dev/null)"
     printf "%b\n" "${ColorGreen}JUID: $(distn "${EPAIR_NUMBER}")${ColorReset}"
     printf "%b\n" "${ColorGreen}IPv4s: ${ColorCyan}${JAIL_IPS}${ColorReset}"
     printf "%b\n" "${ColorGreen}Interface: ${ColorCyan}${EPAIR}${ColorReset}"
@@ -814,7 +814,7 @@ jail_stop () {
         error "No jail to stop"
     fi
     SENTRY="${SENTRY_DIR}/${GIVEN_NAME}"
-    EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/jail.vlan.number" 2>/dev/null)"
+    EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/${CELL_EPAIR_NUMBER_ATTRIBUTE}" 2>/dev/null)"
     try "${IFCONFIG_BIN} ${EPAIR}a down; ${IFCONFIG_BIN} ${EPAIR}a destroy"
 
     set_values "${GIVEN_NAME}"
