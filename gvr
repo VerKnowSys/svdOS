@@ -963,6 +963,12 @@ jail_destroy () {
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/User/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/User/${JAIL_NAME}")!"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${SENTRY}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}${SENTRY}")!"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}${CELL}")!"
+        if [ -n "${CELL}" ] && \
+           [ -n "${SENTRY}" ] && \
+           [ "/" != "${CELL}" ] && \
+           [ "/" != "${SENTRY}" ]; then
+            try "${RM_BIN} -rf ${CELL} ${SENTRY}"
+        fi
 
         if [ -n "${JAIL_IPS}" ]; then
             _used_ip_file="${SYSTEM_IPS_DIR}/ip-${JAIL_IPS}"
