@@ -71,6 +71,43 @@ GVR_HOST_IP_ADDR="$(${IFCONFIG_BIN} "${DEFAULT_INTERFACE}" 2>/dev/null | ${GREP_
 GVR_START_TIMESTAMP_S="$(${DATE_BIN} +%s 2>/dev/null)"
 
 
+create_lock () {
+    printf "%s\n" "${GVR_PID}" > "${GVR_LOCK}"
+}
+
+
+acquire_lock_for () {
+    _lock_pid="$(${CAT_BIN} "${GVR_LOCK}" 2>/dev/null)"
+    if [ -n "${_lock_pid}" ]; then
+        debug "Lock pid: $(distd "${_lock_pid}"). GVR pid: $(distd "${GVR_PID}"), GVR PPID: $(distd "${PPID}")"
+        try "${KILL_BIN} -0 ${_lock_pid} 2>/dev/null"
+        if [ "${?}" = "0" ]; then # NOTE: process is alive
+            if [ "${_lock_pid}" = "${GVR_PID}" ] \
+            || [ "${PPID}" = "${GVR_PID}" ]; then
+                debug "Dealing with own process or it's fork, process may continue.."
+            elif [ "${_lock_pid}" = "${GVR_PID}" ] && \
+                 [ -z "${PPID}" ]; then
+                debug "Dealing with no fork, process may continue.."
+            else
+                note "Awaiting lock. Another instance is running with PID: $(distn "${_lock_pid}…")"
+                sleep 5
+                acquire_lock_for
+            fi
+        else # NOTE: process is dead
+            debug "Found lock file acquired by dead process. Acquring a new lock.."
+            create_lock
+        fi
+    else
+        debug "Lock pid: $(distd "None"), GVR pid: $(distd "${GVR_PID}")"
+        create_lock
+    fi
+}
+
+
+# TODO: currently gvr is not parallel safe, hence pid locking is used:
+acquire_lock_for
+
+
 #
 # Sanity checks start here:
 
