@@ -968,14 +968,14 @@ jail_destroy () {
         if [ -n "${JAIL_IPS}" ]; then
             _used_ip_file="${SYSTEM_IPS_DIR}/ip-${JAIL_IPS}"
             debug "Used IPv4 address: $(distd "${JAIL_IPS}"). IPs dir: $(distn "${_used_ip_file}")"
-            try "${TOUCH_BIN} ${_used_ip_file}" && \
                 note "IPv4: $(distn "${JAIL_IPS}") ($(distn "${_used_ip_file}")) was released by jail: $(distn "${JAIL_NAME}")"
+            run "${TOUCH_BIN} ${_used_ip_file}" && \
         fi
 
         if [ -n "${EPAIR_NUMBER}" ]; then
             _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
-            try "${TOUCH_BIN} ${_used_id_file}" && \
                 note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) was released by jail: $(distn "${JAIL_NAME}")"
+            run "${TOUCH_BIN} ${_used_id_file}" && \
         fi
 
         printf "%b\n" "${ColorGreen}Jail destroyed: ${ColorCyan}${JAIL_NAME}${ColorReset}" && \
