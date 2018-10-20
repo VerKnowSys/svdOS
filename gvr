@@ -818,7 +818,8 @@ jail_stop () {
     try "${IFCONFIG_BIN} ${EPAIR}a down; ${IFCONFIG_BIN} ${EPAIR}a destroy"
 
     set_values "${GIVEN_NAME}"
-    check_cell_name "${CELL}"
+    #
+    # check_cell_name "${CELL}"
     # JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} -F "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
     # if [ -z "${JAIL_NUM_ID}" ]; then
     #     error "NO jail ID?!"
