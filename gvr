@@ -946,8 +946,8 @@ jail_destroy () {
     if [ "I_KNOW_EXACTLY_WHAT_I_AM_DOING" = "${ASK_CONFIRM}" ]; then
         _ans="YES"
     else
-        printf "%b\n" "${ColorGreen}Are you sure you want to destroy jail: ${ColorCyan}${GIVEN_NAME##*/}${ColorGreen} with ${ColorRed}ALL DATA?${ColorReset}"
-        printf "%b\n" "${ColorGreen}Type ${ColorCyan}YES${ColorGreen} followed by [${ColorCyan}Enter${ColorGreen}], to confirm.${ColorReset}"
+        printf "%b\n" "${ColorYellow}Are you sure you want to destroy jail: ${ColorCyan}${GIVEN_NAME##*/}${ColorYellow} with ${ColorRed}ALL DATA?${ColorReset}"
+        printf "%b\n" "${ColorYellow}Type ${ColorCyan}YES${ColorYellow} followed by [${ColorCyan}Enter${ColorYellow}], to confirm.${ColorReset}"
         read -r _ans
     fi
     set_values "${GIVEN_NAME}"
@@ -957,31 +957,31 @@ jail_destroy () {
         if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
             jail_stop ${*}
         fi
-        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
-        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
-        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}"
-        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
-        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${SENTRY}"
-        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}"
-        try "${RM_BIN} -rf ${CELL} ${SENTRY}"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}")!"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}")!"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}")!"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/User/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/User/${JAIL_NAME}")!"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${SENTRY}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}${SENTRY}")!"
+        try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}${CELL}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}${CELL}")!"
 
         if [ -n "${JAIL_IPS}" ]; then
             _used_ip_file="${SYSTEM_IPS_DIR}/ip-${JAIL_IPS}"
-            debug "Used IPv4 address: $(distd "${JAIL_IPS}"). IPs dir: $(distn "${_used_ip_file}")"
-                note "IPv4: $(distn "${JAIL_IPS}") ($(distn "${_used_ip_file}")) was released by jail: $(distn "${JAIL_NAME}")"
+            debug "Used IPv4 address: $(distd "${JAIL_IPS}"). IPs dir: $(distn "${SYSTEM_IPS_DIR}")"
             run "${TOUCH_BIN} ${_used_ip_file}" && \
+                note "IPv4: $(distn "${JAIL_IPS}") ($(distn "${_used_ip_file}")) is no longer assigned to jail: $(distn "${JAIL_NAME}")"
         fi
 
         if [ -n "${EPAIR_NUMBER}" ]; then
             _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
-                note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) was released by jail: $(distn "${JAIL_NAME}")"
+            debug "Used NetID: $(distd "${EPAIR_NUMBER}"). NetIDs dir: $(distn "${SYSTEM_NETIDS_DIR}")"
             run "${TOUCH_BIN} ${_used_id_file}" && \
+                note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is no longer assigned to jail: $(distn "${JAIL_NAME}")"
         fi
 
-        printf "%b\n" "${ColorGreen}Jail destroyed: ${ColorCyan}${JAIL_NAME}${ColorReset}" && \
+        warn "Jail destroyed: $(distw "${JAIL_NAME}")" && \
             try "igni dns reload; igni proxy reload"
     else
-        printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}${GIVEN_NAME##*/} ${ColorGreen}left intact${ColorReset}"
+        warn "Jail: $(distw "${GIVEN_NAME##*/}") is intact."
     fi
 }
 
