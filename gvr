@@ -262,13 +262,13 @@ show_version () {
 }
 
 
-check_cell_name () {
-    _given_name="${1}"
-    _filename="${_given_name##*/}"
-    if [ ! -d "${_given_name}" ]; then
-        error "Bad jail name: $(diste "${_given_name}"), file: $(diste "${_filename}")"
-    fi
-}
+# check_cell_name () {
+#     _given_name="${1}"
+#     _filename="${_given_name##*/}"
+#     if [ ! -d "${_given_name}" ]; then
+#         error "No such cell: $(diste "${_given_name}"), file: $(diste "${_filename}")"
+#     fi
+# }
 
 
 apply_attributes () {
