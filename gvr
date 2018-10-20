@@ -618,23 +618,23 @@ ${JAIL_NAME} {
     # run "${ZFS_BIN} set com.svd:version=${svd_version} ${DEFAULT_ZPOOL}${CELL}" && \
     #     debug "Updated client ServeD version property from base system"
 
-    for logger in messages production staging development; do
-        run "${MKFIFO_BIN} -m \"a=-rwx,u=rw\" \"${CELL}/var/log/${logger}\"" && \
-        ${CHOWN_BIN} "${EPAIR_NUMBER}" "${CELL}/var/log/${logger}" && \
-        printf "
-source s_${JAIL_NAME}_${logger} {
-    pipe(\"${CELL}/var/log/${logger}\");
-};
-destination d_${JAIL_NAME}_${logger}_file {
-    file(\"/var/log/${JAIL_NAME}-${logger}.log\" template(t_default_format));
-};
-log {
-    source(s_${JAIL_NAME}_${logger});
-    destination(d_${JAIL_NAME}_${logger}_file);
-};
-" > "${JAIL_LOGS_CONF_DIR}/${logger}.conf" && \
-        debug "Created logger: $(distd "${logger}")"
-    done
+#     for logger in messages production staging development; do
+#         run "${MKFIFO_BIN} -m \"a=-rwx,u=rw\" \"${CELL}/var/log/${logger}\"" && \
+#         ${CHOWN_BIN} "${EPAIR_NUMBER}" "${CELL}/var/log/${logger}" && \
+#         printf "
+# source s_${JAIL_NAME}_${logger} {
+#     pipe(\"${CELL}/var/log/${logger}\");
+# };
+# destination d_${JAIL_NAME}_${logger}_file {
+#     file(\"/var/log/${JAIL_NAME}-${logger}.log\" template(t_default_format));
+# };
+# log {
+#     source(s_${JAIL_NAME}_${logger});
+#     destination(d_${JAIL_NAME}_${logger}_file);
+# };
+# " > "${JAIL_LOGS_CONF_DIR}/${logger}.conf" && \
+#         debug "Created logger: $(distd "${logger}")"
+#     done
 
     # debug "Reloading syslog"
     # service syslog-ng reload >/dev/null || service syslog-ng restart >/dev/null
