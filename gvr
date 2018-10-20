@@ -951,8 +951,8 @@ jail_destroy () {
         read -r _ans
     fi
     set_values "${GIVEN_NAME}"
-    check_cell_name "${CELL}"
 
+    # check_cell_name "${CELL}"
     if [ "${_ans}" = "YES" ]; then
         if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
             jail_stop ${*}
