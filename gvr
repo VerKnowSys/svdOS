@@ -49,19 +49,19 @@ IGNITERS_DIR="${SHARED_DIR}/Igniters"
 SYSTEM_NETIDS_DIR="${SHARED_DIR}/NetIDs"
 SYSTEM_IPS_DIR="${SHARED_DIR}/IPs"
 SYSTEM_DNS_DIR="${SHARED_DIR}/DNS"
-CELL_IP_ADDRESSES_ATTRIBUTE="jail.ip.addresses"
-CELL_OS_VERSION_ATTRIBUTE="jail.os.version"
-CELL_EPAIR_NUMBER_ATTRIBUTE="jail.vlan.number"
-CELL_ATTRIBUTES_DIR="jail-attributes"
-CELL_DOMAINS_DIR="jail-domains"
-CELL_WEBCONF_DIR="jail-webconfs"
-CELL_LOGS_DIR="jail-loggers"
-JAIL_CONF_NAME="jail.conf"
-JAIL_TRUSS_NAME="jail.truss.log"
-JAIL_TRUSS_EXEC_NAME="jail.truss.exec.log"
-JAIL_ID_NAME="jail.id"
-JAIL_STATUS_NAME="jail.status"
-JAIL_RUNNING_INDICATOR="jail.running"
+CELL_IP_ADDRESSES_ATTRIBUTE="cell.ip.addresses"
+CELL_OS_VERSION_ATTRIBUTE="cell.os.version"
+CELL_EPAIR_NUMBER_ATTRIBUTE="cell.vlan.number"
+CELL_ATTRIBUTES_DIR="cell-attributes"
+CELL_DOMAINS_DIR="cell-domains"
+CELL_WEBCONF_DIR="cell-webconfs"
+CELL_LOGS_DIR="cell-loggers"
+JAIL_CONF_NAME="cell.conf"
+JAIL_TRUSS_NAME="cell.truss.log"
+JAIL_TRUSS_EXEC_NAME="cell.truss.exec.log"
+JAIL_ID_NAME="cell.id"
+JAIL_STATUS_NAME="cell.status"
+JAIL_RUNNING_INDICATOR="cell.running"
 DEFAULT_HOST_ADDRESS="/etc/host.default"
 DEFAULT_JAILS_FIB="0"
 DEFAULT_UNAME="FreeBSD"
@@ -160,7 +160,7 @@ if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
     CURRENT_VERSION="$(cat "${JAIL_CACHE_DIR}/current-stable" 2>/dev/null)"
     if [ -n "${CURRENT_VERSION}" ]; then
         if [ ! -f "${JAIL_CACHE_DIR}/${CURRENT_VERSION}" ]; then
-            printf "%b\n" "${ColorGreen}Fetching ServeD stable snapshot: $(distn "${CURRENT_VERSION}") as jail base system: $(distn "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}")${ColorReset}"
+            printf "%b\n" "${ColorGreen}Fetching ServeD stable snapshot: $(distn "${CURRENT_VERSION}") as cell base system: $(distn "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}")${ColorReset}"
             fetch "${SERVED_SYSTEM_SNAPSHOT_RESOURCE}/${CURRENT_VERSION}" -o "${JAIL_CACHE_DIR}/${CURRENT_VERSION}"
         else
             debug "ServeD stable system snapshot already fetched…"
@@ -188,7 +188,7 @@ zfs list -H -r -t snap -o name "${DEFAULT_ZPOOL}/Software/root/Sofin@${ORIGIN}" 
     invoke_sofin_install
 
 
-# This is where all jail settings are put into global scope of script:
+# This is where all cell settings are put into global scope of script:
 set_values () {
     ENTERED_NAME="${1}"
     if [ -z "${ENTERED_NAME}" ]; then
@@ -225,7 +225,7 @@ set_values () {
     if [ "$?" = "0" ]; then
         JAIL_STATUS="${ColorGreen}*on*${ColorGray} ${JAIL_STATUS_DETAIL}${ColorReset}"
     fi
-    debug "Jail status: $(printf "%b\n" "${JAIL_STATUS}")"
+    debug "Cell status: $(printf "%b\n" "${JAIL_STATUS}")"
     JAIL_VERSION="${DEFAULT_VERSION}"
     if [ -f "${JAIL_VERSION_FILE}" ]; then
         JAIL_VERSION="$(${CAT_BIN} "${JAIL_VERSION_FILE}" 2>/dev/null)"
@@ -233,24 +233,24 @@ set_values () {
     if [ -f "${JAIL_EPAIR_NUMBER_FILE}" ]; then
         EPAIR_NUMBER="$(${CAT_BIN} "${JAIL_EPAIR_NUMBER_FILE}" 2>/dev/null)"
     fi
-    debug "Got jail os version: ${JAIL_VERSION}"
+    debug "Got cell os version: ${JAIL_VERSION}"
     JAIL_SOURCE="${SHARED_DIR}/${SYSTEM_NAME}-${JAIL_VERSION}-${SYSTEM_ARCH}"
-    debug "Got jail source: ${JAIL_SOURCE}"
+    debug "Got cell source: ${JAIL_SOURCE}"
     if [ -f "${JAIL_ADDRESSES_FILE}" ]; then
         JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" 2>/dev/null)"
     fi
-    # debug "Got jail IP(s): ${JAIL_IPS}"
+    # debug "Got cell IP(s): ${JAIL_IPS}"
     HOSTNAMES=""
     if [ -d "${JAIL_DOMAINS_DIR}" ]; then
-        debug "Jail domains dir is present: $(distd "${JAIL_DOMAINS_DIR}")"
+        debug "Cell domains dir is present: $(distd "${JAIL_DOMAINS_DIR}")"
         for hostnfile in $(${FIND_BIN} "${JAIL_DOMAINS_DIR}" -type f 2>> "${GVR_LOG}"); do
             hostn="$(${CAT_BIN} "${hostnfile}" 2>/dev/null | ${GREP_BIN} "local-zone:" 2>/dev/null | ${SED_BIN} 's/^.* "//;s/.".*//' 2>/dev/null)"
             debug "hostn: ${hostn}"
             HOSTNAMES="*.${hostn} ${HOSTNAMES}"
         done
-        debug "Got jail hostnames: ${HOSTNAMES}"
+        debug "Got cell hostnames: ${HOSTNAMES}"
     else
-        debug "Jail domains dir is absent: $(distd "${JAIL_DOMAINS_DIR}")"
+        debug "Cell domains dir is absent: $(distd "${JAIL_DOMAINS_DIR}")"
     fi
 
     JAIL_LOCAL_DOMAIN_CONF="${JAIL_DOMAINS_DIR}/local.conf"
@@ -278,9 +278,9 @@ apply_attributes () {
     run "${RCTL_BIN} -a jail:${JAIL_NAME}:maxproc:deny=${DEFAULT_LIMIT_MAXPROC}" && \
     run "${RCTL_BIN} -a jail:${JAIL_NAME}:openfiles:deny=${DEFAULT_LIMIT_OPENFILES}" && \
     run "${RCTL_BIN} -a jail:${JAIL_NAME}:pseudoterminals:deny=${DEFAULT_LIMIT_MAXPTS}" && \
-        debug "Applied default attributes for jail: $(distd "${JAIL_NAME}")"
+        debug "Applied default attributes for cell: $(distd "${JAIL_NAME}")"
 
-    debug "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for jail: ${JAIL_NAME}"
+    debug "Applying attributes from location: ${JAIL_ATTRIBUTES_DIR} for cell: ${JAIL_NAME}"
     ${MKDIR_BIN} -p "${JAIL_DOMAINS_DIR}" "${JAIL_ATTRIBUTES_DIR}" "${JAIL_WEBSERVER_CONF_DIR}" "${JAIL_LOGS_CONF_DIR}"
     cd "${JAIL_ATTRIBUTES_DIR}"
     for attribute in $(${LS_BIN} 2>/dev/null); do
@@ -294,7 +294,7 @@ apply_attributes () {
                 ;;
 
             ip)
-                printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+                printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
                 debug "conf: ${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
                 printf "%s" "${value}" > "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
                 ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${value};#" "${JAIL_CONF_FILE}"
@@ -353,7 +353,7 @@ apply_attributes () {
 }
 
 
-# check_jail_address () {
+# check_cell_address () {
 #     JAIL_ADDRESS_CHECK="${1}"
 #     for jail in $(${LS_BIN} ${SENTRY_DIR} 2>/dev/null); do
 #         IP_FILE="${SENTRY_DIR}/${jail}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
@@ -372,10 +372,10 @@ apply_attributes () {
 # }
 
 
-check_jail_name () {
+check_cell_name () {
     GIVEN_NAME="${1}"
-    for _jail in $(${LS_BIN} "${SENTRY_DIR}" 2>/dev/null); do
-        if [ "${_jail}" = "${GIVEN_NAME}" ]; then
+    for _cell in $(${LS_BIN} "${SENTRY_DIR}" 2>/dev/null); do
+        if [ "${_cell}" = "${GIVEN_NAME}" ]; then
             error "Name: $(diste "${GIVEN_NAME}") is already in use!"
         fi
     done
@@ -410,10 +410,10 @@ attributes_show () {
     printf "%b\n" "   ${ColorCyan}quota-services${ColorGray}: ${ColorGreen}quota value for /Services dataset only (fmt: 1G 512M 128K). ${ColorReset}"
     printf "%b\n" "   ${ColorCyan}quota-user${ColorGray}: ${ColorGreen}quota value for /User dataset only (fmt: 1G 512M 128K). ${ColorReset}"
     printf "%b\n" "   ${ColorCyan}quota-software${ColorGray}: ${ColorGreen}quota value for /Software dataset only (fmt: 1G 512M 128K). ${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}quota-root${ColorGray}: ${ColorGreen}quota value for jail base (/) system dataset only (fmt: 1G 512M 128K)${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}key${ColorGray}: ${ColorGreen}SSH public key (Skip public key header and comment parts) to be added to authorized keys of jail${ColorRes}\n"
-    printf "%b\n" "   ${ColorCyan}ip${ColorGray}: ${ColorGreen}change jail IP addresses (comma separated) [requires jail restart]${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}+ip${ColorGray}: ${ColorGreen}adds specified (comma separated) IP addresses to jail [requires jail restart]${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}quota-root${ColorGray}: ${ColorGreen}quota value for cell base (/) system dataset only (fmt: 1G 512M 128K)${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}key${ColorGray}: ${ColorGreen}SSH public key (Skip public key header and comment parts) to be added to authorized keys of cell${ColorRes}\n"
+    printf "%b\n" "   ${ColorCyan}ip${ColorGray}: ${ColorGreen}change cell IP addresses (comma separated) [requires cell restart]${ColorReset}"
+    printf "%b\n" "   ${ColorCyan}+ip${ColorGray}: ${ColorGreen}adds specified (comma separated) IP addresses to cell [requires cell restart]${ColorReset}"
 }
 
 
@@ -422,7 +422,7 @@ mark_running () {
 }
 
 
-jail_create () {
+cell_create () {
     usage () {
         printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} create myname${ColorReset}"
         note
@@ -430,9 +430,9 @@ jail_create () {
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail name given"
+        error "No cell name given"
     fi
-    check_jail_name "${GIVEN_NAME}"
+    check_cell_name "${GIVEN_NAME}"
 
     _1st_ip="$(${FIND_BIN} "${SYSTEM_IPS_DIR}" -type f -maxdepth 1 -name 'ip-*' 2>/dev/null | ${HEAD_BIN} -n1 2>/dev/null)"
     _1st_ip_file="${_1st_ip##*/}" # basename()
@@ -441,11 +441,11 @@ jail_create () {
         error "No $(diste "IPv4: JAIL_ADDRESSES") assigned from: $(diste "${SYSTEM_IPS_DIR}/ip-*")!"
     fi
     try "${RM_BIN} -f \"${_1st_ip}\"" && \
-        note "IPv4: $(distn "${JAIL_ADDRESSES}") is now assigned to jail: $(distn "${GIVEN_NAME}")."
+        note "IPv4: $(distn "${JAIL_ADDRESSES}") is now assigned to cell: $(distn "${GIVEN_NAME}")."
 
     # else
     #     note "Validating given IPv4 address: $(distn "${JAIL_ADDRESSES}")"
-    #     check_jail_address "${JAIL_ADDRESSES}"
+    #     check_cell_address "${JAIL_ADDRESSES}"
     # fi
     # JAIL_VERSION="${3}"
     # if [ "${JAIL_VERSION}" = "" ]; then
@@ -467,7 +467,7 @@ jail_create () {
         debug "Mounted and set sentry"
 
     if [ -f "${JAIL_CONF_FILE}" ]; then
-        warn "Jail already configured"
+        warn "Cell already configured"
     else
         # ADDRESSES_LIST="$(echo "${JAIL_ADDRESSES}" | ${TR_BIN} ',' '\n' 2>/dev/null)"
         # if [ -z "${ADDRESSES_LIST}" ]; then
@@ -539,7 +539,7 @@ ${JAIL_NAME} {
         debug "Found an software root ${ORIGIN} of snapshot: $(distd "${DEFAULT_ZPOOL}/Software/root@${ORIGIN}")"
     fi
     {
-        printf "%b\n" "${ColorGreen}Cloning: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME} ${ColorGreen}from most recent snapshot: ${ColorCyan}${DEFAULT_ZPOOL}/Software/root@${ORIGIN}${ColorReset}";
+        debug "Cloning: ${DEFAULT_ZPOOL}/Software/${JAIL_NAME} from most recent snapshot: ${DEFAULT_ZPOOL}/Software/root@${ORIGIN}";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Sofin@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Sofin";
         run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}/Software/root/Git@${ORIGIN} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}/Git";
@@ -597,7 +597,7 @@ ${JAIL_NAME} {
     run "${RM_BIN} -f ${CELL}/etc/rc.conf.local" && \
     run "${SED_BIN} -i '' -e \"s:__HOST_IP:${JAIL_ROUTER_ADDRESS}:\" ${CELL}/etc/resolv.conf" && \
         run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf ${CELL}/etc/rc.local ${CELL}/etc/rc.shutdown ${CELL}/etc/cron.d ${CELL}/etc/hosts" && \
-        debug "Built initial jail environment"
+        debug "Built initial cell environment"
 
     if [ ! -f "${CELL}/etc/sysctl.conf" ]; then
         run "${CP_BIN} -v ${SERVED_REPO}/etc-jail/sysctl.conf ${CELL}/etc/sysctl.conf" && \
@@ -611,7 +611,7 @@ ${JAIL_NAME} {
     run "${CP_BIN} -R ${SERVED_REPO}/shell/ ${CELL}/etc/zsh" && \
     run "${MV_BIN} -v ${CELL}/etc/zsh/zshrc ${CELL}/etc/zshrc" && \
     run "${MV_BIN} -v ${CELL}/etc/zsh/zshenv ${CELL}/etc/zshenv" && \
-        debug "Jail system shell configured"
+        debug "Cell system shell configured"
 
     # XXX: TODO: complete versionning (consider if necessary)
     # svd_version="$(${ZFS_BIN} get -H -o value com.svd:version ${DEFAULT_ZPOOL}/ROOT 2>/dev/null)"
@@ -658,26 +658,26 @@ ${JAIL_NAME} {
 
     _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
     try "${RM_BIN} -f \"${_used_id_file}\"" && \
-        note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is now marked as used by jail: $(distn "${JAIL_NAME}")."
+        note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is now marked as used by cell: $(distn "${JAIL_NAME}")."
 
-    note "Starting jail: $(distd "${JAIL_NAME}")"
-    jail_start "${JAIL_NAME}" && \
-        debug "Zone: $(distd "${JAIL_NAME}.${SHARED_DOMAIN_NAME}") is now locally resolvable. Owned by: $(distd "${JAIL_NAME}")" && \
+    note "Starting cell: $(distd "${JAIL_NAME}")"
+    cell_start "${JAIL_NAME}" && \
+        note "Cell: $(distn "${JAIL_NAME}") bound to domain: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"), with local address: $(distn "${MAIN_JAIL_ADDRESS}")." && \
         return 0
 
-    error "Failed to start jail with zone: $(diste "${JAIL_NAME}.${SHARED_DOMAIN_NAME}")"
+    error "Failed to start cell with zone: $(diste "${JAIL_NAME}.${SHARED_DOMAIN_NAME}")"
 }
 
 
-jail_status () {
+cell_status () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} status jail-name${ColorReset}"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} status cell-name${ColorReset}"
     }
     GIVEN_NAME="${1}"
     VERBOSE="${2}"
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail name given"
+        error "No cell name given"
     fi
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
@@ -687,7 +687,6 @@ jail_status () {
     echo "${JAIL_STATUS}" | ${GREP_BIN} '\*on\*' > /dev/null 2>&1
     if [ "$?" = "0" ]; then
         JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} " ${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
-        debug "JAIL_NUM_ID: ${JAIL_NUM_ID}"
         printf "%b\n" "${ColorGreen}JID: ${ColorCyan}${JAIL_NUM_ID}${ColorReset}"
     fi
     EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/${CELL_EPAIR_NUMBER_ATTRIBUTE}" 2>/dev/null)"
@@ -712,7 +711,7 @@ jail_status () {
 }
 
 
-jail_list () {
+cell_list () {
     mkdir -p "${CELLS_DIR}"
     cd "${CELLS_DIR}"
     _out="$(${JLS_BIN} -v 2>/dev/null)"
@@ -734,20 +733,20 @@ jail_list () {
 
 
 # Apply settings and start jail
-jail_start () {
+cell_start () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} start jail-name${ColorReset}"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} start cell-name${ColorReset}"
     }
     GIVEN_NAME="${1}" # hostname?
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail to start"
+        error "No cell to start"
     fi
     set_values "${GIVEN_NAME}"
 
     ${JLS_BIN} 2>/dev/null | ${EGREP_BIN} " ${GIVEN_NAME}[\.\ ]" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        printf "%b\n" "${ColorGreen}Jail with name: ${ColorCyan}${GIVEN_NAME}${ColorGreen} is already running${ColorReset}"
+        printf "%b\n" "${ColorGreen}Cell with name: ${ColorCyan}${GIVEN_NAME}${ColorGreen} is already running${ColorReset}"
         exit 0
     fi
 
@@ -756,7 +755,7 @@ jail_start () {
         JAIL_IPS="$(${CAT_BIN} "${JAIL_ADDRESSES_FILE}" 2>/dev/null)"
     fi
 
-    echo "Jail start command: ${DEBUG_COMMAND} \"${JAIL_BIN}\" -c -J \"${JAIL_ID_FILE}\" -f \"${JAIL_CONF_FILE}\"" >> "${GVR_LOG}"
+    echo "Cell start command: ${DEBUG_COMMAND} \"${JAIL_BIN}\" -c -J \"${JAIL_ID_FILE}\" -f \"${JAIL_CONF_FILE}\"" >> "${GVR_LOG}"
     ${DEBUG_COMMAND} "${JAIL_BIN}" -c -J "${JAIL_ID_FILE}" -f "${JAIL_CONF_FILE}" >> "${GVR_LOG}" 2>> "${GVR_LOG}"
     if [ "$?" = "0" ]; then
         JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} " ${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
@@ -766,27 +765,27 @@ jail_start () {
 
         printf "%s\n" "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         ${JEXEC_BIN} "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
-            note "Took: $(distn "${GVR_ELAPSED_S}s") to deploy jail: $(distn "${JAIL_NAME}") (JID: $(distn "${JAIL_NUM_ID}"); UID: $(distn "${EPAIR_NUMBER}"), Zone: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"))"
+            note "Took: $(distn "${GVR_ELAPSED_S}s") to deploy cell: $(distn "${JAIL_NAME}") (JID: $(distn "${JAIL_NUM_ID}"); UID: $(distn "${EPAIR_NUMBER}"), Zone: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"))"
 
         apply_attributes
 
         # if [ -z "${JAIL_NUM_ID}" ]; then
-        #     error "Jail ID is empty!"
+        #     error "Cell ID is empty!"
         # fi
         for dset in Services Software Shared User; do
             run "${ZFS_BIN} jail ${JAIL_NAME} ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set canmount=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
-                debug "Jailed dataset: $(distd "${dset}")"
+                debug "Celled dataset: $(distd "${dset}")"
             run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} allow -u ${DEFAULT_JAIL_USER} xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation,readonly ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
-                debug "Allowed user: $(distd "${DEFAULT_JAIL_USER}") to control ZFS datasets under his jail: $(distd "${JAIL_NAME}")."
+                debug "Allowed user: $(distd "${DEFAULT_JAIL_USER}") full control over ZFS datasets of cell: $(distd "${JAIL_NAME}")."
         done
 
         # TODO: XXX: this feels like a hack to set any SUID bits:
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHMOD_BIN} +s ${SYSCTL_BIN} ${CHOWN_BIN} ${ZFS_BIN}" && \
             debug "NOTE: By default, SETUID bit is set only for a few system utilities: $(distd "chown, sysctl, zfs, crontab")."
 
-        run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} -f /etc/sysctl.conf || :" && debug "Jail sysctl.conf loaded"
+        run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} -f /etc/sysctl.conf || :" && debug "Cell sysctl.conf loaded"
         run "${JEXEC_BIN} ${JAIL_NAME} ${MOUNT_BIN} -a" && debug "All filesystems mounted"
         run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} mount -a" && debug "All datasets mounted"
         run "${JEXEC_BIN} ${JAIL_NAME} ${SYSCTL_BIN} kern.securelevel=${KERN_SECURELEVEL}" && debug "Securelevel: ${KERN_SECURELEVEL}"
@@ -799,19 +798,19 @@ jail_start () {
         mark_running
     else
         try "${IFCONFIG_BIN} ${EPAIR}b destroy 2>/dev/null"
-        error "Jail launch failed. Look into log file: ${ColorCyan}${GVR_LOG}"
+        error "Cell launch failed. Look into log file: ${ColorCyan}${GVR_LOG}"
     fi
 }
 
 
-jail_stop () {
+cell_stop () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} stop jail-name${ColorReset}"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} stop cell-name${ColorReset}"
     }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail to stop"
+        error "No cell to stop"
     fi
     SENTRY="${SENTRY_DIR}/${GIVEN_NAME}"
     EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/${CELL_EPAIR_NUMBER_ATTRIBUTE}" 2>/dev/null)"
@@ -822,7 +821,7 @@ jail_stop () {
     # check_cell_name "${CELL}"
     # JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} -F "${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
     # if [ -z "${JAIL_NUM_ID}" ]; then
-    #     error "NO jail ID?!"
+    #     error "NO cell ID?!"
     # fi
     for _dir in /dev /tmp; do
         try "${UMOUNT_BIN} -f ${CELL}${_dir}" && \
@@ -838,24 +837,24 @@ jail_stop () {
     try "${UMOUNT_BIN} -f ${CELL}/Software/Zsh" && debug "Unmounted ${CELL}/Software/Zsh"
 
     run "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
-        printf "%b\n" "${ColorGreen}Terminated jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+        printf "%b\n" "${ColorGreen}Terminated cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
 
     printf "%s\n" "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
     run "${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}" && \
-        debug "Removed jail running indicator: $(distd "${SENTRY}/${JAIL_RUNNING_INDICATOR}")"
+        debug "Removed cell running indicator: $(distd "${SENTRY}/${JAIL_RUNNING_INDICATOR}")"
 }
 
 
-jail_set () {
+cell_set () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} set jail-name attribute=value attr2=val2 (...)${ColorReset}"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} set cell-name attribute=value attr2=val2 (...)${ColorReset}"
     }
     GIVEN_NAME="${1}"
     shift
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail name given"
+        error "No cell name given"
     fi
 
     set_values "${GIVEN_NAME}"
@@ -864,43 +863,43 @@ jail_set () {
         ATTRIBUTE="$(printf "%s\n" "${argument_pair}" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' 2>/dev/null)"
         JAIL_VALUE="$(printf "%s\n" "${argument_pair}" | ${AWK_BIN} '{split($0, a, "="); print a[2];}' 2>/dev/null)"
         debug "arg: ${ATTRIBUTE}, val: ${JAIL_VALUE} "
-        printf "%b\n" "${ColorGreen}Setting attribute: ${ColorCyan}${ATTRIBUTE}${ColorGreen}, value: ${ColorCyan}${JAIL_VALUE}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+        printf "%b\n" "${ColorGreen}Setting attribute: ${ColorCyan}${ATTRIBUTE}${ColorGreen}, value: ${ColorCyan}${JAIL_VALUE}${ColorGreen} for cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
         printf "%s\n" "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
     done
     apply_attributes
 }
 
 
-jail_unset () {
+cell_unset () {
     usage () {
-        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} unset jail-name attribute value${ColorReset}"
+        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} unset cell-name attribute value${ColorReset}"
     }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail name given"
+        error "No cell name given"
     fi
     shift
 
     set_values "${GIVEN_NAME}"
     check_cell_name "${CELL}"
-    for jail_attribute in ${*}; do
-        run "${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${jail_attribute}" && \
-        try "${RCTL_BIN} -r jail:${JAIL_NAME}:${jail_attribute}" && \
-            printf "%b\n" "${ColorGreen}Unset attribute: ${ColorCyan}${jail_attribute}${ColorGreen} for jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+    for cell_attribute in ${*}; do
+        run "${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${cell_attribute}" && \
+        try "${RCTL_BIN} -r jail:${JAIL_NAME}:${cell_attribute}" && \
+            printf "%b\n" "${ColorGreen}Unset attribute: ${ColorCyan}${cell_attribute}${ColorGreen} for cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
     done
     apply_attributes
 }
 
 
-jail_login () {
+cell_login () {
     usage () {
-        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} login jail-name${ColorReset}"
+        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} login cell-name${ColorReset}"
     }
     GIVEN_NAME="${1}" # hostname?
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail to enter"
+        error "No cell to enter"
     fi
     JAIL_LOGIN="${DEFAULT_JAIL_USER}"
     GIVEN_USER="${2}"
@@ -911,43 +910,43 @@ jail_login () {
     check_cell_name "${CELL}"
     ${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} " ${JAIL_NAME} .*ACTIVE" >/dev/null 2>&1
     if [ "$?" = "0" ]; then
-        debug "Logging in as: ${JAIL_LOGIN} to jail: ${JAIL_NAME}" && \
+        debug "Logging in as: ${JAIL_LOGIN} to cell: ${JAIL_NAME}" && \
         ${DEBUG_EXEC_COMMAND} "${JEXEC_BIN}" "${JAIL_NAME}" "su" "${DEFAULT_JAIL_USER}" && \
-            printf "%b\n" "${ColorGreen}Logged out from jail: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+            printf "%b\n" "${ColorGreen}Logged out from cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
     else
-        error "Start the jail first!"
+        error "Start the cell first!"
     fi
 }
 
 
-jail_restart () {
+cell_restart () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} restart jail-name${ColorReset}"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} restart cell-name${ColorReset}"
     }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail to restart"
+        error "No cell to restart"
     fi
-    jail_stop ${*}
-    jail_start ${*}
+    cell_stop ${*}
+    cell_start ${*}
 }
 
 
-jail_destroy () {
+cell_destroy () {
     usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} destroy jail-name${ColorReset}"
+        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} destroy cell-name${ColorReset}"
     }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
         usage
-        error "No jail to destroy"
+        error "No cell to destroy"
     fi
     ASK_CONFIRM="${2}"
     if [ "I_KNOW_EXACTLY_WHAT_I_AM_DOING" = "${ASK_CONFIRM}" ]; then
         _ans="YES"
     else
-        printf "%b\n" "${ColorYellow}Are you sure you want to destroy jail: ${ColorCyan}${GIVEN_NAME##*/}${ColorYellow} with ${ColorRed}ALL DATA?${ColorReset}"
+        printf "%b\n" "${ColorYellow}Are you sure you want to destroy cell: ${ColorCyan}${GIVEN_NAME##*/}${ColorYellow} with ${ColorRed}ALL DATA?${ColorReset}"
         printf "%b\n" "${ColorYellow}Type ${ColorCyan}YES${ColorYellow} followed by [${ColorCyan}Enter${ColorYellow}], to confirm.${ColorReset}"
         read -r _ans
     fi
@@ -956,7 +955,7 @@ jail_destroy () {
     # check_cell_name "${CELL}"
     if [ "${_ans}" = "YES" ]; then
         if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
-            jail_stop ${*}
+            cell_stop ${*}
         fi
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}")!"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}")!"
@@ -975,20 +974,20 @@ jail_destroy () {
             _used_ip_file="${SYSTEM_IPS_DIR}/ip-${JAIL_IPS}"
             debug "Used IPv4 address: $(distd "${JAIL_IPS}"). IPs dir: $(distn "${SYSTEM_IPS_DIR}")"
             run "${TOUCH_BIN} ${_used_ip_file}" && \
-                note "IPv4: $(distn "${JAIL_IPS}") ($(distn "${_used_ip_file}")) is no longer assigned to jail: $(distn "${JAIL_NAME}")"
+                note "IPv4: $(distn "${JAIL_IPS}") ($(distn "${_used_ip_file}")) is no longer assigned to cell: $(distn "${JAIL_NAME}")"
         fi
 
         if [ -n "${EPAIR_NUMBER}" ]; then
             _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
             debug "Used NetID: $(distd "${EPAIR_NUMBER}"). NetIDs dir: $(distn "${SYSTEM_NETIDS_DIR}")"
             run "${TOUCH_BIN} ${_used_id_file}" && \
-                note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is no longer assigned to jail: $(distn "${JAIL_NAME}")"
+                note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is no longer assigned to cell: $(distn "${JAIL_NAME}")"
         fi
 
-        warn "Jail destroyed: $(distw "${JAIL_NAME}")" && \
+        warn "Cell destroyed: $(distw "${JAIL_NAME}")" && \
             try "igni dns reload; igni proxy reload"
     else
-        warn "Jail: $(distw "${GIVEN_NAME##*/}") is intact."
+        warn "Cell: $(distw "${GIVEN_NAME##*/}") is intact."
     fi
 }
 
@@ -1002,55 +1001,55 @@ case $1 in
     create|c)
         shift
         echo
-        jail_create ${*}
+        cell_create ${*}
         ;;
 
     destroy)
         shift
-        jail_destroy ${*}
+        cell_destroy ${*}
         ;;
 
     status|s|stat)
         shift
-        jail_status ${*}
+        cell_status ${*}
         ;;
 
     start)
         shift
         echo
-        jail_start ${*}
+        cell_start ${*}
         ;;
 
     stop)
         shift
-        jail_stop ${*}
+        cell_stop ${*}
         ;;
 
     restart)
         shift
-        jail_restart ${*}
+        cell_restart ${*}
         ;;
 
     list|l|lst)
         shift
-        jail_list ${*}
+        cell_list ${*}
         ;;
 
     set)
         shift
         echo
-        jail_set ${*}
+        cell_set ${*}
         ;;
 
     unset)
         shift
         echo
-        jail_unset ${*}
+        cell_unset ${*}
         ;;
 
     login)
         shift
-        jail_login ${*}
+        cell_login ${*}
         ;;
 
     attributes|attrs)
@@ -1059,12 +1058,12 @@ case $1 in
 
     boot)
         cd "${SENTRY_DIR}"
-        for jail in *; do
-            if [ -f "${SENTRY_DIR}/${jail}/${JAIL_RUNNING_INDICATOR}" ]; then
-                printf "%b\n" "${ColorGreen}Initializing boot of jail: ${ColorCyan}${jail}${ColorReset}"
-                nohup "${0}" start "${jail}" > /dev/null 2>&1 &
+        for _cell in *; do
+            if [ -f "${SENTRY_DIR}/${_cell}/${JAIL_RUNNING_INDICATOR}" ]; then
+                printf "%b\n" "${ColorGreen}Initializing boot of _cell: ${ColorCyan}${_cell}${ColorReset}"
+                nohup "${0}" start "${_cell}" > /dev/null 2>&1 &
             else
-                warn "Boot skipped for: $(distw "${jail}")"
+                warn "Boot skipped for: $(distw "${_cell}")"
             fi
         done
         ;;
@@ -1076,17 +1075,17 @@ case $1 in
 
         note "List of commands:"
         printf "%b\n" "  ${ColorCyan}ver${ColorReset}: ${ColorGreen}prints Governor and svdOS versions${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}boot${ColorReset}: ${ColorGreen}launches all previously running jails${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}create${ColorReset}: ${ColorGreen}creates new jail${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}list${ColorReset} | ${ColorCyan}lst${ColorReset} | ${ColorCyan}l${ColorReset}: ${ColorGreen}lists created jails${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}set${ColorReset}: ${ColorGreen}set attributes for jails${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}boot${ColorReset}: ${ColorGreen}launches all previously running cells${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}create${ColorReset}: ${ColorGreen}creates new cell${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}list${ColorReset} | ${ColorCyan}lst${ColorReset} | ${ColorCyan}l${ColorReset}: ${ColorGreen}lists created cells${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}set${ColorReset}: ${ColorGreen}set attributes for cells${ColorReset}"
         printf "%b\n" "  ${ColorCyan}attributes${ColorReset} | ${ColorCyan}attrs${ColorReset}: ${ColorGreen}shows attributes list modifiable by '${CMD} set …' ${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}login${ColorReset}: ${ColorGreen}logins to jail${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}start${ColorReset}: ${ColorGreen}starts created, non running jail${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}stop${ColorReset}: ${ColorGreen}stops running jail${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}restart${ColorReset}: ${ColorGreen}restarts a jail${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}status${ColorReset}: ${ColorGreen}shows detailed configuration of a jail${ColorReset}"
-        printf "%b\n" "  ${ColorCyan}destroy${ColorReset}: ${ColorGreen}destroys a jail${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}login${ColorReset}: ${ColorGreen}logins to cell${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}start${ColorReset}: ${ColorGreen}starts created, non running cell${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}stop${ColorReset}: ${ColorGreen}stops running cell${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}restart${ColorReset}: ${ColorGreen}restarts a cell${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}status${ColorReset}: ${ColorGreen}shows detailed configuration of a cell${ColorReset}"
+        printf "%b\n" "  ${ColorCyan}destroy${ColorReset}: ${ColorGreen}destroys a cell${ColorReset}"
 
         printf "\n%b\n" "${ColorGreen}Run '${ColorCyan}${CMD} [command]${ColorReset}${ColorGreen}' without arguments to see detailed help about command params.${ColorReset}"
         ;;
