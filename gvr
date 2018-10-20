@@ -830,7 +830,7 @@ jail_stop () {
     done
     # NOTE: make sure that /Software/Zsh and /Software/Git are not mountable (main system override possibility)
     for _dset in Services Software; do
-        run "${ZFS_BIN} unjail ${GIVEN_NAME} ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
+        try "${ZFS_BIN} unjail ${GIVEN_NAME} ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
         run "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
             debug "Unjailed and unmounted dataset: $(distd "${_dset}")"
     done
