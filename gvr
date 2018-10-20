@@ -907,7 +907,7 @@ jail_destroy () {
         _ans="YES"
     else
         printf "%b\n" "${ColorGreen}Are you sure you want to destroy jail: ${ColorCyan}${GIVEN_NAME##*/}${ColorGreen} with ${ColorRed}ALL DATA?${ColorReset}"
-        printf "%b\n" "${ColorGreen}Type ${ColorCyan}YES${ColorGreen} followed by [Enter], to confirm.${ColorReset}"
+        printf "%b\n" "${ColorGreen}Type ${ColorCyan}YES${ColorGreen} followed by [${ColorCyan}Enter${ColorGreen}], to confirm.${ColorReset}"
         read -r _ans
     fi
     set_values "${GIVEN_NAME}"
@@ -934,7 +934,7 @@ jail_destroy () {
         try "${TOUCH_BIN} ${_used_id_file}" && \
             note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) was released by jail: $(distn "${JAIL_NAME}")"
 
-        printf "%b\n" "${ColorGreen}Destroyed datasets of jail: ${ColorCyan}${JAIL_NAME}${ColorReset}" && \
+        printf "%b\n" "${ColorGreen}Jail destroyed: ${ColorCyan}${JAIL_NAME}${ColorReset}" && \
             try "igni dns reload; igni proxy reload"
     else
         printf "%b\n" "${ColorGreen}Jail: ${ColorCyan}${GIVEN_NAME##*/} ${ColorGreen}left intact${ColorReset}"
