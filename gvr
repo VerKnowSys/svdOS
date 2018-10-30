@@ -293,24 +293,24 @@ apply_attributes () {
                 ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${CHOWN_BIN} -R ${DEFAULT_JAIL_USER} /User/.ssh"
                 ;;
 
-            ip)
-                printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
-                debug "conf: ${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
-                printf "%s" "${value}" > "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
-                ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${value};#" "${JAIL_CONF_FILE}"
-                ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${attribute}"
-                ;;
+            # ip)
+            #     printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+            #     debug "conf: ${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+            #     printf "%s" "${value}" > "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+            #     ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${value};#" "${JAIL_CONF_FILE}"
+            #     ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${attribute}"
+            #     ;;
 
-            +ip)
-                file_size="$(${STAT_BIN} -f%z "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null)"
-                if [ "${file_size}" -gt "0" ]; then
-                    printf "%s" ",${value}" >> "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
-                    current_value="$(${CAT_BIN} "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -E 's/[,]{2,}/,/g;s/,$//;s/^[,]{1,}//g' 2>/dev/null)"
-                    debug "Current value: ${current_value}"
-                    ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${current_value};#" "${JAIL_CONF_FILE}"
-                fi
-                ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${attribute}"
-                ;;
+            # +ip)
+            #     file_size="$(${STAT_BIN} -f%z "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null)"
+            #     if [ "${file_size}" -gt "0" ]; then
+            #         printf "%s" ",${value}" >> "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}"
+            #         current_value="$(${CAT_BIN} "${SENTRY_DIR}/${JAIL_NAME}/${CELL_IP_ADDRESSES_ATTRIBUTE}" 2>/dev/null | ${TR_BIN} '\n' ',' 2>/dev/null | ${SED_BIN} -E 's/[,]{2,}/,/g;s/,$//;s/^[,]{1,}//g' 2>/dev/null)"
+            #         debug "Current value: ${current_value}"
+            #         ${SED_BIN} -i '' -e "s#ip4\.addr.*;\$#ip4.addr = ${current_value};#" "${JAIL_CONF_FILE}"
+            #     fi
+            #     ${RM_BIN} -f "${JAIL_ATTRIBUTES_DIR}/${attribute}"
+            #     ;;
 
             quota-root)
                 printf "%b\n" "${ColorGreen}Setting root dir quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}${CELL}${ColorReset}"
@@ -412,8 +412,8 @@ attributes_show () {
     printf "%b\n" "   ${ColorCyan}quota-software${ColorGray}: ${ColorGreen}quota value for /Software dataset only (fmt: 1G 512M 128K). ${ColorReset}"
     printf "%b\n" "   ${ColorCyan}quota-root${ColorGray}: ${ColorGreen}quota value for cell base (/) system dataset only (fmt: 1G 512M 128K)${ColorReset}"
     printf "%b\n" "   ${ColorCyan}key${ColorGray}: ${ColorGreen}SSH public key (Skip public key header and comment parts) to be added to authorized keys of cell${ColorRes}\n"
-    printf "%b\n" "   ${ColorCyan}ip${ColorGray}: ${ColorGreen}change cell IP addresses (comma separated) [requires cell restart]${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}+ip${ColorGray}: ${ColorGreen}adds specified (comma separated) IP addresses to cell [requires cell restart]${ColorReset}"
+    # printf "%b\n" "   ${ColorCyan}ip${ColorGray}: ${ColorGreen}change cell IP addresses (comma separated) [requires cell restart]${ColorReset}"
+    # printf "%b\n" "   ${ColorCyan}+ip${ColorGray}: ${ColorGreen}adds specified (comma separated) IP addresses to cell [requires cell restart]${ColorReset}"
 }
 
 
