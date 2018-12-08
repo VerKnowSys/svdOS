@@ -647,7 +647,7 @@ ${JAIL_NAME} {
         "local-zone: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\" redirect" \
         "local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 360 IN A ${MAIN_JAIL_ADDRESS}\"" \
         "local-data: \"pma-${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 360 IN A ${MAIN_JAIL_ADDRESS}\"" \
-        "local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.${SHARED_DOMAIN_NAME}\"" >> "${JAIL_LOCAL_DOMAIN_CONF}"
+        "local-data-ptr: \"${MAIN_JAIL_ADDRESS} ${JAIL_NAME}.${SHARED_DOMAIN_NAME}.\"" >> "${JAIL_LOCAL_DOMAIN_CONF}"
 
     # NOTE: old template, just in case:
     # local-data: \"${JAIL_NAME}.${SHARED_DOMAIN_NAME}. 10800 IN NS ns1.${SHARED_DOMAIN_NAME}.\"
