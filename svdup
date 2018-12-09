@@ -154,9 +154,9 @@ set_std_zfs_properties () {
 
 
 mount_boot_env () {
-    beadm mount "${NEW_BOOT_ENV}" "${DESTBASE}" && \
-        echo "svdUP: Mounted new environment: ${NEW_BOOT_ENV}, to destination base: ${DESTBASE}" && \
-        return 0
+    beadm mount "${NEW_BOOT_ENV}" "${DESTBASE}" >/dev/null && \
+        echo "svdUP: Mounted new environment: ${NEW_BOOT_ENV} with base system: ${DESTBASE##*/}" \
+            && return 0
     return 1
 }
 
@@ -205,7 +205,7 @@ configure_and_commit_boot_env () {
         install -v "/Software/Rsync/bin/rsync" "${DESTBASE}/usr/bin/rsync"
     fi
 
-    echo "Making sure fstab has no build host mounts enabled"
+    echo "svdUP: Cleaning: build-host specific mounts"
     sed -i '' -e '/src/ d' "${DESTBASE}/etc/fstab"
     sed -i '' -e '/obj/ d' "${DESTBASE}/etc/fstab"
 
@@ -216,7 +216,7 @@ configure_and_commit_boot_env () {
         "${_boot_device}" && \
         echo "svdUP: Gpart: Bootcode installed for environment: ${NEW_BOOT_ENV}. Boot device is: ${_boot_device}"
 
-    beadm umount -f "${NEW_BOOT_ENV}" && \
+    beadm umount -f "${NEW_BOOT_ENV}" >/dev/null && \
         echo "svdUP: Unmounted new environment: ${NEW_BOOT_ENV}" && \
             return 0
 
@@ -332,29 +332,29 @@ upgrade_projects_sync_configuration () {
     git clone "${BEADM_REPOSITORY}" 2>/dev/null
     cd beadm
     git reset --hard >/dev/null 2>&1
-    git pull origin master
-    rm -f beadm.1.gz
-    gzip beadm.1
-    cp -f beadm.1.gz /usr/share/man/man1/
-    cp -f beadm /usr/sbin/beadm
+    git pull origin master 2>/dev/null
+    rm -f "beadm.1.gz"
+    gzip "beadm.1" >/dev/null
+    install -v "beadm.1.gz" "/usr/share/man/man1/"
+    install -v "beadm" "/usr/sbin/beadm"
 
     cd /Projects
     git clone "${SERVED_REPOSITORY}" 2>/dev/null
     cd svdOS
     git reset --hard >/dev/null 2>&1
-    git pull origin master
+    git pull origin master 2>/dev/null
 
-    cp -f etc/sysctl.conf.served /etc/sysctl.conf.served
+    # always install default sysctl.conf.served:
+    install -v "etc/sysctl.conf.served" "/etc/sysctl.conf.served"
 
-    test -f /etc/rc.local || \
-        cp -f etc/rc.local /etc/rc.local
-    test -f /etc/rc.conf.local || \
-        cp -f etc/rc.production.conf /etc/rc.conf.local
+    # System config: Install rc.conf and rc.conf.local, only if doesn't exist:
+    test -f "/etc/rc.local" || install -v "etc/rc.local" "/etc/rc.local"
+    test -f "/etc/rc.conf.local" || install -v "etc/rc.production.conf" "/etc/rc.conf.local"
 
     # Installing Zsh configuration:
-    cp -fr shell/ /etc/zsh
-    ln -fs /etc/zsh/zshenv /etc/zshenv
-    ln -fs /etc/zsh/zshrc /etc/zshrc
+    cp -fr "shell/" "/etc/zsh"
+    ln -fs "/etc/zsh/zshenv" "/etc/zshenv"
+    ln -fs "/etc/zsh/zshrc" "/etc/zshrc"
 
     cd /
 }
