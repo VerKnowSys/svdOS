@@ -167,44 +167,42 @@ configure_and_commit_boot_env () {
     mount_boot_env && \
         test -f "${DESTBASE}/boot/pmbr" || exit 177
 
-    echo "svdUP: Synchronizing system configuration"
-    echo "svdUP: Syncing: /boot/*.conf"
-    cp -f "/boot/loader.conf" "${DESTBASE}/boot/"
-    cp -f "/boot/loader.conf.local" "${DESTBASE}/boot/"
-    echo "svdUP: Syncing: /etc/*"
+    echo "svdUP: Synchronizing system configuration + svdOS specific utils and libs…"
     cp -xpfR "/etc" "${DESTBASE}"
+    install -v "/boot/loader.conf" "${DESTBASE}/boot/"
+    install -v "/boot/loader.conf.local" "${DESTBASE}/boot/"
 
     if [ -x "/usr/bin/gvr" ]; then
         echo "svdUP: Syncing: Jail governor (gvr)"
-        cp -f "/usr/bin/gvr" "${DESTBASE}/usr/bin/"
+        install -v "/usr/bin/gvr" "${DESTBASE}/usr/bin/"
     fi
     if [ -x "/usr/bin/igni" ]; then
         echo "svdUP: Syncing: Service igniter (igni)"
-        cp -f "/usr/bin/igni" "${DESTBASE}/usr/bin/"
+        install -v "/usr/bin/igni" "${DESTBASE}/usr/bin/"
     fi
     if [ -f "/usr/lib/libkvmpro.a" ]; then
         echo "svdUP: Syncing: kvmpro static library (libkvmpro.a)"
-        cp -f "/usr/lib/libkvmpro.a" "${DESTBASE}/usr/lib/"
+        install -v "/usr/lib/libkvmpro.a" "${DESTBASE}/usr/lib/"
     fi
     if [ -f "/usr/lib/libkvmpro.so" ]; then
         echo "svdUP: Syncing: kvmpro dynamic library (libkvmpro.so)"
-        cp -f "/usr/lib/libkvmpro.so" "${DESTBASE}/usr/lib/"
+        install -v "/usr/lib/libkvmpro.so" "${DESTBASE}/usr/lib/"
     fi
     if [ -x "/usr/bin/sysapi" ]; then
         echo "svdUP: Syncing: SysAPI daemon (sysapi)"
-        cp -f "/usr/bin/sysapi" "${DESTBASE}/usr/bin/"
+        install -v "/usr/bin/sysapi" "${DESTBASE}/usr/bin/"
     fi
-
-    echo "svdUP: Installing Lz4 to destination base system"
-    cp -f /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4"
-    ln -fs /usr/bin/lz4 "${DESTBASE}/usr/bin/lz4cat"
-
+    if [ -x "/usr/bin/lz4" ]; then
+        echo "svdUP: Syncing: Lz4 binary utility"
+        install -v "/usr/bin/lz4" "${DESTBASE}/usr/bin/lz4"
+        ln -fs "/usr/bin/lz4" "${DESTBASE}/usr/bin/lz4cat"
+    fi
     if [ -x "/usr/bin/rsync" ]; then
-        echo "svdUP: Installing Rsync to destination base system"
-        cp -f /usr/bin/rsync "${DESTBASE}/usr/bin/rsync"
+        echo "svdUP: Syncing: Rsync"
+        install -v "/usr/bin/rsync" "${DESTBASE}/usr/bin/rsync"
     elif [ -x "/Software/Rsync/bin/rsync" ]; then
-        echo "svdUP: Installing Rsync to destination base system"
-        cp -f /Software/Rsync/bin/rsync "${DESTBASE}/usr/bin/rsync"
+        echo "svdUP: Syncing: Rsync (Sofin version)"
+        install -v "/Software/Rsync/bin/rsync" "${DESTBASE}/usr/bin/rsync"
     fi
 
     echo "Making sure fstab has no build host mounts enabled"
@@ -216,7 +214,7 @@ configure_and_commit_boot_env () {
         -p "${DESTBASE}/boot/gptzfsboot" \
         -i 1 \
         "${_boot_device}" && \
-        echo "svdUP: Gpart: Bootcode: Environment: ${NEW_BOOT_ENV}, boot device: ${_boot_device}"
+        echo "svdUP: Gpart: Bootcode installed for environment: ${NEW_BOOT_ENV}. Boot device is: ${_boot_device}"
 
     beadm umount -f "${NEW_BOOT_ENV}" && \
         echo "svdUP: Unmounted new environment: ${NEW_BOOT_ENV}" && \
