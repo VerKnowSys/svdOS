@@ -213,7 +213,7 @@ configure_and_commit_boot_env () {
         -b "${DESTBASE}/boot/pmbr" \
         -p "${DESTBASE}/boot/gptzfsboot" \
         -i 1 \
-        "${_boot_device}" && \
+        "${_boot_device}" >/dev/null && \
         echo "svdUP: Gpart: Bootcode installed for environment: ${NEW_BOOT_ENV}. Boot device is: ${_boot_device}"
 
     beadm umount -f "${NEW_BOOT_ENV}" >/dev/null && \
@@ -229,7 +229,7 @@ activate_new_boot_env () {
         "${ZPOOL}/ROOT/${NEW_BOOT_ENV}@--head--" \
         "@svdup-${DATE_NOW}" 2>/dev/null
 
-    beadm activate "${NEW_BOOT_ENV}" && \
+    beadm activate "${NEW_BOOT_ENV}" >/dev/null && \
         echo "svdUP: Commited and activated new boot environment: ${NEW_BOOT_ENV}" && \
         return 0
     return 1
@@ -361,6 +361,7 @@ upgrade_projects_sync_configuration () {
 
 
 postinstall_cleanup () {
+    echo "svdUP: Performing post-installation cleanup"
     zfs destroy -r "${ZPOOL}/var/mail" 2>/dev/null
     zfs set primarycache=all "${ZPOOL}/ROOT"
     zfs set secondarycache=all "${ZPOOL}/ROOT"
@@ -372,12 +373,12 @@ postinstall_cleanup () {
     rm -rf "/.profile" "/.cshrc" "/proc"
 
     mkdir -p "${HOME_DIR}/.ssh"
-    grep 'verknowsys.com' "${HOME_DIR}/.ssh/config" 2>/dev/null || \
-        printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' >> "${HOME_DIR}/.ssh/config"
-    grep -E 'rlimit memlock' "/etc/ntp.conf" 2>/dev/null || \
-        printf "\n%s" "rlimit memlock" >> "/etc/ntp.conf"
-    grep -E 'tinker panic 0' "/etc/ntp.conf" 2>/dev/null || \
-        printf "\n%s" "tinker panic 0" >> "/etc/ntp.conf"
+    grep 'verknowsys.com' "${HOME_DIR}/.ssh/config" >/dev/null 2>&1 \
+        || printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' >> "${HOME_DIR}/.ssh/config"
+    grep -E 'rlimit memlock' "/etc/ntp.conf" >/dev/null 2>&1 \
+        || printf "\n%s" "rlimit memlock" >> "/etc/ntp.conf"
+    grep -E 'tinker panic 0' "/etc/ntp.conf" >/dev/null 2>&1 \
+        || printf "\n%s" "tinker panic 0" >> "/etc/ntp.conf"
 }
 
 
