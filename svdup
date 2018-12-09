@@ -182,6 +182,14 @@ configure_and_commit_boot_env () {
         echo "svdUP: Syncing: Service igniter (igni)"
         cp -f "/usr/bin/igni" "${DESTBASE}/usr/bin/"
     fi
+    if [ -f "/usr/lib/libkvmpro.a" ]; then
+        echo "svdUP: Syncing: kvmpro static library (libkvmpro.a)"
+        cp -f "/usr/lib/libkvmpro.a" "${DESTBASE}/usr/lib/"
+    fi
+    if [ -f "/usr/lib/libkvmpro.so" ]; then
+        echo "svdUP: Syncing: kvmpro dynamic library (libkvmpro.so)"
+        cp -f "/usr/lib/libkvmpro.so" "${DESTBASE}/usr/lib/"
+    fi
     if [ -x "/usr/bin/sysapi" ]; then
         echo "svdUP: Syncing: SysAPI daemon (sysapi)"
         cp -f "/usr/bin/sysapi" "${DESTBASE}/usr/bin/"
