@@ -17,7 +17,7 @@ if [ -x "/usr/bin/sysapi" ]; then
     nohup daemon \
         -o "/var/log/gvr-sysapi.log" \
         -R1 -P "/var/run/sysapi.pid" \
-        "/usr/bin/sysapi" >/dev/null
+        "/usr/bin/sysapi" >/dev/null 2>&1
 fi
 
 return 0
