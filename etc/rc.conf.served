@@ -6,6 +6,9 @@
 # svdOS specific boot initialisation stuff goes here:
 served_enable="YES"
 
+# "Controls the creation of a /var memory file system" - we want to prevent mounting /var as ramdisk:
+varmfs="NO"
+
 # alias configuration example:
 # ifconfig_NETWORK_EXTERNAL_INTERFACE_alias0="inet 100.64.1.30/24"
 
