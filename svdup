@@ -172,6 +172,11 @@ configure_and_commit_boot_env () {
     install -v "/boot/loader.conf" "${DESTBASE}/boot/"
     install -v "/boot/loader.conf.local" "${DESTBASE}/boot/"
 
+    echo "svdUP: Synchronizing system crontabs…"
+    mkdir -p "${DESTBASE}/var/cron"
+    cp -xpfR "/var/cron/tabs" "${DESTBASE}/var/cron"
+
+    echo "svdUP: Synchronizing svdOS utilities…"
     if [ -x "/usr/bin/gvr" ]; then
         echo "svdUP: Syncing: Jail governor (gvr)"
         install -v "/usr/bin/gvr" "${DESTBASE}/usr/bin/"
