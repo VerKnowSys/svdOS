@@ -176,6 +176,10 @@ if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
     fi
 fi
 
+# Temporarely make "/" +W:
+set_system_dataset_writable
+
+
 invoke_sofin_install () {
     _pwd="${PWD}"
     cd "${SOFIN_REPO}"
@@ -186,7 +190,6 @@ invoke_sofin_install () {
 # Make sure Sofin dataset has at least origin snapshot present::
 zfs list -H -r -t snap -o name "${DEFAULT_ZPOOL}/Software/root/Sofin@${ORIGIN}" >/dev/null 2>&1 || \
     invoke_sofin_install
-
 
 # This is where all cell settings are put into global scope of script:
 set_values () {
@@ -1091,5 +1094,7 @@ case $1 in
         ;;
 esac
 
+# make "/" -W:
+set_system_dataset_readonly
 
 exit 0
