@@ -167,6 +167,14 @@ configure_and_commit_boot_env () {
     mount_boot_env && \
         test -f "${DESTBASE}/boot/pmbr" || exit 177
 
+    mkdir -p \
+        "${DESTBASE}/var/www" \
+        "${DESTBASE}${CACHE_DIR}" \
+        "${DESTBASE}${SYSTEM_IGNITERS_DIR}" \
+        "${DESTBASE}${SYSTEM_DNS_DIR}" \
+        "${DESTBASE}${SYSTEM_NETIDS_DIR}" \
+        "${DESTBASE}${SYSTEM_IPS_DIR}"
+
     echo "svdUP: Synchronizing system configuration + svdOS specific utils and libs…"
     cp -xpfR "/etc" "${DESTBASE}"
     install -v "/boot/loader.conf" "${DESTBASE}/boot/"
