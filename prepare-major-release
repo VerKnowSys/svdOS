@@ -15,8 +15,8 @@ wipe_xh_known_hosts () {
 }
 
 no_vks_auth () {
-    echo "Local private SSH RSA key file is required: ${HOME}/.ssh/${SSH_IDENTITY_FILE}"
-    echo "Generate it via 'ssh-keygen -b4096 && mv ~/.ssh/id_rsa ~/.ssh/${SSH_IDENTITY_FILE}' first!"
+    echo "Local private SSH key file is required: ${HOME}/.ssh/${SSH_IDENTITY_FILE}"
+    echo "Generate it via 'ssh-keygen -t ed25519 && mv ~/.ssh/id_ed25519 ~/.ssh/${SSH_IDENTITY_FILE}' first!"
     exit 101
 }
 
@@ -36,7 +36,10 @@ fi
 
 # Create home dataset: ${ZPOOL}${HOME_DIR}, dataset and switch as new default
 ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
-    "${ZFS_BIN} create \
+    "fetch --no-verify-peer ${LZ4_BIN_RESOURCE} -o /usr/bin/lz4;
+    chmod 755 /usr/bin/lz4;
+    ln -fs /usr/bin/lz4 /usr/bin/lz4cat;
+    ${ZFS_BIN} create \
         -o mountpoint=none \
         -o casesensitivity=sensitive \
         -o readonly=on \
