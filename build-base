@@ -69,6 +69,8 @@ build_base () {
     git config --global user.email "svd@verknowsys.com"
     git config --global user.name "ServeD"
 
+    export CCACHE_PATH="/Services/Sofin/exports/ccache"
+
     # EXAMPLE:
     #
     # echo "Fetching HBSD current tree"
