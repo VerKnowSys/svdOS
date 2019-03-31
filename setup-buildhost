@@ -1,7 +1,7 @@
 #!/bin/sh
 
 setup_buildhost () {
-    . /usr/share/sofin/loader
+    . /Software/Sofin/share/loader
     if [ "${SYSTEM_NAME}" = "FreeBSD" ]; then
         ${UNAME_BIN} -a | ${EGREP_BIN} -i "HBSD" >/dev/null 2>&1
         if [ "$?" = "0" ]; then
@@ -10,8 +10,8 @@ setup_buildhost () {
             ${ZFS_BIN} set secondarycache=metadata ${DEFAULT_ZPOOL}
             ${ZFS_BIN} set sync=disabled ${DEFAULT_ZPOOL}
             ${SYSCTL_BIN} vfs.zfs.prefetch_disable=1
-            ${SYSCTL_BIN} debug.witness.trace=0
-            ${SYSCTL_BIN} debug.witness.watch=0
+            # ${SYSCTL_BIN} debug.witness.trace=0
+            # ${SYSCTL_BIN} debug.witness.watch=0
 
             note "Setting pageexec and mprotect to 1 for build purposes"
             # erlang, nodejs, java:
