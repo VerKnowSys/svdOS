@@ -335,27 +335,27 @@ upgrade_projects_sync_configuration () {
     _timestamp_now="$(date +%F-%H%M-%s 2>/dev/null)"
 
     cd /Projects
-    git clone "${SOFIN_REPOSITORY}" 2>/dev/null
+    ${SOFTWARE_DIR}/Git/bin/git clone "${SOFIN_REPOSITORY}"
     cd sofin
-    git reset --hard >/dev/null 2>&1
+    ${SOFTWARE_DIR}/Git/bin/git reset --hard >/dev/null 2>&1
     # Install Sofin - software installer:
     bin/upgrade
 
     cd /Projects
-    git clone "${BEADM_REPOSITORY}" 2>/dev/null
+    ${SOFTWARE_DIR}/Git/bin/git clone "${BEADM_REPOSITORY}"
     cd beadm
-    git reset --hard >/dev/null 2>&1
-    git pull origin master 2>/dev/null
+    ${SOFTWARE_DIR}/Git/bin/git reset --hard >/dev/null 2>&1
+    ${SOFTWARE_DIR}/Git/bin/git pull origin master
     rm -f "beadm.1.gz"
     gzip "beadm.1" >/dev/null
     install -v "beadm.1.gz" "/usr/share/man/man1/"
     install -v "beadm" "/usr/sbin/beadm"
 
     cd /Projects
-    git clone "${SERVED_REPOSITORY}" 2>/dev/null
+    ${SOFTWARE_DIR}/Git/bin/git clone "${SERVED_REPOSITORY}"
     cd svdOS
-    git reset --hard >/dev/null 2>&1
-    git pull origin master 2>/dev/null
+    ${SOFTWARE_DIR}/Git/bin/git reset --hard >/dev/null 2>&1
+    ${SOFTWARE_DIR}/Git/bin/git pull origin master
 
     # always install default sysctl.conf.served:
     install -v "etc/sysctl.conf.served" "/etc/sysctl.conf.served"
