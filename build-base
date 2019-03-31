@@ -99,8 +99,8 @@ build_base () {
                 "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-RPI3" \
                 "sys/${ARCH}/conf/${SYSTEM_KERNEL}" || exit 111
 
-            rm -f /usr/bin/ld
-            ln /usr/bin/ld.lld /usr/bin/ld
+            # rm -f /usr/bin/ld
+            # ln /usr/bin/ld.lld /usr/bin/ld
             ;;
 
         arm)
