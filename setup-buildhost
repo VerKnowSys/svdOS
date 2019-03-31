@@ -8,6 +8,7 @@ setup_buildhost () {
             note "Setting some zfs options"
             ${ZFS_BIN} set primarycache=metadata ${DEFAULT_ZPOOL}
             ${ZFS_BIN} set secondarycache=metadata ${DEFAULT_ZPOOL}
+            ${ZFS_BIN} set sync=disabled ${DEFAULT_ZPOOL}
             ${SYSCTL_BIN} vfs.zfs.prefetch_disable=1
             ${SYSCTL_BIN} debug.witness.trace=0
             ${SYSCTL_BIN} debug.witness.watch=0
