@@ -244,14 +244,14 @@ build_base () {
     sync
 
     # bring back non arm64 linker back!
-    case "${ARCH}" in
-        arm64)
-            if [ -f "/usr/bin/ld.original" ]; then
-                rm -f /usr/bin/ld
-                ln -s /usr/bin/ld.bfd /usr/bin/ld
-            fi
-            ;;
-    esac
+    # case "${ARCH}" in
+    #     arm64)
+    #         if [ -f "/usr/bin/ld.original" ]; then
+    #             rm -f /usr/bin/ld
+    #             ln -s /usr/bin/ld.bfd /usr/bin/ld
+    #         fi
+    #         ;;
+    # esac
     # ${GPART_BIN} bootcode \
     #     -b "${DESTBASE}/boot/pmbr" \
     #     -p "${DESTBASE}/boot/gptzfsboot" \
