@@ -272,14 +272,13 @@ build_base () {
         permnote "Done release snapshot: ${NEW_RELEASE}"
 
     ${MKDIR_BIN} \
-        -p "${ARCHIVE_SNAPSHOTS_DIR}" \
-        2>> "${LOG_OUTPUT}"
+        -p "${ARCHIVE_SNAPSHOTS_DIR}"
 
     ${ZFS_BIN} send ${DEFAULT_SNAPSHOT_SEND_OPTS} \
         "${NEW_RELEASE}" | ${LZ4_BIN} ${DEFAULT_LZ4_OPTS} \
         > "${NEW_BOOT_ORIGIN_FILE}" && \
         permnote "Sent release snapshot: ${NEW_RELEASE}, to file: ${NEW_BOOT_ORIGIN_FILE}" && \
-        ${BEADM_BIN} destroy -F "${NEW_BOOT_ORIGIN_FILE}" && \
+        ${BEADM_BIN} destroy -F "${_new_boot_env}" && \
         permnote "Release wiped from local boot environments. Use installer script to install or perform the OS update."
 
     ${CHMOD_BIN} 600 "${HOME_DIR}/.ssh"
