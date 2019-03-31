@@ -397,8 +397,8 @@ postinstall_cleanup () {
     mkdir -p "${HOME_DIR}/.ssh"
     grep 'verknowsys.com' "${HOME_DIR}/.ssh/config" >/dev/null 2>&1 \
         || printf 'Host *.verknowsys.com verknowsys.com\nPort 60022\n\n' >> "${HOME_DIR}/.ssh/config"
-    grep -E 'rlimit memlock' "/etc/ntp.conf" >/dev/null 2>&1 \
-        || printf "\n%s" "rlimit memlock" >> "/etc/ntp.conf"
+    grep -E 'rlimit memlock 0' "/etc/ntp.conf" >/dev/null 2>&1 \
+        || printf "\n%s" "rlimit memlock 0" >> "/etc/ntp.conf"
     grep -E 'tinker panic 0' "/etc/ntp.conf" >/dev/null 2>&1 \
         || printf "\n%s" "tinker panic 0" >> "/etc/ntp.conf"
 }
