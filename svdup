@@ -373,9 +373,18 @@ upgrade_projects_sync_configuration () {
 }
 
 
+move_db_to_separate_writable_dataset () {
+    mv "/var/db" "/tmp/db"
+    zfs create -o mountpoint="/var/db" "${ZPOOL}/var/db" 2>/dev/null
+    zfs set readonly=off "${ZPOOL}/var/db"
+    zfs mount "${ZPOOL}/var/db" 2>/dev/null
+    cp -fR /tmp/db/* "/var/db/"
+}
+
 postinstall_cleanup () {
     echo "svdUP: Performing post-installation cleanup"
-    zfs destroy -r "${ZPOOL}/var/mail" 2>/dev/null
+    zfs list "${ZPOOL}/var/db" || move_db_to_separate_writable_dataset
+    zfs list "${ZPOOL}/var/mail" && zfs destroy -r "${ZPOOL}/var/mail"
     zfs set primarycache=all "${ZPOOL}/ROOT"
     zfs set secondarycache=all "${ZPOOL}/ROOT"
     zfs set checksum=fletcher4 "${ZPOOL}/ROOT"
