@@ -60,6 +60,22 @@ ServeD-OS
     ```
 
     - Paste your SSH public key(s), followed by `Enter`. Hit `Ctrl-d` to save `authorized_keys` file,
+    - Since / filesystem is mounted read-only by default, switch DHCP setup for main interface (usually on "em0"), to manual mode:
+
+    ```
+    # to get ASSIGNED_IPv4 by Hetzner, do:
+    ifconfig em0 # NOTE: netmask /26 is default one (255.255.255.192)
+
+    # to get default ROUTER_IPv4, do:
+    netstat -rn
+
+    # Now edit /etc/rc.conf and replace line with: ifconfig_em0="DHCP" to:
+    ifconfig_em0="inet ASSIGNED_IPv4/26"
+    defaultrouter="ROUTER_IPv4"
+
+    # save the file
+    ```
+
     - That's all. Now hit `Ctrl-d` (or type `exit`) to quit Shell.
     - Installation is now complete!
 
