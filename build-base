@@ -54,7 +54,7 @@ build_base () {
         --single-branch \
         --branch "${CURRENT_BRANCH}" \
         --jobs "${PARALLEL_JOBS}" \
-        "${WORKSTATION_REPO_CACHED}" \
+        "file://${WORKSTATION_REPO_CACHED}" \
         "${_build_dir}"
 
     cd "${_build_dir}" || exit 106
