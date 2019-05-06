@@ -1,0 +1,11 @@
+#!/bin/sh
+
+echo "Initializing PAX for installed cell /Software"
+for _pax in $(find /Software -type f -name '.pax' -maxdepth 2 -mindepth 1 2>/dev/null); do
+    echo "Enforcing PAX features of software bundle: ${_pax}"
+    if [ -f "${_pax}" ]; then
+        . "${_pax}"
+    fi
+done
+
+return 0
