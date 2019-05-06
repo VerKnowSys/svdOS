@@ -44,7 +44,7 @@ ServeD-OS
         - Use defaults for other ZFS settings,
         - Hit `Install`, confirm that we wish to create new pool,
     - Installation shouldn't take more than a minute. After that type new root password,
-    - Select default network card (`em0`), use `DHCP` for `IPv4`,
+    - Select default network card (`em0`), don't use `DHCP`, but `manual` for `IPv4` - use predefined values,
     - Select "NO" when asked about `UTC`, pick "Europe", "Poland", confirm it's "CEST",
     - Skip date/time settings,
     - Enable only: `sshd`, `ntpd`, and `dumpdev` system services,

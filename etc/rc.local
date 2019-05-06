@@ -6,7 +6,7 @@ for pax in $(find /Software -type f -name '.pax' -maxdepth 2 -mindepth 1 2>/dev/
     . "${pax}"
 done
 
-if [ -x "/usr/bin/gvr" ]; then
+if [ -x "/usr/bin/gvr" ] && [ -d "/Shared/Prison" ]; then
     echo "Bring back all previously started jails…"
     sh -c "gvr boot"
 fi

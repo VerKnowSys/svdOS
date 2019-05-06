@@ -6,14 +6,11 @@ build_base () {
     ${TOUCH_BIN} "${LOG_OUTPUT}"
     permnote "Process started for OS version: ${SYSTEM_VERSION_MAJOR}, architecture: ${ARCH}, timestamp: @${TIMESTAMP}"
 
-    # _branch="$(echo "${CURRENT_BRANCH}" | ${TR_BIN} '/' '-' 2>/dev/null)"
-    _common_bare_repo="${WORKSTATION_USER}@${HOSTADDR_GW}:${WORKSTATION_REPO_CACHED}"
-
     permnote "Make '/'' writable for build_base()…"
     _current_root_dataset="$(${BEADM_BIN} list -H 2>/dev/null | ${GREP_BIN} -F 'NR' 2>/dev/null | ${CUT_BIN} -f1 2>/dev/null)"
     zfs set readonly=off "zroot/ROOT/${_current_root_dataset}"
     permnote "${SYSTEM_TYPE} version: ${VERSION}"
-    permnote "Build repository: ${_common_bare_repo}"
+    permnote "Build repository: ${WORKSTATION_REPO_CACHED}"
 
     ${RM_BIN} -f /etc/src.conf /etc/make.conf
     ${INSTALL_BIN} -v \
@@ -57,7 +54,7 @@ build_base () {
         --single-branch \
         --branch "${CURRENT_BRANCH}" \
         --jobs "${PARALLEL_JOBS}" \
-        "${_common_bare_repo}" \
+        "file://${WORKSTATION_REPO_CACHED}" \
         "${_build_dir}"
 
     cd "${_build_dir}" || exit 106

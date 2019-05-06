@@ -23,14 +23,14 @@ sysctl hardening.pax.aslr.status=1
 echo "Enabling Dtrace"
 kldload dtraceall >/dev/null
 
-echo "Setting up ntp.conf"
-grep -e 'rlimit memlock 0' /etc/ntp.conf >/dev/null 2>&1 || \
-    echo "rlimit memlock 0" >> /etc/ntp.conf
-grep -e 'tinker panic 0' /etc/ntp.conf >/dev/null 2>&1 || \
-    echo "tinker panic 0" >> /etc/ntp.conf
-service ntpd restart
+# echo "Setting up ntp.conf"
+# grep -e 'rlimit memlock 0' /etc/ntp.conf >/dev/null 2>&1 || \
+#     echo "rlimit memlock 0" >> /etc/ntp.conf
+# grep -e 'tinker panic 0' /etc/ntp.conf >/dev/null 2>&1 || \
+#     echo "tinker panic 0" >> /etc/ntp.conf
+# service ntpd restart
 
-test -f "${BUILD_NUMBER_FILE}" || echo "1" > "${BUILD_NUMBER_FILE}"
+# test -f "${BUILD_NUMBER_FILE}" || echo "1" > "${BUILD_NUMBER_FILE}"
 BUILD_NUMBER="$(echo "$(cat "${BUILD_NUMBER_FILE}" 2>/dev/null)+1" | bc 2>/dev/null)"
 export BUILD_NUMBER
 
@@ -43,8 +43,8 @@ test -z "${VERSION}" && exit 124
 
 echo "BUILD no: ${BUILD_NUMBER}"
 echo "${BUILD_NUMBER}" > "${BUILD_NUMBER_FILE}"
-echo "Updating current build number on workstation host…"
-${SCP_BIN} "${BUILD_NUMBER_FILE}" "${WORKSTATION_USER}@${HOSTADDR_GW}:/Users/${WORKSTATION_USER}/${BUILD_NUM_NAME}"
+# echo "Updating current build number on workstation host…"
+# ${SCP_BIN} "${BUILD_NUMBER_FILE}" "${WORKSTATION_USER}@${HOSTADDR_GW}:/Users/${WORKSTATION_USER}/${BUILD_NUM_NAME}"
 
 case ${ARCH} in
     arm)
