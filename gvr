@@ -6,16 +6,26 @@
 
 . /Software/Sofin/share/loader
 
-GVR_VERSION="0.36.3"
+GVR_VERSION="0.36.4"
 GVR_LOG="/var/log/gvr.log"
 GVR_LOCK="/var/run/gvr.lock"
 
 GVR_PID="${$}"
 
-# TODO: XXX: replace hardcodes by some kind of global config file:
-SHARED_DOMAIN_NAME="__JAIL_SHARED_DOMAIN" # for local zones it can simply be: "local"
-JAIL_ROUTER_NETWORK="__JAIL_ROUTER_NETWORK" # NOTE: this has to be replaced with default local network. For example: "100.64.1" or "172.16.3".
-JAIL_ROUTER_ADDRESS="${JAIL_ROUTER_NETWORK}.1"
+NETWORK_FILE="/etc/shared.network"
+if [ -f "${NETWORK_FILE}" ]; then
+    CELL_NETWORK="$(${CAT_BIN} "${NETWORK_FILE}" 2>/dev/null)"
+fi
+
+DOMAIN_FILE="/etc/shared.domain"
+if [ -f "${DOMAIN_FILE}" ]; then
+    SHARED_DOMAIN_NAME="$(${CAT_BIN} "${DOMAIN_FILE}" 2>/dev/null)"
+fi
+
+SHARED_DOMAIN_NAME="${SHARED_DOMAIN_NAME:-local.home}" # use "local.home" as default cells domain fallback
+CELL_NETWORK="${CELL_NETWORK:-172.16.3}" # use "172.16.3" as default network used by cells
+CELL_NETWORK_ROUTER="${CELL_NETWORK}.1"
+
 
 BRIDGE_DEVICE="bridge0"
 EPAIR_DEVICE="epair"
@@ -494,7 +504,7 @@ ${JAIL_NAME} {
     exec.start  = \"${IFCONFIG_BIN} lo0 127.0.0.1 up\";
     exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b up\";
     exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b inet ${JAIL_ADDRESSES} up\";
-    exec.start  += \"${ROUTE_BIN} add default ${JAIL_ROUTER_ADDRESS}\";
+    exec.start  += \"${ROUTE_BIN} add default ${CELL_NETWORK_ROUTER}\";
     exec.start  += \"service sshd restart; service cron restart\";
     exec.start  += \"test -f /etc/rc.local && ${SH_BIN} /etc/rc.local\";
     # NOTE: not actually required if we don't want any additional subsystems: exec.start  += \"${SH_BIN} /etc/rc\";
@@ -598,7 +608,7 @@ ${JAIL_NAME} {
     run "${CP_BIN} -R ${DEFAULT_JAIL_ETC_SOURCE} ${CELL}/etc" && \
     run "${SED_BIN} -i '' -e \"s:__JAIL_NAME:${JAIL_NAME}.${SHARED_DOMAIN_NAME}:\" ${CELL}/etc/rc.conf" && \
     run "${RM_BIN} -f ${CELL}/etc/rc.conf.local" && \
-    run "${SED_BIN} -i '' -e \"s:__HOST_IP:${JAIL_ROUTER_ADDRESS}:\" ${CELL}/etc/resolv.conf" && \
+    run "${SED_BIN} -i '' -e \"s:__HOST_IP:${CELL_NETWORK_ROUTER}:\" ${CELL}/etc/resolv.conf" && \
         run "${CHMOD_BIN} g+w ${CELL}/etc/resolv.conf ${CELL}/etc/rc.local ${CELL}/etc/rc.shutdown ${CELL}/etc/cron.d ${CELL}/etc/hosts" && \
         debug "Built initial cell environment"
 
