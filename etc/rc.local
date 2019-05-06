@@ -3,7 +3,9 @@
 echo "Initializing PAX for installed Software"
 for pax in $(find /Software -type f -name '.pax' -maxdepth 2 -mindepth 1 2>/dev/null); do
     echo "Enforcing PAX features of software bundle: ${pax}"
-    . "${pax}"
+    if [ -f "${_pax}" ]; then
+        . "${_pax}"
+    fi
 done
 
 if [ -x "/usr/bin/gvr" ] && [ -d "/Shared/Prison" ]; then
