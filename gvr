@@ -205,6 +205,7 @@ zfs list -H -r -t snap -o name "${DEFAULT_ZPOOL}/Software/root/Sofin@${ORIGIN}" 
 # This is where all cell settings are put into global scope of script:
 set_values () {
     ENTERED_NAME="${1}"
+    debug "ENTERED_NAME: $(distd "${ENTERED_NAME}")"
     if [ -z "${ENTERED_NAME}" ]; then
         error "Empty cell name!"
     fi
@@ -301,11 +302,11 @@ apply_attributes () {
         value="$(${CAT_BIN} "${JAIL_ATTRIBUTES_DIR}/${attribute}" 2>/dev/null)"
         debug "Attribute: ${attribute}, value: ${value}"
         case "${attribute}" in
-            key)
-                a_key="ssh-ed25519 ${value} ${JAIL_NAME}"
-                ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${MKDIR_BIN} -p /User/.ssh; printf \"%s\n\" '${a_key}' >> /User/.ssh/authorized_keys"
-                ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${CHOWN_BIN} -R ${DEFAULT_JAIL_USER} /User/.ssh"
-                ;;
+            # key)
+            #     a_key="ssh-ed25519 ${value} ${JAIL_NAME}"
+            #     ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${MKDIR_BIN} -p /User/.ssh; printf \"%s\n\" '${a_key}' >> /User/.ssh/authorized_keys"
+            #     ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${CHOWN_BIN} -R ${DEFAULT_JAIL_USER} /User/.ssh"
+            #     ;;
 
             # ip)
             #     printf "%b\n" "${ColorGreen}Setting IPs: ${ColorCyan}${value}${ColorGreen} for cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
@@ -425,7 +426,7 @@ attributes_show () {
     printf "%b\n" "   ${ColorCyan}quota-user${ColorGray}: ${ColorGreen}quota value for /User dataset only (fmt: 1G 512M 128K). ${ColorReset}"
     printf "%b\n" "   ${ColorCyan}quota-software${ColorGray}: ${ColorGreen}quota value for /Software dataset only (fmt: 1G 512M 128K). ${ColorReset}"
     printf "%b\n" "   ${ColorCyan}quota-root${ColorGray}: ${ColorGreen}quota value for cell base (/) system dataset only (fmt: 1G 512M 128K)${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}key${ColorGray}: ${ColorGreen}SSH public key (Skip public key header and comment parts) to be added to authorized keys of cell${ColorRes}\n"
+    printf "%b\n" "   ${ColorCyan}key${ColorGray}: ${ColorGreen}add new ED25519 SSH public key (without header and comment parts) to be added to authorized keys of cell${ColorRes}\n"
     # printf "%b\n" "   ${ColorCyan}ip${ColorGray}: ${ColorGreen}change cell IP addresses (comma separated) [requires cell restart]${ColorReset}"
     # printf "%b\n" "   ${ColorCyan}+ip${ColorGray}: ${ColorGreen}adds specified (comma separated) IP addresses to cell [requires cell restart]${ColorReset}"
 }
@@ -884,8 +885,21 @@ cell_set () {
         ATTRIBUTE="$(printf "%s\n" "${argument_pair}" | ${AWK_BIN} '{split($0, a, "="); print a[1];}' 2>/dev/null)"
         JAIL_VALUE="$(printf "%s\n" "${argument_pair}" | ${AWK_BIN} '{split($0, a, "="); print a[2];}' 2>/dev/null)"
         debug "arg: ${ATTRIBUTE}, val: ${JAIL_VALUE} "
-        printf "%b\n" "${ColorGreen}Setting attribute: ${ColorCyan}${ATTRIBUTE}${ColorGreen}, value: ${ColorCyan}${JAIL_VALUE}${ColorGreen} for cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
-        printf "%s\n" "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
+        if [ "${ATTRIBUTE}" = "key" ]; then
+            # NOTE: we don't have to apply SSH2 pubkey as we have to do for other attributes
+            # so directly add key attribute to given jail here:
+            ${JLS_BIN} -j "${JAIL_NAME}" >/dev/null 2>&1
+            if [ "${?}" = "0" ]; then
+                a_key="ssh-ed25519 ${JAIL_VALUE} ${JAIL_NAME}"
+                ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${MKDIR_BIN} -p /User/.ssh; printf \"%s\n\" '${a_key}' >> /User/.ssh/authorized_keys"
+                ${JEXEC_BIN} "${JAIL_NAME}" "${SH_BIN}" -c "${CHOWN_BIN} -R ${DEFAULT_JAIL_USER} /User/.ssh"
+            else
+                error "Can't add key to non-started cell: $(diste "${JAIL_NAME}")"
+            fi
+        else
+            printf "%s\n" "${JAIL_VALUE}" > "${JAIL_ATTRIBUTES_DIR}/${ATTRIBUTE}"
+        fi
+        permnote "Setting attribute: $(distn "${ATTRIBUTE}"), value: $(distn "${JAIL_VALUE}") for cell: $(distn "${JAIL_NAME}")"
     done
     apply_attributes
 }
