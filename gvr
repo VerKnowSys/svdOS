@@ -355,7 +355,7 @@ apply_attributes () {
             *)
                 ${RCTL_BIN} -a "jail:${JAIL_NAME}:${attribute}:deny=${value}" >> "${GVR_LOG}" 2>&1
                 if [ "$?" = "0" ]; then
-                    printf "%b\n" "${ColorGreen}Overriden attribute: ${ColorCyan}${attribute}${ColorGreen} with value: ${ColorCyan}${value}${ColorReset}"
+                    permnote "Overriden attribute: $(distn "${attribute}") with value: $(distn "${value}")"
                 else
                     warn "Wrong attribute: $(distw "${attribute}")"
                 fi
@@ -805,7 +805,7 @@ cell_start () {
         run "${JEXEC_BIN} ${JAIL_NAME} ${TOUCH_BIN} /User/.zshrc" # Avoid Zsh welcome bullshit
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /User/.zshrc /Services /User /Software /Software/Git /Software/Zsh /Software/Sofin /Shared /var/log /var/www"
 
-        note "Reloading $(distn "DNS") and $(distn "Web-proxy") configuration."
+        permnote "Reloading $(distn "DNS") and $(distn "Web-proxy") configuration."
         try "igni dns reload; igni proxy reload"
 
         mark_running
@@ -850,7 +850,7 @@ cell_stop () {
     try "${UMOUNT_BIN} -f ${CELL}/Software/Zsh" && debug "Unmounted ${CELL}/Software/Zsh"
 
     run "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
-        printf "%b\n" "${ColorGreen}Terminated cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+        permnote "Terminated cell: $(distn "${JAIL_NAME}")"
 
     printf "%s\n" "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
