@@ -846,8 +846,15 @@ cell_stop () {
         run "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
             debug "Unjailed and unmounted dataset: $(distd "${_dset}")"
     done
-    try "${UMOUNT_BIN} -f ${CELL}/Software" && debug "Unmounted ${CELL}/Software"
-    try "${UMOUNT_BIN} -f ${CELL}/Software/Zsh" && debug "Unmounted ${CELL}/Software/Zsh"
+
+    for _to_be_unmounted in $(${MOUNT_BIN} 2>/dev/null \
+                                | ${GREP_BIN} -F "${GIVEN_NAME}" 2>/dev/null \
+                                | ${AWK_BIN} '{print $3;}' 2>/dev/null \
+                                | ${GREP_BIN} -vE "/Sentry|${GIVEN_NAME}\$|/Services\$" 2>/dev/null \
+    ); do
+        try "${UMOUNT_BIN} -f '${_to_be_unmounted}'" \
+            && debug "Unmounted ${_to_be_unmounted}"
+    done
 
     run "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
         permnote "Terminated cell: $(distn "${JAIL_NAME}")"
