@@ -224,7 +224,9 @@ which cargo
 
 * `/Shared/Cache/*` - Dataset used as a system cache dir. Usually contains file snapshots from ServeD release process.
 
-* `/Shared/Custody/*` - Dataset monitored by `custody` script which works as superuser on dedicated backend to create new jails. Each file named `jailname` should contain unique IPv4 address of the local network. Each successfull jail creation will be followed by file deletion.
+* `/Shared/IPs/*` - Contains pool of files of unique IPv4 address of the local (VPN) network.
+
+* `/Shared/NetIDs/*` - Contains pool of files of unique Net-IDs (also serves as UID of worker user in Cell, and epair network interface number).
 
 * `/Shared/DNS/*.conf` - DNS dataset with custom Unbound `*.conf` (file per zone) DNS configurations.
 
@@ -240,11 +242,11 @@ which cargo
 
 ## Known issues/ problems:
 
+* Only SSH ED25519 pub-keys are supported at the moment.
+
 * After installation default SSH port (22) is switched to ServeD SSH port (60022).
 
 * `setup-dedicated-system` manages `~/.ssh/config` entries automatically - in case of interruption or crash caused by an error - it doesn't invoke any cleanup, hence config has to be fixed manually.
-
-* SSH RSA keys are not supported at the moment.
 
 
 ## My other projects that are part of the system:
