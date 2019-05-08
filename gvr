@@ -236,7 +236,7 @@ set_values () {
         JAIL_STATUS_DETAIL="$(${CAT_BIN} "${JAIL_STATUS_FILE}" 2>/dev/null)"
     fi
     JAIL_STATUS="${ColorRed}*off*${ColorGray} ${JAIL_STATUS_DETAIL}${ColorReset}"
-    ${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} -o " ${JAIL_NAME} .*ACTIVE" >/dev/null 2>&1
+    ${JLS_BIN} -j "${JAIL_NAME}" >/dev/null 2>&1
     if [ "$?" = "0" ]; then
         JAIL_STATUS="${ColorGreen}*on*${ColorGray} ${JAIL_STATUS_DETAIL}${ColorReset}"
     fi
@@ -699,7 +699,7 @@ cell_status () {
 
     printf "%b\n" "${ColorGreen}Status: ${JAIL_STATUS}${ColorReset}"
     printf "%b\n" "${ColorGreen}Name: ${ColorCyan}${JAIL_NAME}${ColorReset}"
-    echo "${JAIL_STATUS}" | ${GREP_BIN} '\*on\*' > /dev/null 2>&1
+    ${JLS_BIN} -j "${JAIL_NAME}" > /dev/null 2>&1
     if [ "$?" = "0" ]; then
         JAIL_NUM_ID="$(${JLS_BIN} 2>/dev/null | ${EGREP_BIN} " ${JAIL_NAME}[\.\ ]" 2>/dev/null | ${AWK_BIN} '{print $1;}' 2>/dev/null)"
         printf "%b\n" "${ColorGreen}JID: ${ColorCyan}${JAIL_NUM_ID}${ColorReset}"
