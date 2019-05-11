@@ -383,8 +383,8 @@ move_db_to_separate_writable_dataset () {
 
 postinstall_cleanup () {
     echo "svdUP: Performing post-installation cleanup"
-    zfs list "${ZPOOL}/var/db" || move_db_to_separate_writable_dataset
-    zfs list "${ZPOOL}/var/mail" && zfs destroy -r "${ZPOOL}/var/mail"
+    zfs list "${ZPOOL}/var/db" >/dev/null 2>&1 || move_db_to_separate_writable_dataset
+    zfs list "${ZPOOL}/var/mail" >/dev/null 2>&1 && zfs destroy -r "${ZPOOL}/var/mail"
     zfs set primarycache=all "${ZPOOL}/ROOT"
     zfs set secondarycache=all "${ZPOOL}/ROOT"
     zfs set checksum=fletcher4 "${ZPOOL}/ROOT"
