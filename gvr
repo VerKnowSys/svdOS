@@ -1039,11 +1039,12 @@ case $1 in
     boot)
         cd "${SENTRY_DIR}"
         for _cell in *; do
-            if [ -f "${SENTRY_DIR}/${_cell}/${JAIL_RUNNING_INDICATOR}" ]; then
-                printf "%b\n" "${ColorGreen}Initializing boot of _cell: ${ColorCyan}${_cell}${ColorReset}"
+            if [ -f "${SENTRY_DIR}/${_cell}/${JAIL_RUNNING_INDICATOR}" ] \
+            && [ -n "${_cell}" ]; then
+                permnote "Initializing boot of cell: $(distn "${_cell}")"
                 nohup "${0}" start "${_cell}" > /dev/null 2>&1 &
             else
-                warn "Boot skipped for: $(distw "${_cell}")"
+                warn "Boot skipped for cell: '$(distw "${_cell}")'"
             fi
         done
         ;;
