@@ -328,29 +328,29 @@ apply_attributes () {
             #     ;;
 
             quota-root)
-                printf "%b\n" "${ColorGreen}Setting root dir quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}${CELL}${ColorReset}"
+                permnote "Setting root dir quota of: $(distn "${value}") to: $(distn "${DEFAULT_ZPOOL}${CELL}")"
                 run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}${CELL}"
                 ;;
 
             quota)
-                printf "%b\n" "${ColorGreen}Setting quota of: ${value} to ${DEFAULT_ZPOOL}/*/${JAIL_NAME}${ColorReset}"
+                permnote "Setting quota of: $(distn "${value}") to: $(distn "${DEFAULT_ZPOOL}/*/${JAIL_NAME}")"
                 for dest in Software Services User; do
                     run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/${dest}/${JAIL_NAME}"
                 done
                 ;;
 
             quota-software)
-                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/Software/${JAIL_NAME}${ColorReset}"
+                permnote "Setting quota of: $(distn "${value}") to: $(distn "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}")"
                 run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}"
                 ;;
 
             quota-services)
-                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/Services/${JAIL_NAME}${ColorReset}"
+                permnote "Setting quota of: $(distn "${value}") to: $(distn "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}")"
                 run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}"
                 ;;
 
             quota-user)
-                printf "%b\n" "${ColorGreen}Setting quota of: ${ColorCyan}${value}${ColorGreen} to: ${ColorCyan}${DEFAULT_ZPOOL}/User/${JAIL_NAME}${ColorReset}"
+                permnote "Setting quota of: $(distn "${value}") to: $(distn "${DEFAULT_ZPOOL}/User/${JAIL_NAME}")"
                 run "${ZFS_BIN} set quota=${value} ${DEFAULT_ZPOOL}/User/${JAIL_NAME}"
                 ;;
 
@@ -456,7 +456,7 @@ cell_create () {
         error "No $(diste "IPv4: JAIL_ADDRESSES") assigned from: $(diste "${SYSTEM_IPS_DIR}/ip-*")!"
     fi
     try "${RM_BIN} -f \"${_1st_ip}\"" && \
-        note "IPv4: $(distn "${JAIL_ADDRESSES}") is now assigned to cell: $(distn "${GIVEN_NAME}")."
+        permnote "IPv4: $(distn "${JAIL_ADDRESSES}") is now assigned to cell: $(distn "${GIVEN_NAME}")."
 
     # else
     #     note "Validating given IPv4 address: $(distn "${JAIL_ADDRESSES}")"
@@ -673,11 +673,11 @@ ${JAIL_NAME} {
 
     _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
     try "${RM_BIN} -f \"${_used_id_file}\"" && \
-        note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is now marked as used by cell: $(distn "${JAIL_NAME}")."
+        permnote "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is now marked as used by cell: $(distn "${JAIL_NAME}")."
 
     note "Starting cell: $(distd "${JAIL_NAME}")"
     cell_start "${JAIL_NAME}" && \
-        note "Cell: $(distn "${JAIL_NAME}") bound to domain: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"), with local address: $(distn "${MAIN_JAIL_ADDRESS}")." && \
+        permnote "Cell: $(distn "${JAIL_NAME}") bound to domain: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"), with local address: $(distn "${MAIN_JAIL_ADDRESS}")." && \
         return 0
 
     error "Failed to start cell with zone: $(diste "${JAIL_NAME}.${SHARED_DOMAIN_NAME}")"
@@ -720,7 +720,7 @@ cell_status () {
     printf "%b\n" "${ColorGreen}Live attributes:\n${ColorCyan}$(${RCTL_BIN} -h "jail:${JAIL_NAME}" 2>/dev/null | ${SED_BIN} 's/jail:n1://g' 2>/dev/null | ${SED_BIN} 's/:deny=/: /g' 2>/dev/null)${ColorReset}"
     case ${VERBOSE} in
         v|-v|-verbose|verbose|more)
-            printf "\nFull configuration:\n%b\n" "${ColorCyan}$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)${ColorReset}"
+            permnote "Full configuration: $(distn "$(${CAT_BIN} "${JAIL_CONF_FILE}" 2>/dev/null)")"
             ;;
     esac
 }
@@ -759,10 +759,9 @@ cell_start () {
     fi
     set_values "${GIVEN_NAME}"
 
-    ${JLS_BIN} 2>/dev/null | ${EGREP_BIN} " ${GIVEN_NAME}[\.\ ]" > /dev/null 2>&1
+    ${JLS_BIN} 2>/dev/null | ${GREP_BIN} -F " ${GIVEN_NAME} " > /dev/null 2>&1
     if [ "$?" = "0" ]; then
-        printf "%b\n" "${ColorGreen}Cell with name: ${ColorCyan}${GIVEN_NAME}${ColorGreen} is already running${ColorReset}"
-        exit 0
+        error "Cell with name: $(diste "${GIVEN_NAME}") is already running!"
     fi
 
     check_cell_name "${CELL}"
@@ -780,7 +779,7 @@ cell_start () {
 
         printf "%s\n" "[launched by ${USER} on $(${DATE_BIN} +%F-%H%M%S 2>/dev/null)]" > "${JAIL_STATUS_FILE}"
         ${JEXEC_BIN} "${JAIL_NAME}" "${PW_BIN}" usermod "${DEFAULT_JAIL_USER}" -u "${EPAIR_NUMBER}" && \
-            note "Took: $(distn "${GVR_ELAPSED_S}s") to deploy cell: $(distn "${JAIL_NAME}") (JID: $(distn "${JAIL_NUM_ID}"); UID: $(distn "${EPAIR_NUMBER}"), Zone: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"))"
+            permnote "Took: $(distn "${GVR_ELAPSED_S}s") to deploy cell: $(distn "${JAIL_NAME}") (JID: $(distn "${JAIL_NUM_ID}"); UID: $(distn "${EPAIR_NUMBER}"), Zone: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"))"
 
         apply_attributes
 
@@ -947,7 +946,7 @@ cell_login () {
     if [ "$?" = "0" ]; then
         debug "Logging in as: ${JAIL_LOGIN} to cell: ${JAIL_NAME}" && \
         ${DEBUG_EXEC_COMMAND} "${JEXEC_BIN}" "${JAIL_NAME}" "su" "${DEFAULT_JAIL_USER}" && \
-            printf "%b\n" "${ColorGreen}Logged out from cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+            permnote "Logged out from cell: $(distn "${JAIL_NAME}")"
     else
         error "Start the cell first!"
     fi
@@ -1022,7 +1021,7 @@ cell_destroy () {
         warn "Cell destroyed: $(distw "${JAIL_NAME}")" && \
             try "igni dns reload; igni proxy reload"
     else
-        warn "Cell: $(distw "${GIVEN_NAME##*/}") is intact."
+        warn "Cell: $(distw "${GIVEN_NAME##*/}") is left intact."
     fi
 }
 
@@ -1035,7 +1034,6 @@ case $1 in
 
     create|c)
         shift
-        echo
         cell_create ${*}
         ;;
 
@@ -1051,7 +1049,6 @@ case $1 in
 
     start)
         shift
-        echo
         cell_start ${*}
         ;;
 
@@ -1072,13 +1069,11 @@ case $1 in
 
     set)
         shift
-        echo
         cell_set ${*}
         ;;
 
     unset)
         shift
-        echo
         cell_unset ${*}
         ;;
 
