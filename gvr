@@ -160,7 +160,7 @@ if [ ! -d "${DEFAULT_JAIL_SYSTEM_PATH}" ]; then
     CURRENT_VERSION="$(cat "${JAIL_CACHE_DIR}/current-stable" 2>/dev/null)"
     if [ -n "${CURRENT_VERSION}" ]; then
         if [ ! -f "${JAIL_CACHE_DIR}/${CURRENT_VERSION}" ]; then
-            printf "%b\n" "${ColorGreen}Fetching ServeD stable snapshot: $(distn "${CURRENT_VERSION}") as cell base system: $(distn "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}")${ColorReset}"
+            permnote "Fetching ServeD stable snapshot: $(distn "${CURRENT_VERSION}") as cell base system: $(distn "${DEFAULT_ZPOOL}${DEFAULT_JAIL_SYSTEM_PATH}")"
             fetch "${SERVED_SYSTEM_SNAPSHOT_RESOURCE}/${CURRENT_VERSION}" -o "${JAIL_CACHE_DIR}/${CURRENT_VERSION}"
         else
             debug "ServeD stable system snapshot already fetched…"
@@ -262,7 +262,7 @@ set_values () {
 
 
 show_version () {
-    printf "%b\n" "${ColorGreen}GoVeRnor: ${ColorCyan}v${GVR_VERSION}${ColorReset}"
+    permnote "Cell Governor, version: $(distn "${GVR_VERSION}")"
 }
 
 
@@ -389,36 +389,33 @@ check_cell_name () {
 
 attributes_show () {
     # NOTE: resources, taken from FreeBSD "rctl" man page:
-    printf "%b\n" "${ColorGreen}Attributes with description:"
-    printf "%b\n" "   ${ColorCyan}pcpu${ColorGray}: ${ColorGreen}CPU percentage${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}cputime${ColorGray}: ${ColorGreen}CPU time, in seconds${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}datasize${ColorGray}: ${ColorGreen}data size, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}stacksize${ColorGray}: ${ColorGreen}stack size, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}coredumpsize${ColorGray}: ${ColorGreen}core dump size, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}memoryuse${ColorGray}: ${ColorGreen}resident set size, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}memorylocked${ColorGray}: ${ColorGreen}locked memory, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}maxproc${ColorGray}: ${ColorGreen}number of processes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}openfiles${ColorGray}: ${ColorGreen}file descriptor table size${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}vmemoryuse${ColorGray}: ${ColorGreen}address space limit, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}pseudoterminals${ColorGray}: ${ColorGreen}number of PTYs${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}swapuse${ColorGray}: ${ColorGreen}swap usage, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}nthr${ColorGray}: ${ColorGreen}number of threads${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}msgqqueued${ColorGray}: ${ColorGreen}number of queued SysV messages${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}msgqsize${ColorGray}: ${ColorGreen}SysV message queue size, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}nmsgq${ColorGray}: ${ColorGreen}number of SysV message queues${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}nsem${ColorGray}: ${ColorGreen}number of SysV semaphores${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}nsemop${ColorGray}: ${ColorGreen}number of SysV semaphores modified in a single semop(2) call${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}nshm${ColorGray}: ${ColorGreen}number of SysV shared memory segments${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}shmsize${ColorGray}: ${ColorGreen}SysV shared memory size, in bytes${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}wallclock${ColorGray}: ${ColorGreen}wallclock time, in seconds${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}quota${ColorGray}: ${ColorGreen}quota value for /Services, /User and /Software datasets (fmt: 1G 512M 128K). ${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}quota-services${ColorGray}: ${ColorGreen}quota value for /Services dataset only (fmt: 1G 512M 128K). ${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}quota-user${ColorGray}: ${ColorGreen}quota value for /User dataset only (fmt: 1G 512M 128K). ${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}quota-software${ColorGray}: ${ColorGreen}quota value for /Software dataset only (fmt: 1G 512M 128K). ${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}quota-root${ColorGray}: ${ColorGreen}quota value for cell base (/) system dataset only (fmt: 1G 512M 128K)${ColorReset}"
-    printf "%b\n" "   ${ColorCyan}key${ColorGray}: ${ColorGreen}add new ED25519 SSH public key (without header and comment parts) to be added to authorized keys of cell${ColorRes}\n"
-    # printf "%b\n" "   ${ColorCyan}ip${ColorGray}: ${ColorGreen}change cell IP addresses (comma separated) [requires cell restart]${ColorReset}"
-    # printf "%b\n" "   ${ColorCyan}+ip${ColorGray}: ${ColorGreen}adds specified (comma separated) IP addresses to cell [requires cell restart]${ColorReset}"
+    permnote "$(distn "pcpu") - CPU percentage"
+    permnote "$(distn "cputime") - CPU time, in seconds"
+    permnote "$(distn "datasize") - data size, in bytes"
+    permnote "$(distn "stacksize") - stack size, in bytes"
+    permnote "$(distn "coredumpsize") - core dump size, in bytes"
+    permnote "$(distn "memoryuse") - resident set size, in bytes"
+    permnote "$(distn "memorylocked") - locked memory, in bytes"
+    permnote "$(distn "maxproc") - number of processes"
+    permnote "$(distn "openfiles") - file descriptor table size"
+    permnote "$(distn "vmemoryuse") - address space limit, in bytes"
+    permnote "$(distn "pseudoterminals") - number of PTYs"
+    permnote "$(distn "swapuse") - swap usage, in bytes"
+    permnote "$(distn "nthr") - number of threads"
+    permnote "$(distn "msgqqueued") - number of queued SysV messages"
+    permnote "$(distn "msgqsize") - SysV message queue size, in bytes"
+    permnote "$(distn "nmsgq") - number of SysV message queues"
+    permnote "$(distn "nsem") - number of SysV semaphores"
+    permnote "$(distn "nsemop") - number of SysV semaphores modified in a single semop(2) call"
+    permnote "$(distn "nshm") - number of SysV shared memory segments"
+    permnote "$(distn "shmsize") - SysV shared memory size, in bytes"
+    permnote "$(distn "wallclock") - wallclock time, in seconds"
+    permnote "$(distn "quota") - quota value for /Services, /User and /Software datasets (fmt: 1G 512M 128K)"
+    permnote "$(distn "quota-services") - quota value for /Services dataset only (fmt: 1G 512M 128K)"
+    permnote "$(distn "quota-user") - quota value for /User dataset only (fmt: 1G 512M 128K)"
+    permnote "$(distn "quota-software") - quota value for /Software dataset only (fmt: 1G 512M 128K)"
+    permnote "$(distn "quota-root") - quota value for cell base (/) system dataset only (fmt: 1G 512M 128K)"
+    permnote "$(distn "key") - add new ED25519 SSH public key (without header and comment parts) to be added to authorized keys of given cell"
 }
 
 
@@ -428,13 +425,8 @@ mark_running () {
 
 
 cell_create () {
-    usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} create myname${ColorReset}"
-        note
-    }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
         error "No cell name given"
     fi
     check_cell_name "${GIVEN_NAME}"
@@ -675,13 +667,9 @@ ${JAIL_NAME} {
 
 
 cell_status () {
-    usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} status cell-name${ColorReset}"
-    }
     GIVEN_NAME="${1}"
     VERBOSE="${2}"
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
         error "No cell name given"
     fi
     set_values "${GIVEN_NAME}"
@@ -739,13 +727,9 @@ cell_list () {
 
 # Apply settings and start jail
 cell_start () {
-    usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} start cell-name${ColorReset}"
-    }
     GIVEN_NAME="${1}" # hostname?
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
-        error "No cell to start"
+        error "No cell name given to start!"
     fi
     set_values "${GIVEN_NAME}"
 
@@ -808,13 +792,9 @@ cell_start () {
 
 
 cell_stop () {
-    usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} stop cell-name${ColorReset}"
-    }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
-        error "No cell to stop"
+        error "No cell name given to stop!"
     fi
     SENTRY="${SENTRY_DIR}/${GIVEN_NAME}"
     EPAIR="${EPAIR_DEVICE}$(${CAT_BIN} "${SENTRY}/${CELL_EPAIR_NUMBER_ATTRIBUTE}" 2>/dev/null)"
@@ -858,13 +838,9 @@ cell_stop () {
 
 
 cell_set () {
-    usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} set cell-name attribute=value attr2=val2 (...)${ColorReset}"
-    }
     GIVEN_NAME="${1}"
     shift
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
         error "No cell name given"
     fi
 
@@ -895,12 +871,8 @@ cell_set () {
 
 
 cell_unset () {
-    usage () {
-        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} unset cell-name attribute value${ColorReset}"
-    }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
         error "No cell name given"
     fi
     shift
@@ -910,19 +882,15 @@ cell_unset () {
     for cell_attribute in ${*}; do
         run "${RM_BIN} -f ${JAIL_ATTRIBUTES_DIR}/${cell_attribute}" && \
         try "${RCTL_BIN} -r jail:${JAIL_NAME}:${cell_attribute}" && \
-            printf "%b\n" "${ColorGreen}Unset attribute: ${ColorCyan}${cell_attribute}${ColorGreen} for cell: ${ColorCyan}${JAIL_NAME}${ColorReset}"
+            permnote "Unset attribute: $(distn "${cell_attribute}") for cell: $(distn "${JAIL_NAME}")"
     done
     apply_attributes
 }
 
 
 cell_login () {
-    usage () {
-        printf "%b\n" "Usage: ${ColorCyan}${GVR_SCRIPT_NAME} login cell-name${ColorReset}"
-    }
     GIVEN_NAME="${1}" # hostname?
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
         error "No cell to enter"
     fi
     JAIL_LOGIN="${DEFAULT_JAIL_USER}"
@@ -944,12 +912,8 @@ cell_login () {
 
 
 cell_restart () {
-    usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} restart cell-name${ColorReset}"
-    }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
         error "No cell to restart"
     fi
     cell_stop ${*}
@@ -958,12 +922,8 @@ cell_restart () {
 
 
 cell_destroy () {
-    usage () {
-        printf "%b\n" "${ColorGreen}Usage: ${ColorCyan}${GVR_SCRIPT_NAME} destroy cell-name${ColorReset}"
-    }
     GIVEN_NAME="${1}"
     if [ -z "${GIVEN_NAME}" ]; then
-        usage
         error "No cell to destroy"
     fi
     ASK_CONFIRM="${2}"
