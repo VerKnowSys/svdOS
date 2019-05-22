@@ -390,8 +390,9 @@ apply_attributes () {
 check_cell_name () {
     GIVEN_NAME="${1}"
     for _cell in $(${LS_BIN} "${SENTRY_DIR}" 2>/dev/null); do
+        debug "Comparing cell name: $(distd "${_cell}") vs given name: $(distd "${GIVEN_NAME}")"
         if [ "${_cell}" = "${GIVEN_NAME}" ]; then
-            error "Name: $(diste "${GIVEN_NAME}") is already in use!"
+            error "Cell name: $(diste "${GIVEN_NAME}") is already in use!"
         fi
     done
 }
@@ -980,8 +981,8 @@ cell_destroy () {
     if [ "I_KNOW_EXACTLY_WHAT_I_AM_DOING" = "${ASK_CONFIRM}" ]; then
         _ans="YES"
     else
-        printf "%b\n" "${ColorYellow}Are you sure you want to destroy cell: ${ColorCyan}${GIVEN_NAME##*/}${ColorYellow} with ${ColorRed}ALL DATA?${ColorReset}"
-        printf "%b\n" "${ColorYellow}Type ${ColorCyan}YES${ColorYellow} followed by [${ColorCyan}Enter${ColorYellow}], to confirm.${ColorReset}"
+        warn "Are you sure you want to destroy cell: $(distw "${GIVEN_NAME##*/}") including ${ColorRed}ALL CELL DATA?"
+        warn "Type $(distw "YES") followed by [$(distw "Enter")], to confirm!"
         read -r _ans
     fi
     set_values "${GIVEN_NAME}"
@@ -1008,17 +1009,17 @@ cell_destroy () {
             _used_ip_file="${SYSTEM_IPS_DIR}/ip-${JAIL_IPS}"
             debug "Used IPv4 address: $(distd "${JAIL_IPS}"). IPs dir: $(distn "${SYSTEM_IPS_DIR}")"
             run "${TOUCH_BIN} ${_used_ip_file}" && \
-                note "IPv4: $(distn "${JAIL_IPS}") ($(distn "${_used_ip_file}")) is no longer assigned to cell: $(distn "${JAIL_NAME}")"
+                permnote "IPv4: $(distn "${JAIL_IPS}") ($(distn "${_used_ip_file}")) is no longer assigned to cell: $(distn "${JAIL_NAME}")"
         fi
 
         if [ -n "${EPAIR_NUMBER}" ]; then
             _used_id_file="${SYSTEM_NETIDS_DIR}/id-${EPAIR_NUMBER}"
             debug "Used NetID: $(distd "${EPAIR_NUMBER}"). NetIDs dir: $(distn "${SYSTEM_NETIDS_DIR}")"
             run "${TOUCH_BIN} ${_used_id_file}" && \
-                note "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is no longer assigned to cell: $(distn "${JAIL_NAME}")"
+                permnote "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is no longer assigned to cell: $(distn "${JAIL_NAME}")"
         fi
 
-        warn "Cell destroyed: $(distw "${JAIL_NAME}")" && \
+        permnote "Cell destroyed: $(distn "${JAIL_NAME}")" && \
             try "igni dns reload; igni proxy reload"
     else
         warn "Cell: $(distw "${GIVEN_NAME##*/}") is left intact."
