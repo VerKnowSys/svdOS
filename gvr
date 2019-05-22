@@ -934,9 +934,9 @@ cell_login () {
     check_cell_name "${CELL}"
     ${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} " ${JAIL_NAME} .*ACTIVE" >/dev/null 2>&1
     if [ "$?" = "0" ]; then
-        debug "Logging in as: ${JAIL_LOGIN} to cell: ${JAIL_NAME}" && \
-        ${DEBUG_EXEC_COMMAND} "${JEXEC_BIN}" "${JAIL_NAME}" "su" "${DEFAULT_JAIL_USER}" && \
-            permnote "Logged out from cell: $(distn "${JAIL_NAME}")"
+        permnote "Logging in as: $(distn "${JAIL_LOGIN}") to cell: $(distn "${JAIL_NAME}")"
+        ${DEBUG_EXEC_COMMAND} "${JEXEC_BIN}" "${JAIL_NAME}" "su" "${DEFAULT_JAIL_USER}" \
+            && permnote "Logged out from cell: $(distn "${JAIL_NAME}")"
     else
         error "Start the cell first!"
     fi
