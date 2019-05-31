@@ -636,7 +636,7 @@ ${JAIL_NAME} {
     # debug "Reloading syslog"
     # service syslog-ng reload >/dev/null || service syslog-ng restart >/dev/null
 
-    note "Setting up local domains for IPv4: $(distd "${JAIL_ADDRESSES}")"
+    debug "Setting up local domains for IPv4: $(distd "${JAIL_ADDRESSES}")"
     MAIN_JAIL_ADDRESS="$(echo "${JAIL_ADDRESSES}" | ${SED_BIN} -e 's#/.*# #g' 2>/dev/null)"
 
     printf "\n%b\n\n%b\n%b\n%b\n\n" \
@@ -657,7 +657,7 @@ ${JAIL_NAME} {
     try "${RM_BIN} -f \"${_used_id_file}\"" && \
         permnote "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is now marked as used by cell: $(distn "${JAIL_NAME}")."
 
-    note "Starting cell: $(distd "${JAIL_NAME}")"
+    debug "Starting cell: $(distd "${JAIL_NAME}")"
     cell_start "${JAIL_NAME}" && \
         permnote "Cell: $(distn "${JAIL_NAME}") bound to domain: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"), with local address: $(distn "${MAIN_JAIL_ADDRESS}")." && \
         return 0
