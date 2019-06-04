@@ -523,6 +523,8 @@ ${JAIL_NAME} {
     #     debug "Last snapshot of: $(distd "${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}") is: $(distd "${LAST}")"
     # fi
     DEFAULT_JAILS_ROOT_DIR="${SHARED_DIR}/${SYSTEM_NAME}-${DEFAULT_VERSION}-${SYSTEM_ARCH}"
+    run "${ZFS_BIN} set sync=disabled ${DEFAULT_ZPOOL}/Software" && \
+        debug "Set sync disabled for: $(distd "${DEFAULT_ZPOOL}/Software") dataset."
 
     run "${ZFS_BIN} clone ${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${ORIGIN} ${DEFAULT_ZPOOL}${CELL}" && \
         debug "Cloned base system dataset: $(distd "${DEFAULT_ZPOOL}${DEFAULT_JAILS_ROOT_DIR}@${ORIGIN}") to: $(distd "${CELL}")"
