@@ -346,7 +346,7 @@ apply_attributes () {
             *)
                 ${RCTL_BIN} -a "jail:${JAIL_NAME}:${attribute}:deny=${value}" >> "${GVR_LOG}" 2>&1
                 if [ "$?" = "0" ]; then
-                    permnote "Overriden attribute: $(distn "${attribute}") with value: $(distn "${value}")"
+                    debug "Overriden attribute: $(distd "${attribute}") with value: $(distd "${value}")"
                 else
                     warn "Wrong attribute: $(distw "${attribute}")"
                 fi
