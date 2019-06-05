@@ -489,6 +489,7 @@ ${JAIL_NAME} {
     exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b up\";
     exec.start  += \"${IFCONFIG_BIN} ${EPAIR}b inet ${JAIL_ADDRESSES} up\";
     exec.start  += \"${ROUTE_BIN} add default ${CELL_NETWORK_ROUTER}\";
+    exec.start  += \"${CAP_MKDB_BIN} /etc/login.conf\";
     exec.start  += \"service sshd restart; service cron restart\";
     exec.start  += \"test -f /etc/rc.local && ${SH_BIN} /etc/rc.local\";
     # NOTE: not actually required if we don't want any additional subsystems: exec.start  += \"${SH_BIN} /etc/rc\";
