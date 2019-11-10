@@ -6,8 +6,10 @@
 
 . /Software/Sofin/share/loader
 
-GVR_VERSION="0.38.0"
-GVR_VERSION="0.38.1"
+# TODO: copy not only igni but also /Shared/Igniters/common.igni
+# TODO: implement sync of /Shared/DNS/*.conf
+# TODO: solve cell /proc problem for JVM-driven software
+# proc /Shared/Prison/Cells/logstash1/proc procfs rw 0 0
 GVR_LOG="/var/log/gvr.log"
 GVR_LOCK="/var/run/gvr.lock"
 
@@ -269,15 +271,6 @@ set_values () {
 show_version () {
     permnote "Cell Governor, version: $(distn "${GVR_VERSION}")"
 }
-
-
-# check_cell_name () {
-#     _given_name="${1}"
-#     _filename="${_given_name##*/}"
-#     if [ ! -d "${_given_name}" ]; then
-#         error "No such cell: $(diste "${_given_name}"), file: $(diste "${_filename}")"
-#     fi
-# }
 
 
 apply_attributes () {
