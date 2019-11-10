@@ -4,20 +4,21 @@ cpu HAMMER
 ident VerKnowSys
 makeoptions DEBUG=-g                        # Build kernel with gdb(1) debug symbols
 makeoptions WITH_CTF=1                      # Run ctfconvert(1) for DTrace support
-makeoptions "-funroll-loops"
-makeoptions "-ffast-math"
-makeoptions "-fno-omit-frame-pointer"
-makeoptions "-fno-strict-aliasing"
 
-options     HZ=60
 options     SCHED_ULE                       # ULE scheduler
+options     NUMA                            # Non-Uniform Memory Architecture support
 options     PREEMPTION                      # Enable kernel thread preemption
 options     INET                            # InterNETworking
 options     INET6                           # IPv6 communications protocols
 options     IPSEC                           # IP (v4/v6) security
+options     IPSEC_SUPPORT                   # Allow kldload of ipsec and tcpmd5
+options     TCP_BLACKBOX                    # Enhanced TCP event logging
+options     TCP_HHOOK                       # hhook(9) framework for TCP
+options     TCP_RFC7413                     # TCP Fast Open
 options     TCP_OFFLOAD                     # TCP offload
 options     TCP_SIGNATURE
 options     SCTP                            # Stream Control Transmission Protocol
+
 #options     FFS                            # Berkeley Fast Filesystem
 #options     SOFTUPDATES                    # Enable FFS soft updates support
 #options     UFS_ACL                        # Support for access control lists
@@ -25,31 +26,114 @@ options     SCTP                            # Stream Control Transmission Protoc
 #options     UFS_GJOURNAL                   # Enable gjournal-based UFS journaling
 #options     UFS_EXTATTR                    # Extended attributes
 #options     UFS_EXTATTR_AUTOSTART
-# options    QUOTA                          # Enable disk quotas for UFS
+#options     QUOTA                          # Enable disk quotas for UFS
+
 options     MD_ROOT                         # MD is a potential root device
-options     MAXFILES=32768
-options     SHMMAXPGS=65536                 # PostgreSQL
-options     SEMMNI=40
-options     SEMMNS=240
-options     SEMUME=40
-options     SEMMNU=120
-options     DUMMYNET
-options     KTR
+options     SYSVSHM                         # SYSV-style shared memory
+options     SYSVMSG                         # SYSV-style message queues
+options     SYSVSEM                         # SYSV-style semaphores
+
+options     SHMMAXPGS=262144                # PostgreSQL
+options     SEMMNI=256
+options     SEMMNS=512
+options     SEMMNU=256
+options     SEMUME=256
+
+# Enable virtual network for jails:
 options     VIMAGE
 
-device epair
-device pf
-# device pflog
-# device pfsync                                 # Synchronization interface for PF
-device tap                                    # Virtual Ethernet driver
-device gre                                    # IP over IP tunneling
-device if_bridge                              # Bridge interface
-device carp                                   # Common Address Redundancy Protocol
-device enc                                    # IPsec interface
-device lagg                                   # Link aggregation interface
-device stf                                    # IPv4-IPv6 port
-device coretemp
-device cpuctl
+#
+# ABI Emulation
+
+options     MSDOSFS                         # MSDOS Filesystem
+options     CD9660                          # ISO 9660 Filesystem
+options     PROCFS                          # Process filesystem (requires PSEUDOFS)
+options     PSEUDOFS                        # Pseudo-filesystem framework
+
+#
+# Enable 64-bit runtime support for CloudABI binaries.
+options     COMPAT_CLOUDABI64
+
+
+# Debugging support.  Always need this:
+options     KDB                             # Enable kernel debugger support.
+options     KDB_TRACE                       # Print a stack trace for a panic.
+
+# For full debugger support use (turn off in stable branch):
+options     DDB                             # Support DDB.
+options     DDB_CTF                         # Kernel ELF linker loads CTF data
+options     KDTRACE_FRAME                   # Ensure frames are compiled in
+options     KDTRACE_HOOKS                   # Kernel DTrace hooks
+
+#options     GDB                            # Support remote GDB.
+#options     WITNESS                        # Enable checks to detect deadlocks and cycles
+#options     WITNESS_SKIPSPIN               # Don't run witness on spinlocks for speed
+#options     MALLOC_DEBUG_MAXZONES=8        # Separate malloc(9) zones
+
+# Make an SMP-capable kernel by default
+options     SMP                             # Symmetric MultiProcessor Kernel
+options     IMAGACT_BINMISC                 # enables app exec through emulators, such as QEMU via binmiscctl(8). [r266531]
+options     DEVICE_NUMA                     # I/O Device Affinity
+options     EARLY_AP_STARTUP
+
+#
+# DEVICE_POLLING adds support for mixed interrupt-polling handling
+# of network device drivers, which has significant benefits in terms
+# of robustness to overloads and responsivity, as well as permitting
+# accurate scheduling of the CPU time between kernel network processing
+# and other activities.  The drawback is a moderate (up to 1/HZ seconds)
+# potential increase in response times.
+# It is strongly recommended to use HZ=1000 or 2000 with DEVICE_POLLING
+# to achieve smoother behaviour.
+# Additionally, you can enable/disable polling at runtime with help of
+# the ifconfig(8) utility, and select the CPU fraction reserved to
+# userland with the sysctl variable kern.polling.user_frac
+# (default 50, range 0..100).
+#
+# Not all device drivers support this mode of operation at the time of
+# this writing.  See polling(4) for more details.
+
+options     DEVICE_POLLING
+
+device      epair
+device      pf
+# device      pflog
+# device      pfsync                          # Synchronization interface for PF
+device      tap                             # Virtual Ethernet driver
+device      gre                             # IP over IP tunneling
+device      if_bridge                       # Bridge interface
+device      carp                            # Common Address Redundancy Protocol
+device      enc                             # IPsec interface
+device      lagg                            # Link aggregation interface
+device      stf                             # IPv4-IPv6 port
+device      coretemp
+device      cpuctl
+device      nvram
+device      nmdm                            # Null modem
+
+# BUSes:
+device      iicbus
+device      iicbb
+device      iic
+device      ic
+device      iicsmb
+device      smb
+device      smbus
+device      bktr
+
+#
+# Intel integrated Memory Controller (iMC) SMBus controller
+# Sandybridge-Xeon, Ivybridge-Xeon, Haswell-Xeon, Broadwell-Xeon
+device      imcsmb
+
+device      ipmi
+device      pbio
+device      smbios
+device      vpd
+device      asmc
+device      tpm
+device      aesni                           # AES-NI OpenCrypto module
+device      ioat                            # Intel I/OAT DMA engine
 
 
 # NFS support
@@ -58,44 +142,53 @@ options     NFSD                            # Network Filesystem Server
 options     NFSLOCKD                        # Network Lock Manager
 options     NFS_ROOT                        # NFS usable as /, requires NFSCL
 
-options     MSDOSFS                         # MSDOS Filesystem
-options     CD9660                          # ISO 9660 Filesystem
-options     PROCFS                          # Process filesystem (requires PSEUDOFS)
-options     PSEUDOFS                        # Pseudo-filesystem framework
-
 # GEOM support
 options     GEOM_PART_GPT                   # GUID Partition Tables.
 options     GEOM_RAID                       # Soft RAID functionality.
 options     GEOM_LABEL                      # Provides labelization
 options     GEOM_ELI                        # Disk encryption.
 options     SCSI_DELAY=5000                 # Delay (in ms) before probing SCSI
+options     KTRACE                         # ktrace(1) support
 
 #options    COMPAT_FREEBSD32                # Compatible with i386 binaries
 #options    COMPAT_FREEBSD4                 # Compatible with FreeBSD4
 #options    COMPAT_FREEBSD5                 # Compatible with FreeBSD5
 #options    COMPAT_FREEBSD6                 # Compatible with FreeBSD6
 #options    COMPAT_FREEBSD7                 # Compatible with FreeBSD7
-#options     COMPAT_FREEBSD9                # Compatible with FreeBSD9
-options     COMPAT_FREEBSD10                # Compatible with FreeBSD10
-#options     KTRACE                         # ktrace(1) support
+#options    COMPAT_FREEBSD9                 # Compatible with FreeBSD9
+#options    COMPAT_FREEBSD10                # Compatible with FreeBSD10
+
 options     STACK                           # stack(9) support
-options     SYSVSHM                         # SYSV-style shared memory
-options     SYSVMSG                         # SYSV-style message queues
-options     SYSVSEM                         # SYSV-style semaphores
 options     _KPOSIX_PRIORITY_SCHEDULING     # POSIX P1003_1B real-time extensions
-options     PRINTF_BUFR_SIZE=256            # Prevent printf output being interspersed.
+options     PRINTF_BUFR_SIZE=128            # Prevent printf output being interspersed.
 options     KBD_INSTALL_CDEV                # install a CDEV entry in /dev
 options     HWPMC_HOOKS                     # Necessary kernel hooks for hwpmc(4)
 options     AUDIT                           # Security event auditing
 options     CAPABILITY_MODE                 # Capsicum capability mode
 options     CAPABILITIES                    # Capsicum capabilities
+
+# MAC:
 options     MAC                             # TrustedBSD MAC Framework
-options     KDTRACE_FRAME                   # Ensure frames are compiled in
-options     KDTRACE_HOOKS                   # Kernel DTrace hooks
-options     DDB_CTF                         # Kernel ELF linker loads CTF data
+options     MAC_BSDEXTENDED
+options     MAC_PORTACL
+options     MAC_SEEOTHERUIDS
 options     INCLUDE_CONFIG_FILE             # Include this file in kernel
 options     RACCT                           # Resource accounting framework
 options     RCTL                            # Resource limits
+
+
+#
+# Hardware watchdog timers:
+#
+# ichwd: Intel ICH watchdog timer
+# amdsbwd: AMD SB7xx watchdog timer
+# viawd: VIA south bridge watchdog timer
+# wbwd: Winbond watchdog timer
+#
+device    ichwd
+device    amdsbwd
+device    viawd
+device    wbwd
 
 # HardenedBSD hardening options
 options     PAX                             # PaX framework
@@ -104,6 +197,11 @@ options     PAX_ASLR                        # Address Space Layout Randomization
 options     PAX_NOEXEC                      # Remove WX pages from user-space and enforce W^X
 options     PAX_HARDENING                   # Various hardening options
 options     PAX_SEGVGUARD                   # prevent brute-force attacks
+options     PAX_CONTROL_ACL                 # PaX MAC framework, required for secadm
+options     PAX_CONTROL_ACL_OVERRIDE_SUPPORT # Allow to override hbsdcontrol settings with ACLs
+options     PAX_CONTROL_EXTATTR             # extattr based control framework for hbsdcontrol
+options     PAX_JAIL_SUPPORT                # Allow to override PAX settings per jail
+
 #options    PAX_PTRACE_HARDENING
 #options    PAX_PTRACE_HARDENING_GRP=50000
 
@@ -114,36 +212,17 @@ options     INVARIANT_SUPPORT               # Extra sanity checks of internal st
                                             # required by INVARIANTS
 #options     PAX_INSECURE_MODE              # it's required if disabled INVARIANTS
 
-
-# Debugging support.  Always need this:
-options     KDB                             # Enable kernel debugger support.
-options     KDB_TRACE                       # Print a stack trace for a panic.
-
-# For full debugger support use (turn off in stable branch):
-options     DDB                             # Support DDB.
-#options     GDB                            # Support remote GDB.
-#options     WITNESS                        # Enable checks to detect deadlocks and cycles
-#options     WITNESS_SKIPSPIN               # Don't run witness on spinlocks for speed
-#options     MALLOC_DEBUG_MAXZONES=8        # Separate malloc(9) zones
-
-# Make an SMP-capable kernel by default
-options     SMP                             # Symmetric MultiProcessor Kernel
-options     IMAGACT_BINMISC                 # enables app exec through emulators, such as QEMU via binmiscctl(8). [r266531]
-options     DEVICE_NUMA                     # I/O Device Affinity
-
-# enable features:
-options     MAC_BSDEXTENDED
-options     MAC_PORTACL
-options     MAC_SEEOTHERUIDS
-
-# CPU frequency control
-device      cpufreq
-
 # Bus support.
 device      acpi
 options     ACPI_DMAR
 device      pci
+options     PCI_HP                          # PCI-Express native HotPlug
 options     PCI_IOV                         # PCI SR-IOV support
+
+# CPU frequency control
+device      cpufreq
+
+device      hyperv                          # HyperV drivers
 
 # Floppy drives
 #device      fdc
@@ -186,7 +265,7 @@ device      sa                              # Sequential Access (tape etc)
 device      cd                              # CD
 device      pass                            # Passthrough device (direct ATA/SCSI access)
 device      ses                             # Enclosure Services (SES and SAF-TE)
-#device     ctl                             # CAM Target Layer
+device      ctl                             # CAM Target Layer
 
 # RAID controllers interfaced to the SCSI subsystem
 device      amr                             # AMI MegaRAID
@@ -226,7 +305,6 @@ device      psm                             # PS/2 mouse
 device      kbdmux                          # keyboard multiplexer
 
 device      vga                             # VGA video card driver
-#options     VESA                            # Add support for VESA BIOS Extensions (VBE)
 
 device      splash                          # Splash screen and screen saver support
 
@@ -381,10 +459,12 @@ device      virtio_pci                      # VirtIO PCI device
 device      vtnet                           # VirtIO Ethernet device
 device      virtio_blk                      # VirtIO Block device
 device      virtio_scsi                     # VirtIO SCSI device
-device      virtio_balloon                      # VirtIO Memory Balloon device
+device      virtio_balloon                  # VirtIO Memory Balloon device
+device      virtio_random                   # VirtIO Entropy device
+device      virtio_console                  # VirtIO Console device
 
 # VMware support
-# device      vmx                             # VMware VMXNET3 Ethernet
+device      vmx                             # VMware VMXNET3 Ethernet
 
 # Netmap provides direct access to TX/RX rings on supported NICs
 device      netmap                          # netmap(4) support
@@ -392,4 +472,14 @@ device      netmap                          # netmap(4) support
 # Additonal devices
 device      crypto                          # core crypto support
 device      cryptodev                       # /dev/crypto for access to h/w
-device      aesni
+
+# zpty
+device      pty
+
+# nullfs
+options     NULLFS
+options     FDESCFS
+options     TMPFS
+
+# routes setfib
+# options     ROUTETABLES=8
