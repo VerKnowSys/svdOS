@@ -19,7 +19,7 @@ options     TCP_OFFLOAD                     # TCP offload
 options     TCP_SIGNATURE
 options     SCTP                            # Stream Control Transmission Protocol
 
-#options     FFS                            # Berkeley Fast Filesystem
+#options     FFS                             # Berkeley Fast Filesystem
 #options     SOFTUPDATES                    # Enable FFS soft updates support
 #options     UFS_ACL                        # Support for access control lists
 #options     UFS_DIRHASH                    # Improve performance on big directories
@@ -98,7 +98,6 @@ device      epair
 device      pf
 # device      pflog
 # device      pfsync                          # Synchronization interface for PF
-device      tap                             # Virtual Ethernet driver
 device      gre                             # IP over IP tunneling
 device      if_bridge                       # Bridge interface
 device      carp                            # Common Address Redundancy Protocol
@@ -146,8 +145,8 @@ options     GEOM_PART_GPT                   # GUID Partition Tables.
 options     GEOM_RAID                       # Soft RAID functionality.
 options     GEOM_LABEL                      # Provides labelization
 options     GEOM_ELI                        # Disk encryption.
+options     EFIRT                           # EFI Runtime Services support
 options     SCSI_DELAY=5000                 # Delay (in ms) before probing SCSI
-options     KTRACE                         # ktrace(1) support
 
 #options    COMPAT_FREEBSD32                # Compatible with i386 binaries
 #options    COMPAT_FREEBSD4                 # Compatible with FreeBSD4
@@ -156,7 +155,9 @@ options     KTRACE                         # ktrace(1) support
 #options    COMPAT_FREEBSD7                 # Compatible with FreeBSD7
 #options    COMPAT_FREEBSD9                 # Compatible with FreeBSD9
 #options    COMPAT_FREEBSD10                # Compatible with FreeBSD10
+options     COMPAT_FREEBSD11                # Compatible with FreeBSD11
 
+options     KTRACE                          # ktrace(1) support
 options     STACK                           # stack(9) support
 options     _KPOSIX_PRIORITY_SCHEDULING     # POSIX P1003_1B real-time extensions
 options     PRINTF_BUFR_SIZE=128            # Prevent printf output being interspersed.
@@ -176,19 +177,6 @@ options     RACCT                           # Resource accounting framework
 options     RCTL                            # Resource limits
 
 
-#
-# Hardware watchdog timers:
-#
-# ichwd: Intel ICH watchdog timer
-# amdsbwd: AMD SB7xx watchdog timer
-# viawd: VIA south bridge watchdog timer
-# wbwd: Winbond watchdog timer
-#
-device    ichwd
-device    amdsbwd
-device    viawd
-device    wbwd
-
 # HardenedBSD hardening options
 options     PAX                             # PaX framework
 options     PAX_SYSCTLS                     # sysctls for run-time options
@@ -205,7 +193,7 @@ options     PAX_JAIL_SUPPORT                # Allow to override PAX settings per
 #options    PAX_PTRACE_HARDENING_GRP=50000
 
 # Additional security options:
-options     DEADLKRES                       # Enable the deadlock resolver
+# options     DEADLKRES                       # Enable the deadlock resolver
 options     INVARIANTS                      # Enable calls of extra sanity checking
 options     INVARIANT_SUPPORT               # Extra sanity checks of internal structures,
                                             # required by INVARIANTS
@@ -279,6 +267,7 @@ device      iir                             # Intel Integrated RAID
 device      ips                             # IBM (Adaptec) ServeRAID
 device      mly                             # Mylex AcceleRAID/eXtremeRAID
 device      twa                             # 3ware 9000 series PATA/SATA RAID
+device      smartpqi                        # Microsemi smartpqi drive
 device      tws                             # LSI 3ware 9750 SATA+SAS 6Gb/s RAID controller
 
 # RAID controllers
@@ -289,8 +278,9 @@ device      ida                             # Compaq Smart RAID
 device      mfi                             # LSI MegaRAID SAS
 device      mlx                             # Mylex DAC960 family
 device      mrsas                           # LSI/Avago MegaRAID SAS/SATA, 6Gb/s and 12Gb/s
+device      pmspcv                          # PMC-Sierra SAS/SATA Controller driver
+#device      pst                            # Promise Supertrak SX6000
 device      twe                             # 3ware ATA RAID
-#device     pst                             # Promise Supertrak SX6000
 
 # NVM Express (NVMe) support
 device      nvme                            # base NVMe driver
@@ -332,18 +322,23 @@ device      uart                            # Generic UART driver
 #device     vpo                             # Requires scbus and da
 #device      puc                            # Multi I/O cards and multi-channel UARTs
 
-# PCI Ethernet NICs.
-device      bxe                             # Broadcom NetXtreme II BCM5771X/BCM578XX 10GbE
-device      de                              # DEC/Intel DC21x4x (``Tulip'')
+# PCI/PCI-X/PCIe Ethernet NICs that use iflib infrastructure
+device      iflib
 device      em                              # Intel PRO/1000 Gigabit Ethernet Family
 device      ix                              # Intel PRO/10GbE PCIE PF Ethernet
 device      ixv                             # Intel PRO/10GbE PCIE VF Ethernet
-device      ixl                             # Intel XL710 40Gbe PCIE Ethernet
-device      ixlv                            # Intel XL710 40Gbe VF PCIE Ethernet
-device      le                              # AMD Am7900 LANCE and Am79C9xx PCnet
-device      ti                              # Alteon Networks Tigon I/II gigabit Ethernet
-device      txp                             # 3Com 3cR990 (``Typhoon'')
-device      vx                              # 3Com 3c590, 3c595 (``Vortex'')
+device      ixl                             # Intel 700 Series Physical Function
+device      iavf                            # Intel Adaptive Virtual Function
+device      vmx                             # VMware VMXNET3 Ethernet
+
+# PCI Ethernet NICs.
+device    bxe     # Broadcom NetXtreme II BCM5771X/BCM578XX 10GbE
+device    de      # DEC/Intel DC21x4x (``Tulip'')
+device    le      # AMD Am7900 LANCE and Am79C9xx PCnet
+device    ti      # Alteon Networks Tigon I/II gigabit Ethernet
+device    txp     # 3Com 3cR990 (``Typhoon'')
+device    vx      # 3Com 3c590, 3c595 (``Vortex'')
+
 
 # PCI Ethernet NICs that use the common MII bus controller code.
 # NOTE: Be sure to keep the 'device miibus' line in order to use these NICs!
@@ -417,7 +412,7 @@ device      padlock_rng                     # VIA Padlock RNG
 device      rdrand_rng                      # Intel Bull Mountain RNG
 device      ether                           # Ethernet support
 device      vlan                            # 802.1Q VLAN support
-device      tun                             # Packet tunnel.
+device      tuntap                          # Packet tunnel + Virtual Ethernet driver
 device      md                              # Memory "disks"
 device      gif                             # IPv6 and IPv4 tunneling
 device      firmware                        # firmware assist module
@@ -461,9 +456,6 @@ device      virtio_scsi                     # VirtIO SCSI device
 device      virtio_balloon                  # VirtIO Memory Balloon device
 device      virtio_random                   # VirtIO Entropy device
 device      virtio_console                  # VirtIO Console device
-
-# VMware support
-device      vmx                             # VMware VMXNET3 Ethernet
 
 # Netmap provides direct access to TX/RX rings on supported NICs
 device      netmap                          # netmap(4) support
