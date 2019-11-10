@@ -188,16 +188,13 @@ options     PAX_CONTROL_ACL                 # PaX MAC framework, required for se
 options     PAX_CONTROL_ACL_OVERRIDE_SUPPORT # Allow to override hbsdcontrol settings with ACLs
 options     PAX_CONTROL_EXTATTR             # extattr based control framework for hbsdcontrol
 options     PAX_JAIL_SUPPORT                # Allow to override PAX settings per jail
+options     INVARIANTS                      # Enable calls of extra sanity checking
+options     INVARIANT_SUPPORT               # Extra sanity checks of internal structures,
 
 #options    PAX_PTRACE_HARDENING
 #options    PAX_PTRACE_HARDENING_GRP=50000
 
-# Additional security options:
-# options     DEADLKRES                       # Enable the deadlock resolver
-options     INVARIANTS                      # Enable calls of extra sanity checking
-options     INVARIANT_SUPPORT               # Extra sanity checks of internal structures,
-                                            # required by INVARIANTS
-#options     PAX_INSECURE_MODE              # it's required if disabled INVARIANTS
+#options     PAX_INSECURE_MODE             # it's required if disabled INVARIANTS
 
 # Bus support.
 device      acpi
