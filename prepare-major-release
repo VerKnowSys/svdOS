@@ -175,22 +175,22 @@ ${RM_BIN} -f \
     ".archive-base-projects.tar.gz"
 
 PREVIOUS="FreeBSD-11.0-amd64"
-GIT_VERSION="2.12.0"
+GIT_VERSION="2.12.3"
 ZSH_VERSION="5.6.2"
-CCACHE_VERSION="3.3.4"
-MC_VERSION="4.8.18-master"
+CCACHE_VERSION="3.7.1"
+MC_VERSION="4.8.23"
 
 echo "Setting HOME to ${HOME_DIR}, Zsh as default shell, installing base software"
 ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
     "${MKDIR_BIN} -p /${LAMBDA} ${CACHE_DIR} /etc/ssl; \
     ${FETCH_BIN} --no-verify-peer ${CACERT_SOURCE} -o /etc/ssl/cert.pem; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${XZCAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp ${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; ${XZCAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Git-${GIT_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Git; ${XZCAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Git; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Git-common.zfsp ${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Git-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Git; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Mc${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Mc-${MC_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Mc; ${XZCAT_BIN} ${CACHE_DIR}/Mc${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Mc; \
-    ${FETCH_BIN} -o ${CACHE_DIR}/Mc-common.zfsp ${SOFIN_BIN_REPO}/Common/Mc-${MC_VERSION}.zfsp && ${XZCAT_BIN} ${CACHE_DIR}/Mc-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Mc; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Zsh-${ZSH_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; ${LZ4CAT_BIN} ${CACHE_DIR}/Zsh${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Zsh; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Zsh-common.zfsp ${SOFIN_BIN_REPO}/Common/Zsh-${ZSH_VERSION}.zfsp && ${LZ4CAT_BIN} ${CACHE_DIR}/Zsh-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Zsh; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Ccache${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Ccache-${CCACHE_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; ${LZ4CAT_BIN} ${CACHE_DIR}/Ccache${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Ccache; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Git${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Git-${GIT_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Git; ${LZ4CAT_BIN} ${CACHE_DIR}/Git${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Git; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Git-common.zfsp ${SOFIN_BIN_REPO}/Common/Git-${GIT_VERSION}.zfsp && ${LZ4CAT_BIN} ${CACHE_DIR}/Git-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Git; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Mc${ZFSX_EXT} ${SOFIN_BIN_REPO}/${PREVIOUS}/Mc-${MC_VERSION}-${PREVIOUS}${ZFSX_EXT}; ${ZFS_BIN} destroy -r ${ZPOOL}${SOFTWARE_DIR}/root/Mc; ${LZ4CAT_BIN} ${CACHE_DIR}/Mc${ZFSX_EXT} | ${ZFS_BIN} receive ${ZPOOL}${SOFTWARE_DIR}/root/Mc; \
+    ${FETCH_BIN} -o ${CACHE_DIR}/Mc-common.zfsp ${SOFIN_BIN_REPO}/Common/Mc-${MC_VERSION}.zfsp && ${LZ4CAT_BIN} ${CACHE_DIR}/Mc-common.zfsp | ${ZFS_BIN} receive ${ZPOOL}${SERVICES_DIR}/root/Mc; \
     ${MKDIR_BIN} -p ${SERVICES_DIR}/Git/etc/ssl; \
     ${CP_BIN} -v /etc/ssl/cert.pem ${SERVICES_DIR}/Git/etc/ssl/cert.pem; \
     ${SED_BIN} -i '' -e 's|^/bin/tcsh|${DEFAULT_SHELL}|g' /etc/shells; \
