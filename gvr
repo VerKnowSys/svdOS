@@ -97,10 +97,7 @@ acquire_lock_for () {
 
 
 trap_signals () {
-    trap 'destroy_lock' INT
-    trap 'destroy_lock' TERM
-    trap 'destroy_lock' QUIT
-    trap 'destroy_lock' EXIT
+    trap 'destroy_lock' INT TERM QUIT EXIT
 }
 
 
