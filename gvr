@@ -37,7 +37,15 @@ SERVED_SYSTEM_SNAPSHOT_RESOURCE="http://software.verknowsys.com/binary/ServeD"
 
 ORIGIN="origin"
 DEFAULT_ZPOOL="zroot"
-DEFAULT_VERSION="11.2"
+
+# pick currently running OS version:
+SOFIN_OSVER_BIN="/Software/Sofin/bin/s-osver"
+if [ -x "${SOFIN_OSVER_BIN}" ]; then
+    PROD_OS_VERSION="$(${SOFIN_OSVER_BIN})"
+fi
+# use fallback to 11.2 if PROD_OS_VERSION is empty:
+DEFAULT_VERSION="${PROD_OS_VERSION:-11.2}"
+
 DEFAULT_ARCH="amd64"
 KERN_SECURELEVEL="0"
 # DEFAULT_SHELL="/Software/Zsh/exports/zsh"
