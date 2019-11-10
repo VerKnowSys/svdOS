@@ -32,10 +32,12 @@ ZFSP_EXT=".zfsp"
 ORIGIN="origin"
 SYSTEM_NAME="FreeBSD"
 PROD_OS_ARCH="amd64"
-PROD_OS_BRANCH="11.0"
-PROD_OS_BASE="${SYSTEM_NAME}-${PROD_OS_BRANCH}-${PROD_OS_ARCH}"
 DATE_NOW="$(date +%F-%H%M 2>/dev/null)"
 LOG_FILE="/var/log/svdUP-${DATE_NOW:-common}.log"
+
+# use version 11.2 as base when installing on vanilla systems (will work with both 11.x and 12.x)
+PROD_INITIAL_OS="11.2"
+PROD_OS_BASE="${SYSTEM_NAME}-${PROD_INITIAL_OS}-${PROD_OS_ARCH}"
 
 
 get_the_current () {
