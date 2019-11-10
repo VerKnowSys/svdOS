@@ -10,6 +10,8 @@
 # TODO: implement sync of /Shared/DNS/*.conf
 # TODO: solve cell /proc problem for JVM-driven software
 # proc /Shared/Prison/Cells/logstash1/proc procfs rw 0 0
+
+GVR_VERSION="0.38.2"
 GVR_LOG="/var/log/gvr.log"
 GVR_LOCK="/var/run/gvr.lock"
 
