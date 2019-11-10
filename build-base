@@ -46,8 +46,8 @@ build_base () {
         echo
     fi
 
-    _build_dir="/${LAMBDA}/src/${SYSTEM_VERSION_MAJOR}"
-    permnote "Syncing os-branch: ${CURRENT_BRANCH} to: ${_build_dir}"
+    export SOURCEDIR="/${LAMBDA}/src/${SYSTEM_VERSION_MAJOR}"
+    permnote "Syncing os-branch: ${CURRENT_BRANCH} to: ${SOURCEDIR}"
     ${GIT_BIN} clone \
         --progress \
         --depth 1 \
@@ -55,9 +55,9 @@ build_base () {
         --branch "${CURRENT_BRANCH}" \
         --jobs "${PARALLEL_JOBS}" \
         "file://${WORKSTATION_REPO_CACHED}" \
-        "${_build_dir}"
+        "${SOURCEDIR}"
 
-    cd "${_build_dir}" || exit 106
+    cd "${SOURCEDIR}" || exit 106
     test -n "${VERSION}" || exit 107
     test -n "${ARCH}" || exit 108
     test -n "${SYSTEM_TYPE}" || exit 109
