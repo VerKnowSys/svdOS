@@ -34,7 +34,7 @@ kldload dtraceall >/dev/null
 BUILD_NUMBER="$(echo "$(cat "${BUILD_NUMBER_FILE}" 2>/dev/null)+1" | bc 2>/dev/null)"
 export BUILD_NUMBER
 
-VERSION="${VERSION_MAJOR}-${SYSTEM_VERSION_MAJOR}.${SYSTEM_SUBVERSION}-b${BUILD_NUMBER}"
+VERSION="${VERSION_MAJOR}-${SYSTEM_VERSION_MAJOR}-b${BUILD_NUMBER}"
 export VERSION
 
 test -z "${BUILD_NUMBER_FILE}" && exit 122
