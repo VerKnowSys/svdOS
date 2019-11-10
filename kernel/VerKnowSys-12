@@ -73,7 +73,6 @@ options     KDTRACE_HOOKS                   # Kernel DTrace hooks
 # Make an SMP-capable kernel by default
 options     SMP                             # Symmetric MultiProcessor Kernel
 options     IMAGACT_BINMISC                 # enables app exec through emulators, such as QEMU via binmiscctl(8). [r266531]
-options     DEVICE_NUMA                     # I/O Device Affinity
 options     EARLY_AP_STARTUP
 
 #
