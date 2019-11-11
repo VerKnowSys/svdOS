@@ -72,6 +72,3 @@ dtraceall_load="YES"
 hardening.pax.aslr.vdso_len=18
 # hardening.pax.aslr.stack_len: (default to 42 on amd64):
 hardening.pax.aslr.stack_len=30
-
-# Disable IBRS
-hw.ibrs_disable="1"
