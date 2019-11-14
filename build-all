@@ -15,10 +15,13 @@ test -f "${SOFIN_DATA_DIR}/loader" && \
 
 LANG=en_US.UTF-8
 export LANG
-sysctl hardening.pax.mprotect.status=1
-sysctl hardening.pax.pageexec.status=1
-sysctl hardening.pax.disallow_map32bit.status=1
-sysctl hardening.pax.aslr.status=1
+if [ "H" = "${SYSTEM_RELEASE_TYPE}" ]; then
+    # default is hardened
+    sysctl hardening.pax.mprotect.status=1
+    sysctl hardening.pax.pageexec.status=1
+    sysctl hardening.pax.disallow_map32bit.status=1
+    sysctl hardening.pax.aslr.status=1
+fi
 
 echo "Enabling Dtrace"
 kldload dtraceall >/dev/null

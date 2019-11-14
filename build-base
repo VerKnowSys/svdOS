@@ -113,10 +113,10 @@ build_base () {
             # NOTE: overriding x86_64 for architecture used by build system
             ARCH="amd64"
             _new_boot_env="${SYSTEM_TYPE}-v${VERSION}-${ARCH}"
-            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}" || exit 110
+            test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-${SYSTEM_RELEASE_TYPE}" || exit 110
 
             ${INSTALL_BIN} -v \
-                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}" \
+                "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-${SYSTEM_RELEASE_TYPE}" \
                 "sys/${ARCH}/conf/${SYSTEM_KERNEL}" || exit 111
             ;;
 

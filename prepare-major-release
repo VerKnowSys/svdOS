@@ -174,7 +174,7 @@ echo "Cleaning local archive…"
 ${RM_BIN} -f \
     ".archive-base-projects.tar.gz"
 
-PREVIOUS="FreeBSD-11.0-amd64"
+PREVIOUS="FreeBSD-11.2-amd64"
 GIT_VERSION="2.12.3"
 ZSH_VERSION="5.6.2"
 CCACHE_VERSION="3.7.1"
