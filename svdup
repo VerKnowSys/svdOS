@@ -186,6 +186,9 @@ configure_and_commit_boot_env () {
     mkdir -p "${DESTBASE}/var/cron"
     cp -xpfR "/var/cron/tabs" "${DESTBASE}/var/cron"
 
+    echo "svdUP: Setting setuid for chown"
+    chmod +s "${DESTBASE}/usr/sbin/chown"
+
     echo "svdUP: Synchronizing svdOS utilities…"
     if [ -x "/usr/bin/gvr" ]; then
         echo "svdUP: Syncing: Jail governor (gvr)"
