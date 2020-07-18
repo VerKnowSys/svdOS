@@ -3,7 +3,7 @@
 
 # Default base software versions:
 PICKED_BUILD_VERSION="${1:-current-stable}"
-GIT_VERSION="2.12.3"
+GIT_VERSION="2.26.2"
 ZSH_VERSION="5.6.2"
 
 
@@ -36,7 +36,7 @@ DATE_NOW="$(date +%F-%H%M 2>/dev/null)"
 LOG_FILE="/var/log/svdUP-${DATE_NOW:-common}.log"
 
 # use version 11.2 as base when installing on vanilla systems (will work with both 11.x and 12.x)
-PROD_INITIAL_OS="11.2"
+PROD_INITIAL_OS="12.1"
 PROD_OS_BASE="${SYSTEM_NAME}-${PROD_INITIAL_OS}-${PROD_OS_ARCH}"
 
 
@@ -101,7 +101,7 @@ prepare_and_fetch_os_snapshot () {
     ping -c1 -t3 task.pl >> "${LOG_FILE}" 2>> "${LOG_FILE}" || \
         fail_with_no_network
     test -f /etc/ssl/cert.pem || \
-        fetch --no-verify-peer http://software.verknowsys.com/source/cacert.pem -o /etc/ssl/cert.pem
+        fetch --no-verify-peer https://curl.haxx.se/ca/cacert.pem -o /etc/ssl/cert.pem
     test -x /usr/bin/lz4 || \
         fetch_and_install_lz4
 
