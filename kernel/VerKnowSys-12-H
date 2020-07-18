@@ -95,20 +95,20 @@ options     EARLY_AP_STARTUP
 
 options     DEVICE_POLLING
 
-device      epair
-device      pf
+# device      epair
+# device      pf
 # device      pflog
 # device      pfsync                          # Synchronization interface for PF
-device      gre                             # IP over IP tunneling
-device      if_bridge                       # Bridge interface
-device      carp                            # Common Address Redundancy Protocol
-device      enc                             # IPsec interface
-device      lagg                            # Link aggregation interface
-device      stf                             # IPv4-IPv6 port
-device      coretemp
-device      cpuctl
-device      nvram
-device      nmdm                            # Null modem
+# device      gre                             # IP over IP tunneling
+# device      if_bridge                       # Bridge interface
+# device      carp                            # Common Address Redundancy Protocol
+# device      enc                             # IPsec interface
+# device      lagg                            # Link aggregation interface
+# device      stf                             # IPv4-IPv6 port
+# device      coretemp
+# device      cpuctl
+# device      nvram
+# device      nmdm                            # Null modem
 
 # BUSes:
 device      iicbus
@@ -118,21 +118,21 @@ device      ic
 device      iicsmb
 device      smb
 device      smbus
-device      bktr
+# device      bktr
 
 #
 # Intel integrated Memory Controller (iMC) SMBus controller
 # Sandybridge-Xeon, Ivybridge-Xeon, Haswell-Xeon, Broadwell-Xeon
 device      imcsmb
 
-device      ipmi
-device      pbio
-device      smbios
-device      vpd
-device      asmc
-device      tpm
-device      aesni                           # AES-NI OpenCrypto module
-device      ioat                            # Intel I/OAT DMA engine
+# device      ipmi
+# device      pbio
+# device      smbios
+# device      vpd
+# device      asmc
+# device      tpm
+# device      aesni                           # AES-NI OpenCrypto module
+# device      ioat                            # Intel I/OAT DMA engine
 
 
 # NFS support
@@ -205,9 +205,9 @@ options     PCI_HP                          # PCI-Express native HotPlug
 options     PCI_IOV                         # PCI SR-IOV support
 
 # CPU frequency control
-device      cpufreq
+# device      cpufreq
 
-device      hyperv                          # HyperV drivers
+# device      hyperv                          # HyperV drivers
 
 # Floppy drives
 #device      fdc
@@ -287,13 +287,13 @@ device      nvd                             # expose NVMe namespaces as disks, d
 # atkbdc0 controls both the keyboard and the PS/2 mouse
 device      atkbdc                          # AT keyboard controller
 device      atkbd                           # AT keyboard
-device      psm                             # PS/2 mouse
+# device      psm                             # PS/2 mouse
 
 device      kbdmux                          # keyboard multiplexer
 
 device      vga                             # VGA video card driver
 
-device      splash                          # Splash screen and screen saver support
+# device      splash                          # Splash screen and screen saver support
 
 # vt is the new video console driver
 options     TERMINAL_KERN_ATTR=(FG_LIGHTCYAN|BG_BLACK)
@@ -305,12 +305,12 @@ device      agp                             # support several AGP chipsets
 
 # PCCARD (PCMCIA) support
 # PCMCIA and cardbus bridge support
-device      cbb                             # cardbus (yenta) bridge
-device      pccard                          # PC Card (16-bit) bus
-device      cardbus                         # CardBus (32-bit) bus
+# device      cbb                             # cardbus (yenta) bridge
+# device      pccard                          # PC Card (16-bit) bus
+# device      cardbus                         # CardBus (32-bit) bus
 
 # Serial (COM) ports
-device      uart                            # Generic UART driver
+# device      uart                            # Generic UART driver
 
 # Parallel port
 #device      ppc
@@ -406,13 +406,13 @@ device      xl                              # 3Com 3c90x (``Boomerang'', ``Cyclo
 # Pseudo devices.
 device      loop                            # Network loopback
 device      random                          # Entropy device
-device      padlock_rng                     # VIA Padlock RNG
-device      rdrand_rng                      # Intel Bull Mountain RNG
+# device      padlock_rng                     # VIA Padlock RNG
+# device      rdrand_rng                      # Intel Bull Mountain RNG
 device      ether                           # Ethernet support
-device      vlan                            # 802.1Q VLAN support
+# device      vlan                            # 802.1Q VLAN support
 device      tuntap                          # Packet tunnel + Virtual Ethernet driver
 device      md                              # Memory "disks"
-device      gif                             # IPv6 and IPv4 tunneling
+# device      gif                             # IPv6 and IPv4 tunneling
 device      firmware                        # firmware assist module
 
 # The `bpf' device enables the Berkeley Packet Filter.
