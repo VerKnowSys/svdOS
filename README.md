@@ -13,7 +13,7 @@ ServeD-OS
 
 ## Custom/ manual installation:
 
-0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `11.2+`. If you wish to install svdOS on local vm created with [ZFS](http://www.open-zfs.org/wiki/Main_Page) and [xHyve](https://github.com/mist64/xhyve), you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
+0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `12.1+`. If you wish to install svdOS on local vm created with [ZFS](http://www.open-zfs.org/wiki/Main_Page) and [xHyve](https://github.com/mist64/xhyve), you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
 
 1. Run: `fetch -o - https://raw.githubusercontent.com/VerKnowSys/svdOS/master/svdup | sh` - to install ServeD release/update on vanilla system, or update older system version, to current stable build.
 
@@ -30,12 +30,12 @@ ServeD-OS
 
 0. Login to: [Hetzner Robot](https://robot.your-server.de/), select your server on servers list.
 
-1. Activate rescue system with version `FreeBSD 11.1`. Reboot system from web panel: `CB2->Reset->Execute an automatic hardware reset`. Confirm, wait ~48s (default boot time 30s + ~18s for kernel).
+1. Activate rescue system with version `FreeBSD 12.1`. Reboot system from web panel: `CB2->Reset->Execute an automatic hardware reset`. Confirm, wait ~48s (default boot time 30s + ~18s for kernel).
 
 2. Login to rescue system via SSH using provided root password: `ssh root@YOUR-SRV-IP`.
 
 3. Run `bsdinstallimage` (script provided by Hetzner). Follow steps:
-    - Pick `FreeBSD 11.2`, `64bit`,
+    - Pick `FreeBSD 12.1`, `64bit`,
     - Continue with default `keymap`,
     - Enter desired `myhostname`,
     - Unselect all system components on list,
@@ -63,7 +63,7 @@ ServeD-OS
     - That's all. Now hit `Ctrl-d` (or type `exit`) to quit Shell.
     - Installation is now complete!
 
-4. When `bsdinstallimage` is done, type `reboot`, to reboot to freshly installed `FreeBSD-11.2` (vanilla) system. NOTE: This system is used only once - to bootstrap [svdup installer](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - but it's required (as system configuration resource).
+4. When `bsdinstallimage` is done, type `reboot`, to reboot to freshly installed `FreeBSD-12.1` (vanilla) system. NOTE: This system is used only once - to bootstrap [svdup installer](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - but it's required (as system configuration resource).
 
 
 ### Post installation - Shable tasks:
@@ -197,7 +197,7 @@ which cargo
 ---
 
 ![Pic 6](http://s.verknowsys.com/5a0caff1a8403d29af591181d952d5f4.png)
-> Pic 6. List boot environments. NOTE: `default` is our vanilla FreeBSD-11.2.
+> Pic 6. List boot environments. NOTE: `default` is our vanilla FreeBSD-12.1.
 
 ---
 
