@@ -46,9 +46,9 @@ build_base () {
             ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab && \
             permnote "RAM-disk fstab setup complete."
 
-        permnote "(re)Mounting tmpfs under: /${LAMBDA}/src, /${LAMBDA}/obj and /tmp"
-        ${UMOUNT_BIN} -f "/${LAMBDA}/src" >/dev/null
-        ${UMOUNT_BIN} -f "/${LAMBDA}/obj" >/dev/null
+        permnote "Mounting tmpfs under: /${LAMBDA}/src, /${LAMBDA}/obj and /tmp"
+        ${UMOUNT_BIN} -f "/${LAMBDA}/src" >/dev/null 2>&1
+        ${UMOUNT_BIN} -f "/${LAMBDA}/obj" >/dev/null 2>&1
 
         ${MOUNT_BIN} "/${LAMBDA}/src" && permnote "Mounted: /${LAMBDA}/src"
         ${MOUNT_BIN} "/${LAMBDA}/obj" && permnote "Mounted: /${LAMBDA}/obj"
@@ -235,9 +235,11 @@ build_base () {
             permnote "Cleaned"
     fi
 
-    permnote "Post patching modified files"
+    permnote "Post patching modified fstabs"
     ${SED_BIN} -i '' -e '/src/ d' "${DESTBASE}/etc/fstab"
     ${SED_BIN} -i '' -e '/obj/ d' "${DESTBASE}/etc/fstab"
+    ${SED_BIN} -i '' -e '/src/ d' "/etc/fstab"
+    ${SED_BIN} -i '' -e '/obj/ d' "/etc/fstab"
 
     permnote "Removing sources, debug and other cache files before ZFS send…"
     ${RM_BIN} -rf \
