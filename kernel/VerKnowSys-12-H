@@ -19,14 +19,14 @@ options     TCP_OFFLOAD                     # TCP offload
 options     TCP_SIGNATURE
 options     SCTP                            # Stream Control Transmission Protocol
 
-#options     FFS                             # Berkeley Fast Filesystem
-#options     SOFTUPDATES                    # Enable FFS soft updates support
-#options     UFS_ACL                        # Support for access control lists
-#options     UFS_DIRHASH                    # Improve performance on big directories
-#options     UFS_GJOURNAL                   # Enable gjournal-based UFS journaling
-#options     UFS_EXTATTR                    # Extended attributes
-#options     UFS_EXTATTR_AUTOSTART
-#options     QUOTA                          # Enable disk quotas for UFS
+# options     FFS                             # Berkeley Fast Filesystem
+# options     SOFTUPDATES                    # Enable FFS soft updates support
+# options     UFS_ACL                        # Support for access control lists
+# options     UFS_DIRHASH                    # Improve performance on big directories
+# options     UFS_GJOURNAL                   # Enable gjournal-based UFS journaling
+# options     UFS_EXTATTR                    # Extended attributes
+# options     UFS_EXTATTR_AUTOSTART
+# options     QUOTA                          # Enable disk quotas for UFS
 
 options     MD_ROOT                         # MD is a potential root device
 options     SYSVSHM                         # SYSV-style shared memory
@@ -149,13 +149,13 @@ options     GEOM_ELI                        # Disk encryption.
 options     EFIRT                           # EFI Runtime Services support
 options     SCSI_DELAY=5000                 # Delay (in ms) before probing SCSI
 
-#options    COMPAT_FREEBSD32                # Compatible with i386 binaries
-#options    COMPAT_FREEBSD4                 # Compatible with FreeBSD4
-#options    COMPAT_FREEBSD5                 # Compatible with FreeBSD5
-#options    COMPAT_FREEBSD6                 # Compatible with FreeBSD6
-#options    COMPAT_FREEBSD7                 # Compatible with FreeBSD7
-#options    COMPAT_FREEBSD9                 # Compatible with FreeBSD9
-#options    COMPAT_FREEBSD10                # Compatible with FreeBSD10
+# options    COMPAT_FREEBSD32                # Compatible with i386 binaries
+# options    COMPAT_FREEBSD4                 # Compatible with FreeBSD4
+# options    COMPAT_FREEBSD5                 # Compatible with FreeBSD5
+# options    COMPAT_FREEBSD6                 # Compatible with FreeBSD6
+# options    COMPAT_FREEBSD7                 # Compatible with FreeBSD7
+# options    COMPAT_FREEBSD9                 # Compatible with FreeBSD9
+# options    COMPAT_FREEBSD10                # Compatible with FreeBSD10
 options     COMPAT_FREEBSD11                # Compatible with FreeBSD11
 
 options     KTRACE                          # ktrace(1) support
@@ -192,10 +192,9 @@ options     PAX_JAIL_SUPPORT                # Allow to override PAX settings per
 options     INVARIANTS                      # Enable calls of extra sanity checking
 options     INVARIANT_SUPPORT               # Extra sanity checks of internal structures,
 
-#options    PAX_PTRACE_HARDENING
-#options    PAX_PTRACE_HARDENING_GRP=50000
-
-#options     PAX_INSECURE_MODE             # it's required if disabled INVARIANTS
+# options    PAX_PTRACE_HARDENING
+# options    PAX_PTRACE_HARDENING_GRP=50000
+# options    PAX_INSECURE_MODE              # it's required if disabled INVARIANTS
 
 # Bus support.
 device      acpi
@@ -210,7 +209,7 @@ options     PCI_IOV                         # PCI SR-IOV support
 # device      hyperv                          # HyperV drivers
 
 # Floppy drives
-#device      fdc
+# device      fdc
 
 # ATA controllers
 device      ahci                            # AHCI-compatible SATA controllers
@@ -221,15 +220,15 @@ device      siis                            # SiliconImage SiI3124/SiI3132/SiI35
 
 # SCSI Controllers
 device      ahc                             # AHA2940 and onboard AIC7xxx devices
-#options     AHC_REG_PRETTY_PRINT           # Print register bitfields in debug
+# options     AHC_REG_PRETTY_PRINT           # Print register bitfields in debug
                                             # output.  Adds ~128k to driver.
 device      ahd                             # AHA39320/29320 and onboard AIC79xx devices
-#options     AHD_REG_PRETTY_PRINT           # Print register bitfields in debug
+# options     AHD_REG_PRETTY_PRINT           # Print register bitfields in debug
                                             # output.  Adds ~215k to driver.
 device      esp                             # AMD Am53C974 (Tekram DC-390(T))
 device      hptiop                          # Highpoint RocketRaid 3xxx series
 device      isp                             # Qlogic family
-#device     ispfw                           # Firmware for QLogic HBAs- normally a module
+# device     ispfw                           # Firmware for QLogic HBAs- normally a module
 device      mpt                             # LSI-Logic MPT-Fusion
 device      mps                             # LSI-Logic MPT-Fusion 2
 device      mpr                             # LSI-Logic MPT-Fusion 3
@@ -247,10 +246,10 @@ device      scbus                           # SCSI bus (required for ATA/SCSI)
 device      ch                              # SCSI media changers
 device      da                              # Direct Access (disks)
 device      sa                              # Sequential Access (tape etc)
-device      cd                              # CD
+# device      cd                              # CD
 device      pass                            # Passthrough device (direct ATA/SCSI access)
 device      ses                             # Enclosure Services (SES and SAF-TE)
-device      ctl                             # CAM Target Layer
+# device      ctl                             # CAM Target Layer
 
 # RAID controllers interfaced to the SCSI subsystem
 device      amr                             # AMI MegaRAID
@@ -277,7 +276,7 @@ device      mfi                             # LSI MegaRAID SAS
 device      mlx                             # Mylex DAC960 family
 device      mrsas                           # LSI/Avago MegaRAID SAS/SATA, 6Gb/s and 12Gb/s
 device      pmspcv                          # PMC-Sierra SAS/SATA Controller driver
-#device      pst                            # Promise Supertrak SX6000
+device      pst                             # Promise Supertrak SX6000
 device      twe                             # 3ware ATA RAID
 
 # NVM Express (NVMe) support
@@ -288,12 +287,10 @@ device      nvd                             # expose NVMe namespaces as disks, d
 device      atkbdc                          # AT keyboard controller
 device      atkbd                           # AT keyboard
 # device      psm                             # PS/2 mouse
-
-device      kbdmux                          # keyboard multiplexer
-
-device      vga                             # VGA video card driver
-
+# device      kbdmux                          # keyboard multiplexer
+# device      vga                             # VGA video card driver
 # device      splash                          # Splash screen and screen saver support
+# device      agp                             # support several AGP chipsets
 
 # vt is the new video console driver
 options     TERMINAL_KERN_ATTR=(FG_LIGHTCYAN|BG_BLACK)
@@ -301,7 +298,6 @@ options     TERMINAL_NORM_ATTR=(FG_LIGHTGREY|BG_BLACK)
 device      vt
 device      vt_vga
 device      vt_efifb
-device      agp                             # support several AGP chipsets
 
 # PCCARD (PCMCIA) support
 # PCMCIA and cardbus bridge support
@@ -313,12 +309,12 @@ device      agp                             # support several AGP chipsets
 # device      uart                            # Generic UART driver
 
 # Parallel port
-#device      ppc
-#device      ppbus                          # Parallel port bus (required)
-#device      lpt                            # Printer
-#device      ppi                            # Parallel port interface device
-#device     vpo                             # Requires scbus and da
-#device      puc                            # Multi I/O cards and multi-channel UARTs
+# device      ppc
+# device      ppbus                          # Parallel port bus (required)
+# device      lpt                            # Printer
+# device      ppi                            # Parallel port interface device
+# device     vpo                             # Requires scbus and da
+# device      puc                            # Multi I/O cards and multi-channel UARTs
 
 # PCI/PCI-X/PCIe Ethernet NICs that use iflib infrastructure
 device      iflib
@@ -410,7 +406,7 @@ device      random                          # Entropy device
 # device      rdrand_rng                      # Intel Bull Mountain RNG
 device      ether                           # Ethernet support
 # device      vlan                            # 802.1Q VLAN support
-device      tuntap                          # Packet tunnel + Virtual Ethernet driver
+# device      tuntap                          # Packet tunnel + Virtual Ethernet driver
 device      md                              # Memory "disks"
 # device      gif                             # IPv6 and IPv4 tunneling
 device      firmware                        # firmware assist module
