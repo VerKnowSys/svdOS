@@ -193,7 +193,7 @@ build_base () {
         DOC_LANG="${LANG}" \
         NO_CLEAN=1 \
         NO_KERNELCLEAN=1 \
-        2>> "${LOG_OUTPUT}" || exit 121
+        >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 121
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         ${RM_BIN} -rf /var/tmp/temproot
