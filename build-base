@@ -9,6 +9,20 @@ build_base () {
     permnote "Make '/'' writable for build_base()…"
     _current_root_dataset="$(${BEADM_BIN} list -H 2>/dev/null | ${GREP_BIN} -F 'NR' 2>/dev/null | ${CUT_BIN} -f1 2>/dev/null)"
     zfs set readonly=off "zroot/ROOT/${_current_root_dataset}"
+
+    permnote "Making sure zroot/tmp dataset is destroyed"
+    zfs list | grep -F "zroot/tmp" >/dev/null 2>&1
+    if [ "0" = "${?}" ]; then
+        zfs destroy "zroot/tmp"
+    fi
+
+    permnote "Making sure zroot/home is created"
+    mkdir -p "/usr/home"
+    zfs list | grep -F "zroot/home" >/dev/null 2>&1
+    if [ "0" != "${?}" ]; then
+        zfs create -o mountpoint="/usr/home" "zroot/home"
+    fi
+
     permnote "${SYSTEM_TYPE} version: ${VERSION}"
     permnote "Build repository: ${WORKSTATION_REPO_CACHED}"
 
@@ -122,6 +136,7 @@ build_base () {
             ;;
 
     esac
+
 
     ${BEADM_BIN} create "${_new_boot_env}" && \
         permnote "Created new boot environment: ${_new_boot_env}"
