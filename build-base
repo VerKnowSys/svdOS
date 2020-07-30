@@ -9,6 +9,20 @@ build_base () {
     permnote "Make '/'' writable for build_base()…"
     _current_root_dataset="$(${BEADM_BIN} list -H 2>/dev/null | ${GREP_BIN} -F 'NR' 2>/dev/null | ${CUT_BIN} -f1 2>/dev/null)"
     zfs set readonly=off "zroot/ROOT/${_current_root_dataset}"
+
+    permnote "Making sure zroot/tmp dataset is destroyed"
+    zfs list | grep -F "zroot/tmp" >/dev/null 2>&1
+    if [ "0" = "${?}" ]; then
+        zfs destroy "zroot/tmp"
+    fi
+
+    permnote "Making sure zroot/home is created"
+    mkdir -p "/usr/home"
+    zfs list | grep -F "zroot/home" >/dev/null 2>&1
+    if [ "0" != "${?}" ]; then
+        zfs create -o mountpoint="/usr/home" "zroot/home"
+    fi
+
     permnote "${SYSTEM_TYPE} version: ${VERSION}"
     permnote "Build repository: ${WORKSTATION_REPO_CACHED}"
 
@@ -32,9 +46,9 @@ build_base () {
             ${INSTALL_BIN} -v /etc/fstab.svd /etc/fstab && \
             permnote "RAM-disk fstab setup complete."
 
-        permnote "(re)Mounting tmpfs under: /${LAMBDA}/src, /${LAMBDA}/obj and /tmp"
-        ${UMOUNT_BIN} -f "/${LAMBDA}/src" >/dev/null
-        ${UMOUNT_BIN} -f "/${LAMBDA}/obj" >/dev/null
+        permnote "Mounting tmpfs under: /${LAMBDA}/src, /${LAMBDA}/obj and /tmp"
+        ${UMOUNT_BIN} -f "/${LAMBDA}/src" >/dev/null 2>&1
+        ${UMOUNT_BIN} -f "/${LAMBDA}/obj" >/dev/null 2>&1
 
         ${MOUNT_BIN} "/${LAMBDA}/src" && permnote "Mounted: /${LAMBDA}/src"
         ${MOUNT_BIN} "/${LAMBDA}/obj" && permnote "Mounted: /${LAMBDA}/obj"
@@ -123,6 +137,7 @@ build_base () {
 
     esac
 
+
     ${BEADM_BIN} create "${_new_boot_env}" && \
         permnote "Created new boot environment: ${_new_boot_env}"
 
@@ -178,7 +193,7 @@ build_base () {
         DOC_LANG="${LANG}" \
         NO_CLEAN=1 \
         NO_KERNELCLEAN=1 \
-        2>> "${LOG_OUTPUT}" || exit 121
+        >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 121
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         ${RM_BIN} -rf /var/tmp/temproot
@@ -220,9 +235,11 @@ build_base () {
             permnote "Cleaned"
     fi
 
-    permnote "Post patching modified files"
+    permnote "Post patching modified fstabs"
     ${SED_BIN} -i '' -e '/src/ d' "${DESTBASE}/etc/fstab"
     ${SED_BIN} -i '' -e '/obj/ d' "${DESTBASE}/etc/fstab"
+    ${SED_BIN} -i '' -e '/src/ d' "/etc/fstab"
+    ${SED_BIN} -i '' -e '/obj/ d' "/etc/fstab"
 
     permnote "Removing sources, debug and other cache files before ZFS send…"
     ${RM_BIN} -rf \
