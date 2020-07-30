@@ -396,6 +396,7 @@ postinstall_cleanup () {
     zfs set sync=standard "${ZPOOL}/ROOT"
     zfs set readonly=off "${ZPOOL}/ROOT"
     zfs set readonly=off "${ZPOOL}/ROOT/${NEW_BOOT_ENV}"
+    zfs set readonly=off "${ZPOOL}/var"
 
     rm -rf "/.profile" "/.cshrc" "/proc"
 
