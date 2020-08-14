@@ -90,8 +90,10 @@ build_base () {
     export CCACHE_PATH="/Services/Sofin/exports/ccache"
 
     for _patch in ${SERVED_REPO}/patches/*.patch; do
-        permnote "Applying custom patch: ${_patch}"
-        patch -p0 < "${_patch}"
+        if [ -f "${_patch}" ]; then
+            permnote "Applying custom patch: ${_patch}"
+            patch -p0 < "${_patch}"
+        fi
     done
 
     # EXAMPLE:
