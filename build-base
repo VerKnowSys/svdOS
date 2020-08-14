@@ -265,10 +265,11 @@ build_base () {
         "${DESTBASE}/proc" \
         "${DESTBASE}/media" \
         "${DESTBASE}/sys" \
-        "${DESTBASE}/${LAMBDA}" \
+        "${DESTBASE}/boot/kernel.old" \
+        "${DESTBASE}/${LAMBDA}/src" \
+        "${DESTBASE}/${LAMBDA}/obj" \
         "${DESTBASE}${CACHE_DIR}" \
-        "${DESTBASE}/usr/lib/debug" \
-        "${DESTBASE}/usr/obj"
+        "${DESTBASE}/usr/lib/debug"
 
     cd /
     sync
