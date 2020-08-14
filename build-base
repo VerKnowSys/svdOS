@@ -47,9 +47,11 @@ build_base () {
             permnote "RAM-disk fstab setup complete."
 
         permnote "Mounting tmpfs under: /${LAMBDA}/src, /${LAMBDA}/obj and /tmp"
+        ${UMOUNT_BIN} -f "/tmp" >/dev/null 2>&1
         ${UMOUNT_BIN} -f "/${LAMBDA}/src" >/dev/null 2>&1
         ${UMOUNT_BIN} -f "/${LAMBDA}/obj" >/dev/null 2>&1
 
+        ${MOUNT_BIN} "/tmp" && permnote "Mounted: /tmp"
         ${MOUNT_BIN} "/${LAMBDA}/src" && permnote "Mounted: /${LAMBDA}/src"
         ${MOUNT_BIN} "/${LAMBDA}/obj" && permnote "Mounted: /${LAMBDA}/obj"
     else
@@ -60,8 +62,8 @@ build_base () {
         echo
     fi
 
-    export SOURCEDIR="/${LAMBDA}/src/${SYSTEM_VERSION_MAJOR}"
-    permnote "Syncing os-branch: ${CURRENT_BRANCH} to: ${SOURCEDIR}"
+    _tmpdir="/tmp/src"
+    permnote "Cloning os-branch: ${CURRENT_BRANCH} to: ${_tmpdir}"
     ${GIT_BIN} clone \
         --progress \
         --depth 1 \
@@ -69,16 +71,21 @@ build_base () {
         --branch "${CURRENT_BRANCH}" \
         --jobs "${PARALLEL_JOBS}" \
         "file://${WORKSTATION_REPO_CACHED}" \
-        "${SOURCEDIR}"
+        "${_tmpdir}"
 
-    cd "${SOURCEDIR}" || exit 106
+    test -d "${_tmpdir}" || exit 106
     test -n "${VERSION}" || exit 107
     test -n "${ARCH}" || exit 108
     test -n "${SYSTEM_TYPE}" || exit 109
 
-    echo "Preconfiguring git"
-    git config --global user.email "svd@verknowsys.com"
-    git config --global user.name "ServeD"
+    permnote "Synchronizing src ram-disk"
+    ${CP_BIN} -R "/tmp/src/" "/${LAMBDA}/src" \
+        && (${UMOUNT_BIN} -f "/tmp" && ${MOUNT_BIN} "/tmp")
+    cd "/${LAMBDA}/src"
+
+    permnote "Preconfiguring git"
+    git config --global user.email "dmilith@gmail.com"
+    git config --global user.name "VerKnowSys"
 
     export CCACHE_PATH="/Services/Sofin/exports/ccache"
 
@@ -106,6 +113,7 @@ build_base () {
     _default_boot_dev="$(boot_device_name)"
     test -n "${_default_boot_dev}" || exit 112
 
+    permnote "Preparing kernel configuration"
     case "${ARCH}" in
         arm64)
             test -f "${SERVED_REPO}/kernel/${SYSTEM_KERNEL}-${SYSTEM_VERSION_MAJOR}-RPI3" || exit 110
