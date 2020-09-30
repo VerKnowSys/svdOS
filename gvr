@@ -768,7 +768,7 @@ cell_start () {
             run "${ZFS_BIN} set canmount=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
             run "${ZFS_BIN} set jailed=on ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
                 debug "Celled dataset: $(distd "${dset}")"
-            run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} allow -u ${DEFAULT_JAIL_USER} xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation,readonly ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
+            run "${JEXEC_BIN} ${JAIL_NAME} ${ZFS_BIN} allow -u ${DEFAULT_JAIL_USER} xattr,atime,casesensitivity,checksum,copies,logbias,primarycache,secondarycache,snapdir,userused,dedup,mountpoint,canmount,userprop,create,destroy,snapshot,rollback,clone,promote,rename,mount,send,receive,reservation,readonly,mount ${DEFAULT_ZPOOL}/${dset}/${JAIL_NAME}" && \
                 debug "Allowed user: $(distd "${DEFAULT_JAIL_USER}") full control over ZFS datasets of cell: $(distd "${JAIL_NAME}")."
         done
 
