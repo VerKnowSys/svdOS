@@ -193,6 +193,7 @@ options     PAX_JAIL_SUPPORT                # Allow to override PAX settings per
 # NOTE: disabled due to https://github.com/freebsd/freebsd/blob/37fd65a0e194bf556bf96f05bdf495e586f43a45/sys/vm/uma_dbg.c#L60-L91
 # options     INVARIANTS                      # Enable calls of extra sanity checking
 # options     INVARIANT_SUPPORT               # Extra sanity checks of internal structures,
+options     PAX_INSECURE_MODE
 
 # options    PAX_PTRACE_HARDENING
 # options    PAX_PTRACE_HARDENING_GRP=50000
