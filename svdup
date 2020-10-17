@@ -36,7 +36,7 @@ DATE_NOW="$(date +%F-%H%M 2>/dev/null)"
 LOG_FILE="/var/log/svdUP-${DATE_NOW:-common}.log"
 
 # use version 11.2 as base when installing on vanilla systems (will work with both 11.x and 12.x)
-PROD_INITIAL_OS="12.1"
+PROD_INITIAL_OS="12.2"
 PROD_OS_BASE="${SYSTEM_NAME}-${PROD_INITIAL_OS}-${PROD_OS_ARCH}"
 
 
