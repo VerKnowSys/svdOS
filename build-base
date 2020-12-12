@@ -83,6 +83,10 @@ build_base () {
         && (${UMOUNT_BIN} -f "/tmp" && ${MOUNT_BIN} "/tmp")
     cd "/${LAMBDA}/src"
 
+    permnote "Fetching tools/tools/locale/etc/final-maps/widths.txt from CURRENT"
+    fetch "http://software.verknowsys.com/source/widths.txt"
+    ${MV_BIN} -v widths.txt tools/tools/locale/etc/final-maps/widths.txt
+
     permnote "Preconfiguring git"
     git config --global user.email "dmilith@gmail.com"
     git config --global user.name "VerKnowSys"
