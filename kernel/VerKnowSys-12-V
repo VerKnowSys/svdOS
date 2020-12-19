@@ -59,6 +59,9 @@ options     COMPAT_CLOUDABI64
 options     KDB                             # Enable kernel debugger support.
 options     KDB_TRACE                       # Print a stack trace for a panic.
 
+# enable kernel dumps over network
+options     NETDUMP
+
 # For full debugger support use (turn off in stable branch):
 # options     DDB                             # Support DDB.
 options     DDB_CTF                         # Kernel ELF linker loads CTF data

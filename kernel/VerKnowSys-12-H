@@ -54,6 +54,8 @@ options     PSEUDOFS                        # Pseudo-filesystem framework
 # Enable 64-bit runtime support for CloudABI binaries.
 options     COMPAT_CLOUDABI64
 
+# enable kernel dumps over network
+options     NETDUMP
 
 # Debugging support.  Always need this:
 options     KDB                             # Enable kernel debugger support.
