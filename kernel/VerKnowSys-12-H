@@ -56,6 +56,7 @@ options     COMPAT_CLOUDABI64
 
 # enable kernel dumps over network
 options     NETDUMP
+options     ZSTDIO
 
 # Debugging support.  Always need this:
 options     KDB                             # Enable kernel debugger support.
