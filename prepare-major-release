@@ -122,7 +122,7 @@ for _dataset_origin in Software Services; do
         echo "Send origin to file: ${_software_origin_file}"
         ${SSH_BIN} "${ADMIN_USER}@${HOSTADDR_NAME}" \
             "${ZFS_BIN} send \
-            -D -L -e -p -v \
+            -L -e -p -v \
             ${ZPOOL}/${_dataset_origin}/root@${ORIGIN} \
             | ${LZ4_BIN} ${DEFAULT_LZ4_OPTS} > ${CACHE_DIR}/${_software_origin_file}"
 
