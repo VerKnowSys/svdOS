@@ -241,11 +241,14 @@ build_base () {
             >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" && \
             permnote "Installed"
 
-        cd share/ctypedef
-        ${MAKE_BIN} clean
-        ${MAKE_BIN} DESTDIR="${DESTBASE}" >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}"
-        ${MAKE_BIN} install DESTDIR="${DESTBASE}" >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}"
-        cd ../..
+        case "${SYSTEM_VERSION_MAJOR}" in
+            12*)
+                cd share/ctypedef
+                ${MAKE_BIN} clean
+                ${MAKE_BIN} DESTDIR="${DESTBASE}" >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}"
+                ${MAKE_BIN} install DESTDIR="${DESTBASE}" >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}"
+                cd ../..
+        esac
 
         permnote "Merging configuration in: ${DESTBASE}"
         ${MERGEMASTER_BIN} -P -a \
