@@ -175,9 +175,6 @@ build_base () {
     #     < "${SERVED_REPO}/src/patches/export_ucl.patch" \
     #     2>> "${LOG_OUTPUT}"
 
-    permnote "Installing system includes"
-    ${MAKE_BIN} installincludes >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 118
-
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         permnote "Building world v${VERSION}"
         ${MAKE_BIN} \
@@ -189,8 +186,6 @@ build_base () {
             MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
-            NO_CLEAN=1 \
-            NO_KERNELCLEAN=1 \
             >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 119
     fi
 
@@ -204,8 +199,6 @@ build_base () {
         MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
         FORMATS="${DOC_FORMATS}" \
         DOC_LANG="${LANG}" \
-        NO_CLEAN=1 \
-        NO_KERNELCLEAN=1 \
         2>> "${LOG_OUTPUT}" || exit 120
 
     permnote "Installing kernel ${SYSTEM_KERNEL}"
@@ -217,8 +210,6 @@ build_base () {
         MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
         FORMATS="${DOC_FORMATS}" \
         DOC_LANG="${LANG}" \
-        NO_CLEAN=1 \
-        NO_KERNELCLEAN=1 \
         >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 121
 
     if [ -z "${DONT_BUILD_WORLD}" ]; then
@@ -236,8 +227,6 @@ build_base () {
             MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
-            NO_CLEAN=1 \
-            NO_KERNELCLEAN=1 \
             >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" && \
             permnote "Installed"
 
@@ -264,8 +253,6 @@ build_base () {
             MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
-            NO_CLEAN=1 \
-            NO_KERNELCLEAN=1 \
             >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" && \
             permnote "Cleaned"
     fi
