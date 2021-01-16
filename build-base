@@ -171,6 +171,9 @@ build_base () {
     #     < "${SERVED_REPO}/src/patches/export_ucl.patch" \
     #     2>> "${LOG_OUTPUT}"
 
+    permnote "Installing system includes"
+    ${MAKE_BIN} installincludes >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 118
+
     if [ -z "${DONT_BUILD_WORLD}" ]; then
         permnote "Building world v${VERSION}"
         ${MAKE_BIN} \
