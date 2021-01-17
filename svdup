@@ -4,7 +4,7 @@
 # Default base software versions:
 PICKED_BUILD_VERSION="${1:-current-stable}"
 GIT_VERSION="2.26.2"
-ZSH_VERSION="5.6.2"
+ZSH_VERSION="5.8"
 
 
 # Literals:
