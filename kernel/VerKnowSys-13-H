@@ -363,8 +363,9 @@ device      xl                              # 3Com 3c90x (``Boomerang'', ``Cyclo
 
 # Mellanox ConnectX-4 and ConnectX-4 LX based 100Gb, 50Gb, 40Gb, 25Gb and 10Gb Ethernet adapter driver:
 options     COMPAT_LINUXKPI
-device      mlx5
-device      mlx5en
+device      mlx5                            # Base driver
+device      mlxfw                           # Firmware update
+device      mlx5en                          # Ethernet driver
 
 
 # Wireless NIC cards
