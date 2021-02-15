@@ -18,6 +18,7 @@ options     TCP_RFC7413                     # TCP Fast Open
 options     TCP_OFFLOAD                     # TCP offload
 options     TCP_SIGNATURE
 options     SCTP                            # Stream Control Transmission Protocol
+options     KERN_TLS                        # TLS transmit & receive offload
 
 # options     FFS                             # Berkeley Fast Filesystem
 # options     SOFTUPDATES                    # Enable FFS soft updates support
@@ -54,9 +55,13 @@ options     PSEUDOFS                        # Pseudo-filesystem framework
 # Enable 64-bit runtime support for CloudABI binaries.
 options     COMPAT_CLOUDABI64
 
-# enable kernel dumps over network
-options     NETDUMP
-options     ZSTDIO
+# Kernel dump features.
+options     EKCD                    # Support for encrypted kernel dumps
+options     GZIO                    # gzip-compressed kernel and user dumps
+options     ZSTDIO                  # zstd-compressed kernel and user dumps
+options     DEBUGNET                # debugnet networking
+options     NETDUMP                 # netdump(4) client support
+options     NETGDB                  # netgdb(4) client support
 
 # Debugging support.  Always need this:
 options     KDB                             # Enable kernel debugger support.
@@ -204,9 +209,11 @@ options     PAX_INSECURE_MODE
 
 # Bus support.
 device      acpi
+options     IOMMU
 device      pci
 options     PCI_HP                          # PCI-Express native HotPlug
 options     PCI_IOV                         # PCI SR-IOV support
+options     COMPAT_LINUXKPI
 
 # CPU frequency control
 # device      cpufreq
@@ -282,6 +289,10 @@ device      twe                             # 3ware ATA RAID
 device      nvme                            # base NVMe driver
 device      nvd                             # expose NVMe namespaces as disks, depends on nvme
 
+# Intel Volume Management Device (VMD) support
+device      vmd                             # base VMD device
+device      vmd_bus                         # bus for VMD children
+
 # atkbdc0 controls both the keyboard and the PS/2 mouse
 device      atkbdc                          # AT keyboard controller
 device      atkbd                           # AT keyboard
@@ -297,6 +308,7 @@ options     TERMINAL_NORM_ATTR=(FG_LIGHTGREY|BG_BLACK)
 device      vt
 device      vt_vga
 device      vt_efifb
+device      vt_vbefb
 
 # PCCARD (PCMCIA) support
 # PCMCIA and cardbus bridge support
@@ -362,7 +374,6 @@ device      vr                              # VIA Rhine, Rhine II
 device      xl                              # 3Com 3c90x (``Boomerang'', ``Cyclone'')
 
 # Mellanox ConnectX-4 and ConnectX-4 LX based 100Gb, 50Gb, 40Gb, 25Gb and 10Gb Ethernet adapter driver:
-options     COMPAT_LINUXKPI
 device      mlx5                            # Base driver
 device      mlxfw                           # Firmware update
 device      mlx5en                          # Ethernet driver
@@ -406,6 +417,9 @@ device      ether                           # Ethernet support
 device      md                              # Memory "disks"
 # device      gif                             # IPv6 and IPv4 tunneling
 device      firmware                        # firmware assist module
+device      xz                              # lzma decompression
+device      crypto                          # core crypto support
+device      cryptodev                       # /dev/crypto for access to h/w
 
 # The `bpf' device enables the Berkeley Packet Filter.
 # Be aware of the administrative consequences of enabling this!
@@ -449,10 +463,6 @@ device      virtio_console                  # VirtIO Console device
 
 # Netmap provides direct access to TX/RX rings on supported NICs
 device      netmap                          # netmap(4) support
-
-# Additonal devices
-device      crypto                          # core crypto support
-device      cryptodev                       # /dev/crypto for access to h/w
 
 # zpty
 device      pty
