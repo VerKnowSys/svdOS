@@ -13,7 +13,7 @@ ServeD-OS
 
 ## Custom/ manual installation:
 
-0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `12.1+`. If you wish to install svdOS on local vm created with [ZFS](http://www.open-zfs.org/wiki/Main_Page) and [xHyve](https://github.com/mist64/xhyve), you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
+0. Install 64bit [HardenedBSD](https://hardenedbsd.org/) or [FreeBSD](https://www.freebsd.org/) with version: `12.2+`. If you wish to install svdOS on local vm created with [ZFS](http://www.open-zfs.org/wiki/Main_Page) and [xHyve](https://github.com/mist64/xhyve), you may like to [follow steps from README here](https://github.com/VerKnowSys/xhyve).
 
 1. Run: `fetch -o - https://raw.githubusercontent.com/VerKnowSys/svdOS/master/svdup | sh` - to install ServeD release/update on vanilla system, or update older system version, to current stable build.
 
@@ -26,16 +26,16 @@ ServeD-OS
 
 ### System preparation:
 
-> NOTE: I use: [EX-LINE](https://www.hetzner.com/dedicated-rootserver/matrix-ex) server type, (Ryzen doesn't work with FreeBSD 11-STABLE).
+> NOTE: I use: [EX-LINE](https://www.hetzner.com/dedicated-rootserver/matrix-ex) server type
 
 0. Login to: [Hetzner Robot](https://robot.your-server.de/), select your server on servers list.
 
-1. Activate rescue system with version `FreeBSD 12.1`. Reboot system from web panel: `CB2->Reset->Execute an automatic hardware reset`. Confirm, wait ~48s (default boot time 30s + ~18s for kernel).
+1. Activate rescue system with version `FreeBSD 12.2`. Reboot system from web panel: `CB2->Reset->Execute an automatic hardware reset`. Confirm, wait ~48s (default boot time 30s + ~18s for kernel).
 
 2. Login to rescue system via SSH using provided root password: `ssh root@YOUR-SRV-IP`.
 
 3. Run `bsdinstallimage` (script provided by Hetzner). Follow steps:
-    - Pick `FreeBSD 12.1`, `64bit`,
+    - Pick `FreeBSD 12.2`, `64bit`,
     - Continue with default `keymap`,
     - Enter desired `myhostname`,
     - Unselect all system components on list,
@@ -47,7 +47,7 @@ ServeD-OS
     - Select default network card (`em0`), don't use `DHCP`, but `manual` for `IPv4` - use predefined values,
     - Select "NO" when asked about `UTC`, pick "Europe", "Poland", confirm it's "CEST",
     - Skip date/time settings,
-    - Enable only: `sshd`, `ntpd`, and `dumpdev` system services,
+    - Enable only: `sshd`, `ntpd`, `ntpdate`, and `dumpdev` system services,
     - Select all system-hardening options on list, but "Disable process debugging facilities for unprivileged users",
     - Don't add any system users,
     - Hit `Exit` from menu, confirm that you wish to open terminal - we need to do few additional modifications of base system configuration,
@@ -63,31 +63,26 @@ ServeD-OS
     - That's all. Now hit `Ctrl-d` (or type `exit`) to quit Shell.
     - Installation is now complete!
 
-4. When `bsdinstallimage` is done, type `reboot`, to reboot to freshly installed `FreeBSD-12.1` (vanilla) system. NOTE: This system is used only once - to bootstrap [svdup installer](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - but it's required (as system configuration resource).
+4. When `bsdinstallimage` is done, type `reboot`, to reboot to freshly installed `FreeBSD-12.2` (vanilla) system. NOTE: This system is used only once - to bootstrap [svdup installer](https://github.com/VerKnowSys/svdOS/blob/master/svdup) - but it's required (as system configuration resource).
 
 
 ### Post installation - Shable tasks:
 
 5. On your local workstation - clone [Shable](https://github.com/VerKnowSys/Shable): `git clone https://github.com/VerKnowSys/Shable`.
 
-6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 remote_vpn_server=22.33.44.55 vpn_network=172.16.123 default_jails_domain='mydomain.com'" >> inventory`. NOTE: Currently only `172.16.0.0/16` subnet is supported for VPN networks (65535 hosts max).
+6. Do: `cd Shable && echo "myhostname ip=11.22.33.44 vpn_network=172.16.123 default_jails_domain='mydomain.com'" >> inventory`.
 
     * `ip` -> External IP address of the dedicated machine (mandatory),
-
-    * `remote_vpn_server` -> External IP address of OpenVPN service (mandatory),
 
     * `default_jails_domain` -> Domain used as default one for jails (mandatory),
 
     * `vpn_network` -> Override default VPN network (default is: `172.16.3`) (optional),
 
+7. Do `./setup-dedicated-system myhostname` to complete system installation. NOTE: Default SSH config file (`~/.ssh/config` ) will be updated with `myhostname` entry after installation.
 
-7. Generate new passwordless OpenVPN key and certificate for your new dedicated server. Put `ca.crt` (generated for "your OpenVPN server") + `your-inventory-host-name.crt` + `your-inventory-host-name.key` files under `templates/vpn/` directory.
+8. After about a minute, type: `ssh myhostname` to login as superuser to remote system.
 
-8. Do `./setup-dedicated-system myhostname` to complete system installation. NOTE: Default SSH config file (`~/.ssh/config` ) will be updated with `myhostname` entry after installation.
-
-9. After about a minute, type: `ssh myhostname` to login as superuser to remote system.
-
-10. Use `gvr` (Governor) to maintain your jails. Use `s` (Sofin) to install server software.
+9. Use `gvr` (Governor) to maintain your jails. Use `s` (Sofin) to install server software.
 
 
 
@@ -119,7 +114,7 @@ ServeD-OS
 
 * ZFS driven software and configuration management (very fast, block level software installation - thx to Sofin).
 
-* [DTrace](https://github.com/opendtrace) hooks built in (when supported by software) - provided by Sofin. Note, that there's an issue related to this feature at the moment: https://github.com/HardenedBSD/hardenedBSD/issues/305.
+* [DTrace](https://github.com/opendtrace) hooks built in (when supported by software) - provided by Sofin.
 
 * [Unbound](https://www.nlnetlabs.nl/projects/unbound/about/) DNS server is installed by default - configured as caching nameserver - used by all jails.
 
@@ -197,7 +192,7 @@ which cargo
 ---
 
 ![Pic 6](http://s.verknowsys.com/5a0caff1a8403d29af591181d952d5f4.png)
-> Pic 6. List boot environments. NOTE: `default` is our vanilla FreeBSD-12.1.
+> Pic 6. List boot environments. NOTE: `default` is our vanilla FreeBSD-12.2.
 
 ---
 
