@@ -11,7 +11,9 @@
 # TODO: solve cell /proc problem for JVM-driven software
 # proc /Shared/Prison/Cells/logstash1/proc procfs rw 0 0
 
-GVR_VERSION="0.38.2"
+DEBUG=1
+
+GVR_VERSION="0.38.3"
 GVR_LOG="/var/log/gvr.log"
 GVR_LOCK="/var/run/gvr.lock"
 
@@ -188,6 +190,8 @@ fi
 # Temporarely make "/" +W:
 set_system_dataset_writable
 
+debug "Making sure all root filesystems are mounted"
+mount -a
 
 invoke_sofin_install () {
     _pwd="${PWD}"
@@ -784,7 +788,7 @@ cell_start () {
         run "${JEXEC_BIN} ${JAIL_NAME} ${CHOWN_BIN} ${DEFAULT_JAIL_USER} /User/.zshrc /Services /User /Software /Software/Git /Software/Zsh /Software/Sofin /Shared /var/log /var/www"
 
         permnote "Reloading $(distn "DNS") and $(distn "Web-proxy") configuration."
-        try "igni dns reload; igni proxy reload"
+        try "igni dns reload"
 
         mark_running
     else
@@ -972,7 +976,7 @@ cell_destroy () {
         fi
 
         permnote "Cell destroyed: $(distn "${JAIL_NAME}")" && \
-            try "igni dns reload; igni proxy reload"
+            try "igni dns reload"
     else
         warn "Cell: $(distw "${GIVEN_NAME##*/}") is left intact."
     fi
