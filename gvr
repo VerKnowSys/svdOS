@@ -54,7 +54,7 @@ DEFAULT_VERSION="${PROD_OS_VERSION:-12.2}"
 
 DEFAULT_ARCH="amd64"
 KERN_SECURELEVEL="0"
-# DEFAULT_SHELL="/Software/Zsh/exports/zsh"
+DEFAULT_SHELL="/Software/Zsh/exports/zsh"
 LOG="${LOGS_DIR}gvr.log"
 DEFAULT_JAIL_USER="worker"
 DEFAULT_QUOTA_LIMIT="10G"
@@ -909,8 +909,16 @@ cell_login () {
     check_cell_name "${CELL}"
     ${JLS_BIN} -v 2>/dev/null | ${EGREP_BIN} " ${JAIL_NAME} .*ACTIVE" >/dev/null 2>&1
     if [ "$?" = "0" ]; then
+        shift
+        shift
+        JAIL_COMMANDS="${*}"
+        if [ -z "${JAIL_COMMANDS}" ]; then
+            JAIL_COMMANDS="${DEFAULT_SHELL}"
+        fi
+        debug "JAIL_COMMANDS: ${JAIL_COMMANDS}"
+
         permnote "Logging in as: $(distn "${JAIL_LOGIN}") to cell: $(distn "${JAIL_NAME}")"
-        ${DEBUG_EXEC_COMMAND} "${JEXEC_BIN}" "${JAIL_NAME}" "su" "${JAIL_LOGIN}" \
+        ${DEBUG_EXEC_COMMAND} "${JEXEC_BIN}" "${JAIL_NAME}" "su" "${JAIL_LOGIN}" "-c" "${JAIL_COMMANDS}" \
             && permnote "Logged out from cell: $(distn "${JAIL_NAME}")"
     else
         error "Start the cell first!"
