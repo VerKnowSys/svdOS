@@ -484,6 +484,9 @@ cell_create () {
         #     done
         # fi
 
+        note "Handle zombie epair devices"
+        try "${IFCONFIG_BIN} ${EPAIR}a destroy"
+
         printf "
 ${JAIL_NAME} {
     # name = \"${JAIL_NAME}\";
