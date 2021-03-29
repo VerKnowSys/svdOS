@@ -611,6 +611,7 @@ ${JAIL_NAME} {
         debug "Created sysctl.conf from svdOS repository"
     fi
 
+    run "${CP_BIN} -f /Shared/Igniters/common.igni ${CELL}/var/common.igni" && debug "Common igniter updated"
     run "${CP_BIN} -f /usr/bin/igni ${CELL}/usr/bin/igni" && \
     run "${CP_BIN} -f /usr/bin/rsync ${CELL}/usr/bin/rsync" && \
     run "${RM_BIN} -f ${CELL}/etc/zshenv ${CELL}/etc/zshrc" && \
