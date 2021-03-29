@@ -824,7 +824,7 @@ cell_stop () {
     # NOTE: make sure that /Software/Zsh and /Software/Git are not mountable (main system override possibility)
     for _dset in Services Software; do
         try "${ZFS_BIN} unjail ${GIVEN_NAME} ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
-        run "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
+        try "${ZFS_BIN} set canmount=off ${DEFAULT_ZPOOL}/${_dset}/${JAIL_NAME}" && \
             debug "Unjailed and unmounted dataset: $(distd "${_dset}")"
     done
 
@@ -836,12 +836,12 @@ cell_stop () {
             && debug "Unmounted ${_to_be_unmounted}"
     done
 
-    run "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
+    try "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
         permnote "Terminated cell: $(distn "${JAIL_NAME}")"
 
     printf "%s\n" "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
-    run "${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}" && \
+    try "${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}" && \
         debug "Removed cell running indicator: $(distd "${SENTRY}/${JAIL_RUNNING_INDICATOR}")"
 }
 
