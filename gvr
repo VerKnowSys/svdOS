@@ -668,6 +668,7 @@ ${JAIL_NAME} {
         permnote "NetID: $(distn "${EPAIR_NUMBER}") ($(distn "${_used_id_file}")) is now marked as used by cell: $(distn "${JAIL_NAME}")."
 
     debug "Starting cell: $(distd "${JAIL_NAME}")"
+    sleep 3
     cell_start "${JAIL_NAME}" && \
         permnote "Cell: $(distn "${JAIL_NAME}") bound to domain: $(distn "${JAIL_NAME}.${SHARED_DOMAIN_NAME}"), with local address: $(distn "${MAIN_JAIL_ADDRESS}")." && \
         return 0
