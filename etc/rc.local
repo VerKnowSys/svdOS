@@ -8,18 +8,19 @@ for pax in $(find /Software -type f -name '.pax' -maxdepth 2 -mindepth 1 2>/dev/
     fi
 done
 
-if [ -x "/usr/bin/gvr" ] && [ -d "/Shared/Prison" ]; then
-    echo "Bring back all previously started jails…"
-    sh -c "gvr boot"
-fi
+# if [ -x "/usr/bin/gvr" ] && [ -d "/Shared/Prison" ]; then
+#     rm -rf "/var/run/gvr.lock"
+#     echo "Bring back all previously started jails"
+#     sh -c "gvr boot"
+# fi
 
-if [ -x "/usr/bin/sysapi" ]; then
-    echo "Start sysapi daemon…"
-    # XXX: NOTE: right now it's using LISTEN_ADDRESS="172.16.3.1:80" by default:
-    nohup daemon \
-        -o "/var/log/gvr-sysapi.log" \
-        -R1 -P "/var/run/sysapi.pid" \
-        "/usr/bin/sysapi" >/dev/null 2>&1
-fi
+# if [ -x "/usr/bin/sysapi" ]; then
+#     echo "Start sysapi daemon…"
+#     # XXX: NOTE: right now it's using LISTEN_ADDRESS="172.16.3.1:80" by default:
+#     nohup daemon \
+#         -o "/var/log/gvr-sysapi.log" \
+#         -R1 -P "/var/run/sysapi.pid" \
+#         "/usr/bin/sysapi" >/dev/null 2>&1
+# fi
 
 return 0
