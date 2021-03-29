@@ -13,7 +13,7 @@
 
 DEBUG=1
 
-GVR_VERSION="0.38.3"
+GVR_VERSION="0.40.0"
 GVR_LOG="/var/log/gvr.log"
 GVR_LOCK="/var/run/gvr.lock"
 
