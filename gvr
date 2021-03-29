@@ -958,6 +958,10 @@ cell_destroy () {
         if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
             cell_stop ${*}
         fi
+        for _dir in /dev /tmp; do
+            try "${UMOUNT_BIN} -f ${CELL}${_dir}" && \
+                debug "Unmounted: $(distd "${CELL}${_dir}")"
+        done
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}")!"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}")!"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}")!"
