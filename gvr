@@ -834,16 +834,7 @@ cell_stop () {
             debug "Unjailed and unmounted dataset: $(distd "${_dset}")"
     done
 
-    for _to_be_unmounted in $(${MOUNT_BIN} 2>/dev/null \
-                                | ${GREP_BIN} -F "${GIVEN_NAME}" 2>/dev/null \
-                                | ${AWK_BIN} '{print $1;}' \
-                                | ${GREP_BIN} -v 'Sentry' 2>/dev/null)
-    do
-        try "${ZFS_BIN} umount -f '${_to_be_unmounted}'" \
-            && debug "Unmounted ${_to_be_unmounted}"
-    done
-
-    printf "%s\n" "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
+    printf "%s\n" "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}" 2>/dev/null
 
     try "${RM_BIN} -f ${SENTRY}/${JAIL_RUNNING_INDICATOR}" && \
         debug "Removed cell running indicator: $(distd "${SENTRY}/${JAIL_RUNNING_INDICATOR}")"
@@ -960,6 +951,12 @@ cell_destroy () {
     # check_cell_name "${CELL}"
     if [ "${_ans}" = "YES" ]; then
         cell_stop "${GIVEN_NAME}"
+
+        for _to_be_unmounted in $(${MOUNT_BIN} 2>/dev/null | ${AWK_BIN} "/${JAIL_NAME} / {print \$1;}")
+        do
+            try "${ZFS_BIN} umount -f '${_to_be_unmounted}'" \
+                && debug "Unmounted ${_to_be_unmounted}"
+        done
 
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}")!"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}")!"
