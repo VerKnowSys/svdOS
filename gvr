@@ -836,7 +836,8 @@ cell_stop () {
 
     for _to_be_unmounted in $(${MOUNT_BIN} 2>/dev/null \
                                 | ${GREP_BIN} -F "${GIVEN_NAME}" 2>/dev/null \
-                                | ${AWK_BIN} '{print $1;}' 2>/dev/null)
+                                | ${AWK_BIN} '{print $1;}' \
+                                | ${GREP_BIN} -v 'Sentry' 2>/dev/null)
     do
         try "${ZFS_BIN} umount -f '${_to_be_unmounted}'" \
             && debug "Unmounted ${_to_be_unmounted}"
