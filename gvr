@@ -118,7 +118,6 @@ trap_signals () {
 acquire_lock_for
 trap_signals
 
-
 #
 # Sanity checks start here:
 
@@ -819,6 +818,11 @@ cell_stop () {
     # if [ -z "${JAIL_NUM_ID}" ]; then
     #     error "NO cell ID?!"
     # fi
+
+    try "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
+        permnote "Terminated cell: $(distn "${JAIL_NAME}")"
+    sleep 3
+
     for _dir in /dev /tmp; do
         try "${UMOUNT_BIN} -f ${CELL}${_dir}" && \
             debug "Unmounted: $(distd "${CELL}${_dir}")"
@@ -837,9 +841,6 @@ cell_stop () {
         try "${ZFS_BIN} umount -f '${_to_be_unmounted}'" \
             && debug "Unmounted ${_to_be_unmounted}"
     done
-
-    try "${DEBUG_EXEC_COMMAND} ${JAIL_BIN} -r ${JAIL_NAME}" && \
-        permnote "Terminated cell: $(distn "${JAIL_NAME}")"
 
     printf "%s\n" "[terminated by ${USER} on $(${DATE_BIN} +%F-%H-%M-%S)]" > "${JAIL_STATUS_FILE}"
 
@@ -957,13 +958,8 @@ cell_destroy () {
 
     # check_cell_name "${CELL}"
     if [ "${_ans}" = "YES" ]; then
-        if [ -f "${SENTRY}/${JAIL_RUNNING_INDICATOR}" ]; then
-            cell_stop ${*}
-        fi
-        for _dir in /dev /tmp; do
-            try "${UMOUNT_BIN} -f ${CELL}${_dir}" && \
-                debug "Unmounted: $(distd "${CELL}${_dir}")"
-        done
+        cell_stop "${GIVEN_NAME}"
+
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Software/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Software/${JAIL_NAME}")!"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Services/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Services/${JAIL_NAME}")!"
         try "${ZFS_BIN} destroy -rf ${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}" && note "Destroyed dataset: $(distn "${DEFAULT_ZPOOL}/Shared/${JAIL_NAME}")!"
