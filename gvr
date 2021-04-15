@@ -11,7 +11,7 @@
 # TODO: solve cell /proc problem for JVM-driven software
 # proc /Shared/Prison/Cells/logstash1/proc procfs rw 0 0
 
-DEBUG=1
+#DEBUG=1
 
 GVR_VERSION="0.40.1"
 GVR_LOG="/var/log/gvr.log"
