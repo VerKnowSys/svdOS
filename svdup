@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Default DNS for name resolve
+DEFAULT_DNS="1.1.1.1"
+DEFAULT_DNS_BACKUP="1.0.0.1"
+
 
 # Default base software versions:
 PICKED_BUILD_VERSION="${1:-current-stable}"
@@ -23,7 +27,7 @@ HOME_DIR="/User"
 SERVED_REPOSITORY="https://github.com/VerKnowSys/svdOS.git"
 SOFIN_REPOSITORY="https://github.com/VerKnowSys/sofin.git"
 SOFIN_BIN_REPO="http://software.verknowsys.com/binary"
-BEADM_REPOSITORY="https://github.com/vermaden/beadm.git"
+# BEADM_REPOSITORY="https://github.com/vermaden/beadm.git"
 ZSH_AUTOSUGGESTIONS_REPO="https://github.com/VerKnowSys/zsh-autosuggestions"
 ORIGINS_RESOURCE="https://raw.githubusercontent.com/VerKnowSys/sofin/master/share/sofin/origins"
 LZ4_BIN_RESOURCE="https://raw.githubusercontent.com/VerKnowSys/svdOS/master/usr/bin/lz4"
@@ -78,7 +82,9 @@ get_the_current () {
 
 
 write_default_resolv_conf () {
-    { echo "nameserver 1.1.1.1" && echo "nameserver 1.0.0.1"; } > /etc/resolv.conf
+    printf "%b\n%\n" \
+        "nameserver ${DEFAULT_DNS}" \
+        "nameserver ${DEFAULT_DNS_BACKUP}" > /etc/resolv.conf
 }
 
 
@@ -101,7 +107,9 @@ prepare_and_fetch_os_snapshot () {
     ping -c1 -t3 task.pl >> "${LOG_FILE}" 2>> "${LOG_FILE}" || \
         fail_with_no_network
     test -f /etc/ssl/cert.pem || \
-        fetch --no-verify-peer https://curl.haxx.se/ca/cacert.pem -o /etc/ssl/cert.pem
+        fetch --no-verify-peer https://curl.haxx.se/ca/cacert.pem -o /etc/ssl/cert.pem || \
+        fetch --no-verify-peer http://software.verknowsys.com/source/cacert.pem -o /etc/ssl/cert.pem || \
+            fail_with_no_network
     test -x /usr/bin/lz4 || \
         fetch_and_install_lz4
 
@@ -156,7 +164,7 @@ set_std_zfs_properties () {
 
 
 mount_boot_env () {
-    beadm mount "${NEW_BOOT_ENV}" "${DESTBASE}" >/dev/null && \
+    bectl mount "${NEW_BOOT_ENV}" "${DESTBASE}" >/dev/null && \
         echo "svdUP: Mounted new environment: ${NEW_BOOT_ENV} with base system: ${DESTBASE##*/}" \
             && return 0
     return 1
@@ -234,7 +242,7 @@ configure_and_commit_boot_env () {
         "${_boot_device}" >/dev/null && \
         echo "svdUP: Gpart: Bootcode installed for environment: ${NEW_BOOT_ENV}. Boot device is: ${_boot_device}"
 
-    beadm umount -f "${NEW_BOOT_ENV}" >/dev/null && \
+    bectl umount -f "${NEW_BOOT_ENV}" >/dev/null && \
         echo "svdUP: Unmounted new environment: ${NEW_BOOT_ENV}" && \
             return 0
 
@@ -247,7 +255,7 @@ activate_new_boot_env () {
         "${ZPOOL}/ROOT/${NEW_BOOT_ENV}@--head--" \
         "@svdup-${DATE_NOW}" 2>/dev/null
 
-    beadm activate "${NEW_BOOT_ENV}" >/dev/null && \
+    bectl activate "${NEW_BOOT_ENV}" >/dev/null && \
         echo "svdUP: Commited and activated new boot environment: ${NEW_BOOT_ENV}" && \
         return 0
     return 1
@@ -340,21 +348,21 @@ upgrade_projects_sync_configuration () {
     _timestamp_now="$(date +%F-%H%M-%s 2>/dev/null)"
 
     cd /Projects
-    ${SOFTWARE_DIR}/Git/bin/git clone "${SOFIN_REPOSITORY}"
+    ${SOFTWARE_DIR}/Git/bin/git clone "${SOFIN_REPOSITORY}" >/dev/null
     cd sofin
     ${SOFTWARE_DIR}/Git/bin/git reset --hard >/dev/null 2>&1
     # Install Sofin - software installer:
     bin/upgrade
 
-    cd /Projects
-    ${SOFTWARE_DIR}/Git/bin/git clone "${BEADM_REPOSITORY}"
-    cd beadm
-    ${SOFTWARE_DIR}/Git/bin/git reset --hard >/dev/null 2>&1
-    ${SOFTWARE_DIR}/Git/bin/git pull origin master
-    rm -f "beadm.1.gz"
-    gzip "beadm.1" >/dev/null
-    install -v "beadm.1.gz" "/usr/share/man/man1/"
-    install -v "beadm" "/usr/sbin/beadm"
+    # cd /Projects
+    # ${SOFTWARE_DIR}/Git/bin/git clone "${BEADM_REPOSITORY}" >/dev/null
+    # cd beadm
+    # ${SOFTWARE_DIR}/Git/bin/git reset --hard >/dev/null 2>&1
+    # ${SOFTWARE_DIR}/Git/bin/git pull origin master
+    # rm -f "beadm.1.gz"
+    # gzip "beadm.1" >/dev/null
+    # install -v "beadm.1.gz" "/usr/share/man/man1/"
+    # install -v "beadm" "/usr/sbin/beadm"
 
     cd /Projects
     ${SOFTWARE_DIR}/Git/bin/git clone "${SERVED_REPOSITORY}"
@@ -417,7 +425,7 @@ postinstall_cleanup () {
 #
 
 case "$(uname)" in
-    ${SYSTEM_NAME})
+    "${SYSTEM_NAME}")
         ;;
     *)
         echo "Currently only ${SYSTEM_NAME} x86_64 hosts are supported by svdup!"
