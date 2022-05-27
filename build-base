@@ -183,7 +183,6 @@ build_base () {
             TARGET="${TARGET:-${ARCH}}" \
             TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
             DESTDIR="${DESTBASE}" \
-            MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
             >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 119
@@ -196,7 +195,6 @@ build_base () {
         TARGET="${TARGET:-${ARCH}}" \
         TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
         DESTDIR="${DESTBASE}" \
-        MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
         FORMATS="${DOC_FORMATS}" \
         DOC_LANG="${LANG}" \
         2>> "${LOG_OUTPUT}" || exit 120
@@ -207,7 +205,6 @@ build_base () {
         TARGET="${TARGET:-${ARCH}}" \
         TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
         DESTDIR="${DESTBASE}" \
-        MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
         FORMATS="${DOC_FORMATS}" \
         DOC_LANG="${LANG}" \
         >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" || exit 121
@@ -224,7 +221,6 @@ build_base () {
             TARGET="${TARGET:-${ARCH}}" \
             TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
             DESTDIR="${DESTBASE}" \
-            MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
             >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" && \
@@ -250,7 +246,6 @@ build_base () {
             TARGET="${TARGET:-${ARCH}}" \
             TARGET_ARCH="${TARGET_ARCH:-${ARCH}}" \
             DESTDIR="${DESTBASE}" \
-            MAKEOBJDIRPREFIX="/${LAMBDA}/obj" \
             FORMATS="${DOC_FORMATS}" \
             DOC_LANG="${LANG}" \
             >> "${LOG_OUTPUT}" 2>> "${LOG_OUTPUT}" && \
